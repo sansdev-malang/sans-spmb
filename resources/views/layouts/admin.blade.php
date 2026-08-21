@@ -161,6 +161,9 @@
                     <a href="{{ route('admin.spmb-settings') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
                         <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Gelombang & Jalur
                     </a>
+                    <a href="{{ route('admin.spmb-settings.units-grades') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.units-grades') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                        <i data-lucide="building-2" class="w-3.5 h-3.5"></i> Unit & Tingkatan
+                    </a>
                     <a href="{{ route('admin.spmb-settings.registration') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.registration') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
                         <i data-lucide="toggle-left" class="w-3.5 h-3.5"></i> Aktivasi SPMB
                     </a>
@@ -179,7 +182,7 @@
             <a href="{{ route('admin.settings') }}" 
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
                 {{ Route::is('admin.settings') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="credit-card" class="w-4 h-4"></i> Winpay Payment
+                <i data-lucide="credit-card" class="w-4 h-4"></i> Payment Gateways
             </a>
 
             <a href="{{ route('admin.users') }}" 

@@ -19,19 +19,23 @@ use App\Http\Controllers\Web\SpmbFormSettingsController;
 Route::middleware('auth')->group(function () {
     // Candidate Dashboard
     Route::get('/dashboard', [WebDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/form', [WebDashboardController::class, 'form'])->name('dashboard.form');
-    Route::get('/dashboard/payment', [WebDashboardController::class, 'payment'])->name('dashboard.payment');
-    Route::get('/dashboard/verification', [WebDashboardController::class, 'verification'])->name('dashboard.verification');
-    Route::get('/dashboard/observation', [WebDashboardController::class, 'observation'])->name('dashboard.observation');
-    Route::get('/dashboard/result', [WebDashboardController::class, 'result'])->name('dashboard.result');
-    Route::post('/dashboard/step/{stepId}/save', [WebDashboardController::class, 'saveStep'])->name('dashboard.step.save');
-    Route::post('/dashboard/form/submit', [WebDashboardController::class, 'submitForm'])->name('dashboard.form.submit');
-    Route::post('/dashboard/candidate-info', [WebDashboardController::class, 'updateCandidateInfo'])->name('dashboard.candidate');
-    Route::post('/dashboard/parent-info', [WebDashboardController::class, 'updateParentInfo'])->name('dashboard.parent');
-    Route::post('/dashboard/documents', [WebDashboardController::class, 'uploadDocuments'])->name('dashboard.documents');
+    Route::post('/dashboard/registration/create', [WebDashboardController::class, 'createRegistration'])->name('dashboard.registration.create');
+    
+    // Single Registration Details
+    Route::get('/dashboard/registration/{id}/detail', [WebDashboardController::class, 'detail'])->name('dashboard.detail');
+    Route::get('/dashboard/registration/{id}/form', [WebDashboardController::class, 'form'])->name('dashboard.form');
+    Route::get('/dashboard/registration/{id}/payment', [WebDashboardController::class, 'payment'])->name('dashboard.payment');
+    Route::get('/dashboard/registration/{id}/verification', [WebDashboardController::class, 'verification'])->name('dashboard.verification');
+    Route::get('/dashboard/registration/{id}/observation', [WebDashboardController::class, 'observation'])->name('dashboard.observation');
+    Route::get('/dashboard/registration/{id}/result', [WebDashboardController::class, 'result'])->name('dashboard.result');
+    Route::post('/dashboard/registration/{id}/step/{stepId}/save', [WebDashboardController::class, 'saveStep'])->name('dashboard.step.save');
+    Route::post('/dashboard/registration/{id}/form/submit', [WebDashboardController::class, 'submitForm'])->name('dashboard.form.submit');
+    Route::post('/dashboard/registration/{id}/candidate-info', [WebDashboardController::class, 'updateCandidateInfo'])->name('dashboard.candidate');
+    Route::post('/dashboard/registration/{id}/parent-info', [WebDashboardController::class, 'updateParentInfo'])->name('dashboard.parent');
+    Route::post('/dashboard/registration/{id}/documents', [WebDashboardController::class, 'uploadDocuments'])->name('dashboard.documents');
     
     // Payments
-    Route::post('/dashboard/payments/charge', [WebDashboardController::class, 'chargePayment'])->name('dashboard.charge');
+    Route::post('/dashboard/registration/{id}/payments/charge', [WebDashboardController::class, 'chargePayment'])->name('dashboard.charge');
     Route::post('/dashboard/payments/{id}/simulate', [WebDashboardController::class, 'simulatePaymentCallback'])->name('dashboard.simulate-payment');
     Route::post('/dashboard/payments/{id}/cancel', [WebDashboardController::class, 'cancelPayment'])->name('dashboard.cancel-payment');
 
@@ -73,6 +77,7 @@ Route::middleware('auth')->group(function () {
         })->name('admin.api-integrations');
 
         Route::get('/admin/spmb-settings', [SpmbSettingsController::class, 'index'])->name('admin.spmb-settings');
+        Route::get('/admin/spmb-settings/units-grades', [SpmbSettingsController::class, 'unitsGrades'])->name('admin.spmb-settings.units-grades');
         
         // Period CRUD
         Route::post('/admin/spmb-settings/periods', [SpmbSettingsController::class, 'storePeriod'])->name('admin.spmb-settings.periods.store');
@@ -88,6 +93,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/spmb-settings/types', [SpmbSettingsController::class, 'storeType'])->name('admin.spmb-settings.types.store');
         Route::post('/admin/spmb-settings/types/{id}', [SpmbSettingsController::class, 'updateType'])->name('admin.spmb-settings.types.update');
         Route::delete('/admin/spmb-settings/types/{id}', [SpmbSettingsController::class, 'destroyType'])->name('admin.spmb-settings.types.delete');
+
+        // Unit CRUD
+        Route::post('/admin/spmb-settings/units', [SpmbSettingsController::class, 'storeUnit'])->name('admin.spmb-settings.units.store');
+        Route::post('/admin/spmb-settings/units/{id}', [SpmbSettingsController::class, 'updateUnit'])->name('admin.spmb-settings.units.update');
+        Route::delete('/admin/spmb-settings/units/{id}', [SpmbSettingsController::class, 'destroyUnit'])->name('admin.spmb-settings.units.delete');
+
+        // Grade CRUD
+        Route::post('/admin/spmb-settings/grades', [SpmbSettingsController::class, 'storeGrade'])->name('admin.spmb-settings.grades.store');
+        Route::post('/admin/spmb-settings/grades/{id}', [SpmbSettingsController::class, 'updateGrade'])->name('admin.spmb-settings.grades.update');
+        Route::delete('/admin/spmb-settings/grades/{id}', [SpmbSettingsController::class, 'destroyGrade'])->name('admin.spmb-settings.grades.delete');
 
         // Setting Pendaftaran (Activation Config Panel)
         Route::get('/admin/spmb-settings/registration', [SpmbRegistrationSettingsController::class, 'index'])->name('admin.spmb-settings.registration');

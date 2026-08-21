@@ -193,28 +193,30 @@
     <!-- Sub-Navbar Navigation for Candidate Dashboard Tabs -->
     @auth
         @if(!auth()->user()->isAdmin())
+            @if(isset($registration) && $registration->id)
             <div class="bg-emerald-800 text-white border-t border-emerald-700/50 shadow shadow-sm">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-2 overflow-x-auto text-[10px] py-3.5 font-bold tracking-wider uppercase">
-                    <a href="{{ route('dashboard') }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
-                        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Dashboard
+                    <a href="{{ route('dashboard.detail', $registration->id) }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.detail') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
+                        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Dashboard Detail
                     </a>
-                    <a href="{{ route('dashboard.form') }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.form') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
+                    <a href="{{ route('dashboard.form', $registration->id) }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.form') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
                         <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Formulir
                     </a>
-                    <a href="{{ route('dashboard.payment') }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.payment') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
+                    <a href="{{ route('dashboard.payment', $registration->id) }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.payment') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
                         <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Payment
                     </a>
-                    <a href="{{ route('dashboard.verification') }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.verification') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
+                    <a href="{{ route('dashboard.verification', $registration->id) }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.verification') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
                         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Verification
                     </a>
-                    <a href="{{ route('dashboard.observation') }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.observation') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
+                    <a href="{{ route('dashboard.observation', $registration->id) }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.observation') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
                         <i data-lucide="video" class="w-3.5 h-3.5"></i> Observation
                     </a>
-                    <a href="{{ route('dashboard.result') }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.result') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
+                    <a href="{{ route('dashboard.result', $registration->id) }}" class="hover:text-brand-yellow transition px-3.5 py-2 rounded-lg {{ Route::is('dashboard.result') ? 'bg-emerald-900 text-brand-yellow font-black' : 'text-emerald-100' }} flex items-center gap-1.5">
                         <i data-lucide="award" class="w-3.5 h-3.5"></i> Final Result
                     </a>
                 </div>
             </div>
+            @endif
         @endif
     @endauth
 

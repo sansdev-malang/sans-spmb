@@ -61,4 +61,14 @@ class Registration extends Model
     {
         return $this->belongsTo(SpmbType::class, 'spmb_type_id');
     }
+
+    public function unit()
+    {
+        return $this->belongsTo(SpmbUnit::class, 'spmb_unit_id');
+    }
+
+    public function grade()
+    {
+        return $this->belongsTo(SpmbGrade::class, 'spmb_grade_id');
+    }
 }

@@ -81,10 +81,10 @@
                     Melalui portal ini, Anda dapat memantau seluruh rangkaian proses seleksi penerimaan siswa baru Sekolah Anak Saleh. Silakan ikuti instruksi pengisian formulir pendaftaran, lakukan pelunasan biaya seleksi, dan tunggu hasil verifikasi dari tim panitia kami.
                 </p>
                 <div class="pt-2 flex gap-3">
-                    <a href="{{ route('dashboard.form') }}" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
+                    <a href="{{ route('dashboard.form', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
                         <i data-lucide="file-edit" class="w-4 h-4"></i> Mulai Isi Formulir
                     </a>
-                    <a href="{{ route('dashboard.payment') }}" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                    <a href="{{ route('dashboard.payment', $registration->id) }}" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                         <i data-lucide="credit-card" class="w-4 h-4"></i> Rincian Biaya
                     </a>
                 </div>

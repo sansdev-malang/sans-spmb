@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\SpmbPeriod;
 use App\Models\SpmbWave;
 use App\Models\SpmbType;
+use App\Models\SpmbUnit;
+use App\Models\SpmbGrade;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -30,6 +32,21 @@ class SpmbSettingsController extends Controller
         });
 
         return view('admin.settings-spmb', compact('periods', 'waves', 'types'));
+    }
+
+    public function unitsGrades()
+    {
+        $units = SpmbUnit::all()->map(function ($unit) {
+            $unit->registrations_count = Registration::where('spmb_unit_id', $unit->id)->count();
+            return $unit;
+        });
+
+        $grades = SpmbGrade::with('unit')->get()->map(function ($grade) {
+            $grade->registrations_count = Registration::where('spmb_grade_id', $grade->id)->count();
+            return $grade;
+        });
+
+        return view('admin.settings-spmb-units', compact('units', 'grades'));
     }
 
     // Period CRUD
@@ -190,12 +207,88 @@ class SpmbSettingsController extends Controller
     public function destroyType($id)
     {
         $type = SpmbType::findOrFail($id);
-
-        if (Registration::where('spmb_type_id', $id)->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus jenis pendaftaran ini karena sudah memiliki data transaksi.');
+        if (Registration::where('spmb_type_id', $type->id)->exists()) {
+            return redirect()->back()->with('error', 'Gagal menghapus! Jalur ini sedang digunakan oleh pendaftar.');
         }
-
         $type->delete();
-        return redirect()->back()->with('success', 'Jenis pendaftaran berhasil dihapus.');
+        return redirect()->back()->with('success', 'Jalur pendaftaran berhasil dihapus.');
+    }
+
+    // Unit CRUD
+    public function storeUnit(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:50',
+            'is_active' => 'boolean'
+        ]);
+
+        SpmbUnit::create($request->all());
+        return redirect()->back()->with('success', 'Unit berhasil ditambahkan.');
+    }
+
+    public function updateUnit(Request $request, $id)
+    {
+        $unit = SpmbUnit::findOrFail($id);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:50',
+            'is_active' => 'boolean'
+        ]);
+        
+        $data = $request->all();
+        $data['is_active'] = $request->has('is_active');
+        $unit->update($data);
+
+        return redirect()->back()->with('success', 'Unit berhasil diperbarui.');
+    }
+
+    public function destroyUnit($id)
+    {
+        $unit = SpmbUnit::findOrFail($id);
+        if (Registration::where('spmb_unit_id', $unit->id)->exists()) {
+            return redirect()->back()->with('error', 'Gagal menghapus! Unit sedang digunakan oleh pendaftar.');
+        }
+        $unit->delete();
+        return redirect()->back()->with('success', 'Unit berhasil dihapus.');
+    }
+
+    // Grade CRUD
+    public function storeGrade(Request $request)
+    {
+        $request->validate([
+            'spmb_unit_id' => 'required|exists:spmb_units,id',
+            'name' => 'required|string|max:255',
+            'is_active' => 'boolean'
+        ]);
+
+        SpmbGrade::create($request->all());
+        return redirect()->back()->with('success', 'Tingkatan berhasil ditambahkan.');
+    }
+
+    public function updateGrade(Request $request, $id)
+    {
+        $grade = SpmbGrade::findOrFail($id);
+        $request->validate([
+            'spmb_unit_id' => 'required|exists:spmb_units,id',
+            'name' => 'required|string|max:255',
+            'is_active' => 'boolean'
+        ]);
+        
+        $data = $request->all();
+        $data['is_active'] = $request->has('is_active');
+        $grade->update($data);
+
+        return redirect()->back()->with('success', 'Tingkatan berhasil diperbarui.');
+    }
+
+    public function destroyGrade($id)
+    {
+        $grade = SpmbGrade::findOrFail($id);
+        if (Registration::where('spmb_grade_id', $grade->id)->exists()) {
+            return redirect()->back()->with('error', 'Gagal menghapus! Tingkatan sedang digunakan oleh pendaftar.');
+        }
+        $grade->delete();
+        return redirect()->back()->with('success', 'Tingkatan berhasil dihapus.');
     }
 }

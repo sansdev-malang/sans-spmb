@@ -9,6 +9,8 @@ use App\Models\Payment;
 use App\Models\SpmbFormStep;
 use App\Models\SpmbFormField;
 use App\Models\SpmbPaymentChannel;
+use App\Models\SpmbUnit;
+use App\Models\SpmbGrade;
 use App\Services\WinpayService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -22,15 +24,42 @@ class WebDashboardController extends Controller
         $this->winpayService = $winpayService;
     }
 
-    private function getRegistration()
+    private function getRegistration($id)
     {
-        return Registration::firstOrCreate(
-            ['user_id' => auth()->id()],
-            [
-                'registration_status' => 'draft',
-                'payment_status' => 'unpaid'
-            ]
-        );
+        return Registration::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+    }
+
+    public function index()
+    {
+        $registrations = Registration::with(['unit', 'grade'])
+            ->where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $units = SpmbUnit::where('is_active', true)->get();
+        $grades = SpmbGrade::where('is_active', true)->get();
+
+        return view('web.dashboard-index', compact('registrations', 'units', 'grades'));
+    }
+    
+    public function createRegistration(Request $request)
+    {
+        $request->validate([
+            'candidate_name' => 'required|string|max:255',
+            'spmb_unit_id' => 'required|exists:spmb_units,id',
+            'spmb_grade_id' => 'required|exists:spmb_grades,id',
+        ]);
+        
+        $registration = Registration::create([
+            'user_id' => auth()->id(),
+            'candidate_name' => $request->candidate_name,
+            'spmb_unit_id' => $request->spmb_unit_id,
+            'spmb_grade_id' => $request->spmb_grade_id,
+            'registration_status' => 'draft',
+            'payment_status' => 'unpaid'
+        ]);
+        
+        return redirect()->route('dashboard.detail', $registration->id)->with('success', 'Berhasil menambahkan pendaftaran anak baru. Silakan lengkapi formulir.');
     }
 
     private function getFormDetails($registration)
@@ -67,9 +96,9 @@ class WebDashboardController extends Controller
         ];
     }
 
-    public function index()
+    public function detail($id)
     {
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         $activePayment = $registration->activePayment;
 
         $formDetails = $this->getFormDetails($registration);
@@ -147,7 +176,7 @@ class WebDashboardController extends Controller
                     $committeeMessage = 'Pembayaran terkonfirmasi. Berkas Anda sedang diperiksa oleh Panitia SPMB. Mohon tunggu proses verifikasi selesai.';
                 }
             } elseif ($registration->registration_status === 'verified') {
-                $committeeMessage = 'Alhamdulillah, berkas ananda ' . ($registration->candidate_name ?? 'Ahmad Raihan') . ' telah kami terima dan diverifikasi. Silakan persiapkan ananda untuk mengikuti Tes Observasi secara daring. Mohon cek detail jadwal dan tautan di bawah ini.';
+                $committeeMessage = 'Alhamdulillah, berkas ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah kami terima dan diverifikasi. Silakan persiapkan ananda untuk mengikuti Tes Observasi secara daring. Mohon cek detail jadwal dan tautan di bawah ini.';
             } elseif ($registration->registration_status === 'failed') {
                 $committeeMessage = 'Mohon maaf, berkas pendaftaran Anda tidak lolos verifikasi. Silakan hubungi admin panitia.';
             }
@@ -156,9 +185,9 @@ class WebDashboardController extends Controller
         return view('web.dashboard', compact('registration', 'activePayment', 'timeline', 'committeeMessage', 'observationDetails', 'stepsCompleted', 'stepsCount'));
     }
 
-    public function form()
+    public function form($id)
     {
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         $formDetails = $this->getFormDetails($registration);
         $steps = $formDetails['steps'];
         $allStepsCompleted = $formDetails['allStepsCompleted'];
@@ -166,9 +195,9 @@ class WebDashboardController extends Controller
         return view('web.form', compact('registration', 'steps', 'allStepsCompleted'));
     }
 
-    public function submitForm()
+    public function submitForm($id)
     {
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         $formDetails = $this->getFormDetails($registration);
         
         if (!$formDetails['allStepsCompleted']) {
@@ -179,24 +208,24 @@ class WebDashboardController extends Controller
             $registration->update([
                 'registration_status' => 'submitted'
             ]);
-            return redirect()->route('dashboard.payment')->with('success', 'Formulir pendaftaran berhasil dikirim! Silakan selesaikan pembayaran biaya seleksi.');
+            return redirect()->route('dashboard.payment', $id)->with('success', 'Formulir pendaftaran berhasil dikirim! Silakan selesaikan pembayaran biaya seleksi.');
         }
 
-        return redirect()->route('dashboard.payment');
+        return redirect()->route('dashboard.payment', $id);
     }
 
-    public function payment()
+    public function payment($id)
     {
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         $activePayment = $registration->activePayment;
         $channels = SpmbPaymentChannel::where('is_active', true)->orderBy('type')->orderBy('name')->get();
         
         return view('web.payment', compact('registration', 'activePayment', 'channels'));
     }
 
-    public function verification()
+    public function verification($id)
     {
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         
         $committeeMessage = $registration->committee_notes;
         if (empty($committeeMessage)) {
@@ -212,9 +241,9 @@ class WebDashboardController extends Controller
         return view('web.verification', compact('registration', 'committeeMessage'));
     }
 
-    public function observation()
+    public function observation($id)
     {
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         
         $observationDetails = null;
         if ($registration->registration_status === 'verified') {
@@ -229,17 +258,17 @@ class WebDashboardController extends Controller
         return view('web.observation', compact('registration', 'observationDetails'));
     }
 
-    public function result()
+    public function result($id)
     {
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         
         return view('web.result', compact('registration'));
     }
 
-    public function saveStep(Request $request, $stepId)
+    public function saveStep(Request $request, $id, $stepId)
     {
         $step = SpmbFormStep::with('fields')->findOrFail($stepId);
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
 
         // 1. Build dynamic validation rules
         $rules = [];
@@ -317,14 +346,13 @@ class WebDashboardController extends Controller
             $registration->update([
                 'registration_status' => 'submitted'
             ]);
-            return redirect()->route('dashboard')->with('success', 'Pendaftaran Anda berhasil dikirim! Silakan selesaikan pembayaran seleksi.');
+            return redirect()->route('dashboard.detail', $id)->with('success', 'Pendaftaran Anda berhasil dikirim! Silakan selesaikan pembayaran seleksi.');
         }
 
         return redirect()->back()->with('success', 'Langkah "' . $step->title . '" berhasil disimpan.');
     }
 
-    // Legacy web endpoints for backward compatibility / tests
-    public function updateCandidateInfo(Request $request)
+    public function updateCandidateInfo(Request $request, $id)
     {
         $request->validate([
             'candidate_name' => 'required|string|max:255',
@@ -338,7 +366,7 @@ class WebDashboardController extends Controller
             'admission_level' => 'required|string|in:Play Group,TK A,TK B',
         ]);
 
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         $registration->update($request->only([
             'candidate_name', 'nickname', 'nik', 'gender',
             'birth_place', 'birth_date', 'religion',
@@ -348,7 +376,7 @@ class WebDashboardController extends Controller
         return redirect()->back()->with('success', 'Candidate personal information saved. Please fill step 2.');
     }
 
-    public function updateParentInfo(Request $request)
+    public function updateParentInfo(Request $request, $id)
     {
         $request->validate([
             'father_name' => 'required|string|max:255',
@@ -356,7 +384,7 @@ class WebDashboardController extends Controller
             'parent_phone' => 'required|string|min:10|max:15',
         ]);
 
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
         $registration->update($request->only([
             'father_name', 'mother_name', 'parent_phone'
         ]));
@@ -364,14 +392,14 @@ class WebDashboardController extends Controller
         return redirect()->back()->with('success', 'Parent information saved. Please fill step 3.');
     }
 
-    public function uploadDocuments(Request $request)
+    public function uploadDocuments(Request $request, $id)
     {
         $request->validate([
             'birth_certificate' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'family_card' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
 
         if ($request->hasFile('birth_certificate')) {
             $birthCertPath = $request->file('birth_certificate')->store('documents', 'public');
@@ -389,13 +417,13 @@ class WebDashboardController extends Controller
         return redirect()->back()->with('success', 'Documents uploaded and form submitted successfully!');
     }
 
-    public function chargePayment(Request $request)
+    public function chargePayment(Request $request, $id)
     {
         $request->validate([
             'payment_method' => 'required|string|in:MANDIRI,BRI,BNI,BCA,QRIS',
         ]);
 
-        $registration = $this->getRegistration();
+        $registration = $this->getRegistration($id);
 
         if ($registration->registration_status === 'draft') {
             return redirect()->back()->with('error', 'Please complete steps 1-3 first.');
@@ -436,9 +464,9 @@ class WebDashboardController extends Controller
         }
     }
 
-    public function simulatePaymentCallback($paymentId)
+    public function simulatePaymentCallback($id)
     {
-        $payment = Payment::find($paymentId);
+        $payment = Payment::find($id);
         if (!$payment) {
             return redirect()->back()->with('error', 'Payment transaction not found.');
         }
@@ -465,6 +493,7 @@ class WebDashboardController extends Controller
     public function cancelPayment($id)
     {
         $payment = Payment::findOrFail($id);
+        $regId = $payment->registration_id;
 
         DB::beginTransaction();
         try {
@@ -478,7 +507,7 @@ class WebDashboardController extends Controller
             ]);
 
             DB::commit();
-            return redirect()->route('dashboard.payment')->with('success', 'Transaksi pembayaran berhasil dibatalkan. Silakan pilih kembali metode pembayaran Anda.');
+            return redirect()->route('dashboard.payment', $regId)->with('success', 'Transaksi pembayaran berhasil dibatalkan. Silakan pilih kembali metode pembayaran Anda.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());

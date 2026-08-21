@@ -24,6 +24,7 @@
         <button onclick="switchTab('jenis')" id="tabBtn-jenis" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
             <i data-lucide="tag" class="w-4 h-4"></i> Jenis Pendaftaran
         </button>
+
         <button onclick="switchTab('qrcode')" id="tabBtn-qrcode" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
             <i data-lucide="qr-code" class="w-4 h-4"></i> QR Code SPMB
         </button>
@@ -213,8 +214,9 @@
 
             </div>
         </div>
-
     </div>
+
+
 </div>
 
 <!-- Unified CRUD Modal -->

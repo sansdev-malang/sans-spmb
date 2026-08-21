@@ -16,7 +16,7 @@
                 Anda harus mengisi dan melengkapi seluruh tahapan data pendaftaran serta dokumen persyaratan terlebih dahulu pada menu <strong>Formulir</strong> sebelum dapat melakukan pembayaran biaya seleksi.
             </p>
             <div class="pt-4">
-                <a href="{{ route('dashboard.form') }}" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition">
+                <a href="{{ route('dashboard.form', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition">
                     Lengkapi Formulir Sekarang
                 </a>
             </div>
@@ -72,7 +72,7 @@
 
                 <!-- 2. Form Select payment method if unpaid -->
                 @if ($registration->payment_status === 'unpaid')
-                    <form action="{{ route('dashboard.charge') }}" method="POST" class="space-y-4">
+                    <form action="{{ route('dashboard.charge', $registration->id) }}" method="POST" class="space-y-4">
                         @csrf
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilih Metode Pembayaran</label>
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">

@@ -21,7 +21,7 @@
                         <h3 class="font-extrabold text-sm text-slate-800">Semua Data Selesai Diisi!</h3>
                         <p class="text-xs text-slate-500 mt-1">Data Anda sudah tersimpan sebagai draf. Silakan kirimkan pendaftaran Anda untuk memproses tagihan pembayaran.</p>
                     </div>
-                    <form action="{{ route('dashboard.form.submit') }}" method="POST">
+                    <form action="{{ route('dashboard.form.submit', $registration->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
                             <i data-lucide="send" class="w-4 h-4"></i> Kirim Pendaftaran Sekarang
@@ -68,7 +68,7 @@
 
                         <!-- Form Block -->
                         @if ($registration->registration_status === 'draft')
-                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', $step->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm {{ $step->is_completed ? 'hidden' : '' }}">
+                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm {{ $step->is_completed ? 'hidden' : '' }}">
                                 @csrf
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     @foreach($step->fields as $field)
