@@ -106,6 +106,10 @@ class WebDashboardController extends Controller
         $stepsCompleted = $formDetails['stepsCompleted'];
         $stepsCount = $formDetails['stepsCount'];
 
+        $fee = \App\Models\SpmbFee::where('name', 'Biaya Pendaftaran')->first();
+        $feeAmount = $fee ? $fee->amount : 350000;
+        $feeGateway = $fee ? ($fee->payment_gateway === 'bni' ? 'BNI SNAP' : 'Winpay') : 'Winpay';
+
         // Build dashboard timeline steps
         $timeline = [
             'registration' => [
@@ -114,8 +118,8 @@ class WebDashboardController extends Controller
                 'status' => $allStepsCompleted ? 'completed' : 'in_progress',
             ],
             'payment' => [
-                'label' => 'Payment Fee (Winpay)',
-                'description' => 'Membayar biaya seleksi pendaftaran Rp 350.000.',
+                'label' => 'Payment Fee (' . $feeGateway . ')',
+                'description' => 'Membayar biaya seleksi pendaftaran Rp ' . number_format($feeAmount, 0, ',', '.'),
                 'status' => 'not_started',
             ],
             'verification' => [
@@ -171,7 +175,7 @@ class WebDashboardController extends Controller
             $committeeMessage = 'Silakan lengkapi formulir pendaftaran Anda terlebih dahulu.';
             if ($registration->registration_status === 'submitted') {
                 if ($registration->payment_status !== 'paid') {
-                    $committeeMessage = 'Formulir Anda telah disimpan. Silakan lakukan pembayaran pendaftaran sebesar Rp 350.000 untuk memulai proses verifikasi berkas.';
+                    $committeeMessage = 'Formulir Anda telah disimpan. Silakan lakukan pembayaran pendaftaran sebesar Rp ' . number_format($feeAmount, 0, ',', '.') . ' untuk memulai proses verifikasi berkas.';
                 } else {
                     $committeeMessage = 'Pembayaran terkonfirmasi. Berkas Anda sedang diperiksa oleh Panitia SPMB. Mohon tunggu proses verifikasi selesai.';
                 }
@@ -220,7 +224,11 @@ class WebDashboardController extends Controller
         $activePayment = $registration->activePayment;
         $channels = SpmbPaymentChannel::where('is_active', true)->orderBy('type')->orderBy('name')->get();
         
-        return view('web.payment', compact('registration', 'activePayment', 'channels'));
+        $fee = \App\Models\SpmbFee::where('name', 'Biaya Pendaftaran')->first();
+        $feeAmount = $fee ? $fee->amount : 350000;
+        $feeGateway = $fee ? $fee->payment_gateway : 'winpay';
+
+        return view('web.payment', compact('registration', 'activePayment', 'channels', 'feeAmount', 'feeGateway'));
     }
 
     public function verification($id)
@@ -428,12 +436,32 @@ class WebDashboardController extends Controller
         if ($registration->registration_status === 'draft') {
             return redirect()->back()->with('error', 'Please complete steps 1-3 first.');
         }
+        
+        $fee = \App\Models\SpmbFee::where('name', 'Biaya Pendaftaran')->first();
+        $amount = $fee ? $fee->amount : 350000;
+        $gateway = $fee ? $fee->payment_gateway : 'winpay';
+        $invoiceBase = 'INV-SPMB-' . date('Ymd') . '-' . $registration->id . '-' . rand(100, 999);
 
-        // Call Winpay Service to charge
-        $response = $this->winpayService->createPayment(350000, 'INV-SPMB-' . date('Ymd') . '-' . $registration->id . '-' . rand(100, 999), $request->payment_method);
+        if ($gateway === 'bni') {
+            // MOCK BNI SNAP API for now since BniService isn't fully integrated yet
+            $response = [
+                'success' => true,
+                'message' => 'Success',
+                'data' => [
+                    'trxId' => $invoiceBase,
+                    'referenceId' => 'BNI-MOCK-' . time(),
+                    'virtualAccount' => '8001' . rand(10000000, 99999999),
+                    'paymentUrl' => 'https://sandbox.bni.co.id/mock-payment/' . $invoiceBase,
+                    'qrisString' => $request->payment_method === 'QRIS' ? '00020101021226670014ID.CO.BNI.WWW0118936000091503300589...' : null
+                ]
+            ];
+        } else {
+            // Call Winpay Service to charge
+            $response = $this->winpayService->createPayment($amount, $invoiceBase, $request->payment_method);
+        }
 
         if (!$response['success']) {
-            return redirect()->back()->with('error', 'Failed to initiate Winpay payment: ' . $response['message']);
+            return redirect()->back()->with('error', 'Failed to initiate payment: ' . $response['message']);
         }
 
         $paymentData = $response['data'];
@@ -445,7 +473,7 @@ class WebDashboardController extends Controller
             Payment::create([
                 'registration_id' => $registration->id,
                 'invoice_number' => $invoiceNo ?? 'INV-' . time(),
-                'amount' => 350000,
+                'amount' => $amount,
                 'payment_method' => $request->payment_method,
                 'reference_id' => $refId,
                 'payment_info' => $paymentData,

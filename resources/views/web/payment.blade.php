@@ -49,7 +49,7 @@
                 <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 flex justify-between items-center">
                     <div>
                         <span class="text-xs text-slate-400 font-semibold block uppercase">Jumlah Tagihan</span>
-                        <span class="text-2xl font-black text-slate-800">Rp 350.000</span>
+                        <span class="text-2xl font-black text-slate-800">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
                     </div>
                     <div class="text-right">
                         <span class="text-xs text-slate-400 font-semibold block uppercase">Pendaftar</span>
@@ -76,13 +76,26 @@
                         @csrf
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilih Metode Pembayaran</label>
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            @foreach($channels as $channel)
+                            @if($feeGateway === 'bni')
                                 <label class="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
-                                    <input type="radio" name="payment_method" value="{{ $channel->code }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
-                                    <span class="text-sm font-bold text-slate-800 text-center leading-tight">{{ $channel->name }}</span>
-                                    <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">{{ $channel->type }}</span>
+                                    <input type="radio" name="payment_method" value="BNI" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" checked>
+                                    <span class="text-sm font-bold text-slate-800 text-center leading-tight">BNI Virtual Account</span>
+                                    <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">VIRTUAL ACCOUNT</span>
                                 </label>
-                            @endforeach
+                                <label class="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
+                                    <input type="radio" name="payment_method" value="QRIS" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald">
+                                    <span class="text-sm font-bold text-slate-800 text-center leading-tight">QRIS (BNI SNAP)</span>
+                                    <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">E-WALLET / QRIS</span>
+                                </label>
+                            @else
+                                @foreach($channels as $channel)
+                                    <label class="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
+                                        <input type="radio" name="payment_method" value="{{ $channel->code }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
+                                        <span class="text-sm font-bold text-slate-800 text-center leading-tight">{{ $channel->name }}</span>
+                                        <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">{{ $channel->type }}</span>
+                                    </label>
+                                @endforeach
+                            @endif
                         </div>
 
                         <div class="pt-4 flex justify-end">
@@ -117,7 +130,7 @@
                             <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center">
                                 <span class="text-xs text-slate-400 font-semibold uppercase block">Nomor Virtual Account (VA)</span>
                                 <span class="text-2xl font-black text-brand-emerald tracking-wider font-mono block mt-1 select-all">
-                                    {{ $activePayment->payment_info['virtualAccountNo'] ?? '88990012345678' }}
+                                    {{ $activePayment->payment_info['virtualAccountNo'] ?? $activePayment->payment_info['virtualAccount'] ?? '88990012345678' }}
                                 </span>
                                 <span class="text-[10px] text-slate-400 mt-2 block font-semibold">BANK PARTNER: {{ $activePayment->payment_method }}</span>
                             </div>

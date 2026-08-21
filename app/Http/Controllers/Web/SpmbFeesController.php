@@ -88,6 +88,7 @@ class SpmbFeesController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|unique:spmb_fees,name',
             'amount' => 'required|numeric|min:1000',
+            'payment_gateway' => 'required|in:winpay,bni',
         ], [
             'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.'
         ]);
@@ -102,6 +103,7 @@ class SpmbFeesController extends Controller
         SpmbFee::create([
             'name' => $request->name,
             'amount' => $request->amount,
+            'payment_gateway' => $request->payment_gateway,
         ]);
 
         return redirect()->back()->with('success', 'Biaya pendaftaran berhasil ditambahkan.');
@@ -112,6 +114,7 @@ class SpmbFeesController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|unique:spmb_fees,name,' . $id,
             'amount' => 'required|numeric|min:1000',
+            'payment_gateway' => 'required|in:winpay,bni',
         ], [
             'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.'
         ]);
@@ -126,12 +129,19 @@ class SpmbFeesController extends Controller
         $fee = SpmbFee::findOrFail($id);
 
         if (Payment::where('amount', $fee->amount)->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat mengubah nominal biaya yang sudah digunakan dalam transaksi.');
+            // we should still allow updating payment_gateway and name, but amount check can be stricter or not
+            // actually, let's keep the existing logic that prevents any change if it's used.
+            // But wait, the user might want to change gateway even if it's used.
+            // Let's modify the amount constraint: only fail if the amount changed.
+            if ($fee->amount != $request->amount) {
+                return redirect()->back()->with('error', 'Tidak dapat mengubah nominal biaya yang sudah digunakan dalam transaksi.');
+            }
         }
 
         $fee->update([
             'name' => $request->name,
             'amount' => $request->amount,
+            'payment_gateway' => $request->payment_gateway,
         ]);
 
         return redirect()->back()->with('success', 'Biaya pendaftaran berhasil diperbarui.');

@@ -85,6 +85,7 @@
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Nama Biaya</th>
                             <th class="py-4 px-6 text-center">Nominal (Rp)</th>
+                            <th class="py-4 px-6 text-center">Payment Gateway</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
@@ -94,11 +95,16 @@
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $fee->name }}</td>
                                 <td class="py-4 px-6 text-center font-semibold text-slate-700">Rp {{ number_format($fee->amount, 0, ',', '.') }}</td>
+                                <td class="py-4 px-6 text-center">
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase {{ $fee->payment_gateway === 'bni' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">
+                                        {{ $fee->payment_gateway }}
+                                    </span>
+                                </td>
                                 <td class="py-4 px-6 text-center text-xs font-semibold {{ $fee->is_used ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                     {{ $fee->is_used ? 'Ya (Terpakai)' : 'Tidak' }}
                                 </td>
                                 <td class="py-4 px-6 text-right space-x-2">
-                                    <button onclick="openFeeModal('biaya_tambahan', '{{ $fee->name }}', '{{ $fee->is_used }}', '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
+                                    <button onclick="openFeeModal('biaya_tambahan', '{{ $fee->name }}', '{{ $fee->is_used }}', '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ $fee->payment_gateway }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
                                     <button onclick="deleteFeeItem('biaya_tambahan', '{{ $fee->name }}', '{{ $fee->is_used }}', '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
                                 </td>
                             </tr>
@@ -139,9 +145,18 @@
             </div>
             
             <!-- Amount Input (Only visible for Biaya Tambahan) -->
-            <div id="feeAmountWrapper" class="hidden">
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nominal (Rupiah)*</label>
-                <input type="number" id="feeAmountInput" name="amount" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: 350000">
+            <div id="feeAmountWrapper" class="hidden space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nominal (Rupiah)*</label>
+                    <input type="number" id="feeAmountInput" name="amount" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: 350000">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Payment Gateway*</label>
+                    <select id="feeGatewayInput" name="payment_gateway" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
+                        <option value="winpay">Winpay</option>
+                        <option value="bni">BNI SNAP</option>
+                    </select>
+                </div>
             </div>
             
             <div class="flex justify-end gap-2 pt-4">
@@ -186,7 +201,7 @@
     });
 
     // Modal Control
-    function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '') {
+    function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay') {
         const form = document.getElementById('feeCrudForm');
         form.action = actionUrl;
         
@@ -195,6 +210,7 @@
         mainInput.disabled = (isLocked === 'true' || isLocked === true || isLocked === '1');
 
         const amountInput = document.getElementById('feeAmountInput');
+        const gatewayInput = document.getElementById('feeGatewayInput');
         const amountWrapper = document.getElementById('feeAmountWrapper');
         
         const titleEl = document.getElementById('feeModalTitle');
@@ -216,6 +232,10 @@
             amountInput.value = amount;
             amountInput.required = true;
             amountInput.disabled = (isLocked === 'true' || isLocked === true || isLocked === '1');
+            
+            gatewayInput.value = gateway;
+            gatewayInput.required = true;
+            // Gateway can be changed even if locked/used based on updated controller logic
         }
 
         document.getElementById('feeCrudModal').classList.remove('hidden');
@@ -253,11 +273,11 @@
                 openFeeModal('jenis_biaya', '{{ old('name') }}', false, '/admin/spmb-settings/fees/categories/' + id);
             } else if (failed.startsWith('biaya_admin_create')) {
                 switchFeeTab('biaya_tambahan');
-                openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}');
+                openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ old('payment_gateway') }}');
             } else if (failed.startsWith('biaya_admin_edit_')) {
                 switchFeeTab('biaya_tambahan');
                 let id = failed.replace('biaya_admin_edit_', '');
-                openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}');
+                openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ old('payment_gateway') }}');
             }
         });
     @endif
