@@ -1,10 +1,10 @@
 # SANS SPMB - Sistem Penerimaan Murid Baru (Sekolah Anak Saleh)
 
-[![Laravel v11](https://img.shields.io/badge/Laravel-v11-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
+[![Laravel v13](https://img.shields.io/badge/Laravel-v13-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
 [![Winpay SNAP API](https://img.shields.io/badge/Winpay_SNAP_API-Staging/Prod-00529C?style=for-the-badge)](https://winpay.co.id)
 
-SANS SPMB adalah platform digital modern untuk pengelolaan Penerimaan Murid Baru (SPMB) di Sekolah Anak Saleh. Dirancang dengan arsitektur tangguh menggunakan **Laravel 11**, **Tailwind CSS v4 (Plus Jakarta Sans)**, dan integrasi standar industri **Winpay SNAP BI Payment Gateway**.
+SANS SPMB adalah platform digital modern untuk pengelolaan Penerimaan Murid Baru (SPMB) di Sekolah Anak Saleh. Dirancang dengan arsitektur tangguh menggunakan **Laravel 13**, **Tailwind CSS v4 (Plus Jakarta Sans)**, dan integrasi standar industri **Winpay SNAP BI Payment Gateway**.
 
 ---
 
