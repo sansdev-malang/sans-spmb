@@ -50,9 +50,15 @@ class SpmbFormSettingsController extends Controller
 
     public function destroyStep($id)
     {
-        $step = SpmbFormStep::findOrFail($id);
-        $step->delete();
+        $step = SpmbFormStep::with('fields')->findOrFail($id);
 
+        foreach ($step->fields as $field) {
+            if (\App\Models\Registration::whereNotNull("additional_info->{$field->field_name}")->exists()) {
+                return redirect()->back()->with('error', 'Tidak dapat menghapus langkah formulir ini karena kolom di dalamnya ("' . $field->label . '") sudah diisi oleh pendaftar.');
+            }
+        }
+
+        $step->delete();
         return redirect()->back()->with('success', 'Langkah formulir berhasil dihapus.');
     }
 
@@ -109,8 +115,12 @@ class SpmbFormSettingsController extends Controller
     public function destroyField($id)
     {
         $field = SpmbFormField::findOrFail($id);
-        $field->delete();
 
+        if (\App\Models\Registration::whereNotNull("additional_info->{$field->field_name}")->exists()) {
+            return redirect()->back()->with('error', 'Tidak dapat menghapus kolom input ini karena sudah diisi oleh pendaftar.');
+        }
+
+        $field->delete();
         return redirect()->back()->with('success', 'Kolom input formulir berhasil dihapus.');
     }
 }

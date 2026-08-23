@@ -12,4 +12,9 @@ class SpmbUnit extends Model
     {
         return $this->hasMany(SpmbGrade::class);
     }
+
+    public function feeCategories()
+    {
+        return $this->belongsToMany(SpmbFeeCategory::class, 'spmb_fee_category_unit', 'spmb_unit_id', 'spmb_fee_category_id');
+    }
 }

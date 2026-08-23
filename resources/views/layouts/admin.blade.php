@@ -24,6 +24,7 @@
         .bg-admin-dark { background-color: #0f172a; } /* Slate 900 */
         .bg-brand-emerald { background-color: #0f5132; }
         .text-brand-emerald { color: #0f5132; }
+        .bg-brand-yellow { background-color: #ffc107; }
         .text-brand-yellow { color: #ffc107; }
         
         /* iOS Toggle Switch Checked State Sibling style */
@@ -92,8 +93,8 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex text-slate-800">
-
+<body class="min-h-screen flex text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200">
+ 
     <!-- Sidebar Left Layout -->
     <aside class="w-64 bg-admin-dark text-slate-300 flex flex-col fixed inset-y-0 left-0 z-40 border-r border-slate-800">
         <!-- Brand Logo / Info -->
@@ -106,7 +107,7 @@
                 <span class="text-[9px] text-brand-yellow tracking-widest font-semibold uppercase">Admin Panel</span>
             </div>
         </div>
-
+ 
         <!-- Navigation Menus -->
         <nav class="flex-grow py-6 px-4 space-y-1.5 overflow-y-auto">
             <a href="{{ route('admin.dashboard') }}" 
@@ -114,13 +115,13 @@
                 {{ Route::is('admin.dashboard') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }} mb-4">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
             </a>
-
-            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2">Penerimaan</span>
+ 
+            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2">Operasional Utama</span>
             
-            <a href="{{ route('admin.peninjauan') }}" 
+            <a href="{{ route('admin.verification') }}" 
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                {{ Route::is('admin.peninjauan') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="check-square" class="w-4 h-4"></i> Peninjauan
+                {{ Route::is('admin.verification') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                <i data-lucide="check-square" class="w-4 h-4"></i> Verifikasi Data
             </a>
             
             <a href="{{ route('admin.candidates') }}" 
@@ -135,80 +136,156 @@
                 <i data-lucide="wallet" class="w-4 h-4"></i> Laporan Pembayaran
             </a>
 
-            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mt-6 mb-2">Konfigurasi</span>
+            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mt-6 mb-2">Konfigurasi Sistem</span>
             
-            <a href="{{ route('admin.ui-settings') }}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                {{ Route::is('admin.ui-settings') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="palette" class="w-4 h-4"></i> Setting UI Portal
-            </a>
+            @if(auth()->user()->isSuperAdmin())
+                <!-- 1. Aktivasi SPMB -->
+                <a href="{{ route('admin.spmb-settings.registration') }}" 
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.spmb-settings.registration') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="toggle-left" class="w-4 h-4"></i> Aktivasi SPMB
+                </a>
 
-            <a href="{{ route('admin.spmb-settings.form') }}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                {{ Route::is('admin.spmb-settings.form') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="settings-2" class="w-4 h-4"></i> Setting Formulir
-            </a>
-            
-            <!-- Collapsible Setting SPMB Dropdown -->
+                <!-- 2. QR Code SPMB (Top-level under Konfigurasi) -->
+                <a href="{{ route('admin.spmb-settings.qrcode') }}" 
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.spmb-settings.qrcode') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i> QR Code SPMB
+                </a>
+
+                <!-- 3. Manajemen User (Top-level under Konfigurasi) -->
+                <a href="{{ route('admin.users') }}" 
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.users') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="users-round" class="w-4 h-4"></i> Manajemen User
+                </a>
+            @endif
+
+            <!-- 2. Data Master Collapsible Dropdown -->
+             @php
+                $isMasterActive = Request::is('admin/settings*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades') || Request::is('admin/spmb-settings/fees') || Request::is('admin/spmb-settings/form');
+            @endphp
             <div class="space-y-1">
-                <button type="button" onclick="toggleSpmbDropdown()" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide hover:bg-slate-800/50 hover:text-white transition">
+                <button type="button" onclick="toggleMasterDropdown()" 
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition
+                    {{ $isMasterActive ? 'bg-slate-800 text-white font-bold' : 'hover:bg-slate-800/50 hover:text-white text-slate-400' }}">
                     <span class="flex items-center gap-3">
-                        <i data-lucide="sliders" class="w-4 h-4"></i> Setting SPMB
+                        <i data-lucide="database" class="w-4 h-4"></i> Data Master
                     </span>
-                    <span id="spmbDropdownArrow" class="text-[9px] text-slate-500 font-bold">{{ Request::is('admin/spmb-settings*') ? '▲' : '▼' }}</span>
+                    <span id="masterDropdownArrow" class="text-[9px] text-slate-500 font-bold">{{ $isMasterActive ? '▲' : '▼' }}</span>
                 </button>
-                <div id="spmbSubmenu" class="pl-7 space-y-1 {{ Request::is('admin/spmb-settings*') ? '' : 'hidden' }}">
-                    <a href="{{ route('admin.spmb-settings') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
-                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Gelombang & Jalur
-                    </a>
-                    <a href="{{ route('admin.spmb-settings.units-grades') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.units-grades') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
-                        <i data-lucide="building-2" class="w-3.5 h-3.5"></i> Unit & Tingkatan
-                    </a>
-                    <a href="{{ route('admin.spmb-settings.registration') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.registration') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
-                        <i data-lucide="toggle-left" class="w-3.5 h-3.5"></i> Aktivasi SPMB
-                    </a>
+                <div id="masterSubmenu" class="pl-7 space-y-1 {{ $isMasterActive ? '' : 'hidden' }}">
+                    @if(auth()->user()->isSuperAdmin())
+                        <a href="{{ route('admin.spmb-settings.units-grades') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.units-grades') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="building-2" class="w-3.5 h-3.5"></i> Struktur Sekolah
+                        </a>
+                        <a href="{{ route('admin.spmb-settings') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="git-branch" class="w-3.5 h-3.5"></i> Jalur & Gelombang
+                        </a>
+                    @endif
                     <a href="{{ route('admin.spmb-settings.fees') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.fees') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
-                        <i data-lucide="coins" class="w-3.5 h-3.5"></i> Setting Biaya
+                        <i data-lucide="coins" class="w-3.5 h-3.5"></i> Tarif & Biaya
                     </a>
+                    @if(auth()->user()->isSuperAdmin())
+                        <a href="{{ route('admin.settings') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.settings') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="percent" class="w-3.5 h-3.5"></i> Biaya Admin Transaksi
+                        </a>
+                        <a href="{{ route('admin.spmb-settings.form') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.form') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="settings-2" class="w-3.5 h-3.5"></i> Setting Formulir
+                        </a>
+                    @endif
                 </div>
             </div>
 
-            <a href="{{ route('admin.api-integrations') }}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                {{ Route::is('admin.api-integrations') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="blocks" class="w-4 h-4"></i> Integrasi API
-            </a>
+            @if(auth()->user()->isSuperAdmin())
+                <!-- Standalone Desain & Tampilan Category -->
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mt-6 mb-2">Desain & Tampilan</span>
+                <a href="{{ route('admin.ui-settings') }}" 
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition mb-2
+                    {{ Route::is('admin.ui-settings') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white text-slate-400' }}">
+                    <i data-lucide="palette" class="w-4 h-4"></i> Tampilan Portal
+                </a>
 
-            <a href="{{ route('admin.settings') }}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                {{ Route::is('admin.settings') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="credit-card" class="w-4 h-4"></i> Payment Gateways
-            </a>
-
-            <a href="{{ route('admin.users') }}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                {{ Route::is('admin.users') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="users-round" class="w-4 h-4"></i> Data User
-            </a>
+                <!-- 3. Pengaturan Teknis Collapsible Dropdown -->
+                @php
+                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*');
+                @endphp
+                <div class="space-y-1">
+                    <button type="button" onclick="toggleTechDropdown()" 
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition
+                        {{ $isTechActive ? 'bg-slate-800 text-white font-bold' : 'hover:bg-slate-800/50 hover:text-white text-slate-400' }}">
+                        <span class="flex items-center gap-3">
+                            <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan Teknis
+                        </span>
+                        <span id="techDropdownArrow" class="text-[9px] text-slate-500 font-bold">{{ $isTechActive ? '▲' : '▼' }}</span>
+                    </button>
+                    <div id="techSubmenu" class="pl-7 space-y-1 {{ $isTechActive ? '' : 'hidden' }}">
+                        <a href="{{ route('admin.api-integrations') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.api-integrations') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="blocks" class="w-3.5 h-3.5"></i> Integrasi API
+                        </a>
+                        <a href="{{ route('admin.payment-gateways.index') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.payment-gateways.index') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> CRUD Gateway
+                        </a>
+                        @foreach($sidebarGateways as $sgw)
+                            <a href="{{ route('admin.payment-gateways.settings', $sgw->code) }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Request::is('admin/payment-gateways/' . $sgw->code . '/settings') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                                <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-500"></i> Set {{ $sgw->name }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </nav>
 
         <!-- User profile section bottom -->
-        <div class="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-                <div class="h-8 w-8 rounded-full bg-slate-800 text-brand-yellow font-bold flex items-center justify-center border border-slate-700">
-                    P
+        <div class="p-4 border-t border-slate-800 bg-slate-950/40 relative text-xs select-none">
+            <!-- Profile Capsule Button (Click to toggle dropdown) -->
+            <button type="button" onclick="toggleProfileDropdown(event)" class="w-full flex items-center justify-between hover:bg-slate-800/30 p-1.5 rounded-xl transition duration-200 text-left">
+                <div class="flex items-center gap-2">
+                    <div class="h-8 w-8 rounded-full bg-brand-emerald text-brand-yellow font-black flex items-center justify-center border border-emerald-800 shadow-inner uppercase">
+                        {{ substr(auth()->user()->name ?? 'A', 0, 1) }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="font-extrabold text-slate-200 block truncate max-w-[110px]">{{ auth()->user()->name }}</span>
+                        <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider block mt-0.5">
+                            @if(auth()->user()->isSuperAdmin())
+                                Super Admin
+                            @elseif(auth()->user()->spmb_unit_id)
+                                Admin {{ auth()->user()->spmbUnit->name }}
+                            @else
+                                Global Admin
+                            @endif
+                        </span>
+                    </div>
                 </div>
-                <div>
-                    <span class="font-bold text-slate-200 block truncate max-w-[120px]">{{ auth()->user()->name }}</span>
-                    <span class="text-[9px] text-slate-500">Administrator</span>
+                <i data-lucide="chevrons-up-down" class="w-4 h-4 text-slate-500"></i>
+            </button>
+
+            <!-- Upward Floating Dropdown Menu -->
+            <div id="profileDropdown" class="hidden absolute bottom-16 left-4 right-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50 animate-fade-in text-xs text-slate-350">
+                <div class="px-4 py-2 border-b border-slate-800 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                    Menu Akun
+                </div>
+                <div class="divide-y divide-slate-800/50">
+                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
+                        <i data-lucide="user" class="w-4 h-4 text-slate-500"></i> Profil Saya
+                    </a>
+                    <a href="{{ route('profile.edit') }}#update-password" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
+                        <i data-lucide="key-round" class="w-4 h-4 text-slate-500"></i> Ganti Password
+                    </a>
+                    <a href="{{ route('admin.verification') }}?status=completed" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
+                        <i data-lucide="history" class="w-4 h-4 text-slate-500"></i> Aktivitas Log
+                    </a>
+                    
+                    <div class="pt-1.5">
+                        <form method="POST" action="{{ route('logout') }}" class="w-full">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-500 hover:bg-red-950/20 hover:text-red-400 transition font-bold text-left">
+                                <i data-lucide="log-out" class="w-4 h-4"></i> Logout / Keluar
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-                @csrf
-                <button type="submit" title="Logout" class="p-1.5 transition">
-                    <i data-lucide="log-out" class="w-4 h-4 text-slate-400 hover:text-red-500"></i>
-                </button>
-            </form>
         </div>
     </aside>
 
@@ -224,6 +301,26 @@
             </div>
             
             <div class="flex items-center gap-3 text-xs font-medium">
+                @php
+                    $globalPeriods = \App\Models\SpmbPeriod::orderBy('year', 'desc')->get();
+                    $selectedPeriodId = session('selected_period_id', function() {
+                        return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
+                            ?? \App\Models\SpmbPeriod::value('id');
+                    });
+                @endphp
+                <!-- Global Academic Year Selector Form -->
+                <form action="{{ route('admin.change-period') }}" method="POST" id="globalPeriodForm" class="mr-1">
+                    @csrf
+                    <label for="global_period_selector" class="sr-only">Tahun Ajaran</label>
+                    <select name="selected_period_id" id="global_period_selector" onchange="document.getElementById('globalPeriodForm').submit()" class="bg-slate-50 border border-slate-205 dark:bg-slate-800 dark:border-slate-700 dark:text-white rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">
+                        @foreach($globalPeriods as $p)
+                            <option value="{{ $p->id }}" {{ $p->id == $selectedPeriodId ? 'selected' : '' }}>
+                                TA {{ $p->year }} {{ $p->is_active ? '● (Aktif)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+
                 <!-- Toggle Dark/Light Mode Button -->
                 <button onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-slate-50 transition" title="Toggle Tema">
                     <i id="theme-toggle-icon" data-lucide="moon" class="w-4.5 h-4.5"></i>
@@ -242,7 +339,7 @@
                             <span class="bg-red-50 text-red-600 text-[9px] px-2 py-0.5 rounded-full font-bold">3 Baru</span>
                         </div>
                         <div class="divide-y divide-slate-55 max-h-64 overflow-y-auto">
-                            <a href="{{ route('admin.peninjauan') }}" class="block px-4 py-3 hover:bg-slate-50 transition">
+                            <a href="{{ route('admin.verification') }}" class="block px-4 py-3 hover:bg-slate-50 transition">
                                 <div class="font-bold text-slate-800">Pendaftaran Baru Berkas Masuk</div>
                                 <div class="text-[10px] text-slate-400 mt-0.5">Calon siswa Ahmad Raihan telah mengunggah berkas.</div>
                                 <div class="text-[9px] text-brand-emerald font-bold mt-1">2 menit yang lalu</div>
@@ -259,7 +356,7 @@
                             </a>
                         </div>
                         <div class="px-4 py-2 border-t border-slate-100 text-center">
-                            <a href="{{ route('admin.peninjauan') }}" class="text-[10px] text-brand-emerald font-bold hover:underline">Lihat Semua Aktifitas</a>
+                            <a href="{{ route('admin.verification') }}" class="text-[10px] text-brand-emerald font-bold hover:underline">Lihat Semua Aktifitas</a>
                         </div>
                     </div>
                 </div>
@@ -284,12 +381,72 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none"></div>
 
+    <!-- Global Delete Confirmation Modal -->
+    <div id="confirmDeleteModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-xl transform scale-95 transition-transform duration-300 p-6 space-y-4" id="confirmDeleteModalBody">
+            <div class="flex items-center gap-3 text-rose-600">
+                <div class="h-10 w-10 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-800">Konfirmasi Hapus</h3>
+            </div>
+            <p id="confirmDeleteMessage" class="text-xs text-slate-500 leading-relaxed font-semibold">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold transition">Batal</button>
+                <form id="confirmDeleteForm" method="POST" action="" class="inline-block">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm">Ya, Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Script triggers and controllers -->
     <script>
+        // Custom Delete Confirmation Modal Controllers
+        function confirmDelete(actionUrl, message = 'Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.') {
+            const modal = document.getElementById('confirmDeleteModal');
+            const modalBody = document.getElementById('confirmDeleteModalBody');
+            const form = document.getElementById('confirmDeleteForm');
+            const messageEl = document.getElementById('confirmDeleteMessage');
+
+            form.action = actionUrl;
+            messageEl.innerText = message;
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-95');
+            modalBody.classList.add('scale-100');
+            
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('confirmDeleteModal');
+            const modalBody = document.getElementById('confirmDeleteModalBody');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-100');
+            modalBody.classList.add('scale-95');
+        }
+
         // Collapsible dropdown
-        function toggleSpmbDropdown() {
-            const submenu = document.getElementById('spmbSubmenu');
-            const arrow = document.getElementById('spmbDropdownArrow');
+        function toggleMasterDropdown() {
+            const submenu = document.getElementById('masterSubmenu');
+            const arrow = document.getElementById('masterDropdownArrow');
+            if (submenu.classList.contains('hidden')) {
+                submenu.classList.remove('hidden');
+                arrow.innerText = '▲';
+            } else {
+                submenu.classList.add('hidden');
+                arrow.innerText = '▼';
+            }
+        }
+
+        function toggleTechDropdown() {
+            const submenu = document.getElementById('techSubmenu');
+            const arrow = document.getElementById('techDropdownArrow');
             if (submenu.classList.contains('hidden')) {
                 submenu.classList.remove('hidden');
                 arrow.innerText = '▲';
@@ -306,10 +463,22 @@
             dropdown.classList.toggle('hidden');
         }
 
+        // Profile dropdown handler
+        function toggleProfileDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('notifDropdown');
             if (dropdown && !dropdown.classList.contains('hidden') && !dropdown.contains(e.target)) {
                 dropdown.classList.add('hidden');
+            }
+
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (profileDropdown && !profileDropdown.classList.contains('hidden') && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.add('hidden');
             }
         });
 

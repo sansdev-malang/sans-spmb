@@ -3,7 +3,7 @@
 @section('title', 'Pilih Pendaftaran Siswa - Portal SPMB')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8 space-y-6">
+<div class="max-w-7xl mx-auto px-4 pt-4 pb-12 sm:px-6 lg:px-8 space-y-6">
 
     @if (session('success'))
         <div class="bg-green-50 text-green-700 p-4 rounded-xl text-sm border border-green-200 font-semibold shadow-sm">
@@ -16,71 +16,108 @@
         </div>
     @endif
 
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h1 class="text-2xl font-extrabold text-slate-800">Daftar Calon Siswa</h1>
-            <p class="text-sm text-slate-500 mt-1">Pilih calon siswa yang ingin Anda kelola, atau daftarkan calon siswa baru.</p>
-        </div>
-        <button onclick="openRegistrationModal()" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition flex items-center gap-2">
-            <i data-lucide="plus-circle" class="w-5 h-5"></i> Daftarkan Anak Baru
-        </button>
-    </div>
-
-    @if($registrations->isEmpty())
-        <div class="bg-white rounded-3xl p-12 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
-            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
-                <i data-lucide="users" class="w-12 h-12"></i>
+    <!-- WELCOME BANNER & ONBOARDING CARD GRID (ALWAYS SHOWN) -->
+    <div class="max-w-4xl mx-auto pt-2 pb-6 space-y-6 text-center">
+        <div class="space-y-3">
+            <div class="inline-flex items-center justify-center h-16 w-16 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-brand-emerald dark:text-emerald-450 mb-2">
+                <i data-lucide="sparkles" class="w-8 h-8"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800">Belum Ada Pendaftaran</h3>
-            <p class="text-slate-500 mt-2 max-w-sm">Anda belum mendaftarkan anak Anda ke sistem SPMB SANS. Silakan klik tombol di atas untuk memulai.</p>
+            <h1 class="text-3xl font-extrabold text-slate-850 dark:text-white tracking-tight">Selamat Datang di Portal Penerimaan Siswa Baru</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
+                Langkah pertama pendidikan terbaik ananda di {{ \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh') }} dimulai dari sini. Silakan daftarkan anak Anda untuk memulai proses seleksi masuk penerimaan siswa baru.
+            </p>
         </div>
-    @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach($registrations as $reg)
-                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition relative group overflow-hidden">
-                    <!-- Status Badge -->
-                    <div class="absolute top-4 right-4">
-                        @if($reg->registration_status === 'verified')
-                            <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Terverifikasi</span>
-                        @elseif($reg->registration_status === 'submitted')
-                            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Menunggu Verifikasi</span>
-                        @else
-                            <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Draft Form</span>
-                        @endif
+
+        <!-- Card Options for Each School Unit -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            @foreach($units as $unit)
+                @php 
+                    $uCode = strtolower($unit->code);
+                    $firstGrade = \App\Models\SpmbGrade::where('spmb_unit_id', $unit->id)->where('is_active', true)->orderBy('id')->first();
+                    $firstGradeId = $firstGrade?->id ?? '';
+                @endphp
+                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-150/80 dark:border-slate-800 shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-md transition">
+                    <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-brand-emerald dark:text-emerald-450 flex items-center justify-center font-bold text-base shadow-sm">
+                        {{ strtoupper($unit->code) }}
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">{{ $unit->name }}</h3>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2">
+                            {{ \App\Models\Setting::get('unit_' . $uCode . '_desc', 'Pilihan program pendidikan terbaik.') }}
+                        </p>
                     </div>
                     
-                    <div class="flex items-center gap-4 mb-5">
-                        <div class="h-12 w-12 bg-emerald-50 text-brand-emerald rounded-2xl flex items-center justify-center text-xl font-black">
-                            {{ substr($reg->candidate_name ?? 'A', 0, 1) }}
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-slate-800 truncate pr-16">{{ $reg->candidate_name ?? 'Anak (Draft)' }}</h3>
-                            <p class="text-xs text-slate-500 font-semibold">{{ $reg->unit->name ?? '-' }} • {{ $reg->grade->name ?? '-' }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-2 mb-6">
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Status Bayar</span>
-                            @if($reg->payment_status === 'paid')
-                                <span class="text-xs font-bold text-green-600">LUNAS</span>
-                            @elseif($reg->payment_status === 'pending')
-                                <span class="text-xs font-bold text-amber-600">PENDING</span>
-                            @else
-                                <span class="text-xs font-bold text-slate-500">BELUM LUNAS</span>
-                            @endif
-                        </div>
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                            <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Dibuat Pada</span>
-                            <span class="text-xs font-bold text-slate-600">{{ $reg->created_at->format('d M Y') }}</span>
-                        </div>
-                    </div>
-                    
-                    <a href="{{ route('dashboard.detail', $reg->id) }}" class="block w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold text-center rounded-xl transition">
-                        Kelola Pendaftaran
-                    </a>
+                    <button onclick="startRegistrationWithUnit('{{ $unit->id }}', '{{ $firstGradeId }}')" class="w-full py-2.5 bg-custom-primary hover:opacity-90 text-white rounded-xl text-xs font-bold transition shadow-sm dark:bg-emerald-600">
+                        Daftarkan Sekarang
+                    </button>
                 </div>
             @endforeach
+        </div>
+
+        <!-- Supporting information banner -->
+        <div class="bg-slate-100/50 dark:bg-slate-950/30 rounded-2xl p-4 border border-slate-150/60 dark:border-slate-850 max-w-xl mx-auto flex items-center gap-3 text-left">
+            <i data-lucide="help-circle" class="w-5 h-5 text-slate-400 dark:text-slate-600 flex-shrink-0"></i>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+                Butuh bantuan atau informasi mengenai alur seleksi & biaya masuk? Anda dapat membaca detail brosur masing-masing unit dengan mengeklik menu unit di navbar atas sebelum mendaftar.
+            </p>
+        </div>
+    </div>
+
+    <!-- LIST OF CURRENT ACTIVE REGISTRATIONS (SHOWN UNDERNEATH IF NOT EMPTY) -->
+    @if(!$registrations->isEmpty())
+        <div class="pt-8 border-t border-slate-200/60 dark:border-slate-800 space-y-6">
+            <div class="text-left max-w-4xl mx-auto">
+                <h2 class="text-xl font-extrabold text-slate-850 dark:text-white">Pendaftaran Ananda Anda</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola tahapan pendaftaran atau selesaikan administrasi siswa di bawah ini.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                @foreach($registrations as $reg)
+                    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition relative group overflow-hidden text-left">
+                        <!-- Status Badge -->
+                        <div class="absolute top-4 right-4">
+                            @if($reg->registration_status === 'verified')
+                                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Terverifikasi</span>
+                            @elseif($reg->registration_status === 'submitted')
+                                <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Menunggu Verifikasi</span>
+                            @else
+                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Draft Form</span>
+                            @endif
+                        </div>
+                        
+                        <div class="flex items-center gap-4 mb-5">
+                            <div class="h-12 w-12 bg-emerald-50 text-brand-emerald rounded-2xl flex items-center justify-center text-xl font-black dark:bg-emerald-950/30">
+                                {{ substr($reg->candidate_name ?? 'A', 0, 1) }}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 dark:text-white truncate pr-16">{{ $reg->candidate_name ?? 'Anak (Draft)' }}</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">{{ $reg->unit->name ?? '-' }}@if(!empty($reg->grade->name)) • {{ $reg->grade->name }}@endif</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 mb-6">
+                            <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                                <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Status Bayar</span>
+                                @if($reg->payment_status === 'paid')
+                                    <span class="text-xs font-bold text-green-600">LUNAS</span>
+                                @elseif($reg->payment_status === 'pending')
+                                    <span class="text-xs font-bold text-amber-600">PENDING</span>
+                                @else
+                                    <span class="text-xs font-bold text-slate-500">BELUM LUNAS</span>
+                                @endif
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                                <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Dibuat Pada</span>
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-350">{{ $reg->created_at->format('d M Y') }}</span>
+                            </div>
+                        </div>
+                        
+                        <a href="{{ route('dashboard.detail', $reg->id) }}" class="block w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold text-center rounded-xl transition dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                            Kelola Pendaftaran
+                        </a>
+                    </div>
+                @endforeach
+            </div>
         </div>
     @endif
 
@@ -151,6 +188,39 @@
         modal.classList.add('opacity-0', 'pointer-events-none');
         modalBody.classList.remove('scale-100');
         modalBody.classList.add('scale-95');
+    }
+
+    function startRegistrationWithUnit(unitId, gradeId) {
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ route('dashboard.registration.create') }}";
+        
+        let csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = "{{ csrf_token() }}";
+        form.appendChild(csrfInput);
+        
+        let nameInput = document.createElement('input');
+        nameInput.type = 'hidden';
+        nameInput.name = 'candidate_name';
+        nameInput.value = "Calon Siswa";
+        form.appendChild(nameInput);
+        
+        let unitInput = document.createElement('input');
+        unitInput.type = 'hidden';
+        unitInput.name = 'spmb_unit_id';
+        unitInput.value = unitId;
+        form.appendChild(unitInput);
+        
+        let gradeInput = document.createElement('input');
+        gradeInput.type = 'hidden';
+        gradeInput.name = 'spmb_grade_id';
+        gradeInput.value = gradeId;
+        form.appendChild(gradeInput);
+        
+        document.body.appendChild(form);
+        form.submit();
     }
     
     document.getElementById('unitSelect').addEventListener('change', function() {

@@ -81,9 +81,32 @@
                                                 {{ $field->label }}{{ $field->is_required ? '*' : '' }}
                                             </label>
                                             
-                                            @if($field->type === 'select')
+                                            @if($field->field_name === 'extra_services')
+                                                @php
+                                                    $activeServices = \App\Models\SpmbExtraService::where('is_active', true)->get();
+                                                    $selectedServiceIds = $registration->extraServices->pluck('id')->toArray();
+                                                @endphp
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                    @forelse($activeServices as $service)
+                                                        <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
+                                                            <input type="checkbox" name="extra_services[]" value="{{ $service->id }}" {{ in_array($service->id, $selectedServiceIds) ? 'checked' : '' }} class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                                            <span class="text-xs font-bold text-slate-700">
+                                                                {{ $service->name }}
+                                                            </span>
+                                                        </label>
+                                                    @empty
+                                                        <span class="text-xs text-slate-400">Tidak ada layanan tambahan yang aktif.</span>
+                                                    @endforelse
+                                                </div>
+                                            @elseif($field->type === 'select')
+                                                @php
+                                                    $opts = explode(',', $field->options);
+                                                    if ($field->field_name === 'class_program') {
+                                                        $opts = \App\Models\SpmbClassProgram::where('is_active', true)->pluck('name')->toArray();
+                                                    }
+                                                @endphp
                                                 <select name="{{ $field->field_name }}" {{ $field->is_required ? 'required' : '' }} class="w-full border {{ $errors->has($field->field_name) ? 'border-red-500 focus:ring-red-500' : 'border-slate-300 focus:ring-brand-emerald' }} rounded-lg px-3 py-2 text-slate-800 bg-white">
-                                                    @foreach(explode(',', $field->options) as $opt)
+                                                    @foreach($opts as $opt)
                                                         <option value="{{ trim($opt) }}" {{ $val == trim($opt) ? 'selected' : '' }}>{{ trim($opt) }}</option>
                                                     @endforeach
                                                 </select>

@@ -4,7 +4,7 @@
 @section('page_title', 'Integrasi API & Aplikasi')
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex justify-between items-center">
         <div>

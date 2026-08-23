@@ -4,7 +4,7 @@
 @section('page_title', 'Setting Formulir')
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex justify-between items-center">
         <div>
@@ -359,11 +359,7 @@
     }
 
     function deleteStepItem(name, url) {
-        if (confirm(`Apakah Anda yakin ingin menghapus tahapan "${name}"? Seluruh kolom input di dalam tahapan ini juga akan ikut terhapus.`)) {
-            const form = document.getElementById('deleteForm');
-            form.action = url;
-            form.submit();
-        }
+        confirmDelete(url, `Apakah Anda yakin ingin menghapus tahapan "${name}"? Seluruh kolom input di dalam tahapan ini juga akan ikut terhapus.`);
     }
 
     // Field Modals
@@ -393,11 +389,7 @@
     }
 
     function deleteFieldItem(name, url) {
-        if (confirm(`Apakah Anda yakin ingin menghapus kolom input "${name}"?`)) {
-            const form = document.getElementById('deleteForm');
-            form.action = url;
-            form.submit();
-        }
+        confirmDelete(url, `Apakah Anda yakin ingin menghapus kolom input "${name}"?`);
     }
 
     // Toggle options field visibility for 'select' type

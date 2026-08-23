@@ -14,7 +14,7 @@
                 <p class="text-xs text-brand-yellow font-medium mt-0.5">Pantau status peninjauan berkas persyaratan pendaftaran oleh panitia SPMB.</p>
             </div>
             
-            @if($registration->registration_status === 'verified')
+            @if(in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']))
                 <span class="bg-green-700 text-white font-bold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full border border-green-500 shadow-sm">
                     Terverifikasi
                 </span>
@@ -79,10 +79,10 @@
             </div>
 
             <!-- Next steps instruction -->
-            @if ($registration->registration_status === 'verified')
+            @if(in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']))
                 <div class="bg-emerald-50/10 border border-brand-emerald/30 p-5 rounded-xl space-y-2">
-                    <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Langkah Selanjutnya</h4>
-                    <p class="text-xs text-slate-600 leading-relaxed">
+                    <h4 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">Langkah Selanjutnya</h4>
+                    <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
                         Dokumen pendaftaran Anda telah lengkap diverifikasi dengan benar. Jadwal ujian kesiapan belajar (Tes Observasi) kini telah aktif. Silakan buka menu <strong>Observation</strong> untuk detail jadwal pelaksanaan dan tautan video conference.
                     </p>
                 </div>

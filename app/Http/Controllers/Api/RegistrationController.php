@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\Registration;
+use App\Models\SpmbClassProgram;
 use Illuminate\Support\Facades\Storage;
 
 class RegistrationController extends Controller
@@ -41,14 +42,19 @@ class RegistrationController extends Controller
             'religion' => 'required|string|max:100',
             'previous_school' => 'nullable|string|max:255',
             'admission_level' => 'required|string|in:Play Group,TK A,TK B',
+            'class_program' => 'required|string',
         ]);
 
         $registration = $this->getRegistration($request);
-        $registration->update($request->only([
-            'candidate_name', 'nickname', 'nik', 'gender',
-            'birth_place', 'birth_date', 'religion',
-            'previous_school', 'admission_level'
-        ]));
+        $program = SpmbClassProgram::where('name', $request->class_program)->first();
+        $registration->update(array_merge(
+            $request->only([
+                'candidate_name', 'nickname', 'nik', 'gender',
+                'birth_place', 'birth_date', 'religion',
+                'previous_school', 'admission_level'
+            ]),
+            ['spmb_class_program_id' => $program ? $program->id : null]
+        ));
 
         return response()->json([
             'message' => 'Candidate information updated successfully',

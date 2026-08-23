@@ -4,7 +4,7 @@
 @section('page_title', 'Data User')
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex justify-between items-center">
         <div>
@@ -48,10 +48,19 @@
                         @forelse($admins as $admin)
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-800 flex items-center gap-1.5">
+                                    <div class="font-extrabold text-slate-800 flex items-center gap-1.5 flex-wrap">
                                         {{ $admin->name }}
                                         @if($admin->id === Auth::id())
                                             <span class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-200">Anda</span>
+                                        @endif
+                                        @if($admin->role === 'super_admin')
+                                            <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-indigo-200">Developer</span>
+                                        @else
+                                            @if($admin->spmb_unit_id)
+                                                <span class="bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-amber-200">{{ $admin->spmbUnit->name }}</span>
+                                            @else
+                                                <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-slate-200">Global Admin</span>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
@@ -147,9 +156,19 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Peran Pengguna (Role)*</label>
-                <select name="role" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select name="role" id="add-role-select" onchange="toggleAddUnitSelect()" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
                     <option value="admin">Panitia / Admin</option>
                     <option value="candidate">Orang Tua / Calon Siswa</option>
+                    <option value="super_admin">Developer / IT (Super Admin)</option>
+                </select>
+            </div>
+            <div id="add-unit-select-wrapper" class="hidden">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Tugas (Khusus Admin Unit)</label>
+                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                    <option value="">Semua Unit (Global Admin)</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                    @endforeach
                 </select>
             </div>
             <div class="flex justify-end gap-2 pt-4">
@@ -181,9 +200,19 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Peran Pengguna (Role)*</label>
-                <select id="edit-role" name="role" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select id="edit-role" name="role" onchange="toggleEditUnitSelect()" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
                     <option value="admin">Panitia / Admin</option>
                     <option value="candidate">Orang Tua / Calon Siswa</option>
+                    <option value="super_admin">Developer / IT (Super Admin)</option>
+                </select>
+            </div>
+            <div id="edit-unit-select-wrapper" class="hidden">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Tugas (Khusus Admin Unit)</label>
+                <select id="edit-spmb-unit-id" name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                    <option value="">Semua Unit (Global Admin)</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                    @endforeach
                 </select>
             </div>
             <div class="flex justify-end gap-2 pt-4">
@@ -251,9 +280,30 @@
     // Add User Modal
     function openAddUserModal() {
         document.getElementById('addUserModal').classList.remove('hidden');
+        toggleAddUnitSelect();
     }
     function closeAddUserModal() {
         document.getElementById('addUserModal').classList.add('hidden');
+    }
+
+    function toggleAddUnitSelect() {
+        const role = document.getElementById('add-role-select').value;
+        const wrapper = document.getElementById('add-unit-select-wrapper');
+        if (role === 'admin') {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+        }
+    }
+
+    function toggleEditUnitSelect() {
+        const role = document.getElementById('edit-role').value;
+        const wrapper = document.getElementById('edit-unit-select-wrapper');
+        if (role === 'admin') {
+            wrapper.classList.remove('hidden');
+        } else {
+            wrapper.classList.add('hidden');
+        }
     }
 
     // Edit User Modal
@@ -261,6 +311,8 @@
         document.getElementById('edit-name').value = user.name;
         document.getElementById('edit-email').value = user.email;
         document.getElementById('edit-role').value = user.role;
+        document.getElementById('edit-spmb-unit-id').value = user.spmb_unit_id || '';
+        toggleEditUnitSelect();
         document.getElementById('editUserForm').action = '/admin/users/' + user.id;
         document.getElementById('editUserModal').classList.remove('hidden');
     }
@@ -280,11 +332,7 @@
 
     // Delete User
     function deleteUser(userName, actionUrl) {
-        if (confirm(`Apakah Anda yakin ingin menghapus user "${userName}"? Tindakan ini tidak dapat dibatalkan.`)) {
-            const form = document.getElementById('deleteUserForm');
-            form.action = actionUrl;
-            form.submit();
-        }
+        confirmDelete(actionUrl, `Apakah Anda yakin ingin menghapus user "${userName}"? Tindakan ini tidak dapat dibatalkan.`);
     }
 </script>
 @endsection

@@ -7,7 +7,7 @@
 <div class="space-y-8">
     
     <!-- Top Greeting Header -->
-    <div class="bg-gradient-to-r from-brand-emerald to-emerald-800 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div class="bg-gradient-to-r from-emerald-800 to-emerald-950 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div class="absolute -right-16 -top-16 w-44 h-44 rounded-full bg-white/10 blur-2xl"></div>
         <div class="absolute -left-10 -bottom-10 w-36 h-36 rounded-full bg-emerald-400/20 blur-xl"></div>
         
@@ -15,12 +15,12 @@
             <h2 class="text-2xl font-black tracking-wide">Selamat Datang di Portal Panitia SPMB</h2>
             <p class="text-xs text-brand-yellow font-bold uppercase tracking-widest">Sekolah Anak Saleh • Pusat Kendali Administrasi</p>
             <p class="text-[11px] text-emerald-100 max-w-xl font-medium leading-relaxed mt-2">
-                Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru secara real-time. Kelola peninjauan berkas secara berkala pada menu Peninjauan.
+                Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru secara real-time. Kelola verifikasi data berkas secara berkala pada menu Verifikasi Data.
             </p>
         </div>
         <div class="flex gap-2 relative z-10 flex-shrink-0">
-            <a href="{{ route('admin.peninjauan') }}" class="bg-brand-yellow hover:bg-yellow-500 text-slate-900 px-5 py-3 rounded-2xl text-xs font-black shadow-md transition flex items-center gap-1.5">
-                <i data-lucide="check-square" class="w-4 h-4"></i> Tinjau Berkas Masuk
+            <a href="{{ route('admin.verification') }}" class="bg-brand-yellow hover:bg-yellow-500 text-slate-900 px-5 py-3 rounded-2xl text-xs font-black shadow-md transition flex items-center gap-1.5">
+                <i data-lucide="check-square" class="w-4 h-4 text-slate-900"></i> Verifikasi Berkas Masuk
             </a>
         </div>
     </div>

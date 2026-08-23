@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Contracts\PaymentGatewayInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WinpayService
+class WinpayService implements PaymentGatewayInterface
 {
     protected $mode;
     protected $merchantId;

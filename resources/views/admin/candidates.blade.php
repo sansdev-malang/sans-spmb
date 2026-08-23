@@ -39,7 +39,7 @@
                     @forelse($candidates as $cand)
                         <tr class="hover:bg-slate-50/50 transition">
                             <td class="py-4 px-6 font-mono text-xs text-slate-500">
-                                SANS-2026-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}
+                                SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800">{{ $cand->candidate_name }}</div>
@@ -50,6 +50,13 @@
                             </td>
                             <td class="py-4 px-6 font-semibold text-brand-emerald">
                                 {{ $cand->admission_level }}
+                                <div class="mt-0.5">
+                                    @if($cand->classProgram && $cand->classProgram->name === 'Inklusi')
+                                        <span class="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-bold border border-indigo-200">Inklusi</span>
+                                    @else
+                                        <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold border border-slate-200">Reguler</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-4 px-6 text-slate-500 text-xs font-semibold">
                                 {{ $cand->created_at->format('d M Y, H:i') }} WIB
@@ -58,7 +65,7 @@
                                 @php
                                     // Prepare JSON data to pass to Javascript modal
                                     $candJson = [
-                                        'id_label' => 'SANS-2026-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
+                                        'id_label' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
                                         'name' => $cand->candidate_name,
                                         'nickname' => $cand->nickname ?? '-',
                                         'nik' => $cand->nik,
@@ -68,6 +75,7 @@
                                         'religion' => $cand->religion,
                                         'previous_school' => $cand->previous_school ?? 'Tidak ada',
                                         'admission_level' => $cand->admission_level,
+                                        'class_program' => $cand->classProgram->name ?? 'Reguler',
                                         'father_name' => $cand->father_name ?? '-',
                                         'mother_name' => $cand->mother_name ?? '-',
                                         'parent_phone' => $cand->parent_phone ?? '-',
@@ -79,6 +87,7 @@
                                         'period' => $cand->period->year ?? '-',
                                         'wave' => $cand->wave->name ?? '-',
                                         'type' => $cand->type->name ?? '-',
+                                        'extra_services' => $cand->extraServices->pluck('name')->join(', ') ?: '-',
                                     ];
                                 @endphp
                                 <button type="button" 
@@ -117,7 +126,7 @@
                     <i data-lucide="user" class="w-5 h-5 text-brand-yellow"></i>
                     Detail Data Pendaftar
                 </h3>
-                <p id="det-id-label" class="text-[10px] text-emerald-100 font-mono mt-0.5">ID: SANS-2026-0000</p>
+                <p id="det-id-label" class="text-[10px] text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
             </div>
             <button onclick="closeDetailModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
         </div>
@@ -182,6 +191,14 @@
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Tingkat Pendaftaran</span>
                         <span id="det-level" class="font-bold text-slate-800">SD Kelas 1</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Program Kelas</span>
+                        <span id="det-program" class="font-bold text-brand-emerald">Reguler</span>
+                    </div>
+                    <div class="md:col-span-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
+                        <span id="det-extras" class="font-bold text-slate-800">-</span>
                     </div>
                 </div>
             </div>
@@ -282,6 +299,8 @@
         document.getElementById('det-religion').innerText = cand.religion;
         document.getElementById('det-previous-school').innerText = cand.previous_school;
         document.getElementById('det-level').innerText = cand.admission_level;
+        document.getElementById('det-program').innerText = cand.class_program || 'Reguler';
+        document.getElementById('det-extras').innerText = cand.extra_services;
         
         document.getElementById('det-father').innerText = cand.father_name;
         document.getElementById('det-mother').innerText = cand.mother_name;

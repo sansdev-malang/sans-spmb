@@ -42,12 +42,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Automatically initialize draft registration for candidate
-        \App\Models\Registration::create([
-            'user_id' => $user->id,
-            'registration_status' => 'draft',
-            'payment_status' => 'unpaid',
-        ]);
+
 
         event(new Registered($user));
 

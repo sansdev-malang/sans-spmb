@@ -14,7 +14,7 @@ class AdminRegistrationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Registration::with(['user', 'activePayment']);
+        $query = Registration::scopedByAdmin()->with(['user', 'activePayment']);
 
         // Filtering by registration status
         if ($request->has('registration_status')) {
@@ -43,7 +43,7 @@ class AdminRegistrationController extends Controller
      */
     public function show($id)
     {
-        $registration = Registration::with(['user', 'payments'])->find($id);
+        $registration = Registration::scopedByAdmin()->with(['user', 'payments'])->find($id);
 
         if (!$registration) {
             return response()->json([
@@ -61,7 +61,7 @@ class AdminRegistrationController extends Controller
      */
     public function verify(Request $request, $id)
     {
-        $registration = Registration::find($id);
+        $registration = Registration::scopedByAdmin()->find($id);
 
         if (!$registration) {
             return response()->json([
@@ -89,7 +89,7 @@ class AdminRegistrationController extends Controller
      */
     public function reject(Request $request, $id)
     {
-        $registration = Registration::find($id);
+        $registration = Registration::scopedByAdmin()->find($id);
 
         if (!$registration) {
             return response()->json([

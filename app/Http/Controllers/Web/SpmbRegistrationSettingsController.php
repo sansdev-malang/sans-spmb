@@ -7,6 +7,10 @@ use App\Models\SpmbPeriod;
 use App\Models\SpmbWave;
 use App\Models\SpmbType;
 use App\Models\SpmbFee;
+use App\Models\SpmbUnit;
+use App\Models\SpmbGrade;
+use App\Models\SpmbClassProgram;
+use App\Models\SpmbExtraService;
 use Illuminate\Http\Request;
 
 class SpmbRegistrationSettingsController extends Controller
@@ -16,9 +20,20 @@ class SpmbRegistrationSettingsController extends Controller
         $periods = SpmbPeriod::all();
         $waves = SpmbWave::all();
         $types = SpmbType::all();
-        $fees = SpmbFee::all();
+        $units = SpmbUnit::all();
+        $grades = SpmbGrade::with('unit')->get();
+        $classPrograms = SpmbClassProgram::all();
+        $extraServices = SpmbExtraService::all();
 
-        return view('admin.settings-registration', compact('periods', 'waves', 'types', 'fees'));
+        // Eager load all fee categories with their respective fee items and unit relationships
+        $feeCategories = \App\Models\SpmbFeeCategory::with(['fees' => function($q) {
+            $q->with('unit');
+        }])->get();
+
+        return view('admin.settings-registration', compact(
+            'periods', 'waves', 'types', 'feeCategories',
+            'units', 'grades', 'classPrograms', 'extraServices'
+        ));
     }
 
     public function update(Request $request)
@@ -27,6 +42,10 @@ class SpmbRegistrationSettingsController extends Controller
         $activeWaveIds = $request->input('active_waves', []);
         $activeTypeIds = $request->input('active_types', []);
         $activeFeeIds = $request->input('active_fees', []);
+        $activeUnitIds = $request->input('active_units', []);
+        $activeGradeIds = $request->input('active_grades', []);
+        $activeProgramIds = $request->input('active_programs', []);
+        $activeServiceIds = $request->input('active_services', []);
 
         // Validation: At least one item of each configuration type must be active
         if (empty($activePeriodIds)) {
@@ -39,7 +58,13 @@ class SpmbRegistrationSettingsController extends Controller
             return redirect()->back()->with('error', 'Gagal menyimpan: Minimal harus ada 1 Jenis Pendaftaran yang aktif.');
         }
         if (empty($activeFeeIds)) {
-            return redirect()->back()->with('error', 'Gagal menyimpan: Minimal harus ada 1 Biaya Tambahan yang aktif.');
+            return redirect()->back()->with('error', 'Gagal menyimpan: Minimal harus ada 1 Biaya Komponen yang aktif.');
+        }
+        if (empty($activeUnitIds)) {
+            return redirect()->back()->with('error', 'Gagal menyimpan: Minimal harus ada 1 Unit Sekolah yang aktif.');
+        }
+        if (empty($activeGradeIds)) {
+            return redirect()->back()->with('error', 'Gagal menyimpan: Minimal harus ada 1 Tingkatan Kelas yang aktif.');
         }
 
         // 1. Periods (Multiple active periods supported)
@@ -57,6 +82,22 @@ class SpmbRegistrationSettingsController extends Controller
         // 4. Fees
         SpmbFee::query()->update(['is_active' => false]);
         SpmbFee::whereIn('id', $activeFeeIds)->update(['is_active' => true]);
+
+        // 5. Units
+        SpmbUnit::query()->update(['is_active' => false]);
+        SpmbUnit::whereIn('id', $activeUnitIds)->update(['is_active' => true]);
+
+        // 6. Grades
+        SpmbGrade::query()->update(['is_active' => false]);
+        SpmbGrade::whereIn('id', $activeGradeIds)->update(['is_active' => true]);
+
+        // 7. Class Programs
+        SpmbClassProgram::query()->update(['is_active' => false]);
+        SpmbClassProgram::whereIn('id', $activeProgramIds)->update(['is_active' => true]);
+
+        // 8. Extra Services
+        SpmbExtraService::query()->update(['is_active' => false]);
+        SpmbExtraService::whereIn('id', $activeServiceIds)->update(['is_active' => true]);
 
         return redirect()->back()->with('success', 'Status aktifasi pendaftaran berhasil diperbarui.');
     }
