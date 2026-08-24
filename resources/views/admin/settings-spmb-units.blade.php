@@ -165,8 +165,12 @@
                         <h3 class="font-extrabold text-base text-slate-800">Layanan Non-Formal</h3>
                         <p class="text-[11px] text-slate-400">Kelola layanan tambahan opsional seperti TPA/Daycare dan TPQ.</p>
                     </div>
-                    <button onclick="openExtraModal('', '', '0', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Layanan
+                    <button
+                        onclick="openExtraModal('', '', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
+                        class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1"
+                    >
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        Tambah Layanan
                     </button>
                 </div>
                 

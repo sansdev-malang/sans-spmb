@@ -122,5 +122,12 @@ class DatabaseSeeder extends Seeder
             'password' => \Illuminate\Support\Facades\Hash::make('password'),
             'role' => 'admin'
         ]);
+
+        User::factory()->create([
+            'name' => 'Panitia SPMB',
+            'email' => 'superadmin@example.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'role' => 'super_admin'
+        ]);
     }
 }
