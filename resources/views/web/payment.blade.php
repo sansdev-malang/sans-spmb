@@ -25,8 +25,8 @@
                     Lengkapi Formulir Sekarang
                 </a>
                 @if($successPayment)
-                    <a href="{{ route('dashboard.payment.receipt', $successPayment->id) }}" target="_blank" class="w-full sm:w-auto border border-slate-200 hover:bg-slate-50 text-slate-650 px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition text-center flex items-center justify-center gap-1.5">
-                        <i data-lucide="download" class="w-4 h-4"></i> Unduh Bukti Pembayaran
+                    <a href="{{ route('dashboard.payment.receipt', $successPayment->id) }}" class="download-pdf-btn w-full sm:w-auto border border-slate-200 hover:bg-slate-50 text-slate-650 px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition text-center flex items-center justify-center gap-1.5">
+                        <i data-lucide="download" class="w-4 h-4 icon-download"></i> <span class="btn-text">Unduh Bukti Pembayaran</span>
                     </a>
                 @endif
             </div>
@@ -88,7 +88,7 @@
                     <!-- Rincian Komponen Biaya Akhir -->
                     <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs">
                         <h4 class="font-extrabold text-slate-850 dark:text-white uppercase tracking-wider text-[10px] border-b border-slate-200/50 dark:border-slate-800 pb-2 flex items-center gap-1.5">
-                            <i data-lucide="list-checks" class="w-3.5 h-3.5 text-brand-emerald"></i> Rincian Administrasi Akhir
+                            <i data-lucide="list-checks" class="w-3.5 h-3.5 text-brand-emerald"></i> Rincian Pembayaran
                         </h4>
                         @if(isset($feeDetails['items']) && is_array($feeDetails['items']))
                             @foreach($feeDetails['items'] as $item)
@@ -115,10 +115,39 @@
                                 <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($feeDetails['kegiatan'] ?? 0, 0, ',', '.') }}</span>
                             </div>
                         @endif
+
+                        <!-- Dynamic Admin Fee row (shown if unpaid status to update via JS) -->
+                        @if($registration->payment_status === 'unpaid')
+                            <div id="adminFeeRow" class="flex justify-between items-center text-slate-650 dark:text-slate-400">
+                                <span>Biaya Transaksi / Admin</span>
+                                <span id="displayAdminFee" class="font-bold text-slate-800 dark:text-slate-200">Rp 0</span>
+                            </div>
+                        @elseif($registration->payment_status === 'pending' && $activePayment)
+                            <div class="flex justify-between items-center text-slate-650 dark:text-slate-400">
+                                <span>Biaya Transaksi / Admin</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($activePayment->admin_fee, 0, ',', '.') }}</span>
+                            </div>
+                        @elseif($registration->payment_status === 'paid' && isset($successPayment))
+                            <div class="flex justify-between items-center text-slate-650 dark:text-slate-400">
+                                <span>Biaya Transaksi / Admin</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($successPayment->admin_fee, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
                         <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase">
-                            <span>Total Biaya Masuk</span>
-                            <span class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeDetails['total'], 0, ',', '.') }}</span>
+                            <span>Total Pembayaran</span>
+                            @if($registration->payment_status === 'pending' && $activePayment)
+                                <span class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($activePayment->amount, 0, ',', '.') }}</span>
+                            @elseif($registration->payment_status === 'paid' && isset($successPayment))
+                                <span class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($successPayment->amount, 0, ',', '.') }}</span>
+                            @else
+                                <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeDetails['total'], 0, ',', '.') }}</span>
+                            @endif
                         </div>
+
+                        @if($registration->payment_status === 'unpaid' || $registration->payment_status === 'partially_paid')
+                            <p class="text-[10px] text-slate-400 italic leading-relaxed mt-1 select-none">Note: Biaya transaksi dibebankan kepada wali murid sesuai instruksi yayasan.</p>
+                        @endif
                     </div>
                 @endif
 
@@ -142,62 +171,46 @@
                         
                         @if($successPayment)
                             <div class="pt-2">
-                                <a href="{{ route('dashboard.payment.receipt', $successPayment->id) }}" target="_blank" class="inline-flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
-                                    <i data-lucide="download" class="w-4 h-4 text-brand-emerald"></i> Unduh Bukti Pembayaran
+                                <a href="{{ route('dashboard.payment.receipt', $successPayment->id) }}" class="download-pdf-btn inline-flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+                                    <i data-lucide="download" class="w-4 h-4 text-brand-emerald icon-download"></i> <span class="btn-text">Unduh Bukti Pembayaran</span>
                                 </a>
                             </div>
                         @endif
                     </div>
                 @endif
 
-                <!-- 2. Form Select payment method if unpaid -->
-                @if ($registration->payment_status === 'unpaid')
+                <!-- 2. Form Select payment method if unpaid or partially paid -->
+                @if ($registration->payment_status === 'unpaid' || $registration->payment_status === 'partially_paid')
                     <form action="{{ route('dashboard.charge', $registration->id) }}" method="POST" class="space-y-4">
                         @csrf
+                        <input type="hidden" name="items" value="{{ request()->query('items') }}">
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilih Metode Pembayaran</label>
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            @if(str_contains($feeGateway, 'va'))
+                            @forelse($channels as $channel)
                                 <label class="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
-                                    <input type="radio" name="payment_method" value="BNI" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" checked>
-                                    <span class="text-sm font-bold text-slate-800 text-center leading-tight">BNI Virtual Account</span>
-                                    <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">VIRTUAL ACCOUNT</span>
+                                    <input type="radio" name="payment_method" value="{{ $channel->code }}" data-type="{{ $channel->type }}" data-gateway="{{ $channel->gateway->code ?? '' }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
+                                    <span class="text-sm font-bold text-slate-800 text-center leading-tight">{{ $channel->name }}</span>
+                                    <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">{{ $channel->type }}</span>
                                 </label>
-                            @elseif(str_contains($feeGateway, 'qris') || $feeGateway === 'bni')
-                                <label class="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
-                                    <input type="radio" name="payment_method" value="QRIS" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" checked>
-                                    <span class="text-sm font-bold text-slate-800 text-center leading-tight">QRIS (BNI SNAP)</span>
-                                    <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">E-WALLET / QRIS</span>
-                                </label>
+                            @empty
+                                <div class="col-span-full py-6 text-center text-xs text-slate-400 font-bold">
+                                    Tidak ada metode pembayaran aktif yang tersedia saat ini.
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <div class="pt-4 flex justify-end items-center gap-3">
+                            @if($registration->registration_status === 'draft')
+                                <a href="{{ route('dashboard') }}" class="border border-slate-250 hover:bg-slate-50 text-slate-600 px-6 py-3 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5">
+                                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                    Batal / Kembali
+                                </a>
                             @else
-                                @foreach($channels as $channel)
-                                    <label class="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
-                                        <input type="radio" name="payment_method" value="{{ $channel->code }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
-                                        <span class="text-sm font-bold text-slate-800 text-center leading-tight">{{ $channel->name }}</span>
-                                        <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">{{ $channel->type }}</span>
-                                    </label>
-                                @endforeach
+                                <a href="{{ route('dashboard.result', $registration->id) }}" class="border border-slate-250 hover:bg-slate-50 text-slate-600 px-6 py-3 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5">
+                                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                    Batal / Kembali
+                                </a>
                             @endif
-                        </div>
-
-                        <!-- Payment Summary breakdown -->
-                        <div id="paymentSummaryCard" class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3 text-xs mt-4">
-                            <h4 class="font-extrabold text-slate-800 uppercase tracking-wider text-[10px] pb-1 border-b border-slate-200/50">Rincian Pembayaran</h4>
-                            <div class="flex justify-between items-center text-slate-600">
-                                <span>Biaya Pokok</span>
-                                <span class="font-bold text-slate-800">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex justify-between items-center text-slate-600">
-                                <span>Biaya Transaksi / Admin</span>
-                                <span id="displayAdminFee" class="font-bold text-slate-800">Rp 0</span>
-                            </div>
-                            <div class="border-t border-slate-200/50 pt-3 flex justify-between items-center text-xs font-black text-slate-800 uppercase">
-                                <span>Total Pembayaran</span>
-                                <span id="displayGrandTotal" class="text-brand-emerald text-sm font-extrabold">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
-                            </div>
-                            <p class="text-[10px] text-slate-400 italic leading-relaxed mt-1">Note: Biaya transaksi dibebankan kepada wali murid sesuai instruksi yayasan.</p>
-                        </div>
-
-                        <div class="pt-4 flex justify-end">
                             <button type="submit" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5">
                                 <i data-lucide="credit-card" class="w-4 h-4"></i>
                                 Bayar Sekarang
@@ -214,14 +227,14 @@
                             <span class="text-lg font-black text-slate-800">{{ $activePayment->payment_method }}</span>
                         </div>
 
-                        @if ($activePayment->payment_method === 'QRIS')
+                        @if (str_contains(strtoupper($activePayment->payment_method), 'QRIS'))
                             <!-- QRIS Display -->
                             <div class="flex flex-col items-center justify-center gap-3">
                                 <div class="bg-white p-3 border border-slate-200 rounded-xl shadow-inner">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
                                 </div>
                                 <p class="text-xs text-slate-400 font-medium">Scan QRIS menggunakan Mobile Banking atau e-Wallet pilihan Anda.</p>
-                                <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($activePayment->payment_info['qrContent'] ?? 'MOCK_QRIS_STRING') }}" download="QRIS-SPMB-SekolahAnakSaleh.png" target="_blank" class="bg-brand-emerald hover-emerald text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 mt-2">
+                                <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" download="QRIS-SPMB-SekolahAnakSaleh.png" target="_blank" class="bg-brand-emerald hover-emerald text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 mt-2">
                                     <i data-lucide="download" class="w-4 h-4"></i> Unduh Kode QRIS (PNG)
                                 </a>
                             </div>
@@ -235,7 +248,7 @@
                                 <span class="text-[10px] text-slate-400 mt-2 block font-semibold">BANK PARTNER: {{ $activePayment->payment_method }}</span>
                             </div>
                         @endif
-
+                        
                         <div class="bg-slate-50 p-4 rounded-xl text-xs text-slate-500 leading-relaxed space-y-1">
                             <p><strong>Instruksi Pembayaran:</strong></p>
                             <ol class="list-decimal pl-4 space-y-1">
@@ -340,15 +353,15 @@
             if (!selectedRadio) return;
 
             const method = selectedRadio.value;
+            const channelType = selectedRadio.getAttribute('data-type');
+            const channelGateway = selectedRadio.getAttribute('data-gateway');
             let adminFee = 0;
 
-            if (gateway.includes('bni')) {
-                if (method === 'BNI') {
-                    adminFee = feeBniVa;
-                } else if (method === 'QRIS') {
+            if (channelGateway === 'bni') {
+                if (channelType === 'qris') {
                     adminFee = Math.round(baseAmount * feeBniQris);
                 } else {
-                    adminFee = feeWinpayVa;
+                    adminFee = feeBniVa;
                 }
             } else {
                 // Winpay gateway (always use Winpay VA setting flat fee for all its channels)
@@ -376,6 +389,48 @@
 
         // Initialize display
         updateSummary();
+
+        // Handle PDF download button loader animation
+        document.querySelectorAll('.download-pdf-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                const btnText = this.querySelector('.btn-text');
+                const icon = this.querySelector('.icon-download');
+                
+                // Save original HTML state
+                const originalText = btnText ? btnText.innerText : 'Unduh Bukti Pembayaran';
+                
+                // Disable and show loading animation
+                this.classList.add('opacity-75', 'cursor-wait');
+                this.style.pointerEvents = 'none';
+                if (btnText) btnText.innerText = 'Mengunduh PDF...';
+                if (icon) {
+                    icon.outerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-emerald inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                }
+                
+                // Trigger file download
+                window.location.href = url;
+                
+                // Restore button state after 3.5 seconds
+                setTimeout(() => {
+                    this.classList.remove('opacity-75', 'cursor-wait');
+                    this.style.pointerEvents = '';
+                    if (btnText) btnText.innerText = originalText;
+                    
+                    const tempSvg = this.querySelector('svg.animate-spin');
+                    if (tempSvg) {
+                        const newIcon = document.createElement('i');
+                        newIcon.setAttribute('data-lucide', 'download');
+                        newIcon.className = 'w-4 h-4 icon-download' + (this.classList.contains('inline-flex') ? ' text-brand-emerald' : '');
+                        tempSvg.parentNode.replaceChild(newIcon, tempSvg);
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }
+                }, 3500);
+            });
+        });
     });
 
     function openCancelModal() {

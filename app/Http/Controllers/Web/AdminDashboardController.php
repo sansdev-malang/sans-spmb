@@ -102,12 +102,16 @@ class AdminDashboardController extends Controller
         $registration = Registration::scopedByAdmin()->findOrFail($id);
         
         $request->validate([
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
+            'reason' => 'nullable|string|max:500'
         ]);
+
+        $notes = $request->input('notes') ?? $request->input('reason') ?? 'Alhamdulillah, berkas pendaftaran ananda ' . ($registration->candidate_name ?? 'Ahmad Raihan') . ' telah kami terima dan diverifikasi. Silakan persiapkan untuk mengikuti Tes Observasi.';
 
         $registration->update([
             'registration_status' => 'verified',
-            'committee_notes' => $request->notes ?? 'Alhamdulillah, berkas pendaftaran ananda ' . ($registration->candidate_name ?? 'Ahmad Raihan') . ' telah kami terima dan diverifikasi. Silakan persiapkan untuk mengikuti Tes Observasi.'
+            'invalid_fields' => null,
+            'committee_notes' => $notes
         ]);
 
         return redirect()->back()->with('success', 'Candidate registration verified successfully.');
@@ -118,12 +122,25 @@ class AdminDashboardController extends Controller
         $registration = Registration::scopedByAdmin()->findOrFail($id);
         
         $request->validate([
-            'reason' => 'required|string|max:500'
+            'reason' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:500',
+            'invalid_fields' => 'nullable|string'
         ]);
+
+        $invalidFields = null;
+        if ($request->filled('invalid_fields')) {
+            $decoded = json_decode($request->invalid_fields, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $invalidFields = $decoded;
+            }
+        }
+
+        $reason = $request->input('reason') ?? $request->input('notes') ?? 'Berkas ditolak.';
 
         $registration->update([
             'registration_status' => 'failed',
-            'committee_notes' => $request->reason
+            'invalid_fields' => $invalidFields,
+            'committee_notes' => $reason
         ]);
 
         return redirect()->back()->with('success', 'Candidate registration rejected with reason.');

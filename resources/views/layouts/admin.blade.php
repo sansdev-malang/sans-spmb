@@ -163,7 +163,7 @@
 
             <!-- 2. Data Master Collapsible Dropdown -->
              @php
-                $isMasterActive = Request::is('admin/settings*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades') || Request::is('admin/spmb-settings/fees') || Request::is('admin/spmb-settings/form');
+                $isMasterActive = Request::is('admin/settings*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades') || Request::is('admin/spmb-settings/fees') || Request::is('admin/spmb-settings/form*') || Request::is('admin/spmb-settings/instructions*') || Request::is('admin/spmb-settings/agreements*');
             @endphp
             <div class="space-y-1">
                 <button type="button" onclick="toggleMasterDropdown()" 
@@ -193,6 +193,12 @@
                         <a href="{{ route('admin.spmb-settings.form') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.form') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
                             <i data-lucide="settings-2" class="w-3.5 h-3.5"></i> Setting Formulir
                         </a>
+                        <a href="{{ route('admin.spmb-settings.instructions') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.instructions') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="scroll-text" class="w-3.5 h-3.5"></i> Instruksi Daftar Ulang
+                        </a>
+                        <a href="{{ route('admin.spmb-settings.agreements') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.agreements') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="file-signature" class="w-3.5 h-3.5"></i> Surat Pernyataan
+                        </a>
                     @endif
                 </div>
             </div>
@@ -208,7 +214,7 @@
 
                 <!-- 3. Pengaturan Teknis Collapsible Dropdown -->
                 @php
-                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*');
+                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/logs*');
                 @endphp
                 <div class="space-y-1">
                     <button type="button" onclick="toggleTechDropdown()" 
@@ -231,6 +237,9 @@
                                 <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-500"></i> Set {{ $sgw->name }}
                             </a>
                         @endforeach
+                        <a href="{{ route('admin.logs') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.logs') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="scroll-text" class="w-3.5 h-3.5"></i> Log Sistem
+                        </a>
                     </div>
                 </div>
             @endif

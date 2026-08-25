@@ -76,12 +76,18 @@
                     <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition relative group overflow-hidden text-left">
                         <!-- Status Badge -->
                         <div class="absolute top-4 right-4">
-                            @if($reg->registration_status === 'verified')
+                            @if($reg->registration_status === 'completed')
+                                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Lunas & Resmi</span>
+                            @elseif($reg->registration_status === 'agreement_signed')
+                                <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Menunggu Pelunasan</span>
+                            @elseif($reg->registration_status === 'taaruf_completed')
+                                <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Ta'aruf Selesai</span>
+                            @elseif($reg->registration_status === 'verified')
                                 <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Terverifikasi</span>
                             @elseif($reg->registration_status === 'submitted')
                                 <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Menunggu Verifikasi</span>
                             @else
-                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Draft Form</span>
+                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Draft Formulir</span>
                             @endif
                         </div>
                         
@@ -124,8 +130,8 @@
 </div>
 
 <!-- Modal Pendaftaran Baru -->
-<div id="newRegistrationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="bg-white w-full max-w-lg rounded-3xl shadow-xl transform scale-95 transition-transform duration-300" id="registrationModalBody">
+<div id="newRegistrationModal" onclick="closeRegistrationModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 opacity-0 pointer-events-none transition-opacity duration-150">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-xl transform scale-95 transition-transform duration-150" id="registrationModalBody" onclick="event.stopPropagation()">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
             <h2 class="text-xl font-extrabold text-slate-800">Daftarkan Anak Baru</h2>
             <button onclick="closeRegistrationModal()" class="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition">
@@ -143,10 +149,11 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Sekolah</label>
-                        <select id="unitSelect" name="spmb_unit_id" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
-                            <option value="">Pilih Unit...</option>
+                        <input type="hidden" name="spmb_unit_id" id="hiddenUnitInput">
+                        <input type="text" id="unitNameDisplay" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-500 text-sm font-semibold select-none cursor-not-allowed">
+                        <select id="unitSelect" style="display: none;">
                             @foreach($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                <option value="{{ $unit->id }}" data-name="{{ $unit->name }}">{{ $unit->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -156,6 +163,34 @@
                             <option value="">Pilih Tingkatan...</option>
                             <!-- Options akan diisi via javascript -->
                         </select>
+                    </div>
+                </div>
+
+                @php
+                    $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+                @endphp
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jalur Pendaftaran</label>
+                        <select name="spmb_type_id" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
+                            <option value="">Pilih Jalur...</option>
+                            @foreach($types as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Gelombang</label>
+                        <select name="spmb_wave_id" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
+                            <option value="">Pilih Gelombang...</option>
+                            @foreach($waves as $wave)
+                                <option value="{{ $wave->id }}">{{ $wave->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Tahun Pelajaran</label>
+                        <input type="text" readonly value="{{ $activePeriod?->year ?? '-' }}" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-500 text-sm font-semibold select-none cursor-not-allowed">
                     </div>
                 </div>
             </div>
@@ -191,36 +226,27 @@
     }
 
     function startRegistrationWithUnit(unitId, gradeId) {
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = "{{ route('dashboard.registration.create') }}";
+        openRegistrationModal();
         
-        let csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = "{{ csrf_token() }}";
-        form.appendChild(csrfInput);
+        // Update hidden input and display text
+        const hiddenInput = document.getElementById('hiddenUnitInput');
+        hiddenInput.value = unitId;
         
-        let nameInput = document.createElement('input');
-        nameInput.type = 'hidden';
-        nameInput.name = 'candidate_name';
-        nameInput.value = "Calon Siswa";
-        form.appendChild(nameInput);
+        const unitSelect = document.getElementById('unitSelect');
+        unitSelect.value = unitId;
         
-        let unitInput = document.createElement('input');
-        unitInput.type = 'hidden';
-        unitInput.name = 'spmb_unit_id';
-        unitInput.value = unitId;
-        form.appendChild(unitInput);
+        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
+        document.getElementById('unitNameDisplay').value = selectedOption ? selectedOption.getAttribute('data-name') : '';
         
-        let gradeInput = document.createElement('input');
-        gradeInput.type = 'hidden';
-        gradeInput.name = 'spmb_grade_id';
-        gradeInput.value = gradeId;
-        form.appendChild(gradeInput);
+        // Trigger select change to update grades dropdown
+        unitSelect.dispatchEvent(new Event('change'));
         
-        document.body.appendChild(form);
-        form.submit();
+        setTimeout(() => {
+            const gradeSelect = document.getElementById('gradeSelect');
+            if (gradeSelect && gradeId) {
+                gradeSelect.value = gradeId;
+            }
+        }, 100);
     }
     
     document.getElementById('unitSelect').addEventListener('change', function() {

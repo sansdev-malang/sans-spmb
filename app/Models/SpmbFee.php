@@ -8,6 +8,11 @@ class SpmbFee extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'payment_gateway' => 'array',
+        'is_active' => 'boolean',
+    ];
+
     public function category()
     {
         return $this->belongsTo(SpmbFeeCategory::class, 'spmb_fee_category_id');

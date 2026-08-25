@@ -3,6 +3,97 @@
 @section('title', 'Tes Observasi & Kesanggupan - Portal SPMB')
 
 @section('content')
+<style>
+    /* Styling to make sure WYSIWYG rich text content renders beautifully and matches Word document margins */
+    .agreement-body ol {
+        list-style-type: decimal !important;
+        padding-left: 1.5rem !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+        counter-reset: list-0 list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+    }
+    .agreement-body ul {
+        list-style-type: disc !important;
+        padding-left: 1.5rem !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    .agreement-body li {
+        margin-bottom: 0.4rem !important;
+        line-height: 1.65 !important;
+        color: #334155 !important;
+        counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+    }
+    .dark .agreement-body li {
+        color: #cbd5e1 !important;
+    }
+    /* Render lower-alpha prefixes for ql-indent-1 level list items */
+    .agreement-body li.ql-indent-1 {
+        list-style-type: none !important;
+        position: relative !important;
+        padding-left: 1.5rem !important;
+        margin-left: 1.5rem !important;
+        counter-increment: list-1 !important;
+        counter-reset: list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+    }
+    .agreement-body li.ql-indent-1::before {
+        content: counter(list-1, lower-alpha) ". " !important;
+        position: absolute !important;
+        left: -1.25rem !important;
+        font-weight: normal !important;
+        color: #475569 !important;
+    }
+    .dark .agreement-body li.ql-indent-1::before {
+        color: #94a3b8 !important;
+    }
+    /* Render level-2 nested list items further to the right */
+    .agreement-body li.ql-indent-2 {
+        list-style-type: none !important;
+        position: relative !important;
+        padding-left: 1.5rem !important;
+        margin-left: 3rem !important;
+        counter-increment: list-2 !important;
+        counter-reset: list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+    }
+    .agreement-body p {
+        margin-top: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+        line-height: 1.65 !important;
+        color: #334155 !important;
+    }
+    .dark .agreement-body p {
+        color: #cbd5e1 !important;
+    }
+    .agreement-body ol ol {
+        list-style-type: lower-alpha !important;
+        margin-top: 0.25rem !important;
+        padding-left: 1.5rem !important;
+    }
+    .dark .agreement-body strong {
+        color: #f8fafc !important;
+    }
+    .metadata-row {
+        display: grid !important;
+        grid-template-columns: 165px 10px 1fr !important;
+        column-gap: 8px !important;
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+        line-height: 1.65 !important;
+    }
+    /* Responsive mobile formatting */
+    @media (max-width: 640px) {
+        .metadata-row {
+            grid-template-columns: 1fr !important;
+            row-gap: 1px !important;
+            margin-top: 8px !important;
+            margin-bottom: 8px !important;
+        }
+        .metadata-row div:nth-child(2) {
+            display: none !important;
+        }
+    }
+</style>
+
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-150/80 dark:border-slate-800 overflow-hidden">
         
@@ -18,35 +109,61 @@
         <div class="p-8">
             
             @if ($registration->registration_status === 'verified')
-                <!-- 1. State: Verified (Jadwal Observasi Zoom Aktif) -->
+                <!-- 1. State: Verified (Informasi Ta'aruf Offline) -->
                 <div class="space-y-6">
                     <div class="border border-brand-emerald/30 bg-emerald-50/10 rounded-2xl p-6 space-y-4">
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 bg-brand-emerald text-white rounded-xl flex items-center justify-center font-bold text-lg">
-                                📅
+                                🤝
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-800 dark:text-white">{{ $observationDetails['title'] ?? 'Tes Observasi secara daring' }}</h3>
-                                <p class="text-xs text-slate-500 font-semibold">{{ $observationDetails['datetime'] ?? 'Sabtu, 26 Okt 2024. 08:00 - 10:00 WIB' }}</p>
+                                <h3 class="font-bold text-slate-800 dark:text-white">Undangan Sesi Ta'aruf Offline</h3>
+                                <p class="text-xs text-slate-500 font-semibold">Tatap Muka di Unit Sekolah Anak Saleh</p>
                             </div>
                         </div>
-                        <div class="pt-4 flex flex-wrap gap-3">
-                            <a href="{{ $observationDetails['zoom_link'] ?? '#' }}" target="_blank" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-lg font-bold text-xs shadow-sm transition flex items-center gap-2">
-                                <i data-lucide="video" class="w-4 h-4"></i> Masuk Zoom Meeting
-                            </a>
-                            <a href="{{ $observationDetails['guide_link'] ?? '#' }}" target="_blank" class="border border-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg font-bold text-xs transition inline-flex items-center gap-1.5">
-                                <i data-lucide="download" class="w-4 h-4"></i> Unduh Panduan
-                            </a>
+                        
+                        <div class="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <span class="text-slate-400 block">Unit Sekolah</span>
+                                    <span class="font-bold text-slate-800 dark:text-white">{{ $registration->unit->name }} ({{ $registration->unit->code }})</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block">Tingkat Kelas</span>
+                                    <span class="font-bold text-slate-800 dark:text-white">{{ $registration->grade->name }} ({{ $registration->classProgram->name ?? 'Reguler' }})</span>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <span class="text-slate-400 block">No. HP Wali Terdaftar (Penerima Undangan WA)</span>
+                                    <span class="font-bold text-slate-800 dark:text-white flex items-center gap-1">
+                                        {{ $registration->parent_phone }}
+                                        <span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold">Aktif WhatsApp</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
+                            Jadwal tanggal dan waktu spesifik untuk sesi Ta'aruf tatap muka akan dikirimkan langsung oleh panitia unit bersangkutan melalui pesan resmi WhatsApp ke nomor di atas. Mohon pastikan nomor Anda selalu aktif.
+                        </p>
+                    </div>
+
+                    <!-- Info Tahap Selanjutnya -->
+                    <div class="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/50 p-5 rounded-2xl flex items-start gap-3">
+                        <i data-lucide="info" class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"></i>
+                        <div class="space-y-1">
+                            <h4 class="font-extrabold text-xs text-blue-800 dark:text-blue-300 uppercase tracking-wider">Tahap Selanjutnya: Administrasi Keuangan</h4>
+                            <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
+                                Setelah rangkaian wawancara ta'aruf tatap muka selesai dilaksanakan dan status kelulusan disetujui oleh panitia unit, Anda akan diarahkan untuk menyetujui Surat Pernyataan Kesanggupan Orang Tua secara digital dan dapat melanjutkan ke tahap pelunasan biaya masuk sekolah pada menu <strong>Administrasi</strong>.
+                            </p>
                         </div>
                     </div>
 
                     <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-xl text-xs text-slate-500 leading-relaxed space-y-2">
-                        <p class="font-bold text-slate-700 dark:text-slate-300">Ketentuan Tes Observasi Online / Ta'aruf:</p>
+                        <p class="font-bold text-slate-700 dark:text-slate-300">Ketentuan Kehadiran Sesi Ta'aruf Offline:</p>
                         <ul class="list-disc pl-4 space-y-1">
-                            <li>Harap standby di Zoom Meeting 10 menit sebelum jadwal observasi dimulai.</li>
-                            <li>Pastikan koneksi internet stabil dan kamera (webcam) aktif sepanjang proses tes.</li>
-                            <li>Calon siswa didampingi oleh minimal satu orang tua/wali kandung selama sesi wawancara.</li>
-                            <li>Siapkan dokumen asli Kartu Keluarga (KK) dan Akta Lahir untuk dicocokkan panitia saat observasi visual.</li>
+                            <li>Wali murid (Ayah dan Ibu) wajib hadir mendampingi calon siswa ke unit sekolah sesuai undangan.</li>
+                            <li>Harap hadir 10 menit sebelum waktu undangan untuk registrasi kehadiran fisik.</li>
+                            <li>Berpakaian rapi, sopan, dan Islami sesuai ketentuan lingkungan Sekolah Anak Saleh.</li>
                         </ul>
                     </div>
                 </div>
@@ -71,38 +188,101 @@
                         
                         <div class="space-y-4">
                             <h4 class="font-extrabold text-sm text-slate-800 dark:text-white">Surat Pernyataan Kesanggupan Orang Tua / Wali</h4>
-                            
-                            <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-72 overflow-y-auto leading-relaxed">
-                                <p class="font-bold text-center text-slate-800 dark:text-white">SURAT PERNYATAAN KESANGGUPAN MEMATUHI PERATURAN & BIAYA PENDIDIKAN</p>
-                                <p>Saya yang bertanda tangan di bawah ini selaku Orang Tua / Wali murid dari calon siswa:</p>
-                                <div class="pl-4 space-y-1 font-semibold">
-                                    <p>Nama Calon Siswa : {{ $registration->candidate_name }}</p>
-                                    <p>Unit & Program : {{ $registration->unit->name }} - {{ $registration->grade->name }}</p>
-                                </div>
-                                <p>Menyatakan dengan sesungguhnya dan penuh kesadaran bahwa:</p>
-                                <ol class="list-decimal pl-4 space-y-2">
-                                    <li><strong>Tata Tertib Sekolah:</strong> Sanggup mematuhi dan mendidik anak kami agar mematuhi seluruh peraturan, disiplin, dan tata tertib akademik maupun non-akademik di lingkungan Yayasan Sekolah Anak Saleh.</li>
-                                    <li><strong>Komitmen Pembiayaan:</strong> Menyanggupi pelunasan seluruh biaya administrasi masuk awal (Uang Gedung, Seragam, Uang Kegiatan) sesuai ketentuan unit program yang dipilih, serta membayar SPP bulanan paling lambat tanggal 10 setiap bulannya.</li>
-                                    <li><strong>Partisipasi Program:</strong> Bersedia berpartisipasi aktif dalam kegiatan komite sekolah dan mendukung penuh program pembiasaan ibadah harian anak di rumah.</li>
-                                </ol>
-                                <p>Demikian surat pernyataan ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
+                                                      <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-96 overflow-y-auto leading-relaxed">
+                                @if($agreementTemplate)
+                                    <div class="flex flex-col items-end mb-5 select-none">
+                                        <div class="border border-brand-emerald/20 bg-brand-emerald/5 dark:border-emerald-950/40 dark:bg-emerald-950/10 p-2.5 rounded-xl flex flex-col items-center text-center max-w-[280px]">
+                                            <span class="bg-brand-emerald/10 text-brand-emerald dark:bg-emerald-950/30 dark:text-emerald-400 px-2.5 py-0.5 rounded-lg font-bold text-[8px] uppercase tracking-wider border border-brand-emerald/15">
+                                                Untuk Kalangan Sendiri
+                                            </span>
+                                            <span class="text-[8px] text-slate-450 dark:text-slate-400 font-semibold mt-1.5 leading-normal">
+                                                Dilarang memfoto, mengcopy, dan menyebarluaskan dokumen ini
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="font-bold text-center text-slate-800 dark:text-white uppercase tracking-wide border-b border-slate-200 dark:border-slate-800 pb-2 mb-3 whitespace-pre-line">{{ $agreementTemplate->title }}</p>
+                                    <div class="space-y-3 agreement-body">
+                                        {!! $agreementTemplate->content !!}
+                                    </div>
+
+                                    <!-- Dynamic Signature Footer Mockup -->
+                                    <div class="border-t border-slate-200 dark:border-slate-800 pt-6 mt-6 select-none text-[10px] text-slate-650 dark:text-slate-400">
+                                        <!-- Date row -->
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div></div>
+                                            <div class="text-center">
+                                                <p>{{ $agreementTemplate->place }}, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Title row -->
+                                        <div class="grid grid-cols-2 gap-4 mt-2">
+                                            <div class="text-center">
+                                                <p class="font-bold text-slate-750 dark:text-slate-300">{{ $agreementTemplate->principal_title }}</p>
+                                                <p class="font-medium text-slate-500">{{ $registration->unit->name }}</p>
+                                            </div>
+                                            <div class="text-center flex flex-col justify-between">
+                                                <p class="font-bold text-slate-750 dark:text-slate-300">Orangtua/Wali Murid,</p>
+                                                <p class="invisible select-none">Spacer</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Spacing / Meterai row -->
+                                        <div class="grid grid-cols-2 gap-4 my-6">
+                                            <div class="h-12"></div>
+                                            <div class="text-center flex items-center justify-center">
+                                                <div class="inline-block border border-dashed border-slate-350 dark:border-slate-700 px-3 py-1.5 rounded bg-slate-50 dark:bg-slate-900/50 text-[9px] text-slate-400 font-semibold">
+                                                    Meterai Rp10.000
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Name row -->
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="text-center">
+                                                <p class="font-extrabold text-slate-850 dark:text-slate-250 underline">{{ $agreementTemplate->principal_name }}</p>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="font-extrabold text-slate-850 dark:text-slate-250 underline">(<span class="dynamic-signature-name">{{ $registration->father_name ?? ($registration->mother_name ?? '____________________') }}</span>)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <p class="font-bold text-center text-slate-800 dark:text-white">SURAT PERNYATAAN KESANGGUPAN MEMATUHI PERATURAN & BIAYA PENDIDIKAN</p>
+                                    <p>Saya yang bertanda tangan di bawah ini selaku Orang Tua / Wali murid dari calon siswa:</p>
+                                    <div class="pl-4 space-y-1 font-semibold">
+                                        <p>Nama Calon Siswa : {{ $registration->candidate_name }}</p>
+                                        <p>Unit & Program : {{ $registration->unit->name }} - {{ $registration->grade->name }}</p>
+                                    </div>
+                                    <p>Menyatakan dengan sesungguhnya dan penuh kesadaran bahwa:</p>
+                                    <ol class="list-decimal pl-4 space-y-2">
+                                        <li><strong>Tata Tertib Sekolah:</strong> Sanggup mematuhi dan mendidik anak kami agar mematuhi seluruh peraturan, disiplin, dan tata tertib akademik maupun non-akademik di lingkungan Yayasan Sekolah Anak Saleh.</li>
+                                        <li><strong>Komitmen Pembiayaan:</strong> Menyanggupi pelunasan seluruh biaya administrasi masuk awal (Uang Gedung, Seragam, Uang Kegiatan) sesuai ketentuan unit program yang dipilih, serta membayar SPP bulanan paling lambat tanggal 10 setiap bulannya.</li>
+                                        <li><strong>Partisipasi Program:</strong> Bersedia berpartisipasi aktif dalam kegiatan komite sekolah dan mendukung penuh program pembiasaan ibadah harian anak di rumah.</li>
+                                    </ol>
+                                    <p>Demikian surat pernyataan ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
+                                @endif
                             </div>
                         </div>
 
                         <div class="space-y-3">
                             <label class="flex items-start gap-3 cursor-pointer">
                                 <input type="checkbox" name="agree_rules" class="rounded text-brand-emerald focus:ring-brand-emerald mt-0.5" required>
-                                <span class="text-xs text-slate-600 dark:text-slate-400">Saya menyetujui seluruh tata tertib dan peraturan akademik Sekolah Anak Saleh.</span>
+                                <span class="text-xs text-slate-600 dark:text-slate-400">
+                                    {{ $agreementTemplate->rules_consent_label ?? 'Saya menyetujui seluruh tata tertib dan peraturan akademik Sekolah Anak Saleh.' }}
+                                </span>
                             </label>
                             <label class="flex items-start gap-3 cursor-pointer">
                                 <input type="checkbox" name="agree_fees" class="rounded text-brand-emerald focus:ring-brand-emerald mt-0.5" required>
-                                <span class="text-xs text-slate-600 dark:text-slate-400">Saya menyanggupi pemenuhan seluruh rincian biaya pendidikan dan administrasi masuk yayasan.</span>
+                                <span class="text-xs text-slate-600 dark:text-slate-400">
+                                    {{ $agreementTemplate->fees_consent_label ?? 'Saya menyanggupi pemenuhan seluruh rincian biaya pendidikan dan administrasi masuk yayasan.' }}
+                                </span>
                             </label>
                         </div>
 
                         <div class="space-y-2">
                             <label for="signature_name" class="block text-xs font-bold text-slate-650 dark:text-slate-350">Nama Lengkap Penandatangan (Orang Tua / Wali)</label>
-                            <input type="text" id="signature_name" name="signature_name" class="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:text-white" placeholder="Ketik nama lengkap Anda di sini..." required>
+                            <input type="text" id="signature_name" name="signature_name" value="{{ $registration->father_name ?? ($registration->mother_name ?? '') }}" class="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:text-white" placeholder="Ketik nama lengkap Anda di sini..." required>
                         </div>
 
                         <div class="pt-4 flex justify-end">
@@ -125,9 +305,9 @@
                     </p>
                     <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-xl text-left text-xs space-y-2">
                         <p class="font-bold text-slate-800 dark:text-white text-center border-b border-slate-100 dark:border-slate-800 pb-2">Status Persetujuan Digital</p>
-                        <p><strong>Penandatangan:</strong> {{ $registration->candidate_name }} (Orang Tua / Wali)</p>
+                        <p><strong>Penandatangan:</strong> {{ $registration->signature_name ?? ($registration->father_name ?? ($registration->mother_name ?? $registration->candidate_name)) }} (Orang Tua / Wali)</p>
                         <p><strong>Status:</strong> <span class="text-green-600 font-bold">DISAPAKATI / VALID</span></p>
-                        <p><strong>Tanggal:</strong> {{ $registration->updated_at->format('d M Y H:i') }} WIB</p>
+                        <p><strong>Tanggal:</strong> {{ ($registration->signed_at ?? $registration->updated_at)->format('d M Y H:i') }} WIB</p>
                     </div>
                 </div>
 
@@ -147,4 +327,29 @@
         </div>
     </div>
 </div>
+
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+         const signatureInput = document.getElementById('signature_name');
+         
+         if (signatureInput) {
+             // Function to synchronize signature element with dynamic-signature-name
+             const syncParentNames = function(value) {
+                 const cleanValue = value.trim();
+                 const parentNameElements = document.querySelectorAll('.dynamic-signature-name');
+                 parentNameElements.forEach(el => {
+                     el.textContent = cleanValue ? cleanValue : '____________________';
+                 });
+             };
+ 
+             // Run initial sync on load in case field is pre-filled
+             syncParentNames(signatureInput.value);
+ 
+             // Listen for changes as user types
+             signatureInput.addEventListener('input', function() {
+                 syncParentNames(this.value);
+             });
+         }
+     });
+ </script>
 @endsection

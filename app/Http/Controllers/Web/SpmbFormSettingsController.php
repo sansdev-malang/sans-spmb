@@ -100,6 +100,11 @@ class SpmbFormSettingsController extends Controller
             'order' => 'required|integer',
         ]);
 
+        $systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
+        if (in_array($field->field_name, $systemFields) && $request->field_name !== $field->field_name) {
+            return redirect()->back()->with('error', 'Key database kolom sistem utama tidak boleh diubah.');
+        }
+
         $field->update([
             'label' => $request->label,
             'field_name' => $request->field_name,
@@ -115,6 +120,11 @@ class SpmbFormSettingsController extends Controller
     public function destroyField($id)
     {
         $field = SpmbFormField::findOrFail($id);
+
+        $systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
+        if (in_array($field->field_name, $systemFields)) {
+            return redirect()->back()->with('error', 'Kolom sistem utama tidak boleh dihapus.');
+        }
 
         if (\App\Models\Registration::whereNotNull("additional_info->{$field->field_name}")->exists()) {
             return redirect()->back()->with('error', 'Tidak dapat menghapus kolom input ini karena sudah diisi oleh pendaftar.');

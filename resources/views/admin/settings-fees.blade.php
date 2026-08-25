@@ -120,27 +120,30 @@
                                     <td class="py-4 px-6 text-center font-semibold text-slate-700">Rp {{ number_format($fee->amount, 0, ',', '.') }}</td>
                                     <td class="py-4 px-6 text-center whitespace-nowrap">
                                         @php
-                                            $gw = $gateways->where('code', $fee->payment_gateway)->first();
+                                            $gatewaysArray = is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway];
                                         @endphp
-                                        @if($fee->payment_gateway === 'bni')
-                                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-orange-100 text-orange-700">
-                                                {{ $gw ? $gw->name : 'BNI VA' }}
-                                            </span>
-                                        @elseif($fee->payment_gateway === 'bni_qris')
-                                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-700">
-                                                {{ $gw ? $gw->name : 'BNI QRIS' }}
-                                            </span>
-                                        @else
-                                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-700">
-                                                {{ $gw ? $gw->name : 'Winpay' }}
-                                            </span>
-                                        @endif
+                                        <div class="flex flex-wrap gap-1 justify-center">
+                                            @foreach($gatewaysArray as $gwCode)
+                                                @php
+                                                    $gw = $gateways->where('code', $gwCode)->first();
+                                                    $colorClass = 'bg-blue-100 text-blue-700';
+                                                    if ($gwCode === 'bni') {
+                                                        $colorClass = 'bg-orange-100 text-orange-700';
+                                                    } elseif ($gwCode === 'winpay') {
+                                                        $colorClass = 'bg-emerald-50 text-brand-emerald';
+                                                    }
+                                                @endphp
+                                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase {{ $colorClass }}">
+                                                    {{ $gw ? $gw->name : strtoupper($gwCode) }}
+                                                </span>
+                                            @endforeach
+                                        </div>
                                     </td>
                                     <td class="py-4 px-6 text-center text-xs font-semibold {{ $fee->is_used ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                         {{ $fee->is_used ? 'Ya (Terpakai)' : 'Tidak' }}
                                     </td>
                                     <td class="py-4 px-6 text-right space-x-2">
-                                        <button onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
+                                        <button onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
                                         <button onclick="deleteFeeItem('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
                                     </td>
                                 </tr>
@@ -235,11 +238,14 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Payment Gateway*</label>
-                    <select id="feeGatewayInput" name="payment_gateway" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
+                    <div class="space-y-2 bg-slate-50 border border-slate-300 rounded-xl p-3">
                         @foreach($gateways->where('is_active', true) as $gw)
-                            <option value="{{ $gw->code }}">{{ $gw->name }}</option>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer hover:text-slate-900">
+                                <input type="checkbox" name="payment_gateway[]" value="{{ $gw->code }}" class="fee-gateway-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300">
+                                <span>{{ $gw->name }}</span>
+                            </label>
                         @endforeach
-                    </select>
+                    </div>
                 </div>
             </div>
             
@@ -361,7 +367,6 @@
         categoryInput.value = categoryId;
 
         const amountInput = document.getElementById('feeAmountInput');
-        const gatewayInput = document.getElementById('feeGatewayInput');
         const amountWrapper = document.getElementById('feeAmountWrapper');
         const unitWrapper = document.getElementById('feeUnitWrapper');
         const categoryUnitsWrapper = document.getElementById('categoryUnitsWrapper');
@@ -378,6 +383,9 @@
         document.querySelectorAll('.fee-unit-checkbox').forEach(cb => cb.checked = false);
         const checkAllFee = document.getElementById('checkAllFeeUnits');
         if (checkAllFee) checkAllFee.checked = false;
+
+        // Reset gateway checkboxes
+        document.querySelectorAll('.fee-gateway-checkbox').forEach(cb => cb.checked = false);
 
         if (moduleType === 'jenis_biaya') {
             titleEl.innerText = val ? 'Edit Jenis Biaya' : 'Tambah Jenis Biaya';
@@ -408,8 +416,24 @@
             amountInput.required = true;
             amountInput.disabled = false; // Always allow editing to fix typos
             
-            gatewayInput.value = gateway;
-            gatewayInput.required = true;
+            if (gateway) {
+                let selectedGateways = [];
+                try {
+                    if (gateway.startsWith('[')) {
+                        selectedGateways = JSON.parse(gateway);
+                    } else {
+                        selectedGateways = gateway.split(',');
+                    }
+                } catch(e) {
+                    selectedGateways = gateway.split(',');
+                }
+
+                selectedGateways.forEach(code => {
+                    let checkCode = code.trim();
+                    const cb = document.querySelector(`.fee-gateway-checkbox[value="${checkCode}"]`);
+                    if (cb) cb.checked = true;
+                });
+            }
 
             if (unitWrapper) {
                 unitWrapper.classList.remove('hidden');
@@ -456,7 +480,7 @@
                 const oldUnitId = "{{ old('spmb_unit_id') }}";
                 if (oldCatId) {
                     switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ old('payment_gateway') }}', oldCatId, oldUnitId);
+                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, oldUnitId);
                 }
             } else if (failed.startsWith('biaya_admin_edit_')) {
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
@@ -464,7 +488,7 @@
                 let id = failed.replace('biaya_admin_edit_', '');
                 if (oldCatId) {
                     switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ old('payment_gateway') }}', oldCatId, oldUnitId);
+                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, oldUnitId);
                 }
             }
         });

@@ -4,6 +4,31 @@
 @section('page_title', 'Setting UI Portal')
 
 @section('content')
+<!-- Quill editor stylesheets and script library -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<style>
+    /* Custom styles for Quill editor */
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        border-color: #e2e8f0;
+        background-color: #f8fafc;
+        padding: 8px 12px;
+    }
+    .ql-container.ql-snow {
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        border-color: #e2e8f0;
+        background-color: #ffffff;
+    }
+    .ql-editor {
+        min-height: 180px;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 13px;
+        color: #334155;
+    }
+</style>
 <div class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
@@ -20,8 +45,10 @@
     @endif
 
     <!-- Form Configuration -->
-    <form action="{{ route('admin.ui-settings.save') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+    <form id="ui-settings-form" action="{{ route('admin.ui-settings.save') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         @csrf
+        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ session('active_ui_tab', 'global') }}">
+        @php session()->forget('active_ui_tab'); @endphp
         
         <!-- Navigation Tabs -->
         <div class="bg-slate-50/75 border-b border-slate-100 px-6 flex flex-wrap gap-1">
@@ -33,6 +60,7 @@
                 class="tab-button border-b-2 py-4 px-6 text-xs font-bold transition focus:outline-none border-transparent text-slate-500 hover:text-slate-700">
                 Identitas Sekolah
             </button>
+
             @foreach($units as $unit)
                 <button type="button" onclick="switchSettingsTab('unit-{{ strtolower($unit->code) }}')" id="tab-btn-unit-{{ strtolower($unit->code) }}" 
                     class="tab-button border-b-2 py-4 px-6 text-xs font-bold transition focus:outline-none border-transparent text-slate-500 hover:text-slate-700">
@@ -302,6 +330,8 @@
                     </div>
                 </div>
             @endforeach
+            
+
 
         </div>
 
@@ -318,6 +348,11 @@
 <script>
     // Tab switching script
     function switchSettingsTab(tabId) {
+        const activeTabInput = document.getElementById('active-tab-input');
+        if (activeTabInput) {
+            activeTabInput.value = tabId;
+        }
+
         // Toggle tab content panel visibility
         document.querySelectorAll('.tab-panel').forEach(panel => {
             panel.classList.add('hidden');
@@ -362,5 +397,16 @@
             reader.readAsDataURL(file);
         }
     }
+
+    // Initialize Quill Editors for Instructions
+    document.addEventListener("DOMContentLoaded", function() {
+        // Automatically restore active tab on page load
+        var activeTabInput = document.getElementById('active-tab-input');
+        if (activeTabInput && activeTabInput.value && activeTabInput.value !== 'global') {
+            switchSettingsTab(activeTabInput.value);
+        }
+
+
+    });
 </script>
 @endsection

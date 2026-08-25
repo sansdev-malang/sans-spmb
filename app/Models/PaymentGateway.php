@@ -17,4 +17,9 @@ class PaymentGateway extends Model
         'is_active' => 'boolean',
         'settings_schema' => 'array'
     ];
+
+    public function paymentChannels()
+    {
+        return $this->hasMany(SpmbPaymentChannel::class);
+    }
 }

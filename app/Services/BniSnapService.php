@@ -121,7 +121,7 @@ class BniSnapService implements PaymentGatewayInterface
                     'referenceId' => 'BNI-MOCK-' . time(),
                     'virtualAccount' => '8001' . rand(10000000, 99999999),
                     'paymentUrl' => 'https://sandbox.bni.co.id/mock-payment/' . $invoiceNo,
-                    'qrisString' => $method === 'QRIS' ? '00020101021226670014ID.CO.BNI.WWW0118936000091503300589...' : null
+                    'qrisString' => str_contains(strtoupper($method), 'QRIS') ? '00020101021226670014ID.CO.BNI.WWW0118936000091503300589...' : null
                 ]
             ];
         }
@@ -144,7 +144,7 @@ class BniSnapService implements PaymentGatewayInterface
 
         $timestamp = date('c');
         $endpoint = '/api/v1.0/transfer-va/create-va';
-        if ($method === 'QRIS') {
+        if (str_contains(strtoupper($method), 'QRIS')) {
             $endpoint = '/api/v1.0/qr/qr-mpm-generate';
         }
 
@@ -164,7 +164,7 @@ class BniSnapService implements PaymentGatewayInterface
             ]
         ];
 
-        if ($method === 'QRIS') {
+        if (str_contains(strtoupper($method), 'QRIS')) {
             $body = [
                 'partnerReferenceNo' => $invoiceNo,
                 'amount' => [
@@ -207,5 +207,27 @@ class BniSnapService implements PaymentGatewayInterface
             'success' => false,
             'message' => $errorMsg . ' (Status: ' . $response->status() . ')'
         ];
+    }
+
+    /**
+     * Validate incoming Webhook/Callback from BNI.
+     */
+    public function verifyCallback($headers, $body)
+    {
+        if ($this->mode === 'simulator') {
+            return true;
+        }
+
+        $signature = $headers['x-signature'] ?? $headers['X-SIGNATURE'] ?? '';
+        $timestamp = $headers['x-timestamp'] ?? $headers['X-TIMESTAMP'] ?? '';
+        $authorization = $headers['authorization'] ?? $headers['AUTHORIZATION'] ?? '';
+        
+        $accessToken = str_replace('Bearer ', '', $authorization);
+        
+        $endpoint = '/api/payments/callback'; 
+
+        $calculatedSignature = $this->generateSymmetricSignature('POST', $endpoint, $accessToken, $body, $timestamp);
+
+        return hash_equals($calculatedSignature, $signature);
     }
 }

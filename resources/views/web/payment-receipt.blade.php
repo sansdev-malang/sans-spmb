@@ -72,8 +72,8 @@
                     <h1 class="text-lg font-extrabold text-slate-900 leading-tight">
                         {{ \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh') }}
                     </h1>
-                    <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
-                        Penerimaan Peserta Didik Baru (PPDB)
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                        Sistem Penerimaan Murid Baru (SPMB)
                     </p>
                 </div>
                 <div class="text-right">
@@ -115,6 +115,18 @@
                         {{ $registration->unit->name ?? '-' }}@if(!empty($registration->grade->name)) ({{ $registration->grade->name }})@endif
                     </span>
                 </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Tahun Ajaran & Gelombang</span>
+                    <span class="font-bold text-slate-800 mt-0.5 block">
+                        {{ $registration->period->year ?? '-' }} - {{ $registration->wave->name ?? '-' }}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Jalur & Program Kelas</span>
+                    <span class="font-bold text-slate-800 mt-0.5 block">
+                        {{ $registration->type->name ?? '-' }}@if(!empty($registration->classProgram->name)) ({{ $registration->classProgram->name }})@endif
+                    </span>
+                </div>
                 @if($registration->extraServices->count() > 0)
                     <div class="col-span-2 border-t border-slate-100/80 pt-2.5 mt-0.5">
                         <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Layanan Tambahan</span>
@@ -130,14 +142,25 @@
                 <span class="text-[10px] text-slate-400 font-black uppercase tracking-wider block mb-2">Rincian Pembayaran</span>
                 
                 <!-- Base Amount -->
-                <div class="flex justify-between items-center text-xs text-slate-600">
-                    <span>
-                        {{ $payment->payment_type === 'registration_fee' ? 'Biaya Pokok Formulir Pendaftaran' : 'Biaya Pokok Seleksi & Administrasi' }}
-                    </span>
-                    <span class="font-bold text-slate-800">
-                        Rp {{ number_format($payment->base_amount, 0, ',', '.') }}
-                    </span>
-                </div>
+                @if($payment->payment_type === 'final_fee' && isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items']))
+                    @foreach($payment->payment_info['selected_items'] as $item)
+                        <div class="flex justify-between items-center text-xs text-slate-600">
+                            <span>{{ $item['name'] }}</span>
+                            <span class="font-bold text-slate-800">
+                                Rp {{ number_format($item['amount'], 0, ',', '.') }}
+                            </span>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="flex justify-between items-center text-xs text-slate-600">
+                        <span>
+                            {{ $payment->payment_type === 'registration_fee' ? 'Biaya Pokok Formulir Pendaftaran' : 'Biaya Pokok Seleksi & Administrasi' }}
+                        </span>
+                        <span class="font-bold text-slate-800">
+                            Rp {{ number_format($payment->base_amount, 0, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
 
                 <!-- Admin Fee -->
                 <div class="flex justify-between items-center text-xs text-slate-600">

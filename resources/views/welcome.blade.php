@@ -217,7 +217,7 @@
                 </div>
 
                 <!-- 2 Column Inputs -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     
                     <!-- Email -->
                     <div class="space-y-2">
@@ -243,38 +243,43 @@
                         </div>
                     </div>
 
+                    <!-- Password -->
+                    <div class="space-y-2">
+                        <label for="password" class="font-extrabold text-[10px] text-slate-400 uppercase block tracking-wider">Buat Password Akun</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            </span>
+                            <input type="password" name="password" id="password" required placeholder="Min. 8 karakter" minlength="8"
+                                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition" />
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Admission Level Selector -->
                 <div class="space-y-2.5">
                     <label class="font-extrabold text-[10px] text-slate-400 uppercase block tracking-wider">Pilih Jenjang Pendidikan</label>
-                    <input type="hidden" name="admission_level" id="admission_level" value="SD">
+                    <input type="hidden" name="spmb_unit_id" id="spmb_unit_id" value="">
                     
                     <div class="grid grid-cols-3 gap-3">
-                        
-                        <!-- Option PAUD -->
-                        <button type="button" onclick="selectLevel('PAUD')" id="btn-PAUD"
-                                class="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800">
-                            <i data-lucide="car" class="w-4 h-4 text-slate-500"></i>
-                            <span class="font-bold text-[10px]">PAUD</span>
-                        </button>
-
-                        <!-- Option SD -->
-                        <button type="button" onclick="selectLevel('SD')" id="btn-SD"
-                                class="border-2 border-custom-primary bg-emerald-50/45 dark:bg-emerald-950/20 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2">
-                            <i data-lucide="book-open" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i>
-                            <span class="font-extrabold text-[10px] text-custom-primary dark:text-emerald-400">SD</span>
-                        </button>
-
-                        <!-- Option SMP -->
-                        <button type="button" onclick="selectLevel('SMP')" id="btn-SMP"
-                                class="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800">
-                            <i data-lucide="flask-conical" class="w-4 h-4 text-slate-500"></i>
-                            <span class="font-bold text-[10px]">SMP</span>
-                        </button>
-
+                        @foreach($activeUnits as $u)
+                            @php
+                                $uCode = strtoupper($u->code);
+                                $icon = 'book-open';
+                                if ($uCode === 'PAUD') $icon = 'car';
+                                if ($uCode === 'SMP') $icon = 'flask-conical';
+                            @endphp
+                            <button type="button" onclick="selectUnit({{ $u->id }}, '{{ $uCode }}')" id="btn-unit-{{ $u->id }}"
+                                    class="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800">
+                                <i data-lucide="{{ $icon }}" class="w-4 h-4 text-slate-500"></i>
+                                <span class="font-bold text-[10px]">{{ $uCode }}</span>
+                            </button>
+                        @endforeach
                     </div>
                 </div>
+
+
 
                 <!-- Submit Button -->
                 <button type="submit" class="w-full bg-[#F59E0B] hover:bg-[#d97706] text-white py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-md">
@@ -311,38 +316,51 @@
         }, 4500);
     });
 
-    // Custom Level Radio Toggle
-    function selectLevel(level) {
-        document.getElementById('admission_level').value = level;
+    function selectUnit(unitId, unitCode) {
+        document.getElementById('spmb_unit_id').value = unitId;
         
-        const levels = ['PAUD', 'SD', 'SMP'];
-        
-        levels.forEach(l => {
-            const btn = document.getElementById('btn-' + l);
-            if (l === level) {
-                btn.className = `border-2 border-custom-primary bg-emerald-50/45 dark:bg-emerald-950/20 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2`;
-                const icon = btn.querySelector('svg');
-                if (icon) {
-                    icon.style.color = "";
-                    icon.className.baseVal = "w-4 h-4 text-custom-primary dark:text-emerald-400";
+        // Highlight active unit button
+        @foreach($activeUnits as $u)
+            (function() {
+                var btn = document.getElementById('btn-unit-{{ $u->id }}');
+                if (btn) {
+                    if ({{ $u->id }} === unitId) {
+                        btn.className = `border-2 border-brand-emerald bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 shadow-sm`;
+                        var icon = btn.querySelector('svg') || btn.querySelector('i');
+                        if (icon) {
+                            icon.setAttribute('class', 'w-4 h-4 text-brand-emerald dark:text-emerald-450');
+                        }
+                        var label = btn.querySelector('span');
+                        if (label) {
+                            label.className = "font-extrabold text-[10px] text-brand-emerald dark:text-emerald-450";
+                        }
+                    } else {
+                        btn.className = `border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800`;
+                        var icon = btn.querySelector('svg') || btn.querySelector('i');
+                        if (icon) {
+                            icon.setAttribute('class', 'w-4 h-4 text-slate-500');
+                        }
+                        var label = btn.querySelector('span');
+                        if (label) {
+                            label.className = "font-bold text-[10px] text-slate-600 dark:text-slate-400";
+                        }
+                    }
                 }
-                const label = btn.querySelector('span');
-                if (label) {
-                    label.className = "font-extrabold text-[10px] text-custom-primary dark:text-emerald-400";
-                }
-            } else {
-                btn.className = `border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800`;
-                const icon = btn.querySelector('svg');
-                if (icon) {
-                    icon.style.color = "";
-                    icon.className.baseVal = "w-4 h-4 text-slate-500";
-                }
-                const label = btn.querySelector('span');
-                if (label) {
-                    label.className = "font-bold text-[10px] text-slate-600 dark:text-slate-400";
-                }
-            }
-        });
+            })();
+        @endforeach
     }
+
+    // Default select SD unit on load
+    document.addEventListener("DOMContentLoaded", function() {
+        const sdUnit = @json($activeUnits->where('code', 'SD')->first());
+        if (sdUnit) {
+            selectUnit(sdUnit.id, 'SD');
+        } else {
+            const firstUnit = @json($activeUnits->first());
+            if (firstUnit) {
+                selectUnit(firstUnit.id, firstUnit.code);
+            }
+        }
+    });
 </script>
 @endsection

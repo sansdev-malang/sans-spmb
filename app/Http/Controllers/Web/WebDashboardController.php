@@ -134,7 +134,8 @@ class WebDashboardController extends Controller
 
                 $details['items'][] = [
                     'name' => $fee->name,
-                    'amount' => $fee->amount
+                    'amount' => $fee->amount,
+                    'gateways' => is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]
                 ];
             }
 
@@ -176,10 +177,10 @@ class WebDashboardController extends Controller
 
         // Add to items list for fallback too
         $details['items'] = [
-            ['name' => 'Uang Gedung', 'amount' => $details['uang_gedung']],
-            ['name' => 'Biaya Seragam', 'amount' => $details['seragam']],
-            ['name' => 'SPP Bulanan', 'amount' => $details['spp']],
-            ['name' => 'Uang Kegiatan', 'amount' => $details['kegiatan']],
+            ['name' => 'Uang Gedung', 'amount' => $details['uang_gedung'], 'gateways' => ['winpay']],
+            ['name' => 'Biaya Seragam', 'amount' => $details['seragam'], 'gateways' => ['winpay']],
+            ['name' => 'SPP Bulanan', 'amount' => $details['spp'], 'gateways' => ['winpay']],
+            ['name' => 'Uang Kegiatan', 'amount' => $details['kegiatan'], 'gateways' => ['winpay']],
         ];
 
         $details['total'] = $details['uang_gedung'] + $details['seragam'] + $details['spp'] + $details['kegiatan'];
@@ -263,8 +264,10 @@ class WebDashboardController extends Controller
             
         $units = SpmbUnit::where('is_active', true)->get();
         $grades = SpmbGrade::where('is_active', true)->get();
+        $waves = \App\Models\SpmbWave::where('is_active', true)->get();
+        $types = \App\Models\SpmbType::where('is_active', true)->get();
 
-        return view('web.dashboard-index', compact('registrations', 'units', 'grades'));
+        return view('web.dashboard-index', compact('registrations', 'units', 'grades', 'waves', 'types'));
     }
     
     public function createRegistration(Request $request)
@@ -273,11 +276,11 @@ class WebDashboardController extends Controller
             'candidate_name' => 'required|string|max:255',
             'spmb_unit_id' => 'required|exists:spmb_units,id',
             'spmb_grade_id' => 'required|exists:spmb_grades,id',
+            'spmb_type_id' => 'required|exists:spmb_types,id',
+            'spmb_wave_id' => 'required|exists:spmb_waves,id',
         ]);
         
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
-        $activeWave = \App\Models\SpmbWave::where('is_active', true)->first();
-        $activeType = \App\Models\SpmbType::where('is_active', true)->first();
 
         $registration = Registration::create([
             'user_id' => auth()->id(),
@@ -285,8 +288,8 @@ class WebDashboardController extends Controller
             'spmb_unit_id' => $request->spmb_unit_id,
             'spmb_grade_id' => $request->spmb_grade_id,
             'spmb_period_id' => $activePeriod?->id,
-            'spmb_wave_id' => $activeWave?->id,
-            'spmb_type_id' => $activeType?->id,
+            'spmb_wave_id' => $request->spmb_wave_id,
+            'spmb_type_id' => $request->spmb_type_id,
             'registration_status' => 'draft',
             'payment_status' => 'unpaid'
         ]);
@@ -403,9 +406,16 @@ class WebDashboardController extends Controller
 
         $committeeMessage = $this->getCommitteeMessage($registration);
 
-        $channels = \App\Models\SpmbPaymentChannel::where('is_active', true)->orderBy('type')->orderBy('name')->get();
         $feeDb = $this->getRegistrationFee($registration);
-        $feeGateway = $feeDb ? $feeDb->payment_gateway : 'winpay';
+        $feeGateways = $feeDb ? (is_array($feeDb->payment_gateway) ? $feeDb->payment_gateway : [$feeDb->payment_gateway]) : ['winpay'];
+        $channels = \App\Models\SpmbPaymentChannel::where('is_active', true)
+            ->whereHas('gateway', function($q) use ($feeGateways) {
+                $q->whereIn('code', $feeGateways);
+            })
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+        $feeGateway = reset($feeGateways) ?: 'winpay';
 
         return view('web.dashboard', compact('registration', 'activePayment', 'timeline', 'committeeMessage', 'observationDetails', 'stepsCompleted', 'stepsCount', 'feeAmount', 'feeGateway', 'channels'));
     }
@@ -435,12 +445,12 @@ class WebDashboardController extends Controller
             return redirect()->back()->with('error', 'Silakan lengkapi seluruh tahapan formulir terlebih dahulu.');
         }
 
-        if ($registration->registration_status === 'draft') {
+        if (in_array($registration->registration_status, ['draft', 'failed'])) {
             $registration->update([
                 'registration_status' => 'submitted',
-                'committee_notes' => 'Formulir pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.'
+                'committee_notes' => 'Formulir pendaftaran berhasil dikirim kembali. Berkas pendaftaran ananda sedang dalam proses verifikasi ulang oleh panitia SPMB.'
             ]);
-            return redirect()->route('dashboard.detail', $id)->with('success', 'Formulir pendaftaran berhasil dikirim! Silakan menunggu verifikasi berkas dari panitia.');
+            return redirect()->route('dashboard.detail', $id)->with('success', 'Formulir pendaftaran berhasil dikirim kembali! Silakan menunggu verifikasi berkas dari panitia.');
         }
 
         return redirect()->route('dashboard.detail', $id);
@@ -456,23 +466,107 @@ class WebDashboardController extends Controller
         if (in_array($registration->registration_status, ['agreement_signed', 'completed'])) {
             $activePayment = $registration->activeFinalPayment;
             $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
-            $feeAmount = $activePayment ? $activePayment->amount : $feeDetails['total'];
-            
-            $finalFee = \App\Models\SpmbFee::where('spmb_unit_id', $registration->spmb_unit_id)
-                ->where('spmb_fee_category_id', 2)
+
+            // Filter out already paid items
+            $paidItemNames = [];
+            $successfulPayments = $registration->payments()
+                ->where('status', 'success')
+                ->where('payment_type', 'final_fee')
+                ->get();
+            foreach ($successfulPayments as $p) {
+                if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
+                    foreach ($p->payment_info['selected_items'] as $item) {
+                        $paidItemNames[] = $item['name'];
+                    }
+                }
+            }
+
+            // Exclude already paid items from original feeDetails items list
+            $unpaidItems = [];
+            foreach ($feeDetails['items'] as &$item) {
+                if (!in_array($item['name'], $paidItemNames)) {
+                    if (!isset($item['gateways'])) {
+                        $feeRow = \App\Models\SpmbFee::where('name', $item['name'])
+                            ->where('spmb_unit_id', $registration->spmb_unit_id)
+                            ->first();
+                        $item['gateways'] = $feeRow ? (is_array($feeRow->payment_gateway) ? $feeRow->payment_gateway : [$feeRow->payment_gateway]) : ['winpay'];
+                    }
+                    $unpaidItems[] = $item;
+                }
+            }
+            unset($item);
+            $latestSuccessPayment = $registration->payments()
+                ->where('status', 'success')
+                ->where('payment_type', 'final_fee')
+                ->latest()
                 ->first();
-            $feeGateway = $finalFee ? $finalFee->payment_gateway : 'winpay';
+
+            $showSuccessDetails = false;
+            if ($registration->payment_status === 'paid') {
+                $showSuccessDetails = true;
+            } elseif ($latestSuccessPayment && (!$activePayment || $activePayment->status === 'success') && request()->query('items') === null) {
+                $showSuccessDetails = true;
+            }
+
+            if ($showSuccessDetails) {
+                $feeDetails['items'] = $latestSuccessPayment->payment_info['selected_items'] ?? [];
+                $feeDetails['total'] = $latestSuccessPayment->base_amount ?? ($latestSuccessPayment->amount - $latestSuccessPayment->admin_fee);
+                $feeAmount = $latestSuccessPayment->amount;
+            } else {
+                $feeDetails['items'] = $unpaidItems;
+
+                // Apply manual checked items filter if passed in query string
+                $selectedIndices = request()->query('items');
+                if ($selectedIndices !== null && $selectedIndices !== '') {
+                    $indices = explode(',', $selectedIndices);
+                    $filteredItems = [];
+                    foreach ($indices as $index) {
+                        if (isset($unpaidItems[$index])) {
+                            $filteredItems[] = $unpaidItems[$index];
+                        }
+                    }
+                    if (!empty($filteredItems)) {
+                        $feeDetails['items'] = $filteredItems;
+                    }
+                }
+
+                // Calculate final total based on unpaid/filtered items
+                $feeDetails['total'] = array_sum(array_map(function($item) {
+                    return $item['amount'];
+                }, $feeDetails['items']));
+
+                $feeAmount = ($activePayment && $activePayment->status === 'pending') ? $activePayment->amount : $feeDetails['total'];
+            }
+            
+            // Calculate the intersection of gateways for the selected items
+            $commonGateways = null;
+            foreach ($feeDetails['items'] as $item) {
+                $itemGateways = $item['gateways'] ?? ['winpay'];
+                if ($commonGateways === null) {
+                    $commonGateways = $itemGateways;
+                } else {
+                    $commonGateways = array_intersect($commonGateways, $itemGateways);
+                }
+            }
+            $feeGateways = !empty($commonGateways) ? array_values($commonGateways) : ['winpay'];
             $feeName = 'Pelunasan Biaya Administrasi Akhir';
         } else {
             $activePayment = $registration->activeRegistrationPayment;
             $fee = $this->getRegistrationFee($registration);
             $feeAmount = $activePayment ? $activePayment->amount : ($fee ? $fee->amount : 350000);
             $feeDetails = null;
-            $feeGateway = $fee ? $fee->payment_gateway : 'winpay';
+            $feeGateways = $fee ? (is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]) : ['winpay'];
             $feeName = $fee ? $fee->name : 'Formulir Pendaftaran';
         }
 
-        $channels = SpmbPaymentChannel::where('is_active', true)->orderBy('type')->orderBy('name')->get();
+        $channels = SpmbPaymentChannel::where('is_active', true)
+            ->whereHas('gateway', function($q) use ($feeGateways) {
+                $q->whereIn('code', $feeGateways);
+            })
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+        $feeGateway = reset($feeGateways) ?: 'winpay';
 
         return view('web.payment', compact('registration', 'activePayment', 'channels', 'feeAmount', 'feeGateway', 'feeDetails', 'feeName'));
     }
@@ -494,17 +588,37 @@ class WebDashboardController extends Controller
         $gate = $this->checkAccessGate($registration, 'observation');
         if ($gate) return $gate;
         
+        // Fetch dynamic agreement letter template for the candidate's unit
+        $agreementTemplate = \App\Models\SpmbAgreementTemplate::where('spmb_unit_id', $registration->spmb_unit_id)->first();
+        
+        if ($agreementTemplate) {
+            $replacements = [
+                '{{nama_calon_siswa}}' => $registration->candidate_name ?? '',
+                '{{nama_wali}}' => $registration->signature_name ?: ($registration->father_name ?: ($registration->mother_name ?: '')),
+                '{{nama_unit}}' => $registration->unit->name ?? '',
+                '{{nama_kelas}}' => $registration->grade->name ?? '',
+                '{{tahun_ajaran}}' => $registration->period->year ?? '2026-2027',
+            ];
+            
+            $agreementTemplate->title = str_replace(array_keys($replacements), array_values($replacements), $agreementTemplate->title);
+            $agreementTemplate->content = str_replace(array_keys($replacements), array_values($replacements), $agreementTemplate->content);
+            
+            // Align colons in the metadata block using custom vanilla CSS grid rows
+            $metadataPattern = '/<p>(?:<[^>]+>)*(Nama Murid|Nama Calon Siswa|Nama Orangtua\/Wali|Nama Orang\s*Tua\s*\/\s*Wali|Tahun Ajaran|Layanan Pendidikan|Unit & Program)(?:<[^>]+>)*\s*:\s*(.*?)<\/p>/i';
+            $metadataReplacement = '<div class="metadata-row text-slate-750 dark:text-slate-300"><div>$1</div><div>:</div><div class="font-bold">$2</div></div>';
+            $agreementTemplate->content = preg_replace($metadataPattern, $metadataReplacement, $agreementTemplate->content);
+        }
+
         $observationDetails = null;
         if (in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
             $observationDetails = [
-                'title' => 'Tes Observasi secara daring',
-                'datetime' => 'Sabtu, 26 Okt 2024. 08:00 - 10:00 WIB',
-                'zoom_link' => 'https://zoom.us/j/9876543210',
-                'guide_link' => 'https://sekolah-anak-saleh.sch.id/panduan-observasi.pdf'
+                'title' => 'Sesi Ta\'aruf Tatap Muka',
+                'location' => $registration->unit?->name ?? 'Sekolah Anak Saleh',
+                'notes' => 'Undangan resmi kehadiran offline akan dikirimkan panitia melalui WhatsApp ke nomor ' . $registration->parent_phone
             ];
         }
         
-        return view('web.observation', compact('registration', 'observationDetails'));
+        return view('web.observation', compact('registration', 'observationDetails', 'agreementTemplate'));
     }
 
     public function submitAgreement(Request $request, $id)
@@ -527,6 +641,8 @@ class WebDashboardController extends Controller
             'registration_status' => 'agreement_signed',
             'payment_status' => 'unpaid', // reset to unpaid for final fees
             'final_fee_snapshot' => $feeDetails,
+            'signature_name' => $request->signature_name,
+            'signed_at' => \Carbon\Carbon::now(),
             'committee_notes' => 'Pernyataan kesanggupan ditandatangani oleh: ' . $request->signature_name . '. Silakan lakukan pembayaran biaya administrasi seleksi akhir.'
         ]);
 
@@ -541,7 +657,35 @@ class WebDashboardController extends Controller
         
         $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
         
-        return view('web.result', compact('registration', 'feeDetails'));
+        // Patch gateways for backward compatibility
+        if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
+            foreach ($feeDetails['items'] as &$item) {
+                if (!isset($item['gateways'])) {
+                    $feeRow = \App\Models\SpmbFee::where('name', $item['name'])
+                        ->where('spmb_unit_id', $registration->spmb_unit_id)
+                        ->first();
+                    $item['gateways'] = $feeRow ? (is_array($feeRow->payment_gateway) ? $feeRow->payment_gateway : [$feeRow->payment_gateway]) : ['winpay'];
+                }
+            }
+            unset($item);
+        }
+        
+        // Calculate paid item names from successful payments
+        $paidItemNames = [];
+        $successfulPayments = $registration->payments()
+            ->where('status', 'success')
+            ->where('payment_type', 'final_fee')
+            ->get();
+            
+        foreach ($successfulPayments as $p) {
+            if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
+                foreach ($p->payment_info['selected_items'] as $item) {
+                    $paidItemNames[] = $item['name'];
+                }
+            }
+        }
+        
+        return view('web.result', compact('registration', 'feeDetails', 'paidItemNames'));
     }
 
     public function saveStep(Request $request, $id, $stepId)
@@ -571,7 +715,8 @@ class WebDashboardController extends Controller
         $physicalColumns = [
             'candidate_name', 'nickname', 'nik', 'gender', 'birth_place', 
             'birth_date', 'religion', 'previous_school', 'admission_level', 'father_name', 
-            'mother_name', 'parent_phone', 'birth_certificate_path', 'family_card_path'
+            'mother_name', 'parent_phone', 'birth_certificate_path', 'family_card_path',
+            'spmb_wave_id', 'spmb_type_id', 'spmb_period_id', 'spmb_class_program_id'
         ];
 
         $additionalInfo = $registration->additional_info ?? [];
@@ -610,7 +755,7 @@ class WebDashboardController extends Controller
 
         // Sync extra services if the step has extra_services field
         if ($step->fields->where('field_name', 'extra_services')->count() > 0) {
-            $registration->extraServices()->sync($request->input('extra_services', []));
+            $registration->extraServices()->sync(array_filter((array)$request->input('extra_services', [])));
         }
 
         $registration->additional_info = $additionalInfo;
@@ -643,6 +788,15 @@ class WebDashboardController extends Controller
 
     public function updateCandidateInfo(Request $request, $id)
     {
+        $registration = $this->getRegistration($id);
+        
+        $unitId = $registration->spmb_unit_id ?: 1;
+        $validGrades = \App\Models\SpmbGrade::where('spmb_unit_id', $unitId)
+            ->where('is_active', true)
+            ->pluck('name')
+            ->map(fn($n) => $n === 'KB' ? 'Play Group' : $n)
+            ->toArray();
+
         $request->validate([
             'candidate_name' => 'required|string|max:255',
             'nickname' => 'nullable|string|max:100',
@@ -652,11 +806,10 @@ class WebDashboardController extends Controller
             'birth_date' => 'required|date|before:today',
             'religion' => 'required|string|max:100',
             'previous_school' => 'nullable|string|max:255',
-            'admission_level' => 'required|string|in:Play Group,TK A,TK B',
+            'admission_level' => 'required|string|in:' . implode(',', $validGrades),
             'class_program' => 'required|string',
         ]);
 
-        $registration = $this->getRegistration($id);
         $program = SpmbClassProgram::where('name', $request->class_program)->first();
         $registration->update(array_merge(
             $request->only([
@@ -724,19 +877,92 @@ class WebDashboardController extends Controller
         if ($status === 'agreement_signed') {
             $paymentType = 'final_fee';
             $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+
+            // Filter out already paid items
+            $paidItemNames = [];
+            $successfulPayments = $registration->payments()
+                ->where('status', 'success')
+                ->where('payment_type', 'final_fee')
+                ->get();
+            foreach ($successfulPayments as $p) {
+                if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
+                    foreach ($p->payment_info['selected_items'] as $item) {
+                        $paidItemNames[] = $item['name'];
+                    }
+                }
+            }
+
+            // Exclude already paid items from original feeDetails items list
+            $unpaidItems = [];
+            foreach ($feeDetails['items'] as &$item) {
+                if (!in_array($item['name'], $paidItemNames)) {
+                    if (!isset($item['gateways'])) {
+                        $feeRow = \App\Models\SpmbFee::where('name', $item['name'])
+                            ->where('spmb_unit_id', $registration->spmb_unit_id)
+                            ->first();
+                        $item['gateways'] = $feeRow ? (is_array($feeRow->payment_gateway) ? $feeRow->payment_gateway : [$feeRow->payment_gateway]) : ['winpay'];
+                    }
+                    $unpaidItems[] = $item;
+                }
+            }
+            unset($item);
+            $feeDetails['items'] = $unpaidItems;
+
+            // Apply manual checked items filter if passed in query string or POST input
+            $selectedIndices = $request->input('items') ?? request()->query('items');
+            if ($selectedIndices !== null && $selectedIndices !== '') {
+                $indices = explode(',', $selectedIndices);
+                $filteredItems = [];
+                foreach ($indices as $index) {
+                    if (isset($unpaidItems[$index])) {
+                        $filteredItems[] = $unpaidItems[$index];
+                    }
+                }
+                if (!empty($filteredItems)) {
+                    $feeDetails['items'] = $filteredItems;
+                }
+            }
+
+            // Calculate final total based on unpaid/filtered items
+            $feeDetails['total'] = array_sum(array_map(function($item) {
+                return $item['amount'];
+            }, $feeDetails['items']));
+
             $amount = $feeDetails['total'];
             
-            $finalFee = \App\Models\SpmbFee::where('spmb_unit_id', $registration->spmb_unit_id)
-                ->where('spmb_fee_category_id', 2)
-                ->first();
-            $gateway = $finalFee ? $finalFee->payment_gateway : 'winpay';
+            // Calculate the intersection of gateways for the selected items
+            $commonGateways = null;
+            foreach ($feeDetails['items'] as $item) {
+                $itemGateways = $item['gateways'] ?? ['winpay'];
+                if ($commonGateways === null) {
+                    $commonGateways = $itemGateways;
+                } else {
+                    $commonGateways = array_intersect($commonGateways, $itemGateways);
+                }
+            }
+            $gateways = !empty($commonGateways) ? array_values($commonGateways) : ['winpay'];
         } elseif ($status === 'draft') {
             $paymentType = 'registration_fee';
             $fee = $this->getRegistrationFee($registration);
             $amount = $fee ? $fee->amount : 350000;
-            $gateway = $fee ? $fee->payment_gateway : 'winpay';
+            $gateways = $fee ? (is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]) : ['winpay'];
         } else {
             return redirect()->back()->with('error', 'Tidak ada tagihan pembayaran aktif pada tahapan ini.');
+        }
+
+        // Resolve active gateway based on the user's selected payment_method
+        $activeChannel = \App\Models\SpmbPaymentChannel::where('code', $request->payment_method)
+            ->where('is_active', true)
+            ->whereHas('gateway', function($q) use ($gateways) {
+                $q->whereIn('code', $gateways);
+            })
+            ->first();
+        
+        $gateway = 'winpay';
+        if ($activeChannel && $activeChannel->gateway) {
+            $gateway = $activeChannel->gateway->code;
+        } else {
+            $gateway = reset($gateways) ?: 'winpay';
         }
 
         // Fetch fee configurations dynamically from settings
@@ -745,17 +971,14 @@ class WebDashboardController extends Controller
         $feeWinpayVa = floatval(\App\Models\Setting::get('fee_winpay_va', 4500));
 
         // Calculate dynamic admin fee based on payment method and active gateway
-        $method = $request->payment_method;
-        if (str_contains($gateway, 'bni')) {
-            if ($method === 'BNI') {
-                $adminFee = $feeBniVa;
-            } elseif ($method === 'QRIS') {
+        $adminFee = $feeWinpayVa;
+        if ($activeChannel && $activeChannel->gateway && $activeChannel->gateway->code === 'bni') {
+            if ($activeChannel->type === 'qris') {
                 $adminFee = round($amount * $feeBniQris);
             } else {
-                $adminFee = $feeWinpayVa;
+                $adminFee = $feeBniVa;
             }
         } else {
-            // Winpay gateway (always use Winpay VA setting flat fee for all its channels)
             $adminFee = $feeWinpayVa;
         }
 
@@ -790,7 +1013,7 @@ class WebDashboardController extends Controller
                 'admin_fee' => $adminFee,
                 'payment_method' => $request->payment_method,
                 'reference_id' => $refId,
-                'payment_info' => $paymentData,
+                'payment_info' => array_merge(is_array($paymentData) ? $paymentData : [], $paymentType === 'final_fee' ? ['selected_items' => $feeDetails['items']] : []),
                 'status' => 'pending',
                 'payment_type' => $paymentType
             ]);
@@ -829,11 +1052,27 @@ class WebDashboardController extends Controller
             ]);
             
             if ($payment->payment_type === 'final_fee') {
-                $registration->update([
-                    'payment_status' => 'paid',
-                    'registration_status' => 'completed',
-                    'committee_notes' => 'Alhamdulillah, seluruh rangkaian pendaftaran dan pembayaran administrasi akhir ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah lunas diverifikasi. Selamat bergabung di Sekolah Anak Saleh!'
-                ]);
+                $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+                $totalRequired = $feeDetails['total'] ?? 0;
+                
+                $totalPaid = $registration->payments()
+                    ->where('status', 'success')
+                    ->where('payment_type', 'final_fee')
+                    ->sum('base_amount');
+                
+                if ($totalPaid >= $totalRequired) {
+                    $registration->update([
+                        'payment_status' => 'paid',
+                        'registration_status' => 'completed',
+                        'committee_notes' => 'Alhamdulillah, seluruh rangkaian pendaftaran dan pembayaran administrasi akhir ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah lunas diverifikasi. Selamat bergabung di Sekolah Anak Saleh!'
+                    ]);
+                } else {
+                    $registration->update([
+                        'payment_status' => 'partially_paid',
+                        'registration_status' => 'agreement_signed',
+                        'committee_notes' => 'Pembayaran administrasi akhir sebagian berhasil diterima. Silakan selesaikan sisa tanggungan pembiayaan Anda.'
+                    ]);
+                }
             } else {
                 $registration->update([
                     'payment_status' => 'paid',
@@ -874,8 +1113,48 @@ class WebDashboardController extends Controller
                 'payment_status' => 'unpaid'
             ]);
 
+            // Preserve selected items index query parameters upon redirection
+            $itemsQuery = '';
+            if (isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items'])) {
+                $selectedNames = array_column($payment->payment_info['selected_items'], 'name');
+                $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+                if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
+                    // Collect names of successful payments to compute the unpaid list
+                    $paidItemNames = [];
+                    $successfulPayments = $registration->payments()
+                        ->where('status', 'success')
+                        ->where('payment_type', 'final_fee')
+                        ->get();
+                    foreach ($successfulPayments as $p) {
+                        if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
+                            foreach ($p->payment_info['selected_items'] as $item) {
+                                $paidItemNames[] = $item['name'];
+                            }
+                        }
+                    }
+
+                    $unpaidItems = [];
+                    foreach ($feeDetails['items'] as $item) {
+                        if (!in_array($item['name'], $paidItemNames)) {
+                            $unpaidItems[] = $item;
+                        }
+                    }
+
+                    // Resolve indices
+                    $indices = [];
+                    foreach ($unpaidItems as $idx => $item) {
+                        if (in_array($item['name'], $selectedNames)) {
+                            $indices[] = $idx;
+                        }
+                    }
+                    if (!empty($indices)) {
+                        $itemsQuery = '?items=' . implode(',', $indices);
+                    }
+                }
+            }
+
             DB::commit();
-            return redirect()->route('dashboard.payment', $regId)->with('success', 'Transaksi pembayaran berhasil dibatalkan. Silakan pilih kembali metode pembayaran Anda.');
+            return redirect()->to(route('dashboard.payment', $regId) . $itemsQuery)->with('success', 'Transaksi pembayaran berhasil dibatalkan. Silakan pilih kembali metode pembayaran Anda.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
@@ -898,7 +1177,44 @@ class WebDashboardController extends Controller
             return redirect()->back()->with('error', 'Kwitansi hanya tersedia untuk transaksi yang sudah lunas.');
         }
 
-        return view('web.payment-receipt', compact('payment', 'registration'));
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('web.payment-receipt-pdf', compact('payment', 'registration'));
+        
+        $response = response()->make($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="Kwitansi-SPMB-' . $payment->invoice_number . '.pdf"',
+        ]);
+        
+        if (request()->has('download_token')) {
+            $cookie = cookie('download_status_' . request()->query('download_token'), 'success', 5, null, null, false, false);
+            $response->withCookie($cookie);
+        }
+        
+        return $response;
+    }
+
+    public function downloadAdmissionLetter($id)
+    {
+        $registration = \App\Models\Registration::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+            
+        if ($registration->registration_status !== 'completed') {
+            return redirect()->back()->with('error', 'Surat kelulusan hanya tersedia jika status pendaftaran sudah lengkap/lunas.');
+        }
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('web.admission-letter-pdf', compact('registration'));
+        
+        $response = response()->make($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="SKP-SANS-' . str_pad($registration->id, 4, '0', STR_PAD_LEFT) . '.pdf"',
+        ]);
+        
+        if (request()->has('download_token')) {
+            $cookie = cookie('download_status_' . request()->query('download_token'), 'success', 5, null, null, false, false);
+            $response->withCookie($cookie);
+        }
+        
+        return $response;
     }
 
     private function getCommitteeMessage($registration)
@@ -909,6 +1225,14 @@ class WebDashboardController extends Controller
         $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
 
         $committeeMessage = $registration->committee_notes;
+        
+        // If candidate is verified/approved, clear any old rejection notes from view
+        if (in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
+            if ($committeeMessage && (str_contains($committeeMessage, 'perlu diperbaiki') || str_contains($committeeMessage, 'Mohon maaf') || str_contains($committeeMessage, 'ditolak'))) {
+                $committeeMessage = null;
+            }
+        }
+
         $defaultMessages = [
             'Pembayaran formulir pendaftaran berhasil diterima. Silakan isi dan lengkapi formulir pendaftaran Anda.',
             'Pembayaran formulir terkonfirmasi. Silakan lengkapi formulir pendaftaran Anda pada menu di atas.',
@@ -927,9 +1251,9 @@ class WebDashboardController extends Controller
             } elseif ($status === 'submitted') {
                 return 'Formulir pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.';
             } elseif ($status === 'verified') {
-                return 'Alhamdulillah, berkas ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah kami terima dan diverifikasi. Silakan persiapkan ananda untuk mengikuti Tes Observasi secara daring sesuai jadwal di bawah ini.';
+                return 'Alhamdulillah, berkas pendaftaran ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah kami terima dan diverifikasi. Silakan persiapkan untuk mengikuti sesi Ta\'aruf tatap muka di unit sekolah.';
             } elseif ($status === 'taaruf_completed') {
-                return 'Observasi / Ta\'aruf selesai dilaksanakan. Silakan mengisi dan menyetujui Formulir Pernyataan Kesanggupan untuk memproses biaya administrasi akhir.';
+                return 'Sesi Ta\'aruf offline selesai dilakukan. Silakan mengisi dan menyetujui Formulir Pernyataan Kesanggupan untuk memproses biaya administrasi akhir.';
             } elseif ($status === 'agreement_signed') {
                 $finalFees = $this->getFinalFeeDetails($registration);
                 return 'Pernyataan kesanggupan disetujui. Silakan selesaikan pembayaran biaya administrasi akhir sebesar Rp ' . number_format($finalFees['total'], 0, ',', '.') . ' untuk menyelesaikan pendaftaran.';

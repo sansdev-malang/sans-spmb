@@ -22,6 +22,153 @@ class RegistrationController extends Controller
         );
     }
 
+    private function getRegistrationFee($registration)
+    {
+        $feeCategory = \App\Models\SpmbFeeCategory::where('name', 'Formulir Pendaftaran')->first();
+        if ($feeCategory) {
+            if (!empty($registration->spmb_unit_id)) {
+                $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
+                    ->where('spmb_unit_id', $registration->spmb_unit_id)
+                    ->where('is_active', true)
+                    ->first();
+                if (!$fee) {
+                    $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
+                        ->where('spmb_unit_id', $registration->spmb_unit_id)
+                        ->first();
+                }
+                if ($fee) return $fee;
+            }
+
+            $admissionLevel = $registration->admission_level ?? '';
+            $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
+                ->where(function($q) use ($admissionLevel) {
+                    if ($admissionLevel) {
+                        $q->where('name', 'like', '%' . $admissionLevel . '%')
+                          ->orWhere('name', 'Formulir Pendaftaran');
+                    } else {
+                        $q->where('name', 'Formulir Pendaftaran');
+                    }
+                })->first();
+            
+            if (!$fee) {
+                $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)->first();
+            }
+            return $fee;
+        }
+        return null;
+    }
+
+    private function getFinalFeeDetails($registration)
+    {
+        $unitId = $registration->spmb_unit_id;
+        $unitName = $registration->unit->name ?? '';
+        $gradeName = $registration->grade->name ?? '';
+
+        $category = \App\Models\SpmbFeeCategory::where('name', 'Biaya Adminstrasi')
+            ->orWhere('name', 'Biaya Administrasi')
+            ->first();
+
+        $fees = null;
+        if ($category && $unitId) {
+            $fees = \App\Models\SpmbFee::where('spmb_fee_category_id', $category->id)
+                ->where('spmb_unit_id', $unitId)
+                ->where('is_active', true)
+                ->get();
+        }
+
+        $details = [
+            'uang_gedung' => 0,
+            'seragam' => 0,
+            'spp' => 0,
+            'kegiatan' => 0,
+            'items' => [],
+        ];
+
+        if ($fees && $fees->count() > 0) {
+            foreach ($fees as $fee) {
+                $feeNameUpper = strtoupper($fee->name);
+                $gradeNameUpper = strtoupper($gradeName);
+
+                $gradeKeywords = ['TK A', 'TK B', 'KB', 'TPA', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 7'];
+                $hasKeyword = false;
+                foreach ($gradeKeywords as $kw) {
+                    if (strpos($feeNameUpper, $kw) !== false) {
+                        $hasKeyword = true;
+                        if (strpos($gradeNameUpper, $kw) !== false || ($kw === 'PLAY GROUP' && strpos($gradeNameUpper, 'KB') !== false) || ($kw === 'KB' && strpos($gradeNameUpper, 'PLAY GROUP') !== false)) {
+                            $hasKeyword = false;
+                            break;
+                        }
+                    }
+                }
+
+                if ($hasKeyword) {
+                    continue;
+                }
+
+                if (strpos($feeNameUpper, 'GEDUNG') !== false || strpos($feeNameUpper, 'MUSA\'ADAH') !== false || strpos($feeNameUpper, 'MUSAADAH') !== false) {
+                    $details['uang_gedung'] = $fee->amount;
+                } elseif (strpos($feeNameUpper, 'SERAGAM') !== false) {
+                    $details['seragam'] = $fee->amount;
+                } elseif (strpos($feeNameUpper, 'SPP') !== false) {
+                    $details['spp'] = $fee->amount;
+                } elseif (strpos($feeNameUpper, 'KEGIATAN') !== false) {
+                    $details['kegiatan'] = $fee->amount;
+                } else {
+                    $details[strtolower(str_replace(' ', '_', $fee->name))] = $fee->amount;
+                }
+
+                $details['items'][] = [
+                    'name' => $fee->name,
+                    'amount' => $fee->amount
+                ];
+            }
+
+            $details['total'] = array_sum(array_map(function($item) {
+                return $item['amount'];
+            }, $details['items']));
+
+            return $details;
+        }
+
+        if (stripos($unitName, 'PAUD') !== false || stripos($gradeName, 'KB') !== false || stripos($gradeName, 'TK') !== false || stripos($gradeName, 'TPA') !== false) {
+            if (stripos($gradeName, 'KB Saja') !== false) {
+                $details = ['uang_gedung' => 3000000, 'seragam' => 1000000, 'spp' => 250000, 'kegiatan' => 750000];
+            } elseif (stripos($gradeName, 'TK A') !== false || stripos($gradeName, 'TK B') !== false) {
+                $details = ['uang_gedung' => 3500000, 'seragam' => 1200000, 'spp' => 300000, 'kegiatan' => 800000];
+            } elseif (stripos($gradeName, 'TPA Saja') !== false) {
+                $details = ['uang_gedung' => 2500000, 'seragam' => 800000, 'spp' => 200000, 'kegiatan' => 500000];
+            } elseif (stripos($gradeName, 'KB + TPA') !== false) {
+                $details = ['uang_gedung' => 4500000, 'seragam' => 1500000, 'spp' => 400000, 'kegiatan' => 1100000];
+            } elseif (stripos($gradeName, 'TK + TPA') !== false) {
+                $details = ['uang_gedung' => 5000000, 'seragam' => 1600000, 'spp' => 450000, 'kegiatan' => 1150000];
+            } else {
+                $details = ['uang_gedung' => 3200000, 'seragam' => 1100000, 'spp' => 280000, 'kegiatan' => 780000];
+            }
+        } elseif (stripos($unitName, 'SMP') !== false) {
+            if (stripos($gradeName, 'Pindahan') !== false || stripos($gradeName, 'Mutasi') !== false) {
+                $details = ['uang_gedung' => 6000000, 'seragam' => 2000000, 'spp' => 600000, 'kegiatan' => 1100000];
+            } else {
+                $details = ['uang_gedung' => 8500000, 'seragam' => 2000000, 'spp' => 600000, 'kegiatan' => 1400000];
+            }
+        } else {
+            if (stripos($gradeName, 'Pindahan') !== false || stripos($gradeName, 'Mutasi') !== false) {
+                $details = ['uang_gedung' => 5000000, 'seragam' => 1800000, 'spp' => 500000, 'kegiatan' => 1000000];
+            } else {
+                $details = ['uang_gedung' => 7000000, 'seragam' => 1800000, 'spp' => 500000, 'kegiatan' => 1200000];
+            }
+        }
+
+        $details['items'] = [
+            ['name' => 'Uang Gedung', 'amount' => $details['uang_gedung']],
+            ['name' => 'Biaya Seragam', 'amount' => $details['seragam']],
+            ['name' => 'SPP Bulanan', 'amount' => $details['spp']],
+            ['name' => 'Uang Kegiatan', 'amount' => $details['kegiatan']],
+        ];
+
+        $details['total'] = $details['uang_gedung'] + $details['seragam'] + $details['spp'] + $details['kegiatan'];
+        return $details;
+    }
+
     public function show(Request $request)
     {
         $registration = $this->getRegistration($request);
@@ -32,6 +179,16 @@ class RegistrationController extends Controller
 
     public function updateCandidateInfo(Request $request)
     {
+        $registration = $this->getRegistration($request);
+        $program = SpmbClassProgram::where('name', $request->class_program)->first();
+
+        $unitId = $registration->spmb_unit_id ?: 1;
+        $validGrades = \App\Models\SpmbGrade::where('spmb_unit_id', $unitId)
+            ->where('is_active', true)
+            ->pluck('name')
+            ->map(fn($n) => $n === 'KB' ? 'Play Group' : $n)
+            ->toArray();
+
         $request->validate([
             'candidate_name' => 'required|string|max:255',
             'nickname' => 'nullable|string|max:100',
@@ -41,19 +198,33 @@ class RegistrationController extends Controller
             'birth_date' => 'required|date|before:today',
             'religion' => 'required|string|max:100',
             'previous_school' => 'nullable|string|max:255',
-            'admission_level' => 'required|string|in:Play Group,TK A,TK B',
+            'admission_level' => 'required|string|in:' . implode(',', $validGrades),
             'class_program' => 'required|string',
         ]);
 
-        $registration = $this->getRegistration($request);
-        $program = SpmbClassProgram::where('name', $request->class_program)->first();
+        // Dynamically resolve Unit and Grade based on admission_level
+        $unit = $registration->unit;
+        $level = $request->admission_level;
+        $gradeName = $level === 'Play Group' ? 'KB' : $level;
+        
+        $grade = \App\Models\SpmbGrade::where('spmb_unit_id', $unit?->id)
+            ->where(function($q) use ($gradeName) {
+                $q->where('name', $gradeName)
+                  ->orWhere('name', 'KB Saja'); // for old test data compatibility
+            })
+            ->first();
+
         $registration->update(array_merge(
             $request->only([
                 'candidate_name', 'nickname', 'nik', 'gender',
                 'birth_place', 'birth_date', 'religion',
                 'previous_school', 'admission_level'
             ]),
-            ['spmb_class_program_id' => $program ? $program->id : null]
+            [
+                'spmb_class_program_id' => $program ? $program->id : null,
+                'spmb_unit_id' => $unit ? $unit->id : null,
+                'spmb_grade_id' => $grade ? $grade->id : null,
+            ]
         ));
 
         return response()->json([
@@ -90,7 +261,6 @@ class RegistrationController extends Controller
 
         $registration = $this->getRegistration($request);
 
-        // Save files to public disk (easy access for developer testing)
         if ($request->hasFile('birth_certificate')) {
             $birthCertPath = $request->file('birth_certificate')->store('documents', 'public');
             $registration->birth_certificate_path = $birthCertPath;
@@ -101,7 +271,6 @@ class RegistrationController extends Controller
             $registration->family_card_path = $familyCardPath;
         }
 
-        // Auto transition registration status to submitted since step 3 is completed
         $registration->registration_status = 'submitted';
         $registration->save();
 
@@ -115,93 +284,97 @@ class RegistrationController extends Controller
     {
         $registration = $this->getRegistration($request);
         $activePayment = $registration->activePayment;
+        $status = $registration->registration_status;
+        $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
 
-        // Build dashboard timeline & details according to Google Stitch layout guidelines
+        $feeDb = $this->getRegistrationFee($registration);
+        $feeAmount = $feeDb ? $feeDb->amount : 350000;
+        
+        $finalFees = $this->getFinalFeeDetails($registration);
+
         $timeline = [
-            'registration' => [
-                'label' => 'Pendaftaran & Pengisian Berkas',
-                'description' => 'Mengisi formulir data diri, orang tua, dan mengunggah berkas.',
-                'status' => $registration->registration_status === 'draft' ? 'in_progress' : 'completed',
+            'registration_fee' => [
+                'label' => 'Pembayaran Formulir',
+                'description' => 'Membayar biaya seleksi pendaftaran Rp ' . number_format($feeAmount, 0, ',', '.'),
+                'status' => $formPaid ? 'completed' : 'in_progress',
             ],
-            'payment' => [
-                'label' => 'Biaya Seleksi (Pembayaran)',
-                'description' => 'Melakukan pembayaran formulir pendaftaran sebesar Rp 350.000.',
-                'status' => 'not_started',
+            'form_fill' => [
+                'label' => 'Pengisian Formulir',
+                'description' => 'Mengisi data lengkap calon siswa, orang tua, & dokumen.',
+                'status' => ($status !== 'draft') ? 'completed' : ($formPaid ? 'in_progress' : 'not_started'),
             ],
             'verification' => [
                 'label' => 'Verifikasi Berkas',
-                'description' => 'Pemeriksaan berkas pendaftaran oleh panitia SPMB.',
-                'status' => 'not_started',
+                'description' => 'Pemeriksaan berkas persyaratan oleh panitia SPMB.',
+                'status' => in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']) ? 'completed' : ($status === 'failed' ? 'failed' : ($status === 'submitted' ? 'in_progress' : 'not_started')),
             ],
             'observation' => [
-                'label' => 'Tes Observasi',
-                'description' => 'Mengikuti tes kesiapan belajar secara daring.',
-                'status' => 'not_started',
+                'label' => 'Observasi / Ta\'aruf',
+                'description' => 'Tes kesiapan belajar calon siswa secara daring.',
+                'status' => in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']) ? 'completed' : ($status === 'verified' ? 'in_progress' : 'not_started'),
             ],
-            'announcement' => [
-                'label' => 'Pengumuman Hasil',
-                'description' => 'Pengumuman kelulusan akhir dan daftar ulang.',
-                'status' => 'not_started',
+            'agreement' => [
+                'label' => 'Persetujuan Pernyataan',
+                'description' => 'Menandatangani kesepakatan biaya dan tata tertib.',
+                'status' => in_array($status, ['agreement_signed', 'completed']) ? 'completed' : ($status === 'taaruf_completed' ? 'in_progress' : 'not_started'),
+            ],
+            'final_payment' => [
+                'label' => 'Administrasi Akhir',
+                'description' => 'Pelunasan biaya masuk yayasan dan SPP bulanan.',
+                'status' => ($status === 'completed') ? 'completed' : ($status === 'agreement_signed' ? 'in_progress' : 'not_started'),
+            ],
+            'completed' => [
+                'label' => 'Kelulusan & Selesai',
+                'description' => 'Resmi bergabung dengan Sekolah Anak Saleh.',
+                'status' => ($status === 'completed') ? 'completed' : 'not_started',
             ],
         ];
 
-        // 1. Payment status evaluation
-        if ($registration->registration_status !== 'draft') {
-            if ($registration->payment_status === 'paid') {
-                $timeline['payment']['status'] = 'completed';
-            } elseif ($registration->payment_status === 'pending' && $activePayment) {
-                $timeline['payment']['status'] = 'in_progress';
-            } else {
-                $timeline['payment']['status'] = 'in_progress'; // waiting for charge initiation
-            }
-        }
-
-        // 2. Verification status evaluation
-        if ($registration->payment_status === 'paid') {
-            if ($registration->registration_status === 'verified') {
-                $timeline['verification']['status'] = 'completed';
-            } elseif ($registration->registration_status === 'failed') {
-                $timeline['verification']['status'] = 'failed';
-            } else {
-                $timeline['verification']['status'] = 'in_progress';
-            }
-        }
-
-        // 3. Observation status evaluation
         $observationDetails = null;
-        if ($registration->registration_status === 'verified') {
-            $timeline['observation']['status'] = 'in_progress';
-            
-            // Provide Mock/Dynamic schedule data for Observation test as shown in Stitch Dashboard Layout
+        if (in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
             $observationDetails = [
-                'title' => 'Tes Observasi secara daring',
-                'datetime' => 'Sabtu, 26 Okt 2024. 08:00 - 10:00 WIB',
-                'zoom_link' => 'https://zoom.us/j/9876543210',
-                'guide_link' => 'https://sekolah-anak-saleh.sch.id/panduan-observasi.pdf'
+                'title' => 'Sesi Ta\'aruf Tatap Muka',
+                'location' => $registration->unit?->name ?? 'Sekolah Anak Saleh',
+                'notes' => 'Undangan resmi kehadiran offline akan dikirimkan panitia melalui WhatsApp ke nomor ' . $registration->parent_phone
             ];
         }
 
-        // 4. Announcement evaluation
-        if ($registration->registration_status === 'verified' && $registration->payment_status === 'paid') {
-            // Can be extended once final test results are added, currently waiting
-            $timeline['announcement']['status'] = 'not_started'; 
-        }
-
-        // Panitia message based on active step or custom notes from admin
         $committeeMessage = $registration->committee_notes;
         
-        if (empty($committeeMessage)) {
-            $committeeMessage = 'Silakan lengkapi formulir pendaftaran Anda terlebih dahulu.';
-            if ($registration->registration_status === 'submitted') {
-                if ($registration->payment_status !== 'paid') {
-                    $committeeMessage = 'Formulir Anda telah disimpan. Silakan lakukan pembayaran pendaftaran sebesar Rp 350.000 untuk memulai proses verifikasi berkas.';
+        // If candidate is verified/approved, clear any old rejection notes from view
+        if (in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
+            if ($committeeMessage && (str_contains($committeeMessage, 'perlu diperbaiki') || str_contains($committeeMessage, 'Mohon maaf') || str_contains($committeeMessage, 'ditolak'))) {
+                $committeeMessage = null;
+            }
+        }
+
+        $defaultMessages = [
+            'Pembayaran formulir pendaftaran berhasil diterima. Silakan isi dan lengkapi formulir pendaftaran Anda.',
+            'Pembayaran formulir terkonfirmasi. Silakan lengkapi formulir pendaftaran Anda pada menu di atas.',
+            'Selamat datang! Silakan lakukan pembayaran biaya pendaftaran formulir sebesar Rp ' . number_format($feeAmount, 0, ',', '.') . ' untuk membuka formulir.',
+            'Formulir Anda telah disimpan. Berkas Anda sedang diperiksa oleh Panitia SPMB. Mohon tunggu proses verifikasi selesai.',
+            'Formulir pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.'
+        ];
+        
+        if (empty($committeeMessage) || in_array($committeeMessage, $defaultMessages)) {
+            if ($status === 'draft') {
+                if (!$formPaid) {
+                    $committeeMessage = 'Selamat datang! Silakan lakukan pembayaran biaya pendaftaran formulir sebesar Rp ' . number_format($feeAmount, 0, ',', '.') . ' untuk membuka formulir.';
                 } else {
-                    $committeeMessage = 'Pembayaran terkonfirmasi. Berkas Anda sedang diperiksa oleh Panitia SPMB. Mohon tunggu proses verifikasi selesai.';
+                    $committeeMessage = 'Pembayaran formulir terkonfirmasi. Silakan lengkapi formulir pendaftaran Anda pada menu di atas.';
                 }
-            } elseif ($registration->registration_status === 'verified') {
-                $committeeMessage = 'Alhamdulillah, berkas ananda ' . ($registration->candidate_name ?? 'Ahmad Raihan') . ' telah kami terima dan diverifikasi. Silakan persiapkan ananda untuk mengikuti Tes Observasi secara daring. Mohon cek detail jadwal dan tautan di bawah ini.';
-            } elseif ($registration->registration_status === 'failed') {
-                $committeeMessage = 'Mohon maaf, berkas pendaftaran Anda tidak lolos verifikasi. Silakan hubungi admin panitia SPMB.';
+            } elseif ($status === 'submitted') {
+                $committeeMessage = 'Formulir pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.';
+            } elseif ($status === 'verified') {
+                $committeeMessage = 'Alhamdulillah, berkas pendaftaran ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah kami terima dan diverifikasi. Silakan persiapkan untuk mengikuti sesi Ta\'aruf tatap muka di unit sekolah.';
+            } elseif ($status === 'taaruf_completed') {
+                $committeeMessage = 'Sesi Ta\'aruf offline selesai dilakukan. Silakan mengisi dan menyetujui Formulir Pernyataan Kesanggupan untuk memproses biaya administrasi akhir.';
+            } elseif ($status === 'agreement_signed') {
+                $committeeMessage = 'Pernyataan kesanggupan disetujui. Silakan selesaikan pembayaran biaya administrasi akhir sebesar Rp ' . number_format($finalFees['total'], 0, ',', '.') . ' untuk menyelesaikan pendaftaran.';
+            } elseif ($status === 'completed') {
+                $committeeMessage = 'Selamat! Pendaftaran ananda ' . ($registration->candidate_name ?? 'Ananda') . ' dinyatakan selesai dan resmi diterima di Sekolah Anak Saleh. Selamat bergabung!';
+            } elseif ($status === 'failed') {
+                $committeeMessage = 'Mohon maaf, berkas pendaftaran Anda tidak lolos verifikasi. Silakan hubungi admin panitia.';
             }
         }
 

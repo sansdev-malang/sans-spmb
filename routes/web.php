@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/payments/{id}/simulate', [WebDashboardController::class, 'simulatePaymentCallback'])->name('dashboard.simulate-payment');
     Route::post('/dashboard/payments/{id}/cancel', [WebDashboardController::class, 'cancelPayment'])->name('dashboard.cancel-payment');
     Route::get('/dashboard/payments/{id}/receipt', [WebDashboardController::class, 'downloadReceipt'])->name('dashboard.payment.receipt');
+    Route::get('/dashboard/registration/{id}/admission-letter', [WebDashboardController::class, 'downloadAdmissionLetter'])->name('dashboard.admission-letter.download');
 
     // Profile Management (Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -194,6 +195,18 @@ Route::middleware('auth')->group(function () {
             Route::post('/admin/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
             Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
             Route::post('/admin/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password');
+
+            // System Logs Viewer
+            Route::get('/admin/logs', [\App\Http\Controllers\Web\AdminLogsController::class, 'index'])->name('admin.logs');
+            Route::post('/admin/logs/clear', [\App\Http\Controllers\Web\AdminLogsController::class, 'clear'])->name('admin.logs.clear');
+
+            // Agreement Templates Setting CRUD
+            Route::get('/admin/spmb-settings/agreements', [\App\Http\Controllers\Web\SpmbAgreementsController::class, 'index'])->name('admin.spmb-settings.agreements');
+            Route::post('/admin/spmb-settings/agreements/{id}', [\App\Http\Controllers\Web\SpmbAgreementsController::class, 'update'])->name('admin.spmb-settings.agreements.update');
+
+            // Re-registration Instructions settings
+            Route::get('/admin/spmb-settings/instructions', [SettingsController::class, 'reRegistrationInstructions'])->name('admin.spmb-settings.instructions');
+            Route::post('/admin/spmb-settings/instructions', [SettingsController::class, 'saveReRegistrationInstructions'])->name('admin.spmb-settings.instructions.save');
         });
     });
 });

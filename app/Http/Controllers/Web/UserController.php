@@ -117,7 +117,8 @@ class UserController extends Controller
             'candidate_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255',
             'parent_phone' => 'required|string|max:20',
-            'admission_level' => 'required|in:PAUD,SD,SMP',
+            'password' => 'required|string|min:8',
+            'spmb_unit_id' => 'required|exists:spmb_units,id',
         ]);
 
         // Check if user already exists
@@ -126,17 +127,23 @@ class UserController extends Controller
             return redirect()->route('login')->with('error', 'Email ini sudah terdaftar. Silakan login terlebih dahulu untuk melanjutkan pendaftaran.');
         }
 
-        // Create user with WhatsApp as password
+        // Create user with password input
         $user = User::create([
             'name' => $request->candidate_name . ' (Wali)',
             'email' => $request->email,
-            'password' => Hash::make($request->parent_phone),
+            'password' => Hash::make($request->password),
             'role' => 'candidate',
         ]);
 
-        // Determine unit
-        $unitName = $request->admission_level;
-        $unit = \App\Models\SpmbUnit::where('name', 'like', '%' . $unitName . '%')->first();
+        // Resolve unit and default grade dynamically
+        $unit = \App\Models\SpmbUnit::find($request->spmb_unit_id);
+        $grade = \App\Models\SpmbGrade::where('spmb_unit_id', $unit->id)->where('is_active', true)->first();
+
+        // Map admission level dynamically
+        $admissionLevel = $grade ? $grade->name : 'Play Group';
+        if ($admissionLevel === 'KB Saja' || $admissionLevel === 'KB') {
+            $admissionLevel = 'Play Group';
+        }
 
         // Get active configs
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
@@ -148,8 +155,9 @@ class UserController extends Controller
             'user_id' => $user->id,
             'candidate_name' => $request->candidate_name,
             'parent_phone' => $request->parent_phone,
-            'admission_level' => $request->admission_level,
-            'spmb_unit_id' => $unit?->id,
+            'admission_level' => $admissionLevel,
+            'spmb_unit_id' => $unit->id,
+            'spmb_grade_id' => $grade->id,
             'spmb_period_id' => $activePeriod?->id,
             'spmb_wave_id' => $activeWave?->id,
             'spmb_type_id' => $activeType?->id,
@@ -160,6 +168,6 @@ class UserController extends Controller
         // Log the user in
         Auth::login($user);
 
-        return redirect()->route('dashboard.detail', $registration->id)->with('success', 'Akun berhasil dibuat dan Anda telah masuk secara otomatis! Sandi akun Anda adalah nomor WhatsApp Anda. Silakan lengkapi formulir.');
+        return redirect()->route('dashboard.detail', $registration->id)->with('success', 'Akun berhasil dibuat dan Anda telah masuk secara otomatis! Silakan lengkapi formulir.');
     }
 }

@@ -95,7 +95,7 @@
                                 'name' => $reg->candidate_name ?? 'Draft / Belum Isi',
                                 'nickname' => $reg->nickname ?? '-',
                                 'nik' => $reg->nik ?? '-',
-                                'gender' => $reg->gender === 'male' ? 'Laki-laki' : ($reg->gender === 'female' ? 'Perempuan' : '-'),
+                                'gender' => in_array($reg->gender, ['Laki-laki', 'male']) ? 'Laki-laki' : (in_array($reg->gender, ['Perempuan', 'female']) ? 'Perempuan' : ($reg->gender ?? '-')),
                                 'birth_place' => $reg->birth_place ?? '-',
                                 'birth_date' => $reg->birth_date ? $reg->birth_date->format('d F Y') : '-',
                                 'religion' => $reg->religion ?? '-',
@@ -170,25 +170,19 @@
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <div class="flex justify-end items-center gap-1.5 flex-wrap">
-                                    <!-- Detail Modal Trigger -->
-                                    <button type="button" 
-                                        onclick="openCandidateDetailModal({{ json_encode($candJson) }})" 
-                                        class="bg-brand-emerald hover-emerald text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition flex items-center gap-1">
-                                        <i data-lucide="eye" class="w-3 h-3"></i> Detail
-                                    </button>
- 
                                     @if ($reg->registration_status === 'submitted')
-                                        <!-- Quick Verify Form -->
-                                        <form action="{{ route('admin.registrations.verify', $reg->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            <button type="submit" class="bg-green-650 hover:bg-green-750 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg shadow-sm transition">
-                                                Setujui
-                                            </button>
-                                        </form>
- 
-                                        <!-- Reject Trigger (shows custom reason input dialog) -->
-                                        <button onclick="toggleRejectModal({{ $reg->id }}, '{{ $reg->candidate_name }}')" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg shadow-sm transition">
-                                            Tolak
+                                        <!-- Verifikasi Modal Trigger -->
+                                        <button type="button" 
+                                            onclick="openCandidateDetailModal({{ json_encode($candJson) }}, true, {{ $reg->id }})" 
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition flex items-center gap-1.5">
+                                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-yellow"></i> Verifikasi Data
+                                        </button>
+                                    @else
+                                        <!-- Detail Modal Trigger -->
+                                        <button type="button" 
+                                            onclick="openCandidateDetailModal({{ json_encode($candJson) }}, false)" 
+                                            class="bg-slate-600 hover:bg-slate-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition flex items-center gap-1">
+                                            <i data-lucide="eye" class="w-3 h-3"></i> Detail
                                         </button>
                                     @endif
  
@@ -223,211 +217,294 @@
     </div>
 </div>
 
-<!-- Modal 1: Reject Dialog -->
-<div id="rejectModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-        <div class="bg-red-600 text-white px-6 py-4">
-            <h3 class="font-extrabold text-lg">Tolak Pendaftaran</h3>
-            <p class="text-xs text-red-100 mt-0.5">Berikan alasan mengapa berkas pendaftaran calon siswa ditolak.</p>
-        </div>
-        <form id="rejectForm" method="POST" class="p-6 space-y-4 text-left">
+<!-- Modal: Candidate Detail & Verification Modal Overlay -->
+<div id="detailModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+        
+        <form id="verifyForm" method="POST" action="" class="flex flex-col h-full overflow-hidden">
             @csrf
-            <div>
-                <span class="text-xs text-slate-400 font-bold block uppercase mb-1">Calon Siswa</span>
-                <span id="rejectCandidateName" class="font-extrabold text-slate-800 dark:text-white text-sm"></span>
+            <!-- Hidden inputs -->
+            <input type="hidden" id="invalid_fields_input" name="invalid_fields" value="[]">
+
+            <!-- Modal Header -->
+            <div class="bg-brand-emerald text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <div>
+                    <h3 class="font-extrabold text-base flex items-center gap-2">
+                        <i data-lucide="user" class="w-5 h-5 text-brand-yellow"></i>
+                        <span id="det-title-label">Detail Data Pendaftar</span>
+                    </h3>
+                    <p id="det-id-label" class="text-[10px] text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
+                </div>
+                <button type="button" onclick="closeDetailModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
             </div>
-            <div>
-                <label for="reason" class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">Alasan Penolakan*</label>
-                <textarea id="reason" name="reason" required rows="4"
-                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
-                    placeholder="Contoh: Berkas Akta Kelahiran buram dan tidak terbaca. Harap unggah ulang berkas yang lebih jelas."></textarea>
-            </div>
-            <div class="flex justify-end gap-2 pt-4">
-                <button type="button" onclick="closeRejectModal()" class="border border-slate-300 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl text-xs font-bold transition">
-                    Kembali
-                </button>
-                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md">
-                    Kirim Alasan Penolakan
-                </button>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 space-y-6 overflow-y-auto flex-grow text-xs text-slate-700 dark:text-slate-300 text-left">
+                
+                <!-- Grid: SPMB Admission Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800">
+                    <div class="verify-field-container p-1 rounded-lg border border-transparent">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Periode</span>
+                            <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                <input type="checkbox" data-field="spmb_period_id" data-label="Tahun Ajaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                <span>OK</span>
+                            </label>
+                        </div>
+                        <span id="det-period" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+                    </div>
+                    <div class="verify-field-container p-1 rounded-lg border border-transparent">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Gelombang</span>
+                            <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                <input type="checkbox" data-field="spmb_wave_id" data-label="Gelombang" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                <span>OK</span>
+                            </label>
+                        </div>
+                        <span id="det-wave" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+                    </div>
+                    <div class="verify-field-container p-1 rounded-lg border border-transparent">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Jalur Masuk</span>
+                            <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                <input type="checkbox" data-field="spmb_type_id" data-label="Jalur Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                <span>OK</span>
+                            </label>
+                        </div>
+                        <span id="det-type" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Status Berkas</span>
+                        <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase">SUBMITTED</span>
+                    </div>
+                </div>
+
+                <!-- Segment 1: Personal Information -->
+                <div class="space-y-3">
+                    <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="info" class="w-4 h-4"></i> Biodata Calon Siswa
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Lengkap</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="candidate_name" data-label="Nama Lengkap" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-name" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Panggilan</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="nickname" data-label="Nama Panggilan" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">NIK (Nomor Induk Kependudukan)</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="nik" data-label="NIK" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-nik" class="font-mono text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Jenis Kelamin</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="gender" data-label="Jenis Kelamin" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-gender" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="birth_place" data-label="Tempat/Tanggal Lahir" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-birth" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Agama</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="religion" data-label="Agama" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-religion" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Asal Sekolah (TK/PAUD)</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="previous_school" data-label="Asal Sekolah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Tingkat Pendaftaran</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="admission_level" data-label="Tingkat Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-level" class="font-bold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Program Kelas</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="spmb_class_program_id" data-label="Program Kelas" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-program" class="font-bold text-brand-emerald dark:text-emerald-400">-</span>
+                        </div>
+                        <div class="md:col-span-2 bg-slate-50 dark:bg-slate-950/20 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 verify-field-container">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="extra_services" data-label="Layanan Tambahan" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-extras" class="font-bold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segment 2: Parent Information -->
+                <div class="space-y-3 pt-2">
+                    <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="users" class="w-4 h-4"></i> Data Orang Tua / Wali
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ayah Kandung</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="father_name" data-label="Nama Ayah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-father" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ibu Kandung</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="mother_name" data-label="Nama Ibu" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-mother" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">No. HP Wali (WhatsApp)</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                    <input type="checkbox" data-field="parent_phone" data-label="No. HP Wali" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span id="det-phone" class="font-mono text-slate-800 dark:text-slate-200">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segment 3: Uploaded Documents -->
+                <div class="space-y-3 pt-2">
+                    <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> Dokumen Persyaratan
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div id="det-cert-box" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between verify-field-container">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350 block">Akta Kelahiran</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                            <input type="checkbox" data-field="birth_certificate_path" data-label="Scan Akta Kelahiran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
+                                </div>
+                            </div>
+                            <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans">
+                                Buka File
+                            </a>
+                        </div>
+                        <div id="det-card-box" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between verify-field-container">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350 block">Kartu Keluarga</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
+                                            <input type="checkbox" data-field="family_card_path" data-label="Scan Kartu Keluarga" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
+                                </div>
+                            </div>
+                            <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans">
+                                Buka File
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Textarea for Verification Message Notes (Dynamic Rejection Message) -->
+                <div id="verification-notes-block" class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2 hidden">
+                    <label id="verification-notes-label" class="block text-xs font-bold text-slate-655 dark:text-slate-400 uppercase tracking-wider">Pesan Catatan Verifikasi</label>
+                    <textarea id="verification-notes" name="notes" rows="4"
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs leading-relaxed"
+                        placeholder="Masukkan catatan tambahan..."></textarea>
+                </div>
+
+            </div>            <!-- Modal Footer -->
+            <div class="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center flex-shrink-0">
+                <div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Tanggal Masuk Formulir</span>
+                    <span id="det-created" class="text-[10px] font-semibold text-slate-650 dark:text-slate-350">20 Aug 2026, 03:00 WIB</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-reject" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md hidden">
+                        Tolak & Minta Perbaikan
+                    </button>
+                    <button type="submit" id="btn-approve" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md hidden">
+                        Setujui & Verifikasi Berkas
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal 2: Candidate Detail Modal Overlay -->
-<div id="detailModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
-        <!-- Modal Header -->
-        <div class="bg-brand-emerald text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
-            <div>
-                <h3 class="font-extrabold text-base flex items-center gap-2">
-                    <i data-lucide="user" class="w-5 h-5 text-brand-yellow"></i>
-                    Detail Data Pendaftar
-                </h3>
-                <p id="det-id-label" class="text-[10px] text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
-            </div>
-            <button onclick="closeDetailModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
-        </div>
-
-        <!-- Modal Body (Scrollable) -->
-        <div class="p-6 space-y-6 overflow-y-auto flex-grow text-xs text-slate-700 dark:text-slate-300 text-left">
-            
-            <!-- Grid: SPMB Admission Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800">
-                <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Periode</span>
-                    <span id="det-period" class="font-bold text-slate-700 dark:text-slate-300">-</span>
-                </div>
-                <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Gelombang</span>
-                    <span id="det-wave" class="font-bold text-slate-700 dark:text-slate-300">-</span>
-                </div>
-                <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Jalur Masuk</span>
-                    <span id="det-type" class="font-bold text-slate-700 dark:text-slate-300">-</span>
-                </div>
-                <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Status Berkas</span>
-                    <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase">SUBMITTED</span>
-                </div>
-            </div>
-
-            <!-- Segment 1: Personal Information -->
-            <div class="space-y-3">
-                <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="info" class="w-4 h-4"></i> Biodata Calon Siswa
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Lengkap</span>
-                        <span id="det-name" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Panggilan</span>
-                        <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">NIK (Nomor Induk Kependudukan)</span>
-                        <span id="det-nik" class="font-mono text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Jenis Kelamin</span>
-                        <span id="det-gender" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
-                        <span id="det-birth" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Agama</span>
-                        <span id="det-religion" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Asal Sekolah (TK/PAUD)</span>
-                        <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Tingkat Pendaftaran</span>
-                        <span id="det-level" class="font-bold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Program Kelas</span>
-                        <span id="det-program" class="font-bold text-brand-emerald dark:text-emerald-400">-</span>
-                    </div>
-                    <div class="md:col-span-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
-                        <span id="det-extras" class="font-bold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Segment 2: Parent Information -->
-            <div class="space-y-3 pt-2">
-                <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="users" class="w-4 h-4"></i> Data Orang Tua / Wali
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ayah Kandung</span>
-                        <span id="det-father" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ibu Kandung</span>
-                        <span id="det-mother" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">No. HP Wali (WhatsApp)</span>
-                        <span id="det-phone" class="font-mono text-slate-800 dark:text-slate-200">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Segment 3: Uploaded Documents -->
-            <div class="space-y-3 pt-2">
-                <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Dokumen Persyaratan
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div id="det-cert-box" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
-                            <div>
-                                <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350 block">Akta Kelahiran</span>
-                                <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
-                            </div>
-                        </div>
-                        <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans">
-                            Buka File
-                        </a>
-                    </div>
-                    <div id="det-card-box" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
-                            <div>
-                                <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350 block">Kartu Keluarga</span>
-                                <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
-                            </div>
-                        </div>
-                        <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans">
-                            Buka File
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center flex-shrink-0">
-            <div>
-                <span class="text-[9px] font-bold text-slate-400 uppercase block">Tanggal Masuk Formulir</span>
-                <span id="det-created" class="text-[10px] font-semibold text-slate-650 dark:text-slate-350">20 Aug 2026, 03:00 WIB</span>
-            </div>
-            <button onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition">
-                Tutup Detail
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
-    function toggleRejectModal(id, name) {
-        const modal = document.getElementById('rejectModal');
-        const form = document.getElementById('rejectForm');
-        const nameSpan = document.getElementById('rejectCandidateName');
-        
-        nameSpan.innerText = name;
-        form.action = `/admin/registrations/${id}/reject`;
-        
-        modal.classList.remove('hidden');
-    }
-
-    function closeRejectModal() {
-        document.getElementById('rejectModal').classList.add('hidden');
-    }
-
     // Detailed Candidate Modal
-    function openCandidateDetailModal(cand) {
+    function openCandidateDetailModal(cand, isVerificationMode = false, regId = null) {
         document.getElementById('det-id-label').innerText = 'ID: ' + cand.id_label;
         document.getElementById('det-period').innerText = cand.period;
         document.getElementById('det-wave').innerText = cand.wave;
@@ -486,6 +563,44 @@
             cardLink.style.display = 'none';
         }
 
+        // Toggle verification elements
+        const verifyForm = document.getElementById('verifyForm');
+        const titleLabel = document.getElementById('det-title-label');
+        const btnApprove = document.getElementById('btn-approve');
+        const btnReject = document.getElementById('btn-reject');
+        const notesBlock = document.getElementById('verification-notes-block');
+        const verificationChecks = document.querySelectorAll('.verification-check');
+        const fieldContainers = document.querySelectorAll('.verify-field-container');
+
+        // Reset check boxes state & layout styling classes
+        document.querySelectorAll('.verification-check input[type="checkbox"]').forEach(cb => {
+            cb.checked = true;
+        });
+        fieldContainers.forEach(container => {
+            container.classList.remove('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
+        });
+
+        if (isVerificationMode && regId) {
+            verifyForm.dataset.regId = regId;
+            titleLabel.innerText = 'Proses Verifikasi Data & Berkas Calon Siswa';
+            btnApprove.classList.remove('hidden');
+            btnReject.classList.remove('hidden');
+            notesBlock.classList.remove('hidden');
+            verificationChecks.forEach(el => el.classList.remove('hidden'));
+
+            // Bind separate actions to buttons dynamically using formaction
+            btnApprove.setAttribute('formaction', `/admin/registrations/${regId}/verify`);
+            btnReject.setAttribute('formaction', `/admin/registrations/${regId}/reject`);
+
+            updateVerificationSummary();
+        } else {
+            titleLabel.innerText = 'Detail Data Pendaftar';
+            btnApprove.classList.add('hidden');
+            btnReject.classList.add('hidden');
+            notesBlock.classList.add('hidden');
+            verificationChecks.forEach(el => el.classList.add('hidden'));
+        }
+
         document.getElementById('detailModal').classList.remove('hidden');
         
         if (window.lucide) {
@@ -495,6 +610,61 @@
 
     function closeDetailModal() {
         document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    // Close modal by clicking outside
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDetailModal();
+        }
+    });
+
+    // Attach event listeners to validation checkboxes
+    document.querySelectorAll('.verification-check input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const container = this.closest('.verify-field-container');
+            if (container) {
+                if (this.checked) {
+                    container.classList.remove('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
+                } else {
+                    container.classList.add('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
+                }
+            }
+            updateVerificationSummary();
+        });
+    });
+
+    function updateVerificationSummary() {
+        const unchecked = [];
+        const labels = [];
+        document.querySelectorAll('.verification-check input[type="checkbox"]').forEach(cb => {
+            if (!cb.checked) {
+                unchecked.push(cb.getAttribute('data-field'));
+                labels.push(cb.getAttribute('data-label'));
+            }
+        });
+
+        const notesTextarea = document.getElementById('verification-notes');
+        const notesLabel = document.getElementById('verification-notes-label');
+        const invalidFieldsInput = document.getElementById('invalid_fields_input');
+        const candidateName = document.getElementById('det-name').innerText;
+
+        invalidFieldsInput.value = JSON.stringify(unchecked);
+
+        if (unchecked.length > 0) {
+            notesLabel.innerText = 'Alasan Penolakan / Perbaikan Berkas';
+            
+            // Auto-generate helper rejection text
+            let compiledMsg = `Mohon maaf, berkas pendaftaran ananda ${candidateName} perlu diperbaiki pada bagian:\n`;
+            labels.forEach(lbl => {
+                compiledMsg += `- ${lbl}\n`;
+            });
+            compiledMsg += `\nSilakan perbaiki data tersebut melalui portal pendaftar Menu Formulir agar dapat kami verifikasi kembali.`;
+            notesTextarea.value = compiledMsg;
+        } else {
+            notesLabel.innerText = 'Catatan Penutup Verifikasi (Opsional)';
+            notesTextarea.value = `Alhamdulillah, berkas pendaftaran ananda ${candidateName} telah kami terima dan diverifikasi. Silakan persiapkan untuk mengikuti Tes Observasi.`;
+        }
     }
 </script>
 @endsection

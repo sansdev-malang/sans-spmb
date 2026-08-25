@@ -12,6 +12,8 @@ class Registration extends Model
         'birth_date' => 'date',
         'additional_info' => 'array',
         'final_fee_snapshot' => 'array',
+        'invalid_fields' => 'array',
+        'signed_at' => 'datetime',
     ];
 
     public function scopeScopedByAdmin($query)
@@ -35,7 +37,8 @@ class Registration extends Model
         $columns = [
             'candidate_name', 'nickname', 'nik', 'gender', 'birth_place', 
             'birth_date', 'religion', 'previous_school', 'admission_level', 'father_name', 
-            'mother_name', 'parent_phone', 'birth_certificate_path', 'family_card_path'
+            'mother_name', 'parent_phone', 'birth_certificate_path', 'family_card_path',
+            'spmb_wave_id', 'spmb_type_id', 'spmb_period_id', 'spmb_class_program_id'
         ];
 
         if (in_array($fieldName, $columns)) {

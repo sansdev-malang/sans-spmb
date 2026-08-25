@@ -29,6 +29,11 @@
         <button type="button" onclick="switchActivationTab('biaya_tarif')" id="activationTabBtn-biaya_tarif" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
             <i data-lucide="coins" class="w-4 h-4"></i> Biaya Pendaftaran
         </button>
+        @foreach($gateways as $gw)
+            <button type="button" onclick="switchActivationTab('gateway_{{ $gw->code }}')" id="activationTabBtn-gateway_{{ $gw->code }}" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+                <i data-lucide="credit-card" class="w-4 h-4"></i> {{ $gw->name }}
+            </button>
+        @endforeach
     </div>
 
     <form method="POST" action="{{ route('admin.spmb-settings.registration.update') }}" class="space-y-6">
@@ -43,7 +48,7 @@
                 <p class="text-[10px] text-slate-400">Aktifkan periode pendaftaran, gelombang masuk aktif, serta tipe jalur masuk sekolah.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Card 1: Periode Akademik -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
                     <div class="space-y-2">
@@ -118,6 +123,31 @@
                         @endforelse
                     </div>
                 </div>
+
+                <!-- Card 4: Program Kelas -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
+                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                            <h3>Program Kelas</h3>
+                        </div>
+                        <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Program kelas (seperti Reguler, Tahfidz) yang bisa dipilih.</p>
+                    </div>
+                    
+                    <div class="space-y-2 pt-2">
+                        @forelse($classPrograms as $program)
+                            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
+                                <span class="text-xs font-bold text-slate-700">{{ $program->name }}</span>
+                                <div class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="active_programs[]" value="{{ $program->id }}" {{ $program->is_active ? 'checked' : '' }} class="sr-only peer">
+                                    <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </div>
+                            </label>
+                        @empty
+                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada data program kelas.</p>
+                        @endforelse
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -127,10 +157,10 @@
                 <h2 class="text-xs font-black uppercase tracking-widest text-slate-405 flex items-center gap-2">
                     <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i> Konfigurasi Jenjang & Struktur Akademik
                 </h2>
-                <p class="text-[10px] text-slate-400">Aktifkan unit sekolah, tingkatan kelas per jenjang, program kelas, serta layanan non-formal tambahan.</p>
+                <p class="text-[10px] text-slate-400">Aktifkan unit sekolah, tingkatan kelas per jenjang, serta layanan non-formal tambahan.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Card 5: Unit Pendidikan -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
                     <div class="space-y-2">
@@ -159,61 +189,8 @@
                     </div>
                 </div>
 
-                <!-- Card 6: Program Kelas -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
-                            <i data-lucide="book-open" class="w-4 h-4"></i>
-                            <h3>Program Kelas</h3>
-                        </div>
-                        <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Program kelas (seperti Reguler, Tahfidz) yang bisa dipilih.</p>
-                    </div>
-                    
-                    <div class="space-y-2 pt-2">
-                        @forelse($classPrograms as $program)
-                            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
-                                <span class="text-xs font-bold text-slate-700">{{ $program->name }}</span>
-                                <div class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="active_programs[]" value="{{ $program->id }}" {{ $program->is_active ? 'checked' : '' }} class="sr-only peer">
-                                    <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-                                </div>
-                            </label>
-                        @empty
-                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada data program kelas.</p>
-                        @endforelse
-                    </div>
-                </div>
-
-                <!-- Card 7: Layanan Non-Formal (Tambahan) -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
-                            <i data-lucide="puzzle" class="w-4 h-4"></i>
-                            <h3>Layanan Non-Formal</h3>
-                        </div>
-                        <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Layanan tambahan opsional yang ditawarkan pada pendaftaran.</p>
-                    </div>
-                    
-                    <div class="space-y-2 pt-2">
-                        @forelse($extraServices as $service)
-                            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
-                                <div>
-                                    <span class="text-xs font-bold text-slate-700 block">{{ $service->name }}</span>
-                                    <span class="text-[9px] text-slate-400 font-semibold font-mono">{{ $service->code }}</span>
-                                </div>
-                                <div class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="active_services[]" value="{{ $service->id }}" {{ $service->is_active ? 'checked' : '' }} class="sr-only peer">
-                                    <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
-                                </div>
-                            </label>
-                        @empty
-                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada data layanan tambahan.</p>
-                        @endforelse
-                    </div>
-                </div>
-
                 <!-- Card 8: Tingkatan Kelas (Grouped by Unit) -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between md:col-span-2 lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
                     <div class="space-y-2">
                         <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
                             <i data-lucide="layers" class="w-4 h-4"></i>
@@ -247,6 +224,34 @@
                             @endif
                         @empty
                             <p class="text-xs text-slate-400 font-semibold py-2">Belum ada data tingkatan kelas.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Card 7: Layanan Non-Formal (Tambahan) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
+                            <i data-lucide="puzzle" class="w-4 h-4"></i>
+                            <h3>Layanan Non-Formal</h3>
+                        </div>
+                        <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Layanan tambahan opsional yang ditawarkan pada pendaftaran.</p>
+                    </div>
+                    
+                    <div class="space-y-2 pt-2">
+                        @forelse($extraServices as $service)
+                            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-700 block">{{ $service->name }}</span>
+                                    <span class="text-[9px] text-slate-400 font-semibold font-mono">{{ $service->code }}</span>
+                                </div>
+                                <div class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="active_services[]" value="{{ $service->id }}" {{ $service->is_active ? 'checked' : '' }} class="sr-only peer">
+                                    <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </div>
+                            </label>
+                        @empty
+                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada data layanan tambahan.</p>
                         @endforelse
                     </div>
                 </div>
@@ -316,6 +321,55 @@
                 @endforeach
             </div>
         </div>
+
+        @foreach($gateways as $gw)
+            <!-- TAB Gateway: {{ $gw->name }} -->
+            <div id="activationTabContent-gateway_{{ $gw->code }}" class="activation-tab-content space-y-4 hidden">
+                <div class="space-y-1">
+                    <h2 class="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                        <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Aktivasi Channel {{ $gw->name }}
+                    </h2>
+                    <p class="text-[10px] text-slate-400">Aktifkan atau nonaktifkan metode pembayaran yang didukung oleh {{ $gw->name }} untuk SPMB.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4">
+                    <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                        <h3>Metode Pembayaran Tersedia ({{ $gw->name }})</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-2">
+                        @forelse($gw->paymentChannels as $chan)
+                            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-700 block">
+                                        {{ $chan->name }}
+                                    </span>
+                                    <span class="text-[9px] uppercase font-black text-slate-400 tracking-wider">
+                                        Code: {{ $chan->code }} | Type: {{ $chan->type }}
+                                    </span>
+                                </div>
+                                <div class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="active_channels[]" value="{{ $chan->id }}" {{ $chan->is_active ? 'checked' : '' }} class="sr-only peer">
+                                    <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </div>
+                            </label>
+                        @empty
+                            <div class="col-span-full py-4 text-center">
+                                <p class="text-xs text-slate-400 font-semibold">Belum ada channel pembayaran terdaftar untuk gateway ini.</p>
+                                @if($gw->code === 'winpay')
+                                    <div class="mt-2">
+                                        <a href="{{ route('admin.settings') }}" class="inline-flex items-center gap-1 bg-brand-emerald text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow hover:bg-emerald-600">
+                                            <i data-lucide="refresh-cw" class="w-3 h-3"></i> Singkronkan Channel di Pengaturan Teknis
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        @endforeach
 
         <!-- Submit Footer -->
         <div class="bg-white rounded-2xl border border-slate-100 p-4 flex flex-col sm:flex-row gap-3 justify-between items-center shadow-sm">

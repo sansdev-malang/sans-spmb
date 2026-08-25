@@ -348,6 +348,8 @@ class SettingsController extends Controller
             'footer_terms_url' => Setting::get('footer_terms_url', '#'),
             'footer_faq_url' => Setting::get('footer_faq_url', '#'),
             'footer_copyright_text' => Setting::get('footer_copyright_text', '© 2026 {SchoolName}. All rights reserved.'),
+            're_registration_instructions_unpaid' => Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>'),
+            're_registration_instructions_completed' => Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>'),
         ];
 
         foreach ($units as $unit) {
@@ -443,6 +445,8 @@ class SettingsController extends Controller
             'footer_terms_url' => 'nullable|string|max:255',
             'footer_faq_url' => 'nullable|string|max:255',
             'footer_copyright_text' => 'nullable|string|max:255',
+            're_registration_instructions_unpaid' => 'nullable|string',
+            're_registration_instructions_completed' => 'nullable|string',
         ];
 
         foreach ($units as $unit) {
@@ -470,6 +474,8 @@ class SettingsController extends Controller
         Setting::set('footer_terms_url', $request->footer_terms_url ?? '#');
         Setting::set('footer_faq_url', $request->footer_faq_url ?? '#');
         Setting::set('footer_copyright_text', $request->footer_copyright_text ?? '© 2026 {SchoolName}. All rights reserved.');
+        Setting::set('re_registration_instructions_unpaid', $request->re_registration_instructions_unpaid ?? '');
+        Setting::set('re_registration_instructions_completed', $request->re_registration_instructions_completed ?? '');
 
         // Process units dynamically
         foreach ($units as $unit) {
@@ -530,6 +536,31 @@ class SettingsController extends Controller
             Setting::set('school_hero_images', json_encode($heroUrls));
         }
 
+        session(['active_ui_tab' => $request->input('active_tab', 'global')]);
+
         return redirect()->back()->with('success', 'Pengaturan tampilan UI pendaftaran berhasil disimpan!');
+    }
+
+    public function reRegistrationInstructions()
+    {
+        $settings = [
+            're_registration_instructions_unpaid' => Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>'),
+            're_registration_instructions_completed' => Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>'),
+        ];
+
+        return view('admin.settings-instructions', compact('settings'));
+    }
+
+    public function saveReRegistrationInstructions(Request $request)
+    {
+        $request->validate([
+            're_registration_instructions_unpaid' => 'nullable|string',
+            're_registration_instructions_completed' => 'nullable|string',
+        ]);
+
+        Setting::set('re_registration_instructions_unpaid', $request->re_registration_instructions_unpaid ?? '');
+        Setting::set('re_registration_instructions_completed', $request->re_registration_instructions_completed ?? '');
+
+        return redirect()->back()->with('success', 'Instruksi daftar ulang berhasil diperbarui.');
     }
 }

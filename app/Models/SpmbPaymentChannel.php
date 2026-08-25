@@ -10,10 +10,16 @@ class SpmbPaymentChannel extends Model
         'code',
         'name',
         'type',
-        'is_active'
+        'is_active',
+        'payment_gateway_id'
     ];
 
     protected $casts = [
         'is_active' => 'boolean'
     ];
+
+    public function gateway()
+    {
+        return $this->belongsTo(PaymentGateway::class, 'payment_gateway_id');
+    }
 }

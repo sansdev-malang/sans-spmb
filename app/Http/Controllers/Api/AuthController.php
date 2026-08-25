@@ -26,11 +26,18 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+        $activeWave = \App\Models\SpmbWave::where('is_active', true)->first();
+        $activeType = \App\Models\SpmbType::where('is_active', true)->first();
+
         // Automatically initialize draft registration for the user
         $registration = Registration::create([
             'user_id' => $user->id,
             'registration_status' => 'draft',
             'payment_status' => 'unpaid',
+            'spmb_period_id' => $activePeriod?->id,
+            'spmb_wave_id' => $activeWave?->id,
+            'spmb_type_id' => $activeType?->id,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;

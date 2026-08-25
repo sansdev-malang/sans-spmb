@@ -80,7 +80,7 @@
                 <div class="relative z-10 space-y-1">
                     <h3 class="font-black text-xs uppercase tracking-widest text-brand-yellow">Pemberitahuan Terkini</h3>
                     <p class="text-xs text-slate-100/90 leading-relaxed font-medium">
-                        "{{ $committeeMessage }}"
+                        "{!! str_replace('Menu Formulir', '<a href="' . route('dashboard.form', $registration->id) . '" class="text-brand-yellow font-black underline hover:text-amber-250">Menu Formulir</a>', e($committeeMessage)) !!}"
                     </p>
                 </div>
             </div>
@@ -268,22 +268,22 @@
                     </div>
 
                 @elseif($registration->registration_status === 'verified')
-                    <!-- Case 4: Tes Observasi -->
+                    <!-- Case 4: Sesi Ta'aruf -->
                     <div class="text-center py-6 space-y-4 max-w-md mx-auto">
                         <div class="h-16 w-16 bg-brand-yellow/10 text-amber-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-                            <i data-lucide="video" class="w-8 h-8"></i>
+                            <i data-lucide="users" class="w-8 h-8"></i>
                         </div>
-                        <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Jadwal Observasi / Ta'aruf Aktif</h3>
+                        <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Sesi Ta'aruf Offline Aktif</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Alhamdulillah, berkas persyaratan dinyatakan lolos verifikasi. Silakan persiapkan ananda untuk mengikuti tes wawancara kesiapan belajar secara daring sesuai instruksi jadwal & tautan link meeting.
+                            Alhamdulillah, berkas persyaratan dinyatakan lolos verifikasi. Silakan persiapkan kehadiran tatap muka ananda dan orang tua di unit sekolah untuk mengikuti wawancara Ta'aruf.
                         </p>
                         <div class="pt-4">
                             <a href="{{ route('dashboard.observation', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
-                                <i data-lucide="calendar" class="w-4 h-4"></i> Lihat Jadwal & Link Zoom
+                                <i data-lucide="calendar" class="w-4 h-4"></i> Lihat Informasi Ta'aruf & Unit
                             </a>
                         </div>
                     </div>
-
+ 
                 @elseif($registration->registration_status === 'taaruf_completed')
                     <!-- Case 5: Pernyataan Kesanggupan -->
                     <div class="text-center py-6 space-y-4 max-w-md mx-auto">
@@ -292,7 +292,7 @@
                         </div>
                         <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Persetujuan Pernyataan Kesanggupan</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Observasi/ta'aruf selesai dilakukan. Silakan mengisi dan menyepakati formulir komitmen biaya pendidikan serta tata tertib yayasan sebelum mencetak tagihan administrasi akhir.
+                            Sesi Ta'aruf offline selesai dilakukan. Silakan mengisi dan menyepakati formulir komitmen biaya pendidikan serta tata tertib yayasan sebelum mencetak tagihan administrasi akhir.
                         </p>
                         <div class="pt-4">
                             <a href="{{ route('dashboard.observation', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
@@ -482,6 +482,69 @@
                         <div class="pt-4 flex gap-3 justify-center">
                             <a href="{{ route('dashboard.result', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-5 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
                                 <i data-lucide="award" class="w-4 h-4"></i> Surat Kelulusan & Kartu
+                            </a>
+                        </div>
+                    </div>
+
+                @elseif($registration->registration_status === 'failed')
+                    <!-- Case 8: Berkas Ditolak / Perlu Perbaikan -->
+                    <div class="text-center py-6 space-y-4 max-w-xl mx-auto">
+                        <div class="h-16 w-16 bg-red-50 dark:bg-red-955/20 text-rose-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner animate-pulse">
+                            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Berkas Pendaftaran Perlu Perbaikan</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
+                            Terdapat data atau dokumen persyaratan yang tidak sesuai kriteria verifikasi panitia. Mohon periksa kembali dan perbaiki kolom-kolom berikut:
+                        </p>
+
+                        <!-- List of invalid fields -->
+                        @if(!empty($registration->invalid_fields) && is_array($registration->invalid_fields))
+                            <div class="bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/50 rounded-2xl p-4 text-left space-y-2.5 max-w-md mx-auto">
+                                @php
+                                    $fieldMeta = [
+                                        'spmb_period_id' => ['label' => 'Tahun Ajaran', 'step_id' => 1],
+                                        'spmb_wave_id' => ['label' => 'Gelombang Pendaftaran', 'step_id' => 1],
+                                        'spmb_type_id' => ['label' => 'Jalur Pendaftaran', 'step_id' => 1],
+                                        'spmb_class_program_id' => ['label' => 'Program Kelas', 'step_id' => 1],
+                                        'candidate_name' => ['label' => 'Nama Lengkap Calon Siswa', 'step_id' => 2],
+                                        'nickname' => ['label' => 'Nama Panggilan', 'step_id' => 2],
+                                        'nik' => ['label' => 'NIK Anak', 'step_id' => 2],
+                                        'gender' => ['label' => 'Jenis Kelamin', 'step_id' => 2],
+                                        'religion' => ['label' => 'Agama', 'step_id' => 2],
+                                        'birth_place' => ['label' => 'Tempat & Tanggal Lahir', 'step_id' => 2],
+                                        'previous_school' => ['label' => 'Asal Sekolah', 'step_id' => 2],
+                                        'admission_level' => ['label' => 'Tingkat Pendaftaran', 'step_id' => 2],
+                                        'extra_services' => ['label' => 'Layanan Tambahan', 'step_id' => 2],
+                                        'father_name' => ['label' => 'Nama Ayah Kandung', 'step_id' => 3],
+                                        'mother_name' => ['label' => 'Nama Ibu Kandung', 'step_id' => 3],
+                                        'parent_phone' => ['label' => 'No. HP Wali (WhatsApp)', 'step_id' => 3],
+                                        'birth_certificate_path' => ['label' => 'Scan Akta Kelahiran', 'step_id' => 4],
+                                        'family_card_path' => ['label' => 'Scan Kartu Keluarga', 'step_id' => 4],
+                                    ];
+                                @endphp
+                                <ul class="space-y-1.5">
+                                    @foreach($registration->invalid_fields as $invalidField)
+                                        @php
+                                            $meta = $fieldMeta[$invalidField] ?? ['label' => $invalidField, 'step_id' => 2];
+                                        @endphp
+                                        <li class="flex items-center justify-between gap-4 text-xs font-semibold text-red-700 dark:text-rose-400">
+                                            <span class="flex items-center gap-1.5">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                                                {{ $meta['label'] }}
+                                            </span>
+                                            <a href="{{ route('dashboard.form', $registration->id) }}?highlight={{ $invalidField }}&step={{ $meta['step_id'] }}" 
+                                               class="bg-red-100 hover:bg-red-200 dark:bg-rose-950/30 dark:hover:bg-rose-900/50 text-red-800 dark:text-rose-350 px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-sm transition">
+                                                Perbaiki →
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <div class="pt-4">
+                            <a href="{{ route('dashboard.form', $registration->id) }}" class="bg-red-650 hover:bg-red-750 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i> Perbaiki Formulir Pendaftaran
                             </a>
                         </div>
                     </div>

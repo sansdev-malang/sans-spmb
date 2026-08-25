@@ -13,4 +13,13 @@ interface PaymentGatewayInterface
      * @return array ['success' => bool, 'message' => string, 'data' => array]
      */
     public function createPayment($amount, $invoiceNo, $method);
+
+    /**
+     * Validate incoming Webhook/Callback.
+     *
+     * @param array $headers
+     * @param array $body
+     * @return bool
+     */
+    public function verifyCallback($headers, $body);
 }

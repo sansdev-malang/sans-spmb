@@ -24,6 +24,7 @@ class SpmbRegistrationSettingsController extends Controller
         $grades = SpmbGrade::with('unit')->get();
         $classPrograms = SpmbClassProgram::all();
         $extraServices = SpmbExtraService::all();
+        $gateways = \App\Models\PaymentGateway::where('is_active', true)->with('paymentChannels')->get();
 
         // Eager load all fee categories with their respective fee items and unit relationships
         $feeCategories = \App\Models\SpmbFeeCategory::with(['fees' => function($q) {
@@ -32,7 +33,7 @@ class SpmbRegistrationSettingsController extends Controller
 
         return view('admin.settings-registration', compact(
             'periods', 'waves', 'types', 'feeCategories',
-            'units', 'grades', 'classPrograms', 'extraServices'
+            'units', 'grades', 'classPrograms', 'extraServices', 'gateways'
         ));
     }
 
@@ -46,6 +47,7 @@ class SpmbRegistrationSettingsController extends Controller
         $activeGradeIds = $request->input('active_grades', []);
         $activeProgramIds = $request->input('active_programs', []);
         $activeServiceIds = $request->input('active_services', []);
+        $activeChannelIds = $request->input('active_channels', []);
 
         // Validation: At least one item of each configuration type must be active
         if (empty($activePeriodIds)) {
@@ -98,6 +100,12 @@ class SpmbRegistrationSettingsController extends Controller
         // 8. Extra Services
         SpmbExtraService::query()->update(['is_active' => false]);
         SpmbExtraService::whereIn('id', $activeServiceIds)->update(['is_active' => true]);
+
+        // 9. Payment Channels
+        \App\Models\SpmbPaymentChannel::query()->update(['is_active' => false]);
+        if (!empty($activeChannelIds)) {
+            \App\Models\SpmbPaymentChannel::whereIn('id', $activeChannelIds)->update(['is_active' => true]);
+        }
 
         return redirect()->back()->with('success', 'Status aktifasi pendaftaran berhasil diperbarui.');
     }

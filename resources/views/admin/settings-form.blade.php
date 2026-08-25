@@ -123,7 +123,11 @@
                                     </td>
                                     <td class="py-4 px-6 text-right space-x-2">
                                         <button onclick="openEditFieldModal({{ json_encode($field) }})" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
-                                        <button onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                        @if(in_array($field->field_name, ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id']))
+                                            <span class="text-xs text-slate-400 font-semibold cursor-not-allowed select-none" title="Kolom Sistem Utama (Proteksi)">Hapus</span>
+                                        @else
+                                            <button onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -380,6 +384,39 @@
         document.getElementById('edit-field-required').checked = (field.is_required === 1 || field.is_required === '1' || field.is_required === true);
         document.getElementById('edit-field-order').value = field.order;
         document.getElementById('editFieldForm').action = '/admin/spmb-settings/form/fields/' + field.id;
+        
+        // System fields protection
+        const systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
+        const nameInput = document.getElementById('edit-field-name');
+        const typeInput = document.getElementById('edit-field-type');
+        
+        if (systemFields.includes(field.field_name)) {
+            nameInput.readOnly = true;
+            nameInput.title = "Kolom sistem utama tidak boleh diubah key databasenya.";
+            typeInput.disabled = true;
+            typeInput.title = "Kolom sistem utama tidak boleh diubah tipenya.";
+            
+            // Add a hidden input to submit type when disabled
+            let hiddenType = document.getElementById('edit-field-type-hidden');
+            if (!hiddenType) {
+                hiddenType = document.createElement('input');
+                hiddenType.type = 'hidden';
+                hiddenType.id = 'edit-field-type-hidden';
+                hiddenType.name = 'type';
+                document.getElementById('editFieldForm').appendChild(hiddenType);
+            }
+            hiddenType.value = field.type;
+        } else {
+            nameInput.readOnly = false;
+            nameInput.title = "";
+            typeInput.disabled = false;
+            typeInput.title = "";
+            
+            const hiddenType = document.getElementById('edit-field-type-hidden');
+            if (hiddenType) {
+                hiddenType.parentNode.removeChild(hiddenType);
+            }
+        }
         
         document.getElementById('editFieldModal').classList.remove('hidden');
         toggleOptionsInput('edit');

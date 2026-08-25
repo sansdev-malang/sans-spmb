@@ -121,7 +121,8 @@ class SpmbFeesController extends Controller
         $rules = [
             'name' => 'required|string',
             'amount' => 'required|numeric|min:1000',
-            'payment_gateway' => 'required|in:' . implode(',', $gatewayCodes),
+            'payment_gateway' => 'required|array|min:1',
+            'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
         ];
 
@@ -185,7 +186,8 @@ class SpmbFeesController extends Controller
                 })
             ],
             'amount' => 'required|numeric|min:1000',
-            'payment_gateway' => 'required|in:' . implode(',', $gatewayCodes),
+            'payment_gateway' => 'required|array|min:1',
+            'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
         ];
 

@@ -52,6 +52,9 @@ class TestSpmbApi extends Command
         // 8. Test Dashboard Status (Final Verification check)
         $this->testDashboard();
 
+        // Clean up database after running tests
+        $this->cleanUp();
+
         $this->info('All integration tests passed successfully!');
     }
 
@@ -147,6 +150,7 @@ class TestSpmbApi extends Command
             'religion' => 'Islam',
             'previous_school' => 'TK Aisyiyah',
             'admission_level' => 'TK B',
+            'class_program' => 'Reguler',
         ]);
 
         if (isset($response['registration']['candidate_name']) && $response['registration']['candidate_name'] === 'Ahmad Raihan') {
@@ -255,8 +259,8 @@ class TestSpmbApi extends Command
         if (isset($response['payment_status']) && $response['payment_status'] === 'paid') {
             $this->info('Dashboard shows payment status is successfully updated to: PAID.');
             $this->info('Committee Message: ' . $response['committee_message']);
-            $this->info('Registration step status: ' . $response['timeline']['registration']['status']);
-            $this->info('Payment step status: ' . $response['timeline']['payment']['status']);
+            $this->info('Registration step status: ' . $response['timeline']['registration_fee']['status']);
+            $this->info('Payment step status: ' . $response['timeline']['form_fill']['status']);
             $this->info('Verification step status: ' . $response['timeline']['verification']['status']);
             
             // Test Admin API protection (should fail for candidate)
