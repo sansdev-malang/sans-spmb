@@ -63,7 +63,19 @@ class SpmbSettingsController extends Controller
 
     public function qrcode()
     {
-        return view('admin.settings-spmb-qrcode');
+        $qrcodeUrl = \App\Models\Setting::get('spmb_qrcode_url', url('/register'));
+        return view('admin.settings-spmb-qrcode', compact('qrcodeUrl'));
+    }
+
+    public function saveQrcode(Request $request)
+    {
+        $request->validate([
+            'qrcode_url' => 'required|url'
+        ]);
+
+        \App\Models\Setting::set('spmb_qrcode_url', $request->qrcode_url);
+
+        return redirect()->back()->with('success', 'Tautan QR Code berhasil disimpan.');
     }
 
     // Period CRUD

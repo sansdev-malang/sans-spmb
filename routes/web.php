@@ -137,6 +137,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/admin/spmb-settings', [SpmbSettingsController::class, 'index'])->name('admin.spmb-settings');
             Route::get('/admin/spmb-settings/units-grades', [SpmbSettingsController::class, 'unitsGrades'])->name('admin.spmb-settings.units-grades');
             Route::get('/admin/spmb-settings/qrcode', [SpmbSettingsController::class, 'qrcode'])->name('admin.spmb-settings.qrcode');
+            Route::post('/admin/spmb-settings/qrcode', [SpmbSettingsController::class, 'saveQrcode'])->name('admin.spmb-settings.qrcode.save');
             
             // Period CRUD
             Route::post('/admin/spmb-settings/periods', [SpmbSettingsController::class, 'storePeriod'])->name('admin.spmb-settings.periods.store');

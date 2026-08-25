@@ -24,15 +24,16 @@
                     <p class="text-xs text-slate-400">Masukkan tautan formulir atau landing page registrasi Anda untuk mengubah isi kode QR secara instan.</p>
                 </div>
                 
-                <form onsubmit="handleQrUpdate(event)" class="space-y-4">
+                <form method="POST" action="{{ route('admin.spmb-settings.qrcode.save') }}" class="space-y-4">
+                    @csrf
                     <div>
                         <label class="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">URL Tujuan Pendaftaran*</label>
-                        <input type="url" id="qrcodeUrlInput" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
-                            value="{{ url('/register') }}">
+                        <input type="url" name="qrcode_url" id="qrcodeUrlInput" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
+                            value="{{ $qrcodeUrl }}">
                     </div>
                     <div class="flex justify-end">
                         <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
-                            Perbarui QR Code
+                            Perbarui & Simpan QR Code
                         </button>
                     </div>
                 </form>
@@ -52,21 +53,21 @@
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hasil Gambar QR</span>
                 
                 <div class="bg-white p-3 border border-slate-200 rounded-2xl shadow-sm">
-                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode(url('/register')) }}" alt="SANS SPMB QR Code" class="h-36 w-36">
+                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($qrcodeUrl) }}" alt="SANS SPMB QR Code" class="h-36 w-36">
                 </div>
 
                 <!-- Display URL under QR Code to be copied -->
                 <div class="w-full space-y-1.5">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Salin Tautan</label>
                     <div class="flex items-center border border-slate-300 rounded-xl overflow-hidden bg-white">
-                        <input type="text" readonly id="displayUrlInput" value="{{ url('/register') }}" class="w-full border-none bg-transparent px-3 py-2 text-[11px] font-mono text-slate-650 focus:ring-0 focus:outline-none">
+                        <input type="text" readonly id="displayUrlInput" value="{{ $qrcodeUrl }}" class="w-full border-none bg-transparent px-3 py-2 text-[11px] font-mono text-slate-650 focus:ring-0 focus:outline-none">
                         <button onclick="copyToClipboard()" type="button" class="bg-slate-100 hover:bg-slate-200 px-3 py-2 text-[10px] font-bold text-slate-700 transition border-l border-slate-300">
                             Salin
                         </button>
                     </div>
                 </div>
 
-                <a id="downloadQrButton" href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode(url('/register')) }}" target="_blank" download="sans-spmb-qrcode.png"
+                <a id="downloadQrButton" href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($qrcodeUrl) }}" target="_blank" download="sans-spmb-qrcode.png"
                     class="w-full bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-center">
                     📥 Unduh Gambar QR
                 </a>
@@ -77,17 +78,15 @@
 </div>
 
 <script>
-    function handleQrUpdate(e) {
-        e.preventDefault();
-        const url = document.getElementById('qrcodeUrlInput').value;
+    // Real-time preview as user types
+    document.getElementById('qrcodeUrlInput').addEventListener('input', function() {
+        const url = this.value;
         const encoded = encodeURIComponent(url);
 
         document.getElementById('qrCodeImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encoded}`;
         document.getElementById('displayUrlInput').value = url;
         document.getElementById('downloadQrButton').href = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}`;
-        
-        showToast('QR Code berhasil diperbarui secara lokal!', 'success');
-    }
+    });
 
     function copyToClipboard() {
         const input = document.getElementById('displayUrlInput');
