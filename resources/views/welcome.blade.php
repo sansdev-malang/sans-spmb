@@ -20,7 +20,7 @@
         <!-- Hero Text (Left 7 Columns) -->
         <div class="lg:col-span-7 space-y-6">
             <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-extrabold text-[10px] uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-sm">
-                <span>⭐</span> Penerimaan Siswa Barus {{ $activePeriodYear }}
+                <span>⭐</span> Penerimaan Siswa Baru {{ $activePeriodYear }}
             </div>
             
             <h1 class="text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-custom-primary dark:text-emerald-400 font-sans">
