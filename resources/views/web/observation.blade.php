@@ -6,8 +6,8 @@
 <style>
     /* Styling to make sure WYSIWYG rich text content renders beautifully and matches Word document margins */
     .agreement-body ol {
-        list-style-type: decimal !important;
-        padding-left: 1.5rem !important;
+        list-style-type: none !important;
+        padding-left: 0 !important;
         margin-top: 0.5rem !important;
         margin-bottom: 0.5rem !important;
         counter-reset: list-0 list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
@@ -19,12 +19,26 @@
         margin-bottom: 0.5rem !important;
     }
     .agreement-body li {
+        list-style-type: none !important;
+        position: relative !important;
+        padding-left: 1.5rem !important;
         margin-bottom: 0.4rem !important;
         line-height: 1.65 !important;
         color: #334155 !important;
+        counter-increment: list-0 !important;
         counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
     }
+    .agreement-body li::before {
+        content: counter(list-0, decimal) ". " !important;
+        position: absolute !important;
+        left: 0 !important;
+        font-weight: bold !important;
+        color: #334155 !important;
+    }
     .dark .agreement-body li {
+        color: #cbd5e1 !important;
+    }
+    .dark .agreement-body li::before {
         color: #cbd5e1 !important;
     }
     /* Render lower-alpha prefixes for ql-indent-1 level list items */
@@ -39,7 +53,7 @@
     .agreement-body li.ql-indent-1::before {
         content: counter(list-1, lower-alpha) ". " !important;
         position: absolute !important;
-        left: -1.25rem !important;
+        left: 0 !important;
         font-weight: normal !important;
         color: #475569 !important;
     }
@@ -55,6 +69,16 @@
         counter-increment: list-2 !important;
         counter-reset: list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
     }
+    .agreement-body li.ql-indent-2::before {
+        content: "(" counter(list-2, decimal) ") " !important;
+        position: absolute !important;
+        left: 0 !important;
+        font-weight: normal !important;
+        color: #475569 !important;
+    }
+    .dark .agreement-body li.ql-indent-2::before {
+        color: #94a3b8 !important;
+    }
     .agreement-body p {
         margin-top: 0.75rem !important;
         margin-bottom: 0.75rem !important;
@@ -63,11 +87,6 @@
     }
     .dark .agreement-body p {
         color: #cbd5e1 !important;
-    }
-    .agreement-body ol ol {
-        list-style-type: lower-alpha !important;
-        margin-top: 0.25rem !important;
-        padding-left: 1.5rem !important;
     }
     .dark .agreement-body strong {
         color: #f8fafc !important;
