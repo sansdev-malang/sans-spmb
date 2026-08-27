@@ -4,8 +4,6 @@
 @section('page_title', 'Instruksi Daftar Ulang')
 
 @section('content')
-<!-- Quill editor stylesheets and script library -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
     /* Custom styles for professional word-like Quill editor look */
     .ql-toolbar.ql-snow {
@@ -22,18 +20,26 @@
         background-color: #ffffff;
     }
     .ql-editor {
+        position: relative !important;
         min-height: 180px;
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 13px;
         color: #334155;
         line-height: 1.6;
     }
+    .ql-editor.ql-blank::before {
+        position: absolute !important;
+        left: 15px !important;
+        right: 15px !important;
+        color: #94a3b8 !important;
+        font-style: italic !important;
+        pointer-events: none !important;
+    }
     /* Hide Quill link/formula tooltip when it has the hidden class */
     .ql-tooltip.ql-hidden {
         display: none !important;
     }
 </style>
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
 <div id="instructions-settings-container" hx-boost="true" hx-target="#instructions-settings-container" hx-select="#instructions-settings-container" class="w-full space-y-6">
     <!-- Header -->

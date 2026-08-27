@@ -4,8 +4,6 @@
 @section('page_title', 'Surat Pernyataan')
 
 @section('content')
-<!-- Quill editor stylesheets and script library -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
     /* Custom styles for professional word-like Quill editor look */
     .ql-toolbar.ql-snow {
@@ -22,12 +20,21 @@
         background-color: #ffffff;
     }
     .ql-editor {
+        position: relative !important;
         min-height: 350px;
         max-height: 550px;
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 13px;
         color: #334155;
         line-height: 1.6;
+    }
+    .ql-editor.ql-blank::before {
+        position: absolute !important;
+        left: 15px !important;
+        right: 15px !important;
+        color: #94a3b8 !important;
+        font-style: italic !important;
+        pointer-events: none !important;
     }
     .ql-editor ol, .ql-editor ul {
         padding-left: 1.5rem !important;
@@ -50,7 +57,6 @@
         display: none !important;
     }
 </style>
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
 <div id="agreements-settings-container" hx-boost="true" hx-target="#agreements-settings-container" hx-select="#agreements-settings-container" class="w-full space-y-6">
     @php
