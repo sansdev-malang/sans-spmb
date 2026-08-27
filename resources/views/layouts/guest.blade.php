@@ -7,24 +7,284 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        @php
+            $primaryColor = \App\Models\Setting::get('portal_primary_color', '#0D3B2C');
+            $secondaryColor = \App\Models\Setting::get('portal_secondary_color', '#ffc107');
+            $schoolName = \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh');
+            $schoolTagline = \App\Models\Setting::get('school_tagline', 'Yayasan Pendidikan Anak Saleh');
+            $schoolLogo = \App\Models\Setting::get('school_logo_url', '');
+            $schoolFavicon = \App\Models\Setting::get('school_favicon_url', '');
+        @endphp
+
+        @if(!empty($schoolFavicon))
+            <link rel="icon" href="{{ $schoolFavicon }}" type="image/x-icon">
+        @else
+            <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+        @endif
+
+        <!-- Plus Jakarta Sans Font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <!-- Theme init on load (Inline to prevent flash) -->
+        <script>
+            (function() {
+                const theme = localStorage.getItem('theme') || '{{ \App\Models\Setting::get('portal_layout_mode', 'light') }}';
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            })();
+        </script>
+
+        <style>
+            body {
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                transition: background-color 0.3s, color 0.3s;
+            }
+            /* Custom Brand Colors for Tailwind */
+            .bg-brand-emerald { background-color: {{ $primaryColor }}; }
+            .text-brand-emerald { color: {{ $primaryColor }}; }
+            .border-brand-emerald { border-color: {{ $primaryColor }}; }
+            
+            .bg-brand-yellow { background-color: {{ $secondaryColor }}; }
+            .text-brand-yellow { color: {{ $secondaryColor }}; }
+            
+            /* Custom Dynamic Helper Colors */
+            .bg-custom-primary { background-color: {{ $primaryColor }}; }
+            .text-custom-primary { color: {{ $primaryColor }}; }
+            .border-custom-primary { border-color: {{ $primaryColor }}; }
+            .hover\:bg-custom-primary:hover { background-color: {{ $primaryColor }}e0; }
+            .dark\:text-custom-primary { color: {{ $primaryColor }}; }
+
+            /* Dynamic style overrides for components in guest layout */
+            input:focus, select:focus, textarea:focus {
+                border-color: {{ $primaryColor }} !important;
+                --tw-ring-color: {{ $primaryColor }} !important;
+                --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color) !important;
+                --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color) !important;
+                box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000) !important;
+            }
+            .bg-gray-800 {
+                background-color: {{ $primaryColor }} !important;
+            }
+            .hover\:bg-gray-700:hover {
+                background-color: {{ $primaryColor }}e0 !important;
+            }
+            .focus\:bg-gray-700:focus {
+                background-color: {{ $primaryColor }}e0 !important;
+            }
+            .active\:bg-gray-900:active {
+                background-color: {{ $primaryColor }}c0 !important;
+            }
+            .text-indigo-600 {
+                color: {{ $primaryColor }} !important;
+            }
+            .focus\:ring-indigo-500:focus {
+                --tw-ring-color: {{ $primaryColor }} !important;
+            }
+            .hover\:text-gray-900:hover {
+                color: {{ $primaryColor }}e0 !important;
+            }
+            .underline {
+                color: {{ $primaryColor }};
+            }
+            .underline:hover {
+                color: {{ $primaryColor }}e0;
+            }
+
+            /* Dark mode details */
+            html.dark body {
+                background-color: #0f172a;
+                color: #cbd5e1;
+            }
+            html.dark .bg-white {
+                background-color: #1e293b;
+                border-color: #334155;
+            }
+            html.dark .text-slate-800, html.dark h1, html.dark h2, html.dark h3, html.dark h4 {
+                color: #f8fafc;
+            }
+            html.dark .text-slate-600, html.dark .text-slate-700 {
+                color: #cbd5e1;
+            }
+            html.dark .text-slate-400, html.dark .text-slate-500 {
+                color: #64748b;
+            }
+            html.dark .bg-slate-50 {
+                background-color: #0f172a;
+            }
+            html.dark .border-slate-100 {
+                border-color: #334155;
+            }
+            html.dark input, html.dark select, html.dark textarea {
+                background-color: #0f172a;
+                border-color: #475569;
+                color: #f8fafc;
+            }
+        </style>
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
+    <body class="font-sans text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200 min-h-screen flex antialiased">
+        <!-- Split Layout Container -->
+        <div class="w-full min-h-screen flex flex-col md:flex-row">
+            
+            <!-- Left Panel: Branding & Info (Hidden on mobile) -->
+            <div class="hidden md:flex md:w-1/2 bg-custom-primary relative overflow-hidden flex-col justify-between p-12 text-white">
+                <!-- Background decorative elements -->
+                <div class="absolute top-[-10%] left-[-10%] w-[50%] aspect-square bg-white/5 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-[-10%] right-[-10%] w-[60%] aspect-square bg-brand-yellow/10 rounded-full blur-3xl"></div>
+                
+                <!-- Top Brand Header -->
+                <div class="relative z-10 flex items-center gap-3">
+                    @if(!empty($schoolLogo))
+                        <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
+                    @else
+                        <div class="h-10 w-10 bg-brand-yellow rounded-xl flex items-center justify-center font-bold text-slate-900 text-base shadow-sm">
+                            🎓
+                        </div>
+                    @endif
+                    <div class="flex flex-col text-left">
+                        <span class="font-extrabold text-base tracking-tight leading-tight">{{ $schoolName }}</span>
+                        @if(!empty($schoolTagline))
+                            <span class="text-[10px] text-white/70 font-semibold leading-none mt-0.5">{{ $schoolTagline }}</span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Center Content: Title & Features -->
+                <div class="relative z-10 my-auto max-w-md space-y-6">
+                    <span class="inline-flex items-center gap-1 bg-white/10 backdrop-blur-md text-brand-yellow font-extrabold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
+                        ✨ Sistem SPMB Online
+                    </span>
+                    <h1 class="text-3xl lg:text-4xl font-black leading-tight">
+                        Penerimaan Siswa Baru Berbasis Karakter Islami
+                    </h1>
+                    <p class="text-xs text-white/80 leading-relaxed font-medium">
+                        Selamat datang di portal pendaftaran {{ $schoolName }}. Daftarkan putra-putri terbaik Anda untuk bergabung bersama kami.
+                    </p>
+                    
+                    <div class="space-y-3.5 pt-4 text-xs font-semibold text-white/95">
+                        <div class="flex items-center gap-3">
+                            <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                            <span>Proses pendaftaran cepat, online, dan transparan</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                            <span>Pengumuman hasil observasi & administrasi terintegrasi</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                            <span>Layanan bantuan cepat via Whatsapp Panitia</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer: Back to main page -->
+                <div class="relative z-10 flex justify-between items-center text-xs text-white/60 font-semibold border-t border-white/10 pt-6">
+                    <span>© {{ date('Y') }} {{ $schoolName }}</span>
+                    <a href="/" class="flex items-center gap-1.5 hover:text-brand-yellow transition text-white/85">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Portal Utama
+                    </a>
+                </div>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
+            <!-- Right Panel: Authentication Form -->
+            <div class="w-full md:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-slate-50 dark:bg-slate-950">
+                <!-- Theme toggle button (Top Right) -->
+                <div class="absolute top-6 right-6 flex items-center gap-3">
+                    <button onclick="toggleDarkMode()" class="p-2.5 text-slate-500 hover:text-custom-primary dark:text-slate-455 dark:hover:text-emerald-400 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition shadow-sm" title="Toggle Tema">
+                        <i id="theme-toggle-icon" data-lucide="moon" class="w-4.5 h-4.5"></i>
+                    </button>
+                </div>
+
+                <!-- Small Header for Mobile Only -->
+                <div class="md:hidden flex flex-col items-center gap-2 mb-8 mt-12">
+                    @if(!empty($schoolLogo))
+                        <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
+                    @else
+                        <div class="h-12 w-12 bg-custom-primary rounded-2xl flex items-center justify-center font-bold text-brand-yellow text-xl shadow-md">
+                            🎓
+                        </div>
+                    @endif
+                    <div class="text-center">
+                        <h2 class="font-extrabold text-sm text-custom-primary dark:text-emerald-400 tracking-tight leading-tight">{{ $schoolName }}</h2>
+                        @if(!empty($schoolTagline))
+                            <p class="text-[9px] text-slate-400 font-semibold mt-0.5">{{ $schoolTagline }}</p>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Card Form wrapper -->
+                <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-8 shadow-xl">
+                    <!-- Dynamic header text based on page -->
+                    <div class="text-center space-y-2 mb-6">
+                        @if(Request::is('login'))
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white">Masuk Akun</h2>
+                            <p class="text-xs text-slate-450 dark:text-slate-400 font-semibold">Silakan masuk menggunakan akun pendaftaran Anda</p>
+                        @elseif(Request::is('register'))
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white">Daftar Akun Baru</h2>
+                            <p class="text-xs text-slate-455 dark:text-slate-400 font-semibold">Mulai langkah awal pendaftaran sekolah anak Anda</p>
+                        @elseif(Request::is('forgot-password'))
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white">Lupa Password</h2>
+                            <p class="text-xs text-slate-455 dark:text-slate-400 font-semibold">Kami akan mengirimkan link reset password via email</p>
+                        @else
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white">Autentikasi</h2>
+                            <p class="text-xs text-slate-455 dark:text-slate-400 font-semibold">{{ config('app.name') }}</p>
+                        @endif
+                    </div>
+
+                    {{ $slot }}
+                </div>
+
+                <!-- Mobile Back Button -->
+                <a href="/" class="md:hidden mt-6 text-xs text-slate-455 hover:text-custom-primary font-bold transition flex items-center gap-1">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Kembali ke Portal Utama
+                </a>
             </div>
+            
         </div>
+        
+        <!-- Lucide Icons CDN -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <script>
+            // Initialize Lucide Icons
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+            
+            // Dark/Light Theme Handler
+            function toggleDarkMode() {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                updateThemeIcon();
+            }
+
+            function updateThemeIcon() {
+                const icon = document.getElementById('theme-toggle-icon');
+                const isDark = document.documentElement.classList.contains('dark');
+                
+                if (icon) {
+                    icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                }
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            }
+            
+            document.addEventListener("DOMContentLoaded", function() {
+                updateThemeIcon();
+            });
+        </script>
     </body>
 </html>
