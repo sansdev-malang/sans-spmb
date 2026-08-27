@@ -74,20 +74,18 @@ class WinpayService implements PaymentGatewayInterface
 
         // Sandbox/Production endpoint url
         $this->baseUrl = $this->mode === 'production' 
-            ? 'https://api.winpay.id' 
-            : 'https://sandbox-api.winpay.id';
+            ? 'https://snap.winpay.id' 
+            : 'https://sandbox-snap.winpay.id';
     }
 
     /**
-     * Generate SNAP Asymmetric Signature (SHA256withRSA)
+     * Generate SNAP Asymmetric Signature (SHA256withRSA) for direct transaction
      */
-    public function generateAsymmetricSignature($timestamp)
+    public function generateAsymmetricSignature($method, $endpoint, $bodyArray, $timestamp)
     {
-        $stringToSign = $this->clientKey . '|' . $timestamp;
-        
         if (empty($this->privateKey)) {
             Log::warning('Winpay Private Key is empty. Using fallback dummy signature.');
-            return base64_encode(hash_hmac('sha256', $stringToSign, $this->clientSecret));
+            return base64_encode(hash_hmac('sha256', 'mock_string_to_sign', $this->clientSecret));
         }
 
         $privateKeyResource = openssl_pkey_get_private($this->privateKey);
@@ -96,50 +94,18 @@ class WinpayService implements PaymentGatewayInterface
             return '';
         }
 
-        openssl_sign($stringToSign, $signature, $privateKeyResource, OPENSSL_ALGO_SHA256);
-        return base64_encode($signature);
-    }
+        $minifiedBody = json_encode($bodyArray, JSON_UNESCAPED_SLASHES);
+        $hashedBody = strtolower(bin2hex(hash('sha256', $minifiedBody, true)));
 
-    /**
-     * Generate SNAP Symmetric Signature (HMAC-SHA512)
-     */
-    public function generateSymmetricSignature($method, $endpoint, $accessToken, $bodyArray, $timestamp)
-    {
-        $minifiedBody = json_encode($bodyArray, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $hashedBody = strtolower(hash('sha256', $minifiedBody));
-        
-        $stringToSign = strtoupper($method) . ':' . $endpoint . ':' . $accessToken . ':' . $hashedBody . ':' . $timestamp;
-        
-        return base64_encode(hash_hmac('sha512', $stringToSign, $this->clientSecret, true));
-    }
-
-    /**
-     * Request OAuth B2B Access Token from Winpay
-     */
-    public function getAccessToken()
-    {
-        if ($this->mode === 'simulator') {
-            return 'mock_access_token_' . time();
-        }
-
-        $timestamp = date('c'); // ISO 8601
-        $signature = $this->generateAsymmetricSignature($timestamp);
-
-        $response = Http::withHeaders([
-            'X-SIGNATURE' => $signature,
-            'X-TIMESTAMP' => $timestamp,
-            'X-CLIENT-KEY' => $this->clientKey,
-            'Content-Type' => 'application/json',
-        ])->post($this->baseUrl . '/api/v1.0/access-token/b2b', [
-            'grantType' => 'client_credentials'
+        $stringToSign = implode(':', [
+            strtoupper($method),
+            $endpoint,
+            $hashedBody,
+            $timestamp
         ]);
 
-        if ($response->successful()) {
-            return $response->json('accessToken');
-        }
-
-        Log::error('Winpay getAccessToken failed', ['response' => $response->body()]);
-        return null;
+        openssl_sign($stringToSign, $signature, $privateKeyResource, OPENSSL_ALGO_SHA256);
+        return base64_encode($signature);
     }
 
     /**
@@ -149,14 +115,6 @@ class WinpayService implements PaymentGatewayInterface
     {
         if ($this->mode === 'simulator') {
             return $this->getMockPaymentResponse($amount, $invoiceNo, $method);
-        }
-
-        $accessToken = $this->getAccessToken();
-        if (!$accessToken) {
-            return [
-                'success' => false,
-                'message' => 'Failed to obtain Access Token'
-            ];
         }
 
         $timestamp = date('c');
@@ -193,14 +151,14 @@ class WinpayService implements PaymentGatewayInterface
             ];
         }
 
-        $signature = $this->generateSymmetricSignature('POST', $endpoint, $accessToken, $body, $timestamp);
+        $signature = $this->generateAsymmetricSignature('POST', $endpoint, $body, $timestamp);
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $accessToken,
             'X-SIGNATURE' => $signature,
             'X-TIMESTAMP' => $timestamp,
             'X-PARTNER-ID' => $this->clientKey,
             'X-EXTERNAL-ID' => $invoiceNo,
+            'CHANNEL-ID' => 'WEB',
             'Content-Type' => 'application/json',
         ])->post($this->baseUrl . $endpoint, $body);
 
@@ -227,19 +185,40 @@ class WinpayService implements PaymentGatewayInterface
             return true;
         }
 
-        $signature = $headers['x-signature'] ?? $headers['X-SIGNATURE'] ?? '';
-        $timestamp = $headers['x-timestamp'] ?? $headers['X-TIMESTAMP'] ?? '';
-        $authorization = $headers['authorization'] ?? $headers['AUTHORIZATION'] ?? '';
+        $signature = $headers['x-signature'][0] ?? $headers['X-SIGNATURE'][0] ?? $headers['x-signature'] ?? $headers['X-SIGNATURE'] ?? '';
+        if (is_array($signature)) $signature = $signature[0] ?? '';
+        $timestamp = $headers['x-timestamp'][0] ?? $headers['X-TIMESTAMP'][0] ?? $headers['x-timestamp'] ?? $headers['X-TIMESTAMP'] ?? '';
+        if (is_array($timestamp)) $timestamp = $timestamp[0] ?? '';
         
-        $accessToken = str_replace('Bearer ', '', $authorization);
-        
+        if (empty($this->publicKey)) {
+            Log::warning('Winpay Public Key is empty, skipping signature verification.');
+            return true; 
+        }
+
+        $publicKeyResource = openssl_pkey_get_public($this->publicKey);
+        if (!$publicKeyResource) {
+            Log::error('Invalid Winpay Public Key format.');
+            return false;
+        }
+
         // standard path for callback
         $endpoint = '/api/payments/callback'; 
+        
+        $minifiedBody = json_encode($body, JSON_UNESCAPED_SLASHES);
+        $hashedBody = strtolower(bin2hex(hash('sha256', $minifiedBody, true)));
 
-        // Verify signature using symmetric signature check
-        $calculatedSignature = $this->generateSymmetricSignature('POST', $endpoint, $accessToken, $body, $timestamp);
+        $stringToSign = implode(':', [
+            'POST',
+            $endpoint,
+            $hashedBody,
+            $timestamp
+        ]);
 
-        return hash_equals($calculatedSignature, $signature);
+        $signatureBinary = base64_decode($signature);
+        
+        $verified = openssl_verify($stringToSign, $signatureBinary, $publicKeyResource, OPENSSL_ALGO_SHA256);
+        
+        return $verified === 1;
     }
 
     /**

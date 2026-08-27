@@ -126,6 +126,15 @@
         
         // Set active header style
         document.getElementById('tab-btn-' + env).className = "tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider border-brand-emerald text-brand-emerald dark:text-emerald-400 font-extrabold bg-white dark:bg-slate-900 border-b-2";
+        
+        localStorage.setItem('spmb_gateway_settings_active_tab_{{ $gateway->code }}', env);
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const savedTab = localStorage.getItem('spmb_gateway_settings_active_tab_{{ $gateway->code }}');
+        if (savedTab && document.getElementById('tab-btn-' + savedTab)) {
+            switchTab(savedTab);
+        }
+    });
 </script>
 @endsection
