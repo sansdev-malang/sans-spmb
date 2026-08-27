@@ -4,7 +4,7 @@
 @section('page_title', 'Setting Biaya')
 
 @section('content')
-<div class="w-full space-y-6">
+<div id="spmb-fees-container" hx-boost="true" hx-target="#spmb-fees-container" hx-select="#spmb-fees-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h1 class="text-xl font-extrabold text-slate-800">Manajemen Biaya Pendaftaran (SPMB)</h1>
@@ -13,11 +13,11 @@
 
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        <button onclick="switchFeeTab('jenis_biaya')" id="feeTabBtn-jenis_biaya" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow">
+        <button onclick="switchFeeTab('jenis_biaya')" id="feeTabBtn-jenis_biaya" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'jenis_biaya' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="tag" class="w-4 h-4"></i> Jenis Biaya
         </button>
         @foreach($categories as $cat)
-            <button onclick="switchFeeTab('cat_{{ $cat->id }}')" id="feeTabBtn-cat_{{ $cat->id }}" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+            <button onclick="switchFeeTab('cat_{{ $cat->id }}')" id="feeTabBtn-cat_{{ $cat->id }}" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'cat_' . $cat->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="coins" class="w-4 h-4"></i> {{ $cat->name }}
             </button>
         @endforeach
@@ -27,7 +27,7 @@
     <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         
         <!-- Tab 1: Jenis Biaya -->
-        <div id="feeTabContent-jenis_biaya" class="fee-tab-content p-8 space-y-6">
+        <div id="feeTabContent-jenis_biaya" class="fee-tab-content p-8 space-y-6 {{ $activeTab === 'jenis_biaya' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Kategori Jenis Biaya</h3>
@@ -87,7 +87,7 @@
 
         <!-- Dynamic Category Tabs -->
         @foreach($categories as $cat)
-            <div id="feeTabContent-cat_{{ $cat->id }}" class="fee-tab-content p-8 space-y-6 hidden">
+            <div id="feeTabContent-cat_{{ $cat->id }}" class="fee-tab-content p-8 space-y-6 {{ $activeTab === 'cat_' . $cat->id ? '' : 'hidden' }}">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-extrabold text-base text-slate-800">Daftar Nominal {{ $cat->name }}</h3>
@@ -168,13 +168,13 @@
             <h3 id="feeModalTitle" class="font-extrabold text-lg">Tambah</h3>
             <p class="text-xs text-emerald-100 mt-0.5">Kelola data konfigurasi setting biaya.</p>
         </div>
-        <form id="feeCrudForm" method="POST" class="p-6 space-y-4">
+        <form id="feeCrudForm" method="POST" class="p-6 space-y-4" hx-boost="false">
             @csrf
             
             <input type="hidden" id="feeCategoryInput" name="spmb_fee_category_id">
 
             @if($errors->any() && session('failed_modal'))
-                <div class="text-xs text-red-600 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold mb-3 space-y-1">
+                <div id="feeErrorWrapper" class="text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold mb-3 space-y-1">
                     @foreach($errors->all() as $error)
                         <p>⚠️ {{ $error }}</p>
                     @endforeach
@@ -233,8 +233,12 @@
             <!-- Amount Input (Only visible for Biaya Tambahan) -->
             <div id="feeAmountWrapper" class="hidden space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nominal (Rupiah)*</label>
+                    <label class="block text-xs font-bold text-slate-605 uppercase tracking-wider mb-2">Nominal (Rupiah)*</label>
                     <input type="text" id="feeAmountInput" name="amount" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: 350.000">
+                    <p id="feeAmountWarning" class="text-[11px] text-amber-600 font-semibold mt-1.5 hidden flex items-center gap-1">
+                        <i data-lucide="alert-triangle" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                        Nominal biaya ini dikunci karena sudah memiliki transaksi pembayaran.
+                    </p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Payment Gateway*</label>
@@ -258,11 +262,24 @@
                 </button>
             </div>
         </form>
-    </div>
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 </div>
 
 <!-- Hidden Delete Form -->
-<form id="feeDeleteForm" method="POST" class="hidden">
+<form id="feeDeleteForm" method="POST" class="hidden" hx-boost="false">
     @csrf
     @method('DELETE')
 </form>
@@ -334,8 +351,11 @@
 
     // Tab Switching
     function switchFeeTab(tabId) {
+        const panel = document.getElementById('feeTabContent-' + tabId);
+        if (!panel) return;
+
         document.querySelectorAll('.fee-tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('feeTabContent-' + tabId).classList.remove('hidden');
+        panel.classList.remove('hidden');
 
         document.querySelectorAll('.fee-tab-btn').forEach(btn => {
             btn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
@@ -346,18 +366,26 @@
             activeBtn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
         }
         
+        // Update URL query parameter to preserve tab state across actions/redirects
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+        
         localStorage.setItem('spmb_fees_active_tab', tabId);
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        const savedTab = localStorage.getItem('spmb_fees_active_tab') || 'jenis_biaya';
-        switchFeeTab(savedTab);
+        // Tab state is handled server-side via Laravel view variable $activeTab
     });
 
     // Modal Control
     function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = []) {
+        const errorWrapper = document.getElementById('feeErrorWrapper');
+        if (errorWrapper) {
+            errorWrapper.classList.add('hidden');
+        }
+
         const form = document.getElementById('feeCrudForm');
-        form.action = actionUrl;
+        form.setAttribute('action', actionUrl);
         
         const mainInput = document.getElementById('feeMainInput');
         mainInput.value = val;
@@ -373,6 +401,14 @@
         
         const titleEl = document.getElementById('feeModalTitle');
         const labelEl = document.getElementById('feeInputLabel');
+
+        if (amountInput) {
+            amountInput.readOnly = false;
+            amountInput.classList.remove('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
+            amountInput.classList.add('bg-slate-50', 'text-slate-800');
+        }
+        const warningEl = document.getElementById('feeAmountWarning');
+        if (warningEl) warningEl.classList.add('hidden');
 
         // Reset category checkboxes
         document.querySelectorAll('.unit-checkbox').forEach(cb => cb.checked = false);
@@ -414,7 +450,19 @@
             amountWrapper.classList.remove('hidden');
             amountInput.value = formatRupiah(amount);
             amountInput.required = true;
-            amountInput.disabled = false; // Always allow editing to fix typos
+            
+            const isLockedBool = (isLocked === 'true' || isLocked === true || isLocked === '1');
+            amountInput.readOnly = isLockedBool;
+            const warningEl = document.getElementById('feeAmountWarning');
+            if (isLockedBool) {
+                amountInput.classList.add('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
+                amountInput.classList.remove('bg-slate-50', 'text-slate-800');
+                if (warningEl) warningEl.classList.remove('hidden');
+            } else {
+                amountInput.classList.remove('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
+                amountInput.classList.add('bg-slate-50', 'text-slate-800');
+                if (warningEl) warningEl.classList.add('hidden');
+            }
             
             if (gateway) {
                 let selectedGateways = [];
@@ -437,8 +485,17 @@
 
             if (unitWrapper) {
                 unitWrapper.classList.remove('hidden');
+                let selectedUnits = [];
+                if (unitId) {
+                    let unitIdStr = unitId.toString();
+                    if (unitIdStr.includes(',')) {
+                        selectedUnits = unitIdStr.split(',').map(id => id.trim());
+                    } else {
+                        selectedUnits = [unitIdStr];
+                    }
+                }
                 document.querySelectorAll('.fee-unit-checkbox').forEach(cb => {
-                    cb.checked = (cb.value == unitId);
+                    cb.checked = selectedUnits.includes(cb.value.toString());
                 });
                 updateCheckAllFeeState();
             }
@@ -452,7 +509,15 @@
     // Close Modal
     function closeFeeModal() {
         document.getElementById('feeCrudModal').classList.add('hidden');
+        const errorWrapper = document.getElementById('feeErrorWrapper');
+        if (errorWrapper) {
+            errorWrapper.classList.add('hidden');
+        }
     }
+
+    document.getElementById('feeCrudModal').addEventListener('click', function(e) {
+        if (e.target === this) closeFeeModal();
+    });
 
     // Delete Operations
     function deleteFeeItem(type, name, isUsed, deleteUrl) {
@@ -470,28 +535,41 @@
             let failed = "{{ session('failed_modal') }}";
             if (failed.startsWith('jenis_biaya_create')) {
                 switchFeeTab('jenis_biaya');
-                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.categories.store') }}');
+                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}]);
             } else if (failed.startsWith('jenis_biaya_edit_')) {
                 switchFeeTab('jenis_biaya');
                 let id = failed.replace('jenis_biaya_edit_', '');
-                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '/admin/spmb-settings/fees/categories/' + id);
+                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '/admin/spmb-settings/fees/categories/' + id, '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}]);
             } else if (failed.startsWith('biaya_admin_create')) {
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
-                const oldUnitId = "{{ old('spmb_unit_id') }}";
                 if (oldCatId) {
                     switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, oldUnitId);
+                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}');
                 }
             } else if (failed.startsWith('biaya_admin_edit_')) {
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
-                const oldUnitId = "{{ old('spmb_unit_id') }}";
                 let id = failed.replace('biaya_admin_edit_', '');
                 if (oldCatId) {
                     switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, oldUnitId);
+                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}');
                 }
+            }
+
+            const errorWrapper = document.getElementById('feeErrorWrapper');
+            if (errorWrapper) {
+                errorWrapper.classList.remove('hidden');
             }
         });
     @endif
+
+    // Escape key listener to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('feeCrudModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeFeeModal();
+            }
+        }
+    });
 </script>
 @endsection

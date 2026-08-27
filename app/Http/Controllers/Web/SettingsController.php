@@ -138,7 +138,13 @@ class SettingsController extends Controller
             }
         }
 
-        return view('admin.settings', compact('settings', 'channels', 'gatewayFees'));
+        $activeTab = request()->get('tab');
+        if (!$activeTab) {
+            $firstGw = $gateways->first();
+            $activeTab = $firstGw ? $firstGw->code : 'winpay';
+        }
+
+        return view('admin.settings', compact('settings', 'channels', 'gatewayFees', 'activeTab'));
     }
 
     public static function getFeeSettingKey($gatewayCode, $type)
@@ -288,7 +294,8 @@ class SettingsController extends Controller
             Setting::set($key, $request->input($key));
         }
 
-        return redirect()->back()->with('success', 'Konfigurasi Payment Gateway berhasil diperbarui.');
+        $activeTab = $request->input('active_tab', 'winpay');
+        return redirect()->route('admin.settings', ['tab' => $activeTab])->with('success', 'Konfigurasi Payment Gateway berhasil diperbarui.');
     }
 
     public function toggleChannel($id)
@@ -536,31 +543,58 @@ class SettingsController extends Controller
             Setting::set('school_hero_images', json_encode($heroUrls));
         }
 
-        session(['active_ui_tab' => $request->input('active_tab', 'global')]);
-
-        return redirect()->back()->with('success', 'Pengaturan tampilan UI pendaftaran berhasil disimpan!');
-    }
-
-    public function reRegistrationInstructions()
+        $activeTab = $request->input('active_tab', 'global');
+        return redirect()->route('admin.ui-settings', ['tab' => $activeTab])->with('success', 'Pengaturan tampilan UI pendaftaran berhasil disimpan!');
+    }    public function reRegistrationInstructions(Request $request)
     {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $units = \App\Models\SpmbUnit::all();
+        
+        $selectedUnitId = $request->get('unit_id');
+        if (!$selectedUnitId) {
+            $selectedUnitId = !$isSuperAdmin ? auth()->user()->spmb_unit_id : \App\Models\SpmbUnit::value('id');
+        }
+        
+        if (!$isSuperAdmin && $selectedUnitId != auth()->user()->spmb_unit_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $unit = \App\Models\SpmbUnit::findOrFail($selectedUnitId);
+
         $settings = [
-            're_registration_instructions_unpaid' => Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>'),
-            're_registration_instructions_completed' => Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>'),
+            're_registration_instructions_unpaid' => $unit->re_registration_instructions_unpaid 
+                ?? Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>'),
+            're_registration_instructions_completed' => $unit->re_registration_instructions_completed 
+                ?? Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>'),
         ];
 
-        return view('admin.settings-instructions', compact('settings'));
+        return view('admin.settings-instructions', compact('settings', 'units', 'selectedUnitId', 'isSuperAdmin'));
     }
 
     public function saveReRegistrationInstructions(Request $request)
     {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        
+        $selectedUnitId = $request->get('unit_id');
+        if (!$selectedUnitId) {
+            $selectedUnitId = !$isSuperAdmin ? auth()->user()->spmb_unit_id : \App\Models\SpmbUnit::value('id');
+        }
+        
+        if (!$isSuperAdmin && $selectedUnitId != auth()->user()->spmb_unit_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             're_registration_instructions_unpaid' => 'nullable|string',
             're_registration_instructions_completed' => 'nullable|string',
         ]);
 
-        Setting::set('re_registration_instructions_unpaid', $request->re_registration_instructions_unpaid ?? '');
-        Setting::set('re_registration_instructions_completed', $request->re_registration_instructions_completed ?? '');
+        $unit = \App\Models\SpmbUnit::findOrFail($selectedUnitId);
+        $unit->update([
+            're_registration_instructions_unpaid' => $request->re_registration_instructions_unpaid ?? '',
+            're_registration_instructions_completed' => $request->re_registration_instructions_completed ?? '',
+        ]);
 
-        return redirect()->back()->with('success', 'Instruksi daftar ulang berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.instructions', ['unit_id' => $selectedUnitId])->with('success', 'Instruksi daftar ulang berhasil diperbarui.');
     }
 }

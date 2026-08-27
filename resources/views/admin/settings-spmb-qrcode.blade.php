@@ -4,7 +4,7 @@
 @section('page_title', 'QR Code SPMB')
 
 @section('content')
-<div class="w-full space-y-6">
+<div id="qrcode-settings-container" hx-boost="true" hx-target="#qrcode-settings-container" hx-select="#qrcode-settings-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -19,23 +19,43 @@
             
             <!-- Left configuration form -->
             <div class="md:col-span-2 space-y-6">
-                <div>
-                    <h3 class="font-extrabold text-base text-slate-800">Konfigurasi Tautan QR Code</h3>
-                    <p class="text-xs text-slate-400">Masukkan tautan formulir atau landing page registrasi Anda untuk mengubah isi kode QR secara instan.</p>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-800">Tautan QR Code Pendaftaran</h3>
+                        <p class="text-xs text-slate-400">
+                            @if($isSuperAdmin)
+                                Masukkan tautan formulir atau landing page registrasi Anda untuk mengubah isi kode QR secara instan.
+                            @else
+                                Tautan QR Code pendaftaran resmi portal SPMB.
+                            @endif
+                        </p>
+                    </div>
                 </div>
                 
-                <form method="POST" action="{{ route('admin.spmb-settings.qrcode.save') }}" class="space-y-4">
+                @if($errors->any())
+                    <div class="text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
+                        @foreach($errors->all() as $error)
+                            <p>⚠️ {{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
+                
+                <form method="POST" action="{{ route('admin.spmb-settings.qrcode.save') }}" hx-boost="false" class="space-y-4">
                     @csrf
                     <div>
                         <label class="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">URL Tujuan Pendaftaran*</label>
-                        <input type="url" name="qrcode_url" id="qrcodeUrlInput" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
-                            value="{{ $qrcodeUrl }}">
+                        <input type="url" name="qrcode_url" id="qrcodeUrlInput" required 
+                            {{ !$isSuperAdmin ? 'disabled' : '' }} 
+                            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm {{ !$isSuperAdmin ? 'cursor-not-allowed opacity-75' : '' }}"
+                            value="{{ old('qrcode_url', $qrcodeUrl) }}">
                     </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
-                            Perbarui & Simpan QR Code
-                        </button>
-                    </div>
+                    @if($isSuperAdmin)
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm">
+                                Perbarui & Simpan QR Code
+                            </button>
+                        </div>
+                    @endif
                 </form>
 
                 <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 text-xs text-amber-800 leading-relaxed space-y-2">
@@ -75,6 +95,20 @@
 
         </div>
     </div>
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 </div>
 
 <script>

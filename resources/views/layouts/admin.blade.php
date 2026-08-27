@@ -91,12 +91,35 @@
         html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
         }
+        
+        /* HTMX Loading Progress Bar & Button Disable States */
+        #top-loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background-color: #10b981; /* brand emerald */
+            z-index: 99999;
+            width: 0;
+            opacity: 0;
+            transition: width 0.4s ease, opacity 0.2s ease;
+            box-shadow: 0 0 10px #10b981, 0 0 5px #10b981;
+        }
+        .htmx-request {
+            opacity: 0.6 !important;
+            pointer-events: none !important;
+            transition: opacity 0.15s ease;
+            cursor: wait !important;
+        }
     </style>
 </head>
-<body class="min-h-screen flex text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200">
- 
-    <!-- Sidebar Left Layout -->
-    <aside class="w-64 bg-admin-dark text-slate-300 flex flex-col fixed inset-y-0 left-0 z-40 border-r border-slate-800">
+<body class="min-h-screen flex text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200" hx-boost="true" hx-target="#admin-layout-wrapper" hx-select="#admin-layout-wrapper">
+    <!-- YouTube-style dynamic top progress loading bar -->
+    <div id="top-loading-bar"></div>
+
+    <div id="admin-layout-wrapper" class="flex w-full min-h-screen">
+        <!-- Sidebar Left Layout -->
+    <aside id="sidebar-left" class="w-64 bg-admin-dark text-slate-300 flex flex-col fixed inset-y-0 left-0 z-40 border-r border-slate-800 transition-transform duration-300 transform -translate-x-full lg:translate-x-0">
         <!-- Brand Logo / Info -->
         <div class="h-16 bg-slate-950 flex items-center gap-3 px-6 border-b border-slate-800">
             <div class="h-8 w-8 bg-brand-yellow rounded-lg flex items-center justify-center font-bold text-slate-900 text-xs shadow">
@@ -130,12 +153,25 @@
                 <i data-lucide="users" class="w-4 h-4"></i> Data Pendaftar
             </a>
             
+            <a href="{{ route('admin.history') }}" 
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
+                {{ Route::is('admin.history') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                <i data-lucide="history" class="w-4 h-4"></i> Riwayat Pendaftaran (Log)
+            </a>
+            
+            <a href="{{ route('admin.payments.data') }}" 
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
+                {{ Route::is('admin.payments.data') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                <i data-lucide="wallet" class="w-4 h-4"></i> Data Pembayaran
+            </a>
+            
             <a href="{{ route('admin.payments') }}" 
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
                 {{ Route::is('admin.payments') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                <i data-lucide="wallet" class="w-4 h-4"></i> Laporan Pembayaran
+                <i data-lucide="receipt" class="w-4 h-4"></i> Riwayat Pembayaran (Log)
             </a>
 
+            <!-- Konfigurasi Sistem Section -->
             <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mt-6 mb-2">Konfigurasi Sistem</span>
             
             @if(auth()->user()->isSuperAdmin())
@@ -145,21 +181,21 @@
                     {{ Route::is('admin.spmb-settings.registration') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
                     <i data-lucide="toggle-left" class="w-4 h-4"></i> Aktivasi SPMB
                 </a>
-
-                <!-- 2. QR Code SPMB (Top-level under Konfigurasi) -->
-                <a href="{{ route('admin.spmb-settings.qrcode') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.spmb-settings.qrcode') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="qr-code" class="w-4 h-4"></i> QR Code SPMB
-                </a>
-
-                <!-- 3. Manajemen User (Top-level under Konfigurasi) -->
-                <a href="{{ route('admin.users') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.users') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="users-round" class="w-4 h-4"></i> Manajemen User
-                </a>
             @endif
+
+            <!-- 2. QR Code SPMB (Top-level under Konfigurasi) -->
+            <a href="{{ route('admin.spmb-settings.qrcode') }}" 
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
+                {{ Route::is('admin.spmb-settings.qrcode') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                <i data-lucide="qr-code" class="w-4 h-4"></i> QR Code SPMB
+            </a>
+
+            <!-- 3. Manajemen User (Top-level under Konfigurasi) -->
+            <a href="{{ route('admin.users') }}" 
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition 
+                {{ Route::is('admin.users') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                <i data-lucide="users-round" class="w-4 h-4"></i> Manajemen User
+            </a>
 
             <!-- 2. Data Master Collapsible Dropdown -->
              @php
@@ -193,13 +229,13 @@
                         <a href="{{ route('admin.spmb-settings.form') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.form') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
                             <i data-lucide="settings-2" class="w-3.5 h-3.5"></i> Setting Formulir
                         </a>
-                        <a href="{{ route('admin.spmb-settings.instructions') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.instructions') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
-                            <i data-lucide="scroll-text" class="w-3.5 h-3.5"></i> Instruksi Daftar Ulang
-                        </a>
-                        <a href="{{ route('admin.spmb-settings.agreements') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.agreements') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
-                            <i data-lucide="file-signature" class="w-3.5 h-3.5"></i> Surat Pernyataan
-                        </a>
                     @endif
+                    <a href="{{ route('admin.spmb-settings.instructions') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.instructions') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                        <i data-lucide="scroll-text" class="w-3.5 h-3.5"></i> Instruksi Daftar Ulang
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.agreements') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.spmb-settings.agreements') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                        <i data-lucide="file-signature" class="w-3.5 h-3.5"></i> Surat Pernyataan
+                    </a>
                 </div>
             </div>
 
@@ -214,7 +250,7 @@
 
                 <!-- 3. Pengaturan Teknis Collapsible Dropdown -->
                 @php
-                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/logs*');
+                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/activity-logs*') || Request::is('admin/logs*');
                 @endphp
                 <div class="space-y-1">
                     <button type="button" onclick="toggleTechDropdown()" 
@@ -237,6 +273,9 @@
                                 <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-500"></i> Set {{ $sgw->name }}
                             </a>
                         @endforeach
+                        <a href="{{ route('admin.activity-logs') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.activity-logs') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> Log Aktivitas
+                        </a>
                         <a href="{{ route('admin.logs') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.logs') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
                             <i data-lucide="scroll-text" class="w-3.5 h-3.5"></i> Log Sistem
                         </a>
@@ -275,14 +314,11 @@
                     Menu Akun
                 </div>
                 <div class="divide-y divide-slate-800/50">
-                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
+                    <a href="{{ route('admin.profile.edit') }}" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
                         <i data-lucide="user" class="w-4 h-4 text-slate-500"></i> Profil Saya
                     </a>
-                    <a href="{{ route('profile.edit') }}#update-password" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
+                    <a href="{{ route('admin.profile.password') }}" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
                         <i data-lucide="key-round" class="w-4 h-4 text-slate-500"></i> Ganti Password
-                    </a>
-                    <a href="{{ route('admin.verification') }}?status=completed" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-slate-800 hover:text-white transition">
-                        <i data-lucide="history" class="w-4 h-4 text-slate-500"></i> Aktivitas Log
                     </a>
                     
                     <div class="pt-1.5">
@@ -298,15 +334,24 @@
         </div>
     </aside>
 
+    <!-- Sidebar Mobile Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 z-35 hidden transition-opacity duration-300 opacity-0 lg:hidden" onclick="closeSidebar()"></div>
+
     <!-- Right Content Area -->
-    <div class="flex-grow pl-64 flex flex-col min-h-screen">
+    <div class="flex-grow pl-0 lg:pl-64 flex flex-col min-h-screen transition-all duration-300">
         
         <!-- Header Panel -->
-        <header class="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-30 shadow-sm transition">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                <span>Sekolah Anak Saleh</span>
-                <span>/</span>
-                <span class="text-brand-emerald font-bold">@yield('page_title', 'Dashboard')</span>
+        <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30 shadow-sm transition">
+            <div class="flex items-center gap-3">
+                <!-- Hamburger menu button visible only on mobile/tablet -->
+                <button type="button" onclick="openSidebar()" class="lg:hidden p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition" title="Buka Menu">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                    <span class="hidden sm:inline">Sekolah Anak Saleh</span>
+                    <span class="hidden sm:inline">/</span>
+                    <span class="text-brand-emerald font-bold">@yield('page_title', 'Dashboard')</span>
+                </div>
             </div>
             
             <div class="flex items-center gap-3 text-xs font-medium">
@@ -370,14 +415,15 @@
                     </div>
                 </div>
 
-                <a href="{{ route('dashboard') }}" target="_blank" class="bg-emerald-50 text-brand-emerald hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5">
-                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Portal Pendaftar
+                <a href="{{ route('dashboard') }}" target="_blank" class="bg-emerald-50 text-brand-emerald hover:bg-emerald-100 px-2 sm:px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5" title="Buka Portal Pendaftar">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Buka Portal Pendaftar</span>
                 </a>
             </div>
         </header>
 
         <!-- Main Body -->
-        <main class="flex-grow p-8">
+        <main class="flex-grow p-4 lg:p-8">
             @yield('content')
         </main>
         
@@ -387,12 +433,13 @@
         </footer>
 
     </div>
+    </div>
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none"></div>
 
     <!-- Global Delete Confirmation Modal -->
-    <div id="confirmDeleteModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-xl transform scale-95 transition-transform duration-300 p-6 space-y-4" id="confirmDeleteModalBody">
+    <div id="confirmDeleteModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-xl transform scale-95 transition-all duration-100 p-6 space-y-4" id="confirmDeleteModalBody">
             <div class="flex items-center gap-3 text-rose-600">
                 <div class="h-10 w-10 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
                     <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i>
@@ -440,6 +487,12 @@
             modalBody.classList.add('scale-95');
         }
 
+        document.getElementById('confirmDeleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+
         // Collapsible dropdown
         function toggleMasterDropdown() {
             const submenu = document.getElementById('masterSubmenu');
@@ -477,6 +530,27 @@
             event.stopPropagation();
             const dropdown = document.getElementById('profileDropdown');
             dropdown.classList.toggle('hidden');
+        }
+
+        // Sidebar Mobile Controllers
+        function openSidebar() {
+            const sidebar = document.getElementById('sidebar-left');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.add('opacity-100');
+            }, 10);
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar-left');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
         }
 
         document.addEventListener('click', function(e) {
@@ -557,6 +631,113 @@
         document.addEventListener("DOMContentLoaded", function() {
             lucide.createIcons();
             updateThemeIcon();
+            
+            // Re-render Lucide icons after htmx swaps content
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            });
+            
+            // HTMX top loading bar animation
+            document.body.addEventListener('htmx:configRequest', function() {
+                const bar = document.getElementById('top-loading-bar');
+                if (bar) {
+                    bar.style.opacity = '1';
+                    bar.style.width = '30%';
+                    setTimeout(() => {
+                        if (bar.style.width === '30%') {
+                            bar.style.width = '75%';
+                        }
+                    }, 150);
+                }
+            });
+            
+            document.body.addEventListener('htmx:afterRequest', function() {
+                const bar = document.getElementById('top-loading-bar');
+                if (bar) {
+                    bar.style.width = '100%';
+                    setTimeout(() => {
+                        bar.style.opacity = '0';
+                        setTimeout(() => {
+                            bar.style.width = '0';
+                        }, 250);
+                    }, 100);
+                }
+            });
+
+            // Helper to check if an element click/submit will be handled by HTMX
+            function isHtmxRequest(el) {
+                if (!el) return false;
+                if (el.hasAttribute('hx-get') || el.hasAttribute('hx-post') || el.hasAttribute('hx-put') || el.hasAttribute('hx-delete') || el.hasAttribute('hx-patch')) {
+                    return true;
+                }
+                let current = el;
+                while (current && current !== document.body) {
+                    if (current.getAttribute('hx-boost') === 'false') {
+                        return false;
+                    }
+                    if (current.getAttribute('hx-boost') === 'true') {
+                        return true;
+                    }
+                    current = current.parentElement;
+                }
+                return false;
+            }
+
+            // Override HTMLFormElement.prototype.submit to show progress bar on JS-triggered submits
+            const originalSubmit = HTMLFormElement.prototype.submit;
+            HTMLFormElement.prototype.submit = function() {
+                if (!isHtmxRequest(this)) {
+                    const bar = document.getElementById('top-loading-bar');
+                    if (bar) {
+                        bar.style.opacity = '1';
+                        bar.style.width = '60%';
+                        setTimeout(() => {
+                            if (bar.style.opacity === '1') {
+                                bar.style.width = '90%';
+                            }
+                        }, 500);
+                    }
+                }
+                originalSubmit.apply(this, arguments);
+            };
+
+            // Show loading bar on native form submits (e.g. search / filters)
+            document.body.addEventListener('submit', function(e) {
+                if (!isHtmxRequest(e.target)) {
+                    const bar = document.getElementById('top-loading-bar');
+                    if (bar) {
+                        bar.style.opacity = '1';
+                        bar.style.width = '60%';
+                        setTimeout(() => {
+                            if (bar.style.opacity === '1') {
+                                bar.style.width = '90%';
+                            }
+                        }, 500);
+                    }
+                }
+            });
+
+            // Show loading bar on native link clicks (to handle non-boosted transitions)
+            document.body.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (link && !link.target && !link.hasAttribute('download')) {
+                    const href = link.getAttribute('href');
+                    if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !isHtmxRequest(link)) {
+                        const bar = document.getElementById('top-loading-bar');
+                        if (bar) {
+                            bar.style.opacity = '1';
+                            bar.style.width = '50%';
+                            setTimeout(() => {
+                                if (bar.style.opacity === '1') {
+                                    bar.style.width = '85%';
+                                }
+                            }, 500);
+                        }
+                    }
+                }
+            });
             
             @if(session('success'))
                 showToast("{{ session('success') }}", 'success');

@@ -58,26 +58,73 @@
     </div>
 
     <!-- Candidate List Table -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden">
-        <div class="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center">
+    <div id="candidate-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#candidate-card" hx-select="#candidate-card">
+        <div class="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daftar Pendaftaran Calon Siswa</span>
             
             <!-- Quick Filter Links -->
             <div class="flex flex-wrap gap-2 text-[10px] font-bold">
-                <a href="{{ route('admin.verification') }}" class="px-2.5 py-1 rounded-full {{ !request()->has('status') ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Semua</a>
-                <a href="{{ route('admin.verification', ['status' => 'submitted']) }}" class="px-2.5 py-1 rounded-full {{ request()->status === 'submitted' ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Perlu Review</a>
-                <a href="{{ route('admin.verification', ['status' => 'verified']) }}" class="px-2.5 py-1 rounded-full {{ request()->status === 'verified' ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Terverifikasi</a>
-                <a href="{{ route('admin.verification', ['status' => 'taaruf_completed']) }}" class="px-2.5 py-1 rounded-full {{ request()->status === 'taaruf_completed' ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Ta'aruf Selesai</a>
-                <a href="{{ route('admin.verification', ['status' => 'agreement_signed']) }}" class="px-2.5 py-1 rounded-full {{ request()->status === 'agreement_signed' ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Persetujuan</a>
-                <a href="{{ route('admin.verification', ['status' => 'completed']) }}" class="px-2.5 py-1 rounded-full {{ request()->status === 'completed' ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Lulus</a>
-                <a href="{{ route('admin.verification', ['status' => 'failed']) }}" class="px-2.5 py-1 rounded-full {{ request()->status === 'failed' ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Ditolak</a>
+                <a href="{{ route('admin.verification', request()->except(['status', 'page'])) }}" class="px-2.5 py-1 rounded-full {{ !request()->has('status') ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Semua</a>
+                @foreach(['submitted' => 'Perlu Review', 'verified' => 'Terverifikasi', 'taaruf_completed' => 'Ta\'aruf Selesai', 'agreement_signed' => 'Persetujuan', 'completed' => 'Lulus', 'failed' => 'Ditolak'] as $statusVal => $statusLabel)
+                    <a href="{{ route('admin.verification', array_merge(request()->except(['page']), ['status' => $statusVal])) }}" class="px-2.5 py-1 rounded-full {{ request()->status === $statusVal ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">{{ $statusLabel }}</a>
+                @endforeach
             </div>
         </div>
+
+        <!-- Search & Filter Form -->
+        <form action="{{ route('admin.verification') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
+            @if(request('status'))
+                <input type="hidden" name="status" value="{{ request('status') }}">
+            @endif
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <!-- Search Input Container -->
+                <div class="relative w-full md:w-80 flex items-center">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, WhatsApp, NIK..." 
+                           class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:text-white transition">
+                    
+                    <!-- Clear (X) Button -->
+                    @if(request('search'))
+                        <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; htmx.trigger(this.form, 'submit');" 
+                                class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition"
+                                title="Hapus Pencarian">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    @endif
+
+                    <!-- Integrated Search Button -->
+                    <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-[10px] font-bold shadow-sm transition">
+                        Cari
+                    </button>
+                </div>
+                
+                @if(auth()->user()->isSuperAdmin())
+                    <!-- Filter Level / Unit -->
+                    <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <option value="">Semua Jenjang</option>
+                        @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
+                            <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
+                        @endforeach
+                    </select>
+                @endif
+
+                <!-- Per Page Select -->
+                <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
+                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
+                </select>
+            </div>
+        </form>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-950/20">
+                        <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">ID / No. Reg</th>
                         <th class="py-4 px-6">Calon Siswa</th>
                         <th class="py-4 px-6">Tingkat</th>
@@ -117,6 +164,9 @@
                             ];
                         @endphp
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition">
+                            <td class="py-4 px-6 text-center text-slate-500 font-bold text-xs">
+                                {{ ($registrations->currentPage() - 1) * $registrations->perPage() + $loop->iteration }}
+                            </td>
                             <td class="py-4 px-6 font-mono text-xs text-slate-500">
                                 SANS-{{ substr($reg->period->year ?? '2026', 0, 4) }}-{{ str_pad($reg->id, 4, '0', STR_PAD_LEFT) }}
                             </td>
@@ -200,7 +250,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-8 px-6 text-center text-slate-400">
+                            <td colspan="8" class="py-8 px-6 text-center text-slate-400">
                                 Tidak ada data pendaftaran yang sesuai filter ini.
                             </td>
                         </tr>

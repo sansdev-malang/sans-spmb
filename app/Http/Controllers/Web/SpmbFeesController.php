@@ -21,7 +21,11 @@ class SpmbFeesController extends Controller
             });
         }
         $categories = $categoriesQuery->with('units')->get()->map(function ($cat) {
-            $cat->is_used = SpmbFee::where('spmb_fee_category_id', $cat->id)->exists();
+            $cat->is_used = SpmbFee::where('spmb_fee_category_id', $cat->id)
+                ->get()
+                ->contains(function ($fee) {
+                    return self::isFeeUsed($fee);
+                });
             return $cat;
         });
 
@@ -29,16 +33,17 @@ class SpmbFeesController extends Controller
         if (!auth()->user()->isSuperAdmin()) {
             $feesQuery->where('spmb_unit_id', auth()->user()->spmb_unit_id);
         }
-        $fees = $feesQuery->with('unit')->get()->map(function ($fee) {
-            // Check if any payment matches the amount of this fee in the database
-            $fee->is_used = Payment::where('amount', $fee->amount)->exists();
+        $fees = $feesQuery->with(['unit', 'category'])->get()->map(function ($fee) {
+            $fee->is_used = self::isFeeUsed($fee);
             return $fee;
         });
 
         $units = SpmbUnit::where('is_active', true)->get();
         $gateways = \App\Models\PaymentGateway::get();
 
-        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'gateways'));
+        $activeTab = request()->get('tab', 'jenis_biaya');
+
+        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'gateways', 'activeTab'));
     }
 
     // Fee Category (Jenis Biaya) CRUD
@@ -67,7 +72,7 @@ class SpmbFeesController extends Controller
         $units = auth()->user()->isSuperAdmin() ? $request->spmb_units : [auth()->user()->spmb_unit_id];
         $category->units()->sync($units);
 
-        return redirect()->back()->with('success', 'Jenis biaya berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])->with('success', 'Jenis biaya berhasil ditambahkan.');
     }
 
     public function updateCategory(Request $request, $id)
@@ -97,7 +102,7 @@ class SpmbFeesController extends Controller
             $category->units()->sync($request->spmb_units);
         }
 
-        return redirect()->back()->with('success', 'Jenis biaya berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])->with('success', 'Jenis biaya berhasil diperbarui.');
     }
 
     public function destroyCategory($id)
@@ -105,11 +110,11 @@ class SpmbFeesController extends Controller
         $category = SpmbFeeCategory::findOrFail($id);
 
         if (SpmbFee::where('spmb_fee_category_id', $category->id)->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus jenis biaya ini karena memiliki data nominal biaya aktif.');
+            return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])->with('error', 'Tidak dapat menghapus jenis biaya ini karena memiliki data nominal biaya aktif.');
         }
 
         $category->delete();
-        return redirect()->back()->with('success', 'Jenis biaya berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])->with('success', 'Jenis biaya berhasil dihapus.');
     }
 
     // Admin Fee (Biaya Admin) CRUD
@@ -120,7 +125,7 @@ class SpmbFeesController extends Controller
         $gatewayCodes = \App\Models\PaymentGateway::pluck('code')->toArray();
         $rules = [
             'name' => 'required|string',
-            'amount' => 'required|numeric|min:1000',
+            'amount' => 'required|numeric|min:1000|max:9999999999',
             'payment_gateway' => 'required|array|min:1',
             'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
@@ -132,7 +137,8 @@ class SpmbFeesController extends Controller
         }
 
         $validator = Validator::make($request->all(), $rules, [
-            'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.'
+            'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.',
+            'amount.max' => 'Nominal biaya pendaftaran maksimal adalah Rp 9.999.999.999.'
         ]);
 
         $validator->after(function ($validator) use ($request, $units) {
@@ -168,7 +174,7 @@ class SpmbFeesController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', 'Biaya pendaftaran berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $request->spmb_fee_category_id])->with('success', 'Biaya pendaftaran berhasil ditambahkan.');
     }
 
     public function updateFee(Request $request, $id)
@@ -185,7 +191,7 @@ class SpmbFeesController extends Controller
                                  ->where('spmb_unit_id', $unitId);
                 })
             ],
-            'amount' => 'required|numeric|min:1000',
+            'amount' => 'required|numeric|min:1000|max:9999999999',
             'payment_gateway' => 'required|array|min:1',
             'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
@@ -198,6 +204,7 @@ class SpmbFeesController extends Controller
 
         $validator = Validator::make($request->all(), $rules, [
             'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.',
+            'amount.max' => 'Nominal biaya pendaftaran maksimal adalah Rp 9.999.999.999.',
             'name.unique' => 'Nama biaya sudah digunakan pada unit dan kategori ini.'
         ]);
 
@@ -210,9 +217,9 @@ class SpmbFeesController extends Controller
 
         $fee = SpmbFee::findOrFail($id);
 
-        if (Payment::whereIn('amount', [$fee->amount, $fee->amount + 1500, $fee->amount + 4500, round($fee->amount * 1.007)])->exists()) {
+        if (self::isFeeUsed($fee)) {
             if ($fee->amount != $request->amount) {
-                return redirect()->back()->with('error', 'Tidak dapat mengubah nominal biaya yang sudah digunakan dalam transaksi.');
+                return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $fee->spmb_fee_category_id])->with('error', 'Tidak dapat mengubah nominal biaya yang sudah digunakan dalam transaksi.');
             }
         }
 
@@ -224,18 +231,53 @@ class SpmbFeesController extends Controller
             'spmb_unit_id' => $unitId,
         ]);
 
-        return redirect()->back()->with('success', 'Biaya pendaftaran berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $request->spmb_fee_category_id])->with('success', 'Biaya pendaftaran berhasil diperbarui.');
     }
 
     public function destroyFee($id)
     {
         $fee = SpmbFee::findOrFail($id);
 
-        if (Payment::whereIn('amount', [$fee->amount, $fee->amount + 1500, $fee->amount + 4500, round($fee->amount * 1.007)])->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus biaya ini karena sudah terpakai pada transaksi pembayaran.');
+        $catId = $fee->spmb_fee_category_id;
+        if (self::isFeeUsed($fee)) {
+            return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $catId])->with('error', 'Tidak dapat menghapus biaya ini karena sudah terpakai pada transaksi pembayaran.');
         }
 
         $fee->delete();
-        return redirect()->back()->with('success', 'Biaya pendaftaran berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $catId])->with('success', 'Biaya pendaftaran berhasil dihapus.');
+    }
+
+    public static function isFeeUsed($fee)
+    {
+        // 1. If it's a registration fee category
+        if ($fee->category && $fee->category->name === 'Formulir Pendaftaran') {
+            return Payment::where('payment_type', 'registration_fee')
+                ->whereIn('status', ['success', 'pending'])
+                ->whereHas('registration', function ($q) use ($fee) {
+                    $q->where('spmb_unit_id', $fee->spmb_unit_id);
+                })
+                ->where(function ($q) use ($fee) {
+                    $q->where('base_amount', $fee->amount)
+                      ->orWhereIn('amount', [
+                          $fee->amount,
+                          $fee->amount + 1500,
+                          $fee->amount + 4500,
+                          round($fee->amount * 1.007)
+                      ]);
+                })
+                ->exists();
+        }
+
+        // 2. For final_fee payment type (additional fees like Seragam, Uang Gedung)
+        return Payment::where('payment_type', 'final_fee')
+            ->whereIn('status', ['success', 'pending'])
+            ->whereHas('registration', function ($q) use ($fee) {
+                $q->where('spmb_unit_id', $fee->spmb_unit_id);
+            })
+            ->get()
+            ->contains(function ($payment) use ($fee) {
+                $items = $payment->payment_info['selected_items'] ?? [];
+                return collect($items)->contains('name', $fee->name);
+            });
     }
 }

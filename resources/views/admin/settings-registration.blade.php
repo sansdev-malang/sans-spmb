@@ -4,7 +4,7 @@
 @section('page_title', 'Aktivasi SPMB')
 
 @section('content')
-<div class="w-full space-y-6">
+<div id="registration-settings-container" hx-boost="true" hx-target="#registration-settings-container" hx-select="#registration-settings-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex items-center gap-3">
@@ -18,29 +18,33 @@
         </div>
     </div>
 
+    @php
+        $activeTab = request()->get('tab', 'jalur_gelombang');
+    @endphp
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        <button type="button" onclick="switchActivationTab('jalur_gelombang')" id="activationTabBtn-jalur_gelombang" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow">
+        <button type="button" onclick="switchActivationTab('jalur_gelombang')" id="activationTabBtn-jalur_gelombang" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'jalur_gelombang' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="git-merge" class="w-4 h-4"></i> Jalur & Gelombang
         </button>
-        <button type="button" onclick="switchActivationTab('struktur_akademik')" id="activationTabBtn-struktur_akademik" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+        <button type="button" onclick="switchActivationTab('struktur_akademik')" id="activationTabBtn-struktur_akademik" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'struktur_akademik' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="graduation-cap" class="w-4 h-4"></i> Struktur Akademik
         </button>
-        <button type="button" onclick="switchActivationTab('biaya_tarif')" id="activationTabBtn-biaya_tarif" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+        <button type="button" onclick="switchActivationTab('biaya_tarif')" id="activationTabBtn-biaya_tarif" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'biaya_tarif' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="coins" class="w-4 h-4"></i> Biaya Pendaftaran
         </button>
         @foreach($gateways as $gw)
-            <button type="button" onclick="switchActivationTab('gateway_{{ $gw->code }}')" id="activationTabBtn-gateway_{{ $gw->code }}" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+            <button type="button" onclick="switchActivationTab('gateway_{{ $gw->code }}')" id="activationTabBtn-gateway_{{ $gw->code }}" class="activation-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'gateway_' . $gw->code ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="credit-card" class="w-4 h-4"></i> {{ $gw->name }}
             </button>
         @endforeach
     </div>
 
-    <form method="POST" action="{{ route('admin.spmb-settings.registration.update') }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.spmb-settings.registration.update') }}" hx-boost="false" class="space-y-6">
         @csrf
+        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ $activeTab }}">
         
         <!-- TAB 1: Jalur & Gelombang -->
-        <div id="activationTabContent-jalur_gelombang" class="activation-tab-content space-y-4">
+        <div id="activationTabContent-jalur_gelombang" class="activation-tab-content space-y-4 {{ $activeTab === 'jalur_gelombang' ? '' : 'hidden' }}">
             <div class="space-y-1">
                 <h2 class="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                     <i data-lucide="settings" class="w-3.5 h-3.5"></i> Konfigurasi Jalur & Gelombang
@@ -152,7 +156,7 @@
         </div>
 
         <!-- TAB 2: Struktur Akademik -->
-        <div id="activationTabContent-struktur_akademik" class="activation-tab-content space-y-4 hidden">
+        <div id="activationTabContent-struktur_akademik" class="activation-tab-content space-y-4 {{ $activeTab === 'struktur_akademik' ? '' : 'hidden' }}">
             <div class="space-y-1">
                 <h2 class="text-xs font-black uppercase tracking-widest text-slate-405 flex items-center gap-2">
                     <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i> Konfigurasi Jenjang & Struktur Akademik
@@ -259,7 +263,7 @@
         </div>
 
         <!-- TAB 3: Biaya Pendaftaran -->
-        <div id="activationTabContent-biaya_tarif" class="activation-tab-content space-y-4 hidden">
+        <div id="activationTabContent-biaya_tarif" class="activation-tab-content space-y-4 {{ $activeTab === 'biaya_tarif' ? '' : 'hidden' }}">
             <div class="space-y-1">
                 <h2 class="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                     <i data-lucide="settings" class="w-3.5 h-3.5"></i> Aktivasi Nominal Biaya & Tarif
@@ -324,7 +328,7 @@
 
         @foreach($gateways as $gw)
             <!-- TAB Gateway: {{ $gw->name }} -->
-            <div id="activationTabContent-gateway_{{ $gw->code }}" class="activation-tab-content space-y-4 hidden">
+            <div id="activationTabContent-gateway_{{ $gw->code }}" class="activation-tab-content space-y-4 {{ $activeTab === 'gateway_' . $gw->code ? '' : 'hidden' }}">
                 <div class="space-y-1">
                     <h2 class="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                         <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Aktivasi Channel {{ $gw->name }}
@@ -379,20 +383,52 @@
                 Simpan Konfigurasi Aktivasi
             </button>
         </div>
-
     </form>
-</div>
+    <script>
+        function switchActivationTab(tabId) {
+            document.querySelectorAll('.activation-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.activation-tab-btn').forEach(el => {
+                el.classList.remove('bg-brand-emerald', 'text-white', 'shadow');
+                el.classList.add('text-slate-600', 'hover:bg-slate-50');
+            });
+            document.getElementById('activationTabContent-' + tabId).classList.remove('hidden');
+            document.getElementById('activationTabBtn-' + tabId).classList.remove('text-slate-600', 'hover:bg-slate-50');
+            document.getElementById('activationTabBtn-' + tabId).classList.add('bg-brand-emerald', 'text-white', 'shadow');
+            
+            const activeTabInput = document.getElementById('active-tab-input');
+            if (activeTabInput) {
+                activeTabInput.value = tabId;
+            }
+            
+            // Update URL query parameter
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
 
-<script>
-    function switchActivationTab(tabId) {
-        document.querySelectorAll('.activation-tab-content').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.activation-tab-btn').forEach(el => {
-            el.classList.remove('bg-brand-emerald', 'text-white', 'shadow');
-            el.classList.add('text-slate-600', 'hover:bg-slate-50');
-        });
-        document.getElementById('activationTabContent-' + tabId).classList.remove('hidden');
-        document.getElementById('activationTabBtn-' + tabId).classList.remove('text-slate-600', 'hover:bg-slate-50');
-        document.getElementById('activationTabBtn-' + tabId).classList.add('bg-brand-emerald', 'text-white', 'shadow');
-    }
-</script>
+            localStorage.setItem('spmb_activation_active_tab', tabId);
+        }
+        window.switchActivationTab = switchActivationTab;
+
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeTab = urlParams.get('tab') || localStorage.getItem('spmb_activation_active_tab') || 'jalur_gelombang';
+            if (document.getElementById('activationTabBtn-' + activeTab)) {
+                switchActivationTab(activeTab);
+            }
+        })();
+    </script>
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
+</div>
 @endsection

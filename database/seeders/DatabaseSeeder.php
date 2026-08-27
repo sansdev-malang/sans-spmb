@@ -22,18 +22,24 @@ class DatabaseSeeder extends Seeder
                 'name' => 'PAUD Terpadu Anak Saleh',
                 'code' => 'PAUD',
                 'is_active' => 1,
+                're_registration_instructions_unpaid' => '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>',
+                're_registration_instructions_completed' => '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>',
             ],
             [
                 'id' => 2,
                 'name' => 'Sekolah Dasar Anak Saleh',
                 'code' => 'SD',
                 'is_active' => 1,
+                're_registration_instructions_unpaid' => '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>',
+                're_registration_instructions_completed' => '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>',
             ],
             [
                 'id' => 3,
                 'name' => 'Sekolah Menengah Pertama Anak Saleh',
                 'code' => 'SMP',
                 'is_active' => 1,
+                're_registration_instructions_unpaid' => '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>',
+                're_registration_instructions_completed' => '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>',
             ],
         ];
         foreach ($units as $unit) {
@@ -724,8 +730,6 @@ class DatabaseSeeder extends Seeder
             'school_name' => 'Sekolah Anak Saleh',
             'portal_hero_title' => 'Membangun Generasi Cerdas, Sholeh, dan Berakhlak Mulia.',
             'portal_hero_description' => 'Bergabunglah bersama Sekolah Anak Saleh. Kami menyajikan kurikulum yang mengintegrasikan nilai-nilai Islam dengan pendidikan modern untuk menyiapkan pemimpin masa depan.',
-            're_registration_instructions_unpaid' => '<p>Terima kasih atas kepercayaan Bapak/Ibu orang tua/wali murid baru. Untuk menyelesaikan proses daftar ulang, mohon lakukan pembayaran biaya formulir & administrasi sekolah sesuai petunjuk di bawah ini:</p><ol><li>Lakukan pembayaran tagihan sesuai nominal yang tertera pada invoice tagihan melalui gerbang pembayaran virtual account (VA) atau QRIS yang tersedia.</li><li>Setelah pembayaran sukses, sistem akan mencatat pembayaran secara otomatis dan memperbarui status pendaftaran Anda.</li><li>Unduh dan tanda tangani surat kesanggupan (Surat Pernyataan) yang disediakan di halaman portal Anda.</li><li>Apabila mengalami kendala selama proses pembayaran, silakan hubungi bagian keuangan/admisi melalui WhatsApp di nomor 0812-3456-7890.</li></ol>',
-            're_registration_instructions_completed' => '<p><strong>Selamat! Pendaftaran Anda Telah Resmi Terdaftar dan Lunas.</strong></p><p>Berikut adalah langkah-langkah berikutnya yang harus diikuti untuk memulai kegiatan belajar mengajar:</p><ol><li>Unduh dan cetak <strong>Surat Keterangan Penerimaan (SKP)</strong> resmi dari halaman portal Anda sebagai bukti kelulusan.</li><li>Silakan ikuti jadwal pengambilan seragam sekolah dan buku paket pembelajaran yang akan diinfokan lebih lanjut melalui grup WhatsApp kelas.</li><li>Pastikan Bapak/Ibu menghadiri <strong>Pertemuan Wali Murid Perdana</strong> yang akan diselenggarakan menjelang masuk tahun ajaran baru.</li><li>Informasi lebih rinci mengenai kalender akademik, tata tertib, dan jadwal masuk hari pertama akan dikirimkan secara berkala.</li></ol>'
         ];
 
         foreach ($defaultSettings as $key => $value) {

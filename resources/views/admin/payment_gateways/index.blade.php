@@ -4,7 +4,7 @@
 @section('page_title', 'Payment Gateways')
 
 @section('content')
-<div class="space-y-8">
+<div id="gateway-settings-container" class="space-y-8">
     
     <!-- Header -->
     <div class="md:flex md:items-center md:justify-between mb-8">
@@ -69,9 +69,15 @@
                             <td class="py-4 px-6 text-right">
                                 <div class="flex justify-end items-center gap-1.5">
                                     <!-- Config link -->
-                                    <a href="{{ route('admin.payment-gateways.settings', $gateway->code) }}" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition flex items-center gap-1">
-                                        <i data-lucide="settings" class="w-3 h-3 text-brand-yellow"></i> Konfigurasi
-                                    </a>
+                                    @if($gateway->is_active)
+                                        <a href="{{ route('admin.payment-gateways.settings', $gateway->code) }}" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition flex items-center gap-1">
+                                            <i data-lucide="settings" class="w-3 h-3 text-brand-yellow"></i> Konfigurasi
+                                        </a>
+                                    @else
+                                        <button type="button" disabled class="bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 px-2.5 py-1.5 rounded-lg text-[10px] font-bold cursor-not-allowed flex items-center gap-1 border border-slate-200 dark:border-slate-700" title="Aktifkan gateway terlebih dahulu untuk melakukan konfigurasi">
+                                            <i data-lucide="settings" class="w-3 h-3 text-slate-400 dark:text-slate-600"></i> Konfigurasi
+                                        </button>
+                                    @endif
 
                                     <!-- Edit Trigger -->
                                     <button onclick="openEditModal({{ json_encode($gateway) }})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
@@ -122,17 +128,39 @@
   {"key": "private_key", "label": "Private Key (RSA)", "type": "textarea"}
 ]</pre>
     </div>
+
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 </div>
 
 <!-- Modal Create -->
-<div id="createModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
+<div id="createModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/40 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left transform scale-95 transition-all duration-100" id="createModalBody">
         <div class="bg-brand-emerald text-white px-6 py-4">
             <h3 class="font-extrabold text-lg">Tambah Payment Gateway</h3>
             <p class="text-xs text-emerald-100 mt-0.5">Daftarkan jenis/channel gateway pembayaran baru.</p>
         </div>
-        <form action="{{ route('admin.payment-gateways.store') }}" method="POST" class="p-6 space-y-4">
+        <form action="{{ route('admin.payment-gateways.store') }}" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
+            @if($errors->any() && session('failed_modal') && session('failed_modal') === 'gateway_create')
+                <div class="spmb-gateway-errors mx-6 mt-4 text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
+                    @foreach($errors->all() as $error)
+                        <p>⚠️ {{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
             <div>
                 <label for="create_name" class="block text-xs font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wider mb-1.5">Nama Gateway*</label>
                 <input type="text" id="create_name" name="name" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: DOKU Checkout, Midtrans SNAP">
@@ -169,14 +197,21 @@
 </div>
 
 <!-- Modal Edit -->
-<div id="editModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left">
+<div id="editModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/40 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-left transform scale-95 transition-all duration-100" id="editModalBody">
         <div class="bg-blue-600 text-white px-6 py-4">
             <h3 class="font-extrabold text-lg">Edit Payment Gateway</h3>
             <p class="text-xs text-blue-100 mt-0.5">Ubah konfigurasi detail pendaftaran gateway pembayaran.</p>
         </div>
-        <form id="editForm" method="POST" class="p-6 space-y-4">
+        <form id="editForm" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
+            @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'gateway_edit_'))
+                <div class="spmb-gateway-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
+                    @foreach($errors->all() as $error)
+                        <p>⚠️ {{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
             <div>
                 <label for="edit_name" class="block text-xs font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wider mb-1.5">Nama Gateway*</label>
                 <input type="text" id="edit_name" name="name" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
@@ -209,28 +244,104 @@
 </div>
 
 <script>
+    // Clear validation errors
+    function clearGatewayErrors() {
+        document.querySelectorAll('.spmb-gateway-errors').forEach(el => {
+            el.classList.add('hidden');
+        });
+    }
+
     function openCreateModal() {
+        clearGatewayErrors();
         document.getElementById('createModal').classList.remove('hidden');
+        setTimeout(() => {
+            const body = document.getElementById('createModalBody');
+            if (body) body.classList.replace('scale-95', 'scale-100');
+        }, 10);
     }
     function closeCreateModal() {
-        document.getElementById('createModal').classList.add('hidden');
+        clearGatewayErrors();
+        const body = document.getElementById('createModalBody');
+        if (body) body.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => {
+            document.getElementById('createModal').classList.add('hidden');
+        }, 100);
     }
 
     function openEditModal(gateway) {
+        clearGatewayErrors();
         const modal = document.getElementById('editModal');
         const form = document.getElementById('editForm');
         
         document.getElementById('edit_name').value = gateway.name;
         document.getElementById('edit_code').value = gateway.code;
         document.getElementById('edit_is_active').checked = gateway.is_active;
-        document.getElementById('edit_schema').value = JSON.stringify(gateway.settings_schema, null, 2);
+        document.getElementById('edit_schema').value = typeof gateway.settings_schema === 'string' 
+            ? gateway.settings_schema 
+            : JSON.stringify(gateway.settings_schema, null, 2);
         
-        form.action = `/admin/payment-gateways/${gateway.id}/update`;
+        form.setAttribute('action', `/admin/payment-gateways/${gateway.id}/update`);
         modal.classList.remove('hidden');
+        setTimeout(() => {
+            const body = document.getElementById('editModalBody');
+            if (body) body.classList.replace('scale-95', 'scale-100');
+        }, 10);
     }
     
     function closeEditModal() {
-        document.getElementById('editModal').classList.add('hidden');
+        clearGatewayErrors();
+        const body = document.getElementById('editModalBody');
+        if (body) body.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => {
+            document.getElementById('editModal').classList.add('hidden');
+        }, 100);
     }
+
+    // Click outside handlers to close modals
+    document.getElementById('createModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCreateModal();
+    });
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+
+    // Escape key listener to close modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const createModal = document.getElementById('createModal');
+            if (createModal && !createModal.classList.contains('hidden')) closeCreateModal();
+            
+            const editModal = document.getElementById('editModal');
+            if (editModal && !editModal.classList.contains('hidden')) closeEditModal();
+        }
+    });
+
+    // Auto-reopen modal if validation failed on redirect
+    @if(session('failed_modal'))
+        document.addEventListener("DOMContentLoaded", function() {
+            let failed = "{{ session('failed_modal') }}";
+            if (failed.startsWith('gateway_create')) {
+                openCreateModal();
+                // Repopulate form inputs with old values
+                document.getElementById('create_name').value = "{{ old('name') }}";
+                document.getElementById('create_code').value = "{{ old('code') }}";
+                document.getElementById('create_schema').value = `{!! old('settings_schema_raw') !!}`;
+            } else if (failed.startsWith('gateway_edit_')) {
+                let id = failed.replace('gateway_edit_', '');
+                openEditModal({
+                    id: id,
+                    name: "{{ old('name') }}",
+                    code: "{{ old('code') }}",
+                    is_active: {{ old('is_active') ? 'true' : 'false' }},
+                    settings_schema: `{!! old('settings_schema_raw') !!}`
+                });
+            }
+
+            // Unhide the failed errors block in the reopened modal
+            document.querySelectorAll('.spmb-gateway-errors').forEach(el => {
+                el.classList.remove('hidden');
+            });
+        });
+    @endif
 </script>
 @endsection

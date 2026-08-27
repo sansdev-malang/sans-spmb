@@ -4,7 +4,7 @@
 @section('page_title', 'Log Sistem')
 
 @section('content')
-<div class="w-full space-y-6">
+<div id="logs-container" hx-boost="true" hx-target="#logs-container" hx-select="#logs-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -15,7 +15,7 @@
             <p class="text-xs text-slate-500 mt-1">Pantau callback gateway, error exceptions, dan rekonsiliasi data transaksi langsung dari server.</p>
         </div>
         
-        <form action="{{ route('admin.logs.clear') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh log sistem? File laravel.log akan dikosongkan.');">
+        <form action="{{ route('admin.logs.clear') }}" method="POST" hx-boost="false" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh log sistem? File laravel.log akan dikosongkan.');">
             @csrf
             <button type="submit" class="bg-red-650 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-red-200 shadow-sm">
                 <i data-lucide="trash-2" class="w-4 h-4"></i> Bersihkan Log
@@ -25,7 +25,7 @@
 
     <!-- Filters & Search -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-        <form action="{{ route('admin.logs') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <form action="{{ route('admin.logs') }}" method="GET" hx-boost="false" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Pencarian Kata Kunci</label>
                 <div class="relative">
@@ -159,6 +159,21 @@
             </div>
         @endif
     </div>
+
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 </div>
 
 <script>

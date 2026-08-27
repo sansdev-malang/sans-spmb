@@ -4,7 +4,7 @@
 @section('page_title', 'Master Unit & Tingkatan')
 
 @section('content')
-<div class="p-8">
+<div id="spmb-units-container" hx-boost="true" hx-target="#spmb-units-container" hx-select="#spmb-units-container" class="p-8">
     
     <!-- Top Header -->
     <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -19,21 +19,24 @@
     <!-- Main Card Container -->
     <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
         
+        @php
+            $activeTab = request()->get('tab', 'unit');
+        @endphp
         <!-- Tab Navigation -->
         <div class="border-b border-slate-100 p-4 flex gap-2 overflow-x-auto">
-            <button id="tabBtn-unit" onclick="switchTab('unit')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow">
+            <button id="tabBtn-unit" onclick="switchTab('unit')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'unit' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="building-2" class="w-4 h-4"></i> Unit Sekolah
             </button>
-            <button id="tabBtn-grade" onclick="switchTab('grade')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+            <button id="tabBtn-grade" onclick="switchTab('grade')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'grade' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="layers" class="w-4 h-4"></i> Tingkatan Kelas
             </button>
-            <button id="tabBtn-extra" onclick="switchTab('extra')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+            <button id="tabBtn-extra" onclick="switchTab('extra')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'extra' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="sparkles" class="w-4 h-4"></i> Layanan Non-Formal
             </button>
         </div>
 
         <!-- Tab: Unit -->
-        <div id="tabContent-unit" class="tab-content p-8 space-y-6">
+        <div id="tabContent-unit" class="tab-content p-8 space-y-6 {{ $activeTab === 'unit' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Unit Sekolah</h3>
@@ -96,7 +99,7 @@
         </div>
 
         <!-- Tab: Grade (Tingkatan) -->
-        <div id="tabContent-grade" class="tab-content p-8 space-y-6 hidden">
+        <div id="tabContent-grade" class="tab-content p-8 space-y-6 {{ $activeTab === 'grade' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Tingkatan Kelas</h3>
@@ -159,7 +162,7 @@
         </div>
             
             <!-- Tab: Extra Services (Layanan Non-Formal) -->
-            <div id="tabContent-extra" class="tab-content p-8 space-y-6 hidden">
+            <div id="tabContent-extra" class="tab-content p-8 space-y-6 {{ $activeTab === 'extra' ? '' : 'hidden' }}">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-extrabold text-base text-slate-800">Layanan Non-Formal</h3>
@@ -231,17 +234,24 @@
         </div>
 
         <!-- Modal for Extra Service (Layanan Non-Formal) -->
-        <div id="extraModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-            <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-transform duration-300" id="extraModalBody">
+        <div id="extraModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
+            <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-all duration-100" id="extraModalBody">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h2 class="text-lg font-extrabold text-slate-800" id="extraModalTitle">Tambah Layanan Non-Formal</h2>
                     <button onclick="closeExtraModal()" type="button" class="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-650 transition">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <form id="extraForm" method="POST" action="">
+                <form id="extraForm" method="POST" action="" hx-boost="false">
                     @csrf
                     <div id="extraMethod"></div>
+                    @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'extra_'))
+                        <div class="spmb-unit-errors mx-6 mt-4 text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-205 font-semibold space-y-1">
+                            @foreach($errors->all() as $error)
+                                <p>⚠️ {{ $error }}</p>
+                            @endforeach
+                        </div>
+                    @endif
                     <div class="p-6 space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Layanan</label>
@@ -265,17 +275,24 @@
         </div>
 
     <!-- Modal for Unit -->
-    <div id="unitModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-transform duration-300" id="unitModalBody">
+    <div id="unitModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-all duration-100" id="unitModalBody">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h2 class="text-lg font-extrabold text-slate-800" id="unitModalTitle">Tambah Unit Pendaftaran</h2>
                 <button onclick="closeUnitModal()" type="button" class="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <form id="unitForm" method="POST" action="">
+            <form id="unitForm" method="POST" action="" hx-boost="false">
                 @csrf
                 <div id="unitMethod"></div>
+                @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'unit_'))
+                    <div class="spmb-unit-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-205 font-semibold space-y-1">
+                        @foreach($errors->all() as $error)
+                            <p>⚠️ {{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="p-6 space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Unit Sekolah</label>
@@ -299,17 +316,24 @@
     </div>
 
     <!-- Modal for Grade -->
-    <div id="gradeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-transform duration-300" id="gradeModalBody">
+    <div id="gradeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-all duration-100" id="gradeModalBody">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h2 class="text-lg font-extrabold text-slate-800" id="gradeModalTitle">Tambah Tingkatan Kelas</h2>
                 <button onclick="closeGradeModal()" type="button" class="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <form id="gradeForm" method="POST" action="">
+            <form id="gradeForm" method="POST" action="" hx-boost="false">
                 @csrf
                 <div id="gradeMethod"></div>
+                @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'grade_'))
+                    <div class="spmb-unit-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-205 font-semibold space-y-1">
+                        @foreach($errors->all() as $error)
+                            <p>⚠️ {{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="p-6 space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Tingkatan (Grade)</label>
@@ -336,32 +360,61 @@
             </form>
         </div>
     </div>
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 
-</div>
+    <script>
+        // Tab Switching
+        window.switchTab = function(tabId) {
+            const panel = document.getElementById('tabContent-' + tabId);
+            if (!panel) return;
 
-<script>
-    // Tab Switching
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('tabContent-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            panel.classList.remove('hidden');
 
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
-        });
-        
-        const activeBtn = document.getElementById('tabBtn-' + tabId);
-        activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
-        
-        localStorage.setItem('spmb_units_active_tab', tabId);
-    }
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
+            });
+            
+            const activeBtn = document.getElementById('tabBtn-' + tabId);
+            if (activeBtn) {
+                activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+            }
+            
+            // Update URL query parameter to sync with server
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+
+            localStorage.setItem('spmb_units_active_tab', tabId);
+        }
 
     document.addEventListener("DOMContentLoaded", function() {
-        const savedTab = localStorage.getItem('spmb_units_active_tab') || 'unit';
-        switchTab(savedTab);
+        // Tab state is handled server-side via Laravel view variable $activeTab
     });
+
+    // Clear Validation Errors on modal show/hide
+    function clearModalErrors() {
+        document.querySelectorAll('.spmb-unit-errors').forEach(el => {
+            el.classList.add('hidden');
+        });
+    }
 
     // Modal Unit
     function openUnitModal(name = '', code = '', isActive = '1', isCreate = true, actionUrl = '') {
+        clearModalErrors();
+        
         const modal = document.getElementById('unitModal');
         const modalBody = document.getElementById('unitModalBody');
         const form = document.getElementById('unitForm');
@@ -370,10 +423,10 @@
         document.getElementById('unitModalTitle').innerText = isCreate ? 'Tambah Unit Pendaftaran' : 'Edit Unit Pendaftaran';
         document.getElementById('unitSubmitBtn').innerText = isCreate ? 'Simpan Unit' : 'Perbarui Unit';
         
-        form.action = actionUrl;
+        form.setAttribute('action', actionUrl);
         document.getElementById('unitNameInput').value = name;
         document.getElementById('unitCodeInput').value = code;
-        document.getElementById('unitActiveInput').checked = (isActive == '1' || isActive == true);
+        document.getElementById('unitActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
         
         if (!isCreate) {
             methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
@@ -387,6 +440,7 @@
     }
 
     function closeUnitModal() {
+        clearModalErrors();
         const modal = document.getElementById('unitModal');
         const modalBody = document.getElementById('unitModalBody');
         modal.classList.add('opacity-0', 'pointer-events-none');
@@ -396,6 +450,8 @@
 
     // Modal Grade
     function openGradeModal(name = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
+        clearModalErrors();
+        
         const modal = document.getElementById('gradeModal');
         const modalBody = document.getElementById('gradeModalBody');
         const form = document.getElementById('gradeForm');
@@ -404,10 +460,10 @@
         document.getElementById('gradeModalTitle').innerText = isCreate ? 'Tambah Tingkatan Kelas' : 'Edit Tingkatan Kelas';
         document.getElementById('gradeSubmitBtn').innerText = isCreate ? 'Simpan Tingkatan' : 'Perbarui Tingkatan';
         
-        form.action = actionUrl;
+        form.setAttribute('action', actionUrl);
         document.getElementById('gradeNameInput').value = name;
         document.getElementById('gradeUnitInput').value = unitId;
-        document.getElementById('gradeActiveInput').checked = (isActive == '1' || isActive == true);
+        document.getElementById('gradeActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
         
         if (!isCreate) {
             methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
@@ -421,6 +477,7 @@
     }
 
     function closeGradeModal() {
+        clearModalErrors();
         const modal = document.getElementById('gradeModal');
         const modalBody = document.getElementById('gradeModalBody');
         modal.classList.add('opacity-0', 'pointer-events-none');
@@ -430,6 +487,8 @@
 
     // Modal Extra Service
     function openExtraModal(name = '', code = '', isActive = '1', isCreate = true, actionUrl = '') {
+        clearModalErrors();
+        
         const modal = document.getElementById('extraModal');
         const modalBody = document.getElementById('extraModalBody');
         const form = document.getElementById('extraForm');
@@ -438,7 +497,7 @@
         document.getElementById('extraModalTitle').innerText = isCreate ? 'Tambah Layanan Non-Formal' : 'Edit Layanan Non-Formal';
         document.getElementById('extraSubmitBtn').innerText = isCreate ? 'Simpan Layanan' : 'Perbarui Layanan';
         
-        form.action = actionUrl;
+        form.setAttribute('action', actionUrl);
         document.getElementById('extraNameInput').value = name;
         document.getElementById('extraCodeInput').value = code;
         document.getElementById('extraActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
@@ -455,11 +514,72 @@
     }
 
     function closeExtraModal() {
+        clearModalErrors();
         const modal = document.getElementById('extraModal');
         const modalBody = document.getElementById('extraModalBody');
         modal.classList.add('opacity-0', 'pointer-events-none');
         modalBody.classList.remove('scale-100');
         modalBody.classList.add('scale-95');
     }
+
+    // Click outside handlers to close modals
+    document.getElementById('unitModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUnitModal();
+    });
+    document.getElementById('gradeModal').addEventListener('click', function(e) {
+        if (e.target === this) closeGradeModal();
+    });
+    document.getElementById('extraModal').addEventListener('click', function(e) {
+        if (e.target === this) closeExtraModal();
+    });
+
+    // Auto-reopen modal if validation failed on redirect
+    @if(session('failed_modal'))
+        document.addEventListener("DOMContentLoaded", function() {
+            let failed = "{{ session('failed_modal') }}";
+            if (failed.startsWith('unit_create')) {
+                switchTab('unit');
+                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.units.store') }}');
+            } else if (failed.startsWith('unit_edit_')) {
+                switchTab('unit');
+                let id = failed.replace('unit_edit_', '');
+                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
+            } else if (failed.startsWith('grade_create')) {
+                switchTab('grade');
+                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
+            } else if (failed.startsWith('grade_edit_')) {
+                switchTab('grade');
+                let id = failed.replace('grade_edit_', '');
+                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
+            } else if (failed.startsWith('extra_create')) {
+                switchTab('extra');
+                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
+            } else if (failed.startsWith('extra_edit_')) {
+                switchTab('extra');
+                let id = failed.replace('extra_edit_', '');
+                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
+            }
+
+            // Show errors inside the reopened modal
+            document.querySelectorAll('.spmb-unit-errors').forEach(el => {
+                el.classList.remove('hidden');
+            });
+        });
+    @endif
+
+    // Escape key listener to close modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const uModal = document.getElementById('unitModal');
+            if (uModal && !uModal.classList.contains('pointer-events-none')) closeUnitModal();
+            
+            const gModal = document.getElementById('gradeModal');
+            if (gModal && !gModal.classList.contains('pointer-events-none')) closeGradeModal();
+            
+            const eModal = document.getElementById('extraModal');
+            if (eModal && !eModal.classList.contains('pointer-events-none')) closeExtraModal();
+        }
+    });
 </script>
+</div>
 @endsection

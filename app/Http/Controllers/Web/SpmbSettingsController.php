@@ -38,7 +38,8 @@ class SpmbSettingsController extends Controller
             return $program;
         });
 
-        return view('admin.settings-spmb', compact('periods', 'waves', 'types', 'classPrograms'));
+        $activeTab = request()->get('tab', 'periode');
+        return view('admin.settings-spmb', compact('periods', 'waves', 'types', 'classPrograms', 'activeTab'));
     }
 
     public function unitsGrades()
@@ -63,15 +64,24 @@ class SpmbSettingsController extends Controller
 
     public function qrcode()
     {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
         $qrcodeUrl = \App\Models\Setting::get('spmb_qrcode_url', url('/register'));
-        return view('admin.settings-spmb-qrcode', compact('qrcodeUrl'));
+        return view('admin.settings-spmb-qrcode', compact('qrcodeUrl', 'isSuperAdmin'));
     }
 
     public function saveQrcode(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'qrcode_url' => 'required|url'
+        ], [
+            'qrcode_url.url' => 'Tautan QR Code harus berupa alamat URL yang valid (menggunakan http:// atau https://).'
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         \App\Models\Setting::set('spmb_qrcode_url', $request->qrcode_url);
 
@@ -96,7 +106,7 @@ class SpmbSettingsController extends Controller
 
         SpmbPeriod::create(['year' => $request->year]);
 
-        return redirect()->back()->with('success', 'Periode akademik berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('success', 'Periode akademik berhasil ditambahkan.');
     }
 
     public function updatePeriod(Request $request, $id)
@@ -117,7 +127,7 @@ class SpmbSettingsController extends Controller
         $period = SpmbPeriod::findOrFail($id);
 
         $period->update(['year' => $request->year]);
-        return redirect()->back()->with('success', 'Periode akademik berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('success', 'Periode akademik berhasil diperbarui.');
     }
 
     public function destroyPeriod($id)
@@ -125,11 +135,11 @@ class SpmbSettingsController extends Controller
         $period = SpmbPeriod::findOrFail($id);
 
         if (Registration::where('spmb_period_id', $id)->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus periode ini karena sudah memiliki transaksi pendaftaran aktif.');
+            return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('error', 'Tidak dapat menghapus periode ini karena sudah memiliki transaksi pendaftaran aktif.');
         }
 
         $period->delete();
-        return redirect()->back()->with('success', 'Periode akademik berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('success', 'Periode akademik berhasil dihapus.');
     }
 
     // Wave CRUD
@@ -152,7 +162,7 @@ class SpmbSettingsController extends Controller
             'description' => $request->description
         ]);
 
-        return redirect()->back()->with('success', 'Gelombang pendaftaran berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'gelombang'])->with('success', 'Gelombang pendaftaran berhasil ditambahkan.');
     }
 
     public function updateWave(Request $request, $id)
@@ -175,7 +185,7 @@ class SpmbSettingsController extends Controller
             'name' => $request->name,
             'description' => $request->description
         ]);
-        return redirect()->back()->with('success', 'Gelombang pendaftaran berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'gelombang'])->with('success', 'Gelombang pendaftaran berhasil diperbarui.');
     }
 
     public function destroyWave($id)
@@ -183,11 +193,11 @@ class SpmbSettingsController extends Controller
         $wave = SpmbWave::findOrFail($id);
 
         if (Registration::where('spmb_wave_id', $id)->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus gelombang ini karena sudah digunakan dalam transaksi.');
+            return redirect()->route('admin.spmb-settings', ['tab' => 'gelombang'])->with('error', 'Tidak dapat menghapus gelombang ini karena sudah digunakan dalam transaksi.');
         }
 
         $wave->delete();
-        return redirect()->back()->with('success', 'Gelombang pendaftaran berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'gelombang'])->with('success', 'Gelombang pendaftaran berhasil dihapus.');
     }
 
     // Type CRUD
@@ -210,7 +220,7 @@ class SpmbSettingsController extends Controller
             'description' => $request->description
         ]);
 
-        return redirect()->back()->with('success', 'Jenis pendaftaran berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'jenis'])->with('success', 'Jenis pendaftaran berhasil ditambahkan.');
     }
 
     public function updateType(Request $request, $id)
@@ -233,46 +243,60 @@ class SpmbSettingsController extends Controller
             'name' => $request->name,
             'description' => $request->description
         ]);
-        return redirect()->back()->with('success', 'Jenis pendaftaran berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'jenis'])->with('success', 'Jenis pendaftaran berhasil diperbarui.');
     }
 
     public function destroyType($id)
     {
         $type = SpmbType::findOrFail($id);
         if (Registration::where('spmb_type_id', $type->id)->exists()) {
-            return redirect()->back()->with('error', 'Gagal menghapus! Jalur ini sedang digunakan oleh pendaftar.');
+            return redirect()->route('admin.spmb-settings', ['tab' => 'jenis'])->with('error', 'Gagal menghapus! Jalur ini sedang digunakan oleh pendaftar.');
         }
         $type->delete();
-        return redirect()->back()->with('success', 'Jalur pendaftaran berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'jenis'])->with('success', 'Jalur pendaftaran berhasil dihapus.');
     }
 
     // Unit CRUD
     public function storeUnit(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
             'is_active' => 'boolean'
         ]);
 
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'unit'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'unit_create');
+        }
+
         SpmbUnit::create($request->all());
-        return redirect()->back()->with('success', 'Unit berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'unit'])->with('success', 'Unit berhasil ditambahkan.');
     }
 
     public function updateUnit(Request $request, $id)
     {
         $unit = SpmbUnit::findOrFail($id);
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
             'is_active' => 'boolean'
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'unit'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'unit_edit_' . $id);
+        }
         
         $data = $request->all();
         $data['is_active'] = $request->has('is_active');
         $unit->update($data);
 
-        return redirect()->back()->with('success', 'Unit berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'unit'])->with('success', 'Unit berhasil diperbarui.');
     }
 
     public function destroyUnit($id)
@@ -282,36 +306,50 @@ class SpmbSettingsController extends Controller
             return redirect()->back()->with('error', 'Gagal menghapus! Unit sedang digunakan oleh pendaftar.');
         }
         $unit->delete();
-        return redirect()->back()->with('success', 'Unit berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'unit'])->with('success', 'Unit berhasil dihapus.');
     }
 
     // Grade CRUD
     public function storeGrade(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'spmb_unit_id' => 'required|exists:spmb_units,id',
             'name' => 'required|string|max:255',
             'is_active' => 'boolean'
         ]);
 
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'grade_create');
+        }
+
         SpmbGrade::create($request->all());
-        return redirect()->back()->with('success', 'Tingkatan berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil ditambahkan.');
     }
 
     public function updateGrade(Request $request, $id)
     {
         $grade = SpmbGrade::findOrFail($id);
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'spmb_unit_id' => 'required|exists:spmb_units,id',
             'name' => 'required|string|max:255',
             'is_active' => 'boolean'
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'grade_edit_' . $id);
+        }
         
         $data = $request->all();
         $data['is_active'] = $request->has('is_active');
         $grade->update($data);
 
-        return redirect()->back()->with('success', 'Tingkatan berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil diperbarui.');
     }
 
     public function destroyGrade($id)
@@ -321,7 +359,7 @@ class SpmbSettingsController extends Controller
             return redirect()->back()->with('error', 'Gagal menghapus! Tingkatan sedang digunakan oleh pendaftar.');
         }
         $grade->delete();
-        return redirect()->back()->with('success', 'Tingkatan berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil dihapus.');
     }
 
     // Class Program CRUD
@@ -345,7 +383,7 @@ class SpmbSettingsController extends Controller
             'is_active' => true
         ]);
 
-        return redirect()->back()->with('success', 'Program kelas berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Program kelas berhasil ditambahkan.');
     }
 
     public function updateClassProgram(Request $request, $id)
@@ -370,7 +408,7 @@ class SpmbSettingsController extends Controller
             'is_active' => $request->has('is_active')
         ]);
 
-        return redirect()->back()->with('success', 'Program kelas berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Program kelas berhasil diperbarui.');
     }
 
     public function destroyClassProgram($id)
@@ -378,42 +416,56 @@ class SpmbSettingsController extends Controller
         $program = SpmbClassProgram::findOrFail($id);
 
         if (Registration::where('spmb_class_program_id', $program->id)->exists()) {
-            return redirect()->back()->with('error', 'Gagal menghapus! Program kelas sedang digunakan oleh pendaftar.');
+            return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('error', 'Gagal menghapus! Program kelas sedang digunakan oleh pendaftar.');
         }
 
         $program->delete();
-        return redirect()->back()->with('success', 'Program kelas berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Program kelas berhasil dihapus.');
     }
 
     // Extra Services CRUD
     public function storeExtraService(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_extra_services,code',
             'is_active' => 'boolean'
         ]);
 
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'extra_create');
+        }
+
         $data = $request->all();
         $data['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
         SpmbExtraService::create($data);
-        return redirect()->back()->with('success', 'Layanan tambahan berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil ditambahkan.');
     }
 
     public function updateExtraService(Request $request, $id)
     {
         $service = SpmbExtraService::findOrFail($id);
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_extra_services,code,' . $id,
             'is_active' => 'boolean'
         ]);
 
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'extra_edit_' . $id);
+        }
+
         $data = $request->all();
         $data['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
         $service->update($data);
 
-        return redirect()->back()->with('success', 'Layanan tambahan berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil diperbarui.');
     }
 
     public function destroyExtraService($id)
@@ -423,6 +475,6 @@ class SpmbSettingsController extends Controller
             return redirect()->back()->with('error', 'Gagal menghapus! Layanan tambahan sedang digunakan oleh pendaftar.');
         }
         $service->delete();
-        return redirect()->back()->with('success', 'Layanan tambahan berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil dihapus.');
     }
 }

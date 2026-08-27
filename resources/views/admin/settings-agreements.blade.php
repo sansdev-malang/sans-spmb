@@ -45,10 +45,19 @@
     .ql-editor li.ql-indent-2 {
         counter-reset: list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
     }
+    /* Hide Quill link/formula tooltip when it has the hidden class */
+    .ql-tooltip.ql-hidden {
+        display: none !important;
+    }
 </style>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-<div class="w-full space-y-6">
+<div id="agreements-settings-container" hx-boost="true" hx-target="#agreements-settings-container" hx-select="#agreements-settings-container" class="w-full space-y-6">
+    @php
+        $firstUnit = $units->first();
+        $defaultTab = $firstUnit ? 'unit_' . $firstUnit->id : '';
+        $activeTab = request()->get('tab', $defaultTab);
+    @endphp
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex items-center gap-3">
@@ -70,7 +79,7 @@
             <button type="button" 
                     onclick="switchAgreementTab('unit_{{ $unit->id }}')" 
                     id="agreementTabBtn-unit_{{ $unit->id }}" 
-                    class="agreement-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $index === 0 ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+                    class="agreement-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'unit_' . $unit->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="school" class="w-4 h-4"></i> {{ $unit->name }}
             </button>
         @endforeach
@@ -78,7 +87,7 @@
 
     <!-- Tab Contents -->
     @foreach($units as $index => $unit)
-        <div id="agreementTabContent-unit_{{ $unit->id }}" class="agreement-tab-content {{ $index === 0 ? '' : 'hidden' }} bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-6">
+        <div id="agreementTabContent-unit_{{ $unit->id }}" class="agreement-tab-content {{ $activeTab === 'unit_' . $unit->id ? '' : 'hidden' }} bg-white rounded-3xl border border-slate-100 shadow-sm p-6 space-y-6">
             <div class="border-b border-slate-100 pb-4 flex justify-between items-center">
                 <div>
                     <h2 class="text-sm font-extrabold text-slate-850">Format Surat Pernyataan: {{ $unit->name }}</h2>
@@ -89,8 +98,9 @@
                 </span>
             </div>
 
-            <form method="POST" action="{{ route('admin.spmb-settings.agreements.update', $unit->id) }}" class="space-y-6">
+            <form method="POST" action="{{ route('admin.spmb-settings.agreements.update', $unit->id) }}" hx-boost="false" class="space-y-6">
                 @csrf
+                <input type="hidden" name="active_tab" class="active-tab-input" value="{{ $activeTab }}">
                 
                 <!-- Title Field -->
                 <div class="space-y-2">
@@ -201,76 +211,96 @@
             </form>
         </div>
     @endforeach
-</div>
+    <script>
+        function switchAgreementTab(unitId) {
+            // Save active tab ID to localStorage to persist state across form submissions/reloads
+            localStorage.setItem('active_agreement_unit_id', unitId);
 
-<script>
-    function switchAgreementTab(unitId) {
-        // Save active tab ID to localStorage to persist state across form submissions/reloads
-        localStorage.setItem('active_agreement_unit_id', unitId);
+            // Hide all content tabs
+            document.querySelectorAll('.agreement-tab-content').forEach(function(content) {
+                content.classList.add('hidden');
+            });
+            
+            // Show active tab
+            var contentEl = document.getElementById('agreementTabContent-' + unitId);
+            if (contentEl) {
+                contentEl.classList.remove('hidden');
+            }
+            
+            // Reset all buttons to inactive style
+            document.querySelectorAll('.agreement-tab-btn').forEach(function(btn) {
+                btn.className = 'agreement-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50';
+            });
+            
+            // Set active button style
+            var activeBtn = document.getElementById('agreementTabBtn-' + unitId);
+            if (activeBtn) {
+                activeBtn.className = 'agreement-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow';
+            }
 
-        // Hide all content tabs
-        document.querySelectorAll('.agreement-tab-content').forEach(function(content) {
-            content.classList.add('hidden');
-        });
-        
-        // Show active tab
-        var contentEl = document.getElementById('agreementTabContent-' + unitId);
-        if (contentEl) {
-            contentEl.classList.remove('hidden');
+            // Update hidden active_tab input values
+            document.querySelectorAll('.active-tab-input').forEach(function(input) {
+                input.value = unitId;
+            });
+
+            // Update URL query parameter
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + unitId;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
         }
-        
-        // Reset all buttons to inactive style
-        document.querySelectorAll('.agreement-tab-btn').forEach(function(btn) {
-            btn.className = 'agreement-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50';
-        });
-        
-        // Set active button style
-        var activeBtn = document.getElementById('agreementTabBtn-' + unitId);
-        if (activeBtn) {
-            activeBtn.className = 'agreement-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow';
-        }
-    }
 
-    // Initialize Quill Editors and restored active tabs
-    document.addEventListener("DOMContentLoaded", function() {
-        // Restore active tab from localStorage if exists
-        var savedUnitId = localStorage.getItem('active_agreement_unit_id');
-        if (savedUnitId) {
-            switchAgreementTab(savedUnitId);
-        }
+        // Tab restoration and Quill re-initialization for htmx swaps
+        (function() {
+            var savedUnitId = localStorage.getItem('active_agreement_unit_id') || '{{ $activeTab }}';
+            if (savedUnitId && document.getElementById('agreementTabBtn-' + savedUnitId)) {
+                switchAgreementTab(savedUnitId);
+            }
 
-        @foreach($units as $unit)
-            (function() {
-                var unitId = "{{ $unit->id }}";
-                var editorElement = document.querySelector('#quill-editor-unit_' + unitId);
-                if (editorElement) {
-                    var quill = new Quill('#quill-editor-unit_' + unitId, {
-                        theme: 'snow',
-                        placeholder: 'Tulis isi surat kesanggupan di sini...',
-                        modules: {
-                            toolbar: [
-                                [{'header': [1, 2, 3, false]}],
-                                ['bold', 'italic', 'underline', 'strike'],
-                                [{'list': 'ordered'}, {'list': 'bullet'}],
-                                ['clean']
-                            ]
-                        }
-                    });
-
-                    // Sync rich text to hidden input on form submit
-                    var form = document.querySelector('#agreementTabContent-unit_' + unitId + ' form');
-                    if (form) {
-                        form.addEventListener('submit', function() {
-                            var hiddenInput = document.getElementById('hidden-content-unit_' + unitId);
-                            if (hiddenInput) {
-                                // Write inner HTML of Quill editor directly
-                                hiddenInput.value = quill.root.innerHTML;
+            @foreach($units as $unit)
+                (function() {
+                    var unitId = "{{ $unit->id }}";
+                    var editorElement = document.querySelector('#quill-editor-unit_' + unitId);
+                    if (editorElement && !editorElement.classList.contains('ql-container')) {
+                        var quill = new Quill('#quill-editor-unit_' + unitId, {
+                            theme: 'snow',
+                            placeholder: 'Tulis isi surat kesanggupan di sini...',
+                            modules: {
+                                toolbar: [
+                                    [{'header': [1, 2, 3, false]}],
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{'list': 'ordered'}, {'list': 'bullet'}],
+                                    ['clean']
+                                ]
                             }
                         });
+
+                        var form = document.querySelector('#agreementTabContent-unit_' + unitId + ' form');
+                        if (form) {
+                            form.addEventListener('submit', function() {
+                                var hiddenInput = document.getElementById('hidden-content-unit_' + unitId);
+                                if (hiddenInput) {
+                                    hiddenInput.value = quill.root.innerHTML;
+                                }
+                            });
+                        }
                     }
-                }
-            })();
-        @endforeach
-    });
-</script>
+                })();
+            @endforeach
+        })();
+    </script>
+
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
+</div>
 @endsection

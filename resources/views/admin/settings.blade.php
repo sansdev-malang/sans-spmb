@@ -4,7 +4,7 @@
 @section('page_title', 'Biaya Admin Transaksi')
 
 @section('content')
-<div class="w-full space-y-6">
+<div id="technical-settings-container" hx-boost="true" hx-target="#technical-settings-container" hx-select="#technical-settings-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
@@ -17,15 +17,16 @@
     <!-- Tab Navigation Pills for Payment Gateways -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
         @foreach($gatewayFees as $gwCode => $gwData)
-            <button type="button" onclick="switchGatewayTab('{{ $gwCode }}')" id="gwTabBtn-{{ $gwCode }}" class="gw-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $loop->first ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+            <button type="button" onclick="switchGatewayTab('{{ $gwCode }}')" id="gwTabBtn-{{ $gwCode }}" class="gw-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === $gwCode ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="credit-card" class="w-4 h-4"></i> {{ $gwData['gateway_name'] }}
             </button>
         @endforeach
     </div>
 
     <!-- Main Configuration Form -->
-    <form action="{{ route('admin.settings.update') }}" method="POST" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+    <form action="{{ route('admin.settings.update') }}" method="POST" hx-boost="false" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         @csrf
+        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ $activeTab }}">
         
         <!-- Hidden fields for other settings to preserve values and pass validation -->
         @foreach($settings as $key => $val)
@@ -41,7 +42,7 @@
             </div>
 
             @foreach($gatewayFees as $gwCode => $gwData)
-                <div id="gwTabContent-{{ $gwCode }}" class="gw-tab-content space-y-6 {{ $loop->first ? '' : 'hidden' }}">
+                <div id="gwTabContent-{{ $gwCode }}" class="gw-tab-content space-y-6 {{ $activeTab === $gwCode ? '' : 'hidden' }}">
                     @foreach($gwData['fields'] as $field)
                         <div>
                             <label for="{{ $field['key'] }}" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
@@ -75,31 +76,50 @@
             </button>
         </div>
     </form>
+
+
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 </div>
 
 <script>
     function switchGatewayTab(tabId) {
+        const panelEl = document.getElementById('gwTabContent-' + tabId);
+        const btnEl = document.getElementById('gwTabBtn-' + tabId);
+        if (!panelEl || !btnEl) return;
+
         document.querySelectorAll('.gw-tab-content').forEach(el => el.classList.add('hidden'));
-        const activeContent = document.getElementById('gwTabContent-' + tabId);
-        if (activeContent) activeContent.classList.remove('hidden');
+        panelEl.classList.remove('hidden');
 
         document.querySelectorAll('.gw-tab-btn').forEach(btn => {
             btn.className = "gw-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
         });
         
-        const activeBtn = document.getElementById('gwTabBtn-' + tabId);
-        if (activeBtn) {
-            activeBtn.className = "gw-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+        btnEl.className = "gw-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+        
+        // Set hidden active_tab input value
+        const activeTabInput = document.getElementById('active-tab-input');
+        if (activeTabInput) {
+            activeTabInput.value = tabId;
         }
         
+        // Update URL query parameter
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+
         localStorage.setItem('spmb_gateway_fees_active_tab', tabId);
     }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const savedTab = localStorage.getItem('spmb_gateway_fees_active_tab');
-        if (savedTab && document.getElementById('gwTabBtn-' + savedTab)) {
-            switchGatewayTab(savedTab);
-        }
-    });
 </script>
 @endsection

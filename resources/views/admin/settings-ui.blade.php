@@ -29,41 +29,36 @@
         color: #334155;
     }
 </style>
-<div class="w-full space-y-6">
+<div id="ui-settings-container" hx-boost="true" hx-target="#ui-settings-container" hx-select="#ui-settings-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h1 class="text-xl font-extrabold text-slate-800">Pengaturan Tampilan Portal Pendaftaran (UI Portal)</h1>
         <p class="text-xs text-slate-500 mt-1">Mengustomisasi logo, warna, judul, banner slider, dan konten informasi per jenjang sekolah.</p>
     </div>
 
-    <!-- Alert notifications -->
-    @if(session('success'))
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3.5 rounded-xl text-xs font-bold flex items-center gap-2">
-            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
-
     <!-- Form Configuration -->
-    <form id="ui-settings-form" action="{{ route('admin.ui-settings.save') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+    <form id="ui-settings-form" action="{{ route('admin.ui-settings.save') }}" method="POST" enctype="multipart/form-data" hx-boost="false" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         @csrf
-        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ session('active_ui_tab', 'global') }}">
-        @php session()->forget('active_ui_tab'); @endphp
+        @php
+            $activeTab = request()->get('tab', 'global');
+        @endphp
+        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ $activeTab }}">
         
         <!-- Navigation Tabs -->
         <div class="bg-slate-50/75 border-b border-slate-100 px-6 flex flex-wrap gap-1">
             <button type="button" onclick="switchSettingsTab('global')" id="tab-btn-global" 
-                class="tab-button border-b-2 py-4 px-6 text-xs font-extrabold transition focus:outline-none border-brand-emerald text-brand-emerald">
+                class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $activeTab === 'global' ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
                 Global / Banner
             </button>
             <button type="button" onclick="switchSettingsTab('identity')" id="tab-btn-identity" 
-                class="tab-button border-b-2 py-4 px-6 text-xs font-bold transition focus:outline-none border-transparent text-slate-500 hover:text-slate-700">
+                class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $activeTab === 'identity' ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
                 Identitas Sekolah
             </button>
 
             @foreach($units as $unit)
-                <button type="button" onclick="switchSettingsTab('unit-{{ strtolower($unit->code) }}')" id="tab-btn-unit-{{ strtolower($unit->code) }}" 
-                    class="tab-button border-b-2 py-4 px-6 text-xs font-bold transition focus:outline-none border-transparent text-slate-500 hover:text-slate-700">
+                @php $unitCode = strtolower($unit->code); @endphp
+                <button type="button" onclick="switchSettingsTab('unit-{{ $unitCode }}')" id="tab-btn-unit-{{ $unitCode }}" 
+                    class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $activeTab === 'unit-' . $unitCode ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
                     Jenjang {{ $unit->name }}
                 </button>
             @endforeach
@@ -73,7 +68,7 @@
         <div class="p-8">
             
             <!-- TAB 1: GLOBAL / BANNER -->
-            <div id="tab-content-global" class="tab-panel space-y-6">
+            <div id="tab-content-global" class="tab-panel space-y-6 {{ $activeTab === 'global' ? '' : 'hidden' }}">
                 <!-- Section 1: Hero Banner Text -->
                 <div class="space-y-4">
                     <h3 class="text-xs font-extrabold text-brand-emerald uppercase tracking-wider">A. Konten Teks Hero</h3>
@@ -162,7 +157,7 @@
             </div>
 
             <!-- TAB 2: IDENTITAS SEKOLAH -->
-            <div id="tab-content-identity" class="tab-panel space-y-6 hidden">
+            <div id="tab-content-identity" class="tab-panel space-y-6 {{ $activeTab === 'identity' ? '' : 'hidden' }}">
                 <!-- School Name & Tagline -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
@@ -253,7 +248,7 @@
             <!-- DYNAMIC UNITS TABS -->
             @foreach($units as $unit)
                 @php $code = strtolower($unit->code); @endphp
-                <div id="tab-content-unit-{{ $code }}" class="tab-panel space-y-6 hidden">
+                <div id="tab-content-unit-{{ $code }}" class="tab-panel space-y-6 {{ $activeTab === 'unit-' . $code ? '' : 'hidden' }}">
                     <div class="bg-slate-50/50 p-6 rounded-2xl border border-slate-150 space-y-6">
                         <h4 class="text-xs font-extrabold text-brand-emerald uppercase tracking-wider">Pengaturan Jenjang {{ $unit->name }}</h4>
                         
@@ -343,70 +338,89 @@
             </button>
         </div>
     </form>
-</div>
 
-<script>
-    // Tab switching script
-    function switchSettingsTab(tabId) {
-        const activeTabInput = document.getElementById('active-tab-input');
-        if (activeTabInput) {
-            activeTabInput.value = tabId;
-        }
-
-        // Toggle tab content panel visibility
-        document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.add('hidden');
-        });
-        const activePanel = document.getElementById('tab-content-' + tabId);
-        if (activePanel) {
-            activePanel.classList.remove('hidden');
-        }
-
-        // Toggle button active visual states
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.classList.remove('border-brand-emerald', 'text-brand-emerald', 'font-extrabold');
-            btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'font-bold');
-        });
-        const activeBtn = document.getElementById('tab-btn-' + tabId);
-        if (activeBtn) {
-            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'font-bold');
-            activeBtn.classList.add('border-brand-emerald', 'text-brand-emerald', 'font-extrabold');
-        }
-    }
-
-    // Color picker labels updater
-    function updateHexLabel(type) {
-        const picker = document.getElementById(type + '-picker');
-        const label = document.getElementById(type + '-hex');
-        if (picker && label) {
-            label.textContent = picker.value.toUpperCase();
-        }
-    }
-
-    // Local image reader for file upload previews
-    function previewSelectedImage(event, containerId) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const container = document.getElementById(containerId);
-                if (container) {
-                    container.innerHTML = `<img src="${e.target.result}" class="max-h-full object-contain" />`;
-                }
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
             }
-            reader.readAsDataURL(file);
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
+    <script>
+        // Tab switching script
+        function switchSettingsTab(tabId) {
+            const activeTabInput = document.getElementById('active-tab-input');
+            if (activeTabInput) {
+                activeTabInput.value = tabId;
+            }
+
+            // Toggle tab content panel visibility
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            const activePanel = document.getElementById('tab-content-' + tabId);
+            if (activePanel) {
+                activePanel.classList.remove('hidden');
+            }
+
+            // Toggle button active visual states
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-brand-emerald', 'text-brand-emerald', 'font-extrabold');
+                btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'font-bold');
+            });
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'font-bold');
+                activeBtn.classList.add('border-brand-emerald', 'text-brand-emerald', 'font-extrabold');
+            }
+
+            // Update URL query parameter
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+
+            // Save active tab to localStorage
+            localStorage.setItem('spmb_ui_active_tab', tabId);
         }
-    }
 
-    // Initialize Quill Editors for Instructions
-    document.addEventListener("DOMContentLoaded", function() {
-        // Automatically restore active tab on page load
-        var activeTabInput = document.getElementById('active-tab-input');
-        if (activeTabInput && activeTabInput.value && activeTabInput.value !== 'global') {
-            switchSettingsTab(activeTabInput.value);
+        // Color picker labels updater
+        function updateHexLabel(type) {
+            const picker = document.getElementById(type + '-picker');
+            const label = document.getElementById(type + '-hex');
+            if (picker && label) {
+                label.textContent = picker.value.toUpperCase();
+            }
         }
 
+        // Local image reader for file upload previews
+        function previewSelectedImage(event, containerId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        container.innerHTML = `<img src="${e.target.result}" class="max-h-full object-contain" />`;
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
 
-    });
-</script>
+        // Restore active tab
+        (function() {
+            const activeTabInput = document.getElementById('active-tab-input');
+            const savedTab = activeTabInput ? activeTabInput.value : (localStorage.getItem('spmb_ui_active_tab') || 'global');
+            if (savedTab && document.getElementById('tab-btn-' + savedTab)) {
+                switchSettingsTab(savedTab);
+            }
+        })();
+    </script>
+</div>
 @endsection

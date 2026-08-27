@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Registration;
+use App\Models\SpmbActivityLog;
 
 class AdminDashboardController extends Controller
 {
@@ -25,7 +26,28 @@ class AdminDashboardController extends Controller
             $query->where('registration_status', $request->status);
         }
 
-        $registrations = $query->latest()->paginate(10);
+        // Search by Name, WhatsApp, or NIK
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('candidate_name', 'like', "%{$search}%")
+                  ->orWhere('parent_phone', 'like', "%{$search}%")
+                  ->orWhere('nik', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by Unit/Jenjang
+        if ($request->filled('unit_id')) {
+            $query->where('spmb_unit_id', $request->unit_id);
+        }
+
+        // Per page limit
+        $perPage = intval($request->get('per_page', 10));
+        if (!in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $registrations = $query->latest()->paginate($perPage)->withQueryString();
 
         // Stats calculation (scoped by period)
         $stats = [
@@ -45,6 +67,8 @@ class AdminDashboardController extends Controller
             return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
                 ?? \App\Models\SpmbPeriod::value('id');
         });
+
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
 
         // General stats
         $totalCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->count();
@@ -85,6 +109,23 @@ class AdminDashboardController extends Controller
             'Paid' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('payment_status', 'paid')->count(),
         ];
 
+        // Recent Registrations (5 items)
+        $recentRegistrations = Registration::scopedByAdmin()
+            ->with(['user', 'unit'])
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        // Recent Logs (5 items)
+        $recentLogs = $isSuperAdmin ? SpmbActivityLog::latest()->limit(5)->get() : collect();
+
+        // Active Wave/Gelombang Info
+        $activeWave = \App\Models\SpmbWave::where('is_active', true)->first();
+
+        // Total registered users
+        $totalUsersCount = \App\Models\User::count();
+
         return view('admin.dashboard', compact(
             'totalCandidates',
             'submittedCandidates',
@@ -93,7 +134,11 @@ class AdminDashboardController extends Controller
             'totalRevenue',
             'levelStats',
             'statusStats',
-            'paymentStats'
+            'paymentStats',
+            'recentRegistrations',
+            'recentLogs',
+            'activeWave',
+            'totalUsersCount'
         ));
     }
 
@@ -113,6 +158,8 @@ class AdminDashboardController extends Controller
             'invalid_fields' => null,
             'committee_notes' => $notes
         ]);
+
+        SpmbActivityLog::log('VERIFY_CANDIDATE', "Memverifikasi berkas pendaftaran ananda " . ($registration->candidate_name ?? 'Draft') . " (ID: {$registration->id})");
 
         return redirect()->back()->with('success', 'Candidate registration verified successfully.');
     }
@@ -143,6 +190,8 @@ class AdminDashboardController extends Controller
             'committee_notes' => $reason
         ]);
 
+        SpmbActivityLog::log('REJECT_CANDIDATE', "Menolak berkas pendaftaran ananda " . ($registration->candidate_name ?? 'Draft') . " (ID: {$registration->id}) dengan alasan: {$reason}");
+
         return redirect()->back()->with('success', 'Candidate registration rejected with reason.');
     }
 
@@ -155,6 +204,35 @@ class AdminDashboardController extends Controller
             'committee_notes' => 'Ujian observasi / ta\'aruf telah selesai dilaksanakan. Silakan mengisi Formulir Pernyataan Kesanggupan Biaya dan Tata Tertib Sekolah.'
         ]);
 
+        SpmbActivityLog::log('COMPLETE_TAARUF', "Menyelesaikan tahapan observasi/ta'aruf ananda " . ($registration->candidate_name ?? 'Draft') . " (ID: {$registration->id})");
+
         return redirect()->back()->with('success', 'Status Ta\'aruf calon siswa berhasil diselesaikan.');
+    }
+
+    public function activityLogs(Request $request)
+    {
+        $query = SpmbActivityLog::with('user');
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('description', 'like', '%' . $search . '%')
+                  ->orWhere('user_name', 'like', '%' . $search . '%')
+                  ->orWhere('action', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('action_type')) {
+            $query->where('action', $request->action_type);
+        }
+
+        $perPage = $request->integer('per_page', 10);
+        $logs = $query->latest()->paginate($perPage);
+
+        // Get distinct action types for filter dropdown
+        $actionTypes = SpmbActivityLog::select('action')->distinct()->pluck('action');
+
+        return view('admin.activity-logs', compact('logs', 'actionTypes'));
     }
 }

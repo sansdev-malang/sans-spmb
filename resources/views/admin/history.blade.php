@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Data Pendaftar (Aktif) - Admin Panel')
-@section('page_title', 'Data Pendaftar (Aktif)')
+@section('title', 'Riwayat Pendaftaran (Log) - Admin Panel')
+@section('page_title', 'Riwayat Pendaftaran (Log)')
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Summary Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800">Daftar Lengkap Pendaftar (Aktif)</h1>
-            <p class="text-xs text-slate-500 mt-1">Menampilkan data calon pendaftar aktif yang telah melakukan pembayaran biaya pendaftaran formulir Sekolah Anak Saleh.</p>
+            <h1 class="text-xl font-extrabold text-slate-800">Riwayat Pendaftaran Lengkap (Log)</h1>
+            <p class="text-xs text-slate-500 mt-1">Menampilkan seluruh riwayat calon pendaftar (termasuk draf/belum bayar) yang tercatat dalam sistem pendaftaran Sekolah Anak Saleh.</p>
         </div>
         <div class="flex gap-2">
             <button class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
@@ -21,158 +21,11 @@
         </div>
     </div>
 
-    <!-- Stats Rekap Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <!-- Card 1: Total -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Total Aktif</span>
-                <span class="text-2xl font-black text-slate-800 block mt-1">{{ $stats['total'] }}</span>
-            </div>
-            <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="users" class="w-5 h-5"></i>
-            </div>
-        </div>
-        <!-- Card 2: Laki-laki -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Laki-Laki (L)</span>
-                <span class="text-2xl font-black text-blue-600 block mt-1">{{ $stats['male'] }}</span>
-            </div>
-            <div class="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="user-check" class="w-5 h-5 text-blue-600"></i>
-            </div>
-        </div>
-        <!-- Card 3: Perempuan -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Perempuan (P)</span>
-                <span class="text-2xl font-black text-rose-600 block mt-1">{{ $stats['female'] }}</span>
-            </div>
-            <div class="h-10 w-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="user-check" class="w-5 h-5 text-rose-600"></i>
-            </div>
-        </div>
-        <!-- Card 4: Terverifikasi -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
-                <span class="text-2xl font-black text-green-600 block mt-1">{{ $stats['verified'] }}</span>
-            </div>
-            <div class="h-10 w-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="shield-check" class="w-5 h-5"></i>
-            </div>
-        </div>
-        <!-- Card 5: Menunggu Verifikasi -->
-        <div class="col-span-2 md:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Menunggu Verif</span>
-                <span class="text-2xl font-black text-amber-600 block mt-1">{{ $stats['pending'] }}</span>
-            </div>
-            <div class="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="clock" class="w-5 h-5"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- Collapsible Advanced Stats Section -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300">
-        <button onclick="document.getElementById('rekap-detail-panel').classList.toggle('hidden'); this.querySelector('.chevron-icon').classList.toggle('rotate-180');" 
-                class="w-full flex items-center justify-between px-6 py-4 bg-slate-50/50 hover:bg-slate-50 transition text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-            <span class="flex items-center gap-2">
-                <i data-lucide="bar-chart-horizontal" class="w-4 h-4 text-brand-emerald"></i>
-                Lihat Rekap Gelombang, Jalur, & Program Kelas
-            </span>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200 chevron-icon"></i>
-        </button>
-        
-        <div id="rekap-detail-panel" class="hidden p-6 border-t border-slate-100 bg-white">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Column 1: Gelombang -->
-                <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                        <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                        Distribusi Gelombang
-                    </h4>
-                    <div class="space-y-2.5">
-                        @forelse($waveStats as $ws)
-                            @php
-                                $percent = $stats['total'] > 0 ? round(($ws['count'] / $stats['total']) * 100) : 0;
-                            @endphp
-                            <div class="space-y-1">
-                                <div class="flex justify-between text-xs font-bold text-slate-650">
-                                    <span>{{ $ws['name'] }}</span>
-                                    <span>{{ $ws['count'] }} Siswa ({{ $percent }}%)</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Tidak ada data gelombang.</p>
-                        @endforelse
-                    </div>
-                </div>
-
-                <!-- Column 2: Jalur Pendaftaran -->
-                <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                        <i data-lucide="git-branch" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                        Jalur Pendaftaran
-                    </h4>
-                    <div class="space-y-2.5">
-                        @forelse($typeStats as $ts)
-                            @php
-                                $percent = $stats['total'] > 0 ? round(($ts['count'] / $stats['total']) * 100) : 0;
-                            @endphp
-                            <div class="space-y-1">
-                                <div class="flex justify-between text-xs font-bold text-slate-650">
-                                    <span>{{ $ts['name'] }}</span>
-                                    <span>{{ $ts['count'] }} Siswa ({{ $percent }}%)</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Tidak ada data jalur.</p>
-                        @endforelse
-                    </div>
-                </div>
-
-                <!-- Column 3: Program Kelas -->
-                <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                        <i data-lucide="award" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                        Program Kelas
-                    </h4>
-                    <div class="space-y-2.5">
-                        @forelse($classProgramStats as $cps)
-                            @php
-                                $percent = $stats['total'] > 0 ? round(($cps['count'] / $stats['total']) * 100) : 0;
-                            @endphp
-                            <div class="space-y-1">
-                                <div class="flex justify-between text-xs font-bold text-slate-650">
-                                    <span>{{ $cps['name'] }}</span>
-                                    <span>{{ $cps['count'] }} Siswa ({{ $percent }}%)</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Tidak ada data program kelas.</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Candidate List Table -->
-    <div id="candidates-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#candidates-card" hx-select="#candidates-card">
-         <!-- Search & Filter Form -->
-        <form action="{{ route('admin.candidates') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
+    <div id="history-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#history-card" hx-select="#history-card">
+        
+        <!-- Search & Filter Form -->
+        <form action="{{ route('admin.history') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
             @if(request('unit_id'))
                 <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
             @endif
@@ -210,6 +63,18 @@
                             @endforeach
                         </select>
                     @endif
+
+                    <!-- Filter Stage / Status -->
+                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <option value="">Semua Tahapan</option>
+                        <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Pembayaran / Pengisian</option>
+                        <option value="submitted" {{ request('status') === 'submitted' ? 'selected' : '' }}>Verifikasi Berkas</option>
+                        <option value="verified" {{ request('status') === 'verified' ? 'selected' : '' }}>Observasi / Ta'aruf</option>
+                        <option value="taaruf_completed" {{ request('status') === 'taaruf_completed' ? 'selected' : '' }}>Persetujuan Pernyataan</option>
+                        <option value="agreement_signed" {{ request('status') === 'agreement_signed' ? 'selected' : '' }}>Administrasi Akhir</option>
+                        <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Selesai & Lulus</option>
+                        <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Perbaikan Berkas</option>
+                    </select>
 
                     <!-- Per Page Select -->
                     <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">

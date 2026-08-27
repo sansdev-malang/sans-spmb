@@ -4,7 +4,7 @@
 @section('page_title', 'Jalur & Gelombang')
 
 @section('content')
-<div class="w-full space-y-6">
+<div id="spmb-master-container" hx-boost="true" hx-target="#spmb-master-container" hx-select="#spmb-master-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h1 class="text-xl font-extrabold text-slate-800">Master Jalur & Gelombang</h1>
@@ -13,16 +13,16 @@
 
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        <button onclick="switchTab('periode')" id="tabBtn-periode" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow">
+        <button onclick="switchTab('periode')" id="tabBtn-periode" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'periode' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="calendar" class="w-4 h-4"></i> Periode
         </button>
-        <button onclick="switchTab('gelombang')" id="tabBtn-gelombang" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+        <button onclick="switchTab('gelombang')" id="tabBtn-gelombang" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'gelombang' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="waves" class="w-4 h-4"></i> Gelombang
         </button>
-        <button onclick="switchTab('jenis')" id="tabBtn-jenis" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+        <button onclick="switchTab('jenis')" id="tabBtn-jenis" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'jenis' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="tag" class="w-4 h-4"></i> Jenis Pendaftaran
         </button>
-        <button onclick="switchTab('program')" id="tabBtn-program" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+        <button onclick="switchTab('program')" id="tabBtn-program" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'program' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="layers" class="w-4 h-4"></i> Program Kelas
         </button>
     </div>
@@ -31,7 +31,7 @@
     <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         
         <!-- Tab 1: Periode -->
-        <div id="tabContent-periode" class="tab-content p-8 space-y-6">
+        <div id="tabContent-periode" class="tab-content p-8 space-y-6 {{ $activeTab === 'periode' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Tahun Pelajaran (Periode Akademik)</h3>
@@ -74,7 +74,7 @@
         </div>
 
         <!-- Tab 2: Gelombang -->
-        <div id="tabContent-gelombang" class="tab-content p-8 space-y-6 hidden">
+        <div id="tabContent-gelombang" class="tab-content p-8 space-y-6 {{ $activeTab === 'gelombang' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Gelombang Masuk Pendaftaran</h3>
@@ -122,7 +122,7 @@
         </div>
 
         <!-- Tab 3: Jenis Pendaftaran -->
-        <div id="tabContent-jenis" class="tab-content p-8 space-y-6 hidden">
+        <div id="tabContent-jenis" class="tab-content p-8 space-y-6 {{ $activeTab === 'jenis' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Kategori Jenis Pendaftaran</h3>
@@ -170,7 +170,7 @@
         </div>
 
         <!-- Tab: Program Kelas -->
-        <div id="tabContent-program" class="tab-content p-8 space-y-6 hidden">
+        <div id="tabContent-program" class="tab-content p-8 space-y-6 {{ $activeTab === 'program' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Program Kelas (Kategori Siswa)</h3>
@@ -236,11 +236,11 @@
             <h3 id="crudModalTitle" class="font-extrabold text-lg">Tambah</h3>
             <p class="text-xs text-emerald-100 mt-0.5">Kelola data konfigurasi setting master.</p>
         </div>
-        <form id="crudForm" method="POST" class="p-6 space-y-4">
+        <form id="crudForm" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
             
             @if($errors->any() && session('failed_modal'))
-                <div class="text-xs text-red-600 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold mb-3 space-y-1">
+                <div id="spmbErrorWrapper" class="text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold mb-3 space-y-1">
                     @foreach($errors->all() as $error)
                         <p>⚠️ {{ $error }}</p>
                     @endforeach
@@ -271,11 +271,24 @@
                 </button>
             </div>
         </form>
-    </div>
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 </div>
 
 <!-- Hidden Delete Form -->
-<form id="deleteForm" method="POST" class="hidden">
+<form id="deleteForm" method="POST" hx-boost="false" class="hidden">
     @csrf
     @method('DELETE')
 </form>
@@ -283,10 +296,13 @@
 <script>
     // Tab Switching
     function switchTab(tabId) {
+        const panel = document.getElementById('tabContent-' + tabId);
+        if (!panel) return;
+
         // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         // Show selected tab
-        document.getElementById('tabContent-' + tabId).classList.remove('hidden');
+        panel.classList.remove('hidden');
 
         // Style tabs
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -294,22 +310,32 @@
         });
         
         const activeBtn = document.getElementById('tabBtn-' + tabId);
-        activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+        if (activeBtn) {
+            activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+        }
         
-        // Save to localStorage
+        // Update URL query parameter
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+
+        // Save to localStorage as fallback
         localStorage.setItem('spmb_active_tab', tabId);
     }
 
     // On Load Restore Active Tab
     document.addEventListener("DOMContentLoaded", function() {
-        const savedTab = localStorage.getItem('spmb_active_tab') || 'periode';
-        switchTab(savedTab);
+        // Tab state is handled server-side via Laravel view variable $activeTab
     });
 
     // Modal Control
     function openModal(moduleType, val = '', isLocked = false, actionUrl = '', isActive = '1', desc = '') {
+        const errorWrapper = document.getElementById('spmbErrorWrapper');
+        if (errorWrapper) {
+            errorWrapper.classList.add('hidden');
+        }
+
         const form = document.getElementById('crudForm');
-        form.action = actionUrl;
+        form.setAttribute('action', actionUrl);
         
         const mainInput = document.getElementById('crudMainInput');
         mainInput.value = val;
@@ -368,7 +394,15 @@
 
     function closeModal() {
         document.getElementById('crudModal').classList.add('hidden');
+        const errorWrapper = document.getElementById('spmbErrorWrapper');
+        if (errorWrapper) {
+            errorWrapper.classList.add('hidden');
+        }
     }
+
+    document.getElementById('crudModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
 
     // Delete Operations
     function deleteItem(type, name, isUsed, deleteUrl) {
@@ -413,7 +447,22 @@
                 let id = failed.replace('program_edit_', '');
                 openModal('program', '{{ old('name') }}', false, '/admin/spmb-settings/class-programs/' + id, '{{ old('is_active') ? 1 : 0 }}', '{{ old('description') }}');
             }
+
+            const errorWrapper = document.getElementById('spmbErrorWrapper');
+            if (errorWrapper) {
+                errorWrapper.classList.remove('hidden');
+            }
         });
     @endif
+
+    // Escape key listener to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('crudModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        }
+    });
 </script>
 @endsection

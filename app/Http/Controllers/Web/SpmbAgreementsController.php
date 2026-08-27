@@ -11,13 +11,23 @@ class SpmbAgreementsController extends Controller
 {
     public function index()
     {
-        // Load all units with their respective agreement template
-        $units = SpmbUnit::with('agreementTemplate')->get();
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        
+        // Load only the admin's unit if they are not super admin
+        $unitsQuery = SpmbUnit::with('agreementTemplate');
+        if (!$isSuperAdmin) {
+            $unitsQuery->where('id', auth()->user()->spmb_unit_id);
+        }
+        $units = $unitsQuery->get();
 
         return view('admin.settings-agreements', compact('units'));
     }
     public function update(Request $request, $id)
     {
+        if (!auth()->user()->isSuperAdmin() && $id != auth()->user()->spmb_unit_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -41,6 +51,8 @@ class SpmbAgreementsController extends Controller
             ]
         );
 
-        return redirect()->back()->with('success', 'Template Surat Pernyataan berhasil diperbarui.');
+        $activeTab = $request->input('active_tab', 'unit_' . $id);
+        return redirect()->route('admin.spmb-settings.agreements', ['tab' => $activeTab])
+            ->with('success', 'Template Surat Pernyataan berhasil diperbarui.');
     }
 }

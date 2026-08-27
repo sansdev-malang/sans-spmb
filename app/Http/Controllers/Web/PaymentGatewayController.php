@@ -23,11 +23,18 @@ class PaymentGatewayController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:payment_gateways,code',
             'settings_schema_raw' => 'required|string'
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'gateway_create');
+        }
 
         try {
             $schema = json_decode($request->input('settings_schema_raw'), true);
@@ -45,7 +52,10 @@ class PaymentGatewayController extends Controller
             return redirect()->route('admin.payment-gateways.index')
                 ->with('success', 'Payment Gateway berhasil ditambahkan.');
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['settings_schema_raw' => $e->getMessage()]);
+            return redirect()->back()
+                ->withErrors(['settings_schema_raw' => $e->getMessage()])
+                ->withInput()
+                ->with('failed_modal', 'gateway_create');
         }
     }
 
@@ -56,11 +66,18 @@ class PaymentGatewayController extends Controller
     {
         $gateway = PaymentGateway::findOrFail($id);
 
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:payment_gateways,code,' . $id,
             'settings_schema_raw' => 'required|string'
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'gateway_edit_' . $id);
+        }
 
         try {
             $schema = json_decode($request->input('settings_schema_raw'), true);
@@ -78,7 +95,10 @@ class PaymentGatewayController extends Controller
             return redirect()->route('admin.payment-gateways.index')
                 ->with('success', 'Payment Gateway berhasil diperbarui.');
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['settings_schema_raw' => $e->getMessage()]);
+            return redirect()->back()
+                ->withErrors(['settings_schema_raw' => $e->getMessage()])
+                ->withInput()
+                ->with('failed_modal', 'gateway_edit_' . $id);
         }
     }
 
@@ -102,7 +122,7 @@ class PaymentGatewayController extends Controller
     /**
      * Display configuration form for a specific gateway.
      */
-    public function settings($code)
+    public function settings(Request $request, $code)
     {
         $gateway = PaymentGateway::where('code', $code)->firstOrFail();
 
@@ -118,8 +138,9 @@ class PaymentGatewayController extends Controller
 
         $modeKey = $gateway->code . '_mode';
         $gatewayMode = Setting::get($modeKey, 'simulator');
+        $activeTab = $request->get('tab', $gatewayMode);
 
-        return view('admin.payment_gateways.settings', compact('gateway', 'settings', 'gatewayMode'));
+        return view('admin.payment_gateways.settings', compact('gateway', 'settings', 'gatewayMode', 'activeTab'));
     }
 
     /**
@@ -147,7 +168,9 @@ class PaymentGatewayController extends Controller
             }
         }
 
-        return back()->with('success', "Konfigurasi {$gateway->name} berhasil disimpan.");
+        $activeTab = $request->input('active_tab', 'simulator');
+        return redirect()->route('admin.payment-gateways.settings', ['code' => $gateway->code, 'tab' => $activeTab])
+            ->with('success', "Konfigurasi {$gateway->name} berhasil disimpan.");
     }
 
     /**

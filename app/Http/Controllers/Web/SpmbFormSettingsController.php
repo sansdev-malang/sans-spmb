@@ -12,15 +12,23 @@ class SpmbFormSettingsController extends Controller
     public function index()
     {
         $steps = SpmbFormStep::with('fields')->orderBy('order')->get();
-        return view('admin.settings-form', compact('steps'));
+        $activeTab = request()->get('tab', 'crud_steps');
+        return view('admin.settings-form', compact('steps', 'activeTab'));
     }
 
     public function storeStep(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'order' => 'required|integer',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'step_create');
+        }
 
         SpmbFormStep::create([
             'title' => $request->title,
@@ -28,24 +36,31 @@ class SpmbFormSettingsController extends Controller
             'is_active' => true,
         ]);
 
-        return redirect()->back()->with('success', 'Langkah formulir berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps'])->with('success', 'Langkah formulir berhasil ditambahkan.');
     }
 
     public function updateStep(Request $request, $id)
     {
         $step = SpmbFormStep::findOrFail($id);
 
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'order' => 'required|integer',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps'])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'step_edit_' . $id);
+        }
 
         $step->update([
             'title' => $request->title,
             'order' => $request->order,
         ]);
 
-        return redirect()->back()->with('success', 'Langkah formulir berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps'])->with('success', 'Langkah formulir berhasil diperbarui.');
     }
 
     public function destroyStep($id)
@@ -54,17 +69,17 @@ class SpmbFormSettingsController extends Controller
 
         foreach ($step->fields as $field) {
             if (\App\Models\Registration::whereNotNull("additional_info->{$field->field_name}")->exists()) {
-                return redirect()->back()->with('error', 'Tidak dapat menghapus langkah formulir ini karena kolom di dalamnya ("' . $field->label . '") sudah diisi oleh pendaftar.');
+                return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps'])->with('error', 'Tidak dapat menghapus langkah formulir ini karena kolom di dalamnya ("' . $field->label . '") sudah diisi oleh pendaftar.');
             }
         }
 
         $step->delete();
-        return redirect()->back()->with('success', 'Langkah formulir berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps'])->with('success', 'Langkah formulir berhasil dihapus.');
     }
 
     public function storeField(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'form_step_id' => 'required|exists:spmb_form_steps,id',
             'label' => 'required|string|max:255',
             'field_name' => 'required|string|max:255',
@@ -73,6 +88,13 @@ class SpmbFormSettingsController extends Controller
             'is_required' => 'nullable|boolean',
             'order' => 'required|integer',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $request->form_step_id])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'field_create_' . $request->form_step_id);
+        }
 
         SpmbFormField::create([
             'form_step_id' => $request->form_step_id,
@@ -84,14 +106,14 @@ class SpmbFormSettingsController extends Controller
             'order' => $request->order,
         ]);
 
-        return redirect()->back()->with('success', 'Kolom input formulir berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $request->form_step_id])->with('success', 'Kolom input formulir berhasil ditambahkan.');
     }
 
     public function updateField(Request $request, $id)
     {
         $field = SpmbFormField::findOrFail($id);
 
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'label' => 'required|string|max:255',
             'field_name' => 'required|string|max:255',
             'type' => 'required|in:text,number,email,date,select,textarea,file',
@@ -100,9 +122,16 @@ class SpmbFormSettingsController extends Controller
             'order' => 'required|integer',
         ]);
 
+        if ($validator->fails()) {
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])
+                ->withErrors($validator)
+                ->withInput()
+                ->with('failed_modal', 'field_edit_' . $id);
+        }
+
         $systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
         if (in_array($field->field_name, $systemFields) && $request->field_name !== $field->field_name) {
-            return redirect()->back()->with('error', 'Key database kolom sistem utama tidak boleh diubah.');
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('error', 'Key database kolom sistem utama tidak boleh diubah.');
         }
 
         $field->update([
@@ -114,7 +143,7 @@ class SpmbFormSettingsController extends Controller
             'order' => $request->order,
         ]);
 
-        return redirect()->back()->with('success', 'Kolom input formulir berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('success', 'Kolom input formulir berhasil diperbarui.');
     }
 
     public function destroyField($id)
@@ -123,14 +152,14 @@ class SpmbFormSettingsController extends Controller
 
         $systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
         if (in_array($field->field_name, $systemFields)) {
-            return redirect()->back()->with('error', 'Kolom sistem utama tidak boleh dihapus.');
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('error', 'Kolom sistem utama tidak boleh dihapus.');
         }
 
         if (\App\Models\Registration::whereNotNull("additional_info->{$field->field_name}")->exists()) {
-            return redirect()->back()->with('error', 'Tidak dapat menghapus kolom input ini karena sudah diisi oleh pendaftar.');
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('error', 'Tidak dapat menghapus kolom input ini karena sudah diisi oleh pendaftar.');
         }
 
         $field->delete();
-        return redirect()->back()->with('success', 'Kolom input formulir berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('success', 'Kolom input formulir berhasil dihapus.');
     }
 }

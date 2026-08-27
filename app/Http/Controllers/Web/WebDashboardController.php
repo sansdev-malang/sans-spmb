@@ -595,9 +595,9 @@ class WebDashboardController extends Controller
             $replacements = [
                 '{{nama_calon_siswa}}' => $registration->candidate_name ?? '',
                 '{{nama_wali}}' => $registration->signature_name ?: ($registration->father_name ?: ($registration->mother_name ?: '')),
-                '{{nama_unit}}' => $registration->unit->name ?? '',
-                '{{nama_kelas}}' => $registration->grade->name ?? '',
-                '{{tahun_ajaran}}' => $registration->period->year ?? '2026-2027',
+                '{{nama_unit}}' => $registration->unit?->name ?? '',
+                '{{nama_kelas}}' => $registration->grade?->name ?? '',
+                '{{tahun_ajaran}}' => $registration->period?->year ?? '2026-2027',
             ];
             
             $agreementTemplate->title = str_replace(array_keys($replacements), array_values($replacements), $agreementTemplate->title);

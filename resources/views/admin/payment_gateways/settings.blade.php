@@ -4,7 +4,7 @@
 @section('page_title', 'Konfigurasi Gateway')
 
 @section('content')
-<div class="space-y-8">
+<div id="gateway-settings-container" class="space-y-8">
     
     <!-- Header -->
     <div class="md:flex md:items-center md:justify-between mb-8">
@@ -26,8 +26,16 @@
 
 
     <!-- Form Configuration -->
-    <form action="{{ route('admin.payment-gateways.settings.save', $gateway->code) }}" method="POST" class="space-y-6 w-full text-left">
+    <form action="{{ route('admin.payment-gateways.settings.save', $gateway->code) }}" method="POST" hx-boost="false" class="space-y-6 w-full text-left">
         @csrf
+        @if($errors->any())
+            <div class="mx-auto text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1 mb-6">
+                @foreach($errors->all() as $error)
+                    <p>⚠️ {{ $error }}</p>
+                @endforeach
+            </div>
+        @endif
+        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ $activeTab }}">
         
         <!-- Environment Mode Selector -->
         <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
@@ -49,13 +57,13 @@
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
             <!-- Tabs Headers -->
             <div class="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 flex text-xs select-none">
-                <button type="button" id="tab-btn-simulator" onclick="switchTab('simulator')" class="tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider border-brand-emerald text-brand-emerald dark:text-emerald-400 font-extrabold bg-white dark:bg-slate-900 border-b-2">
+                <button type="button" id="tab-btn-simulator" onclick="switchTab('simulator')" class="tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider {{ $activeTab === 'simulator' ? 'border-brand-emerald text-brand-emerald dark:text-emerald-400 font-extrabold bg-white dark:bg-slate-900 border-b-2' : 'text-slate-450 hover:text-slate-700' }}">
                     1. Simulator
                 </button>
-                <button type="button" id="tab-btn-sandbox" onclick="switchTab('sandbox')" class="tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider text-slate-450 hover:text-slate-700">
+                <button type="button" id="tab-btn-sandbox" onclick="switchTab('sandbox')" class="tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider {{ $activeTab === 'sandbox' ? 'border-brand-emerald text-brand-emerald dark:text-emerald-400 font-extrabold bg-white dark:bg-slate-900 border-b-2' : 'text-slate-450 hover:text-slate-700' }}">
                     2. Sandbox
                 </button>
-                <button type="button" id="tab-btn-production" onclick="switchTab('production')" class="tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider text-slate-450 hover:text-slate-700">
+                <button type="button" id="tab-btn-production" onclick="switchTab('production')" class="tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider {{ $activeTab === 'production' ? 'border-brand-emerald text-brand-emerald dark:text-emerald-400 font-extrabold bg-white dark:bg-slate-900 border-b-2' : 'text-slate-450 hover:text-slate-700' }}">
                     3. Production
                 </button>
             </div>
@@ -64,7 +72,7 @@
             <div class="p-6">
                 
                 @foreach(['simulator', 'sandbox', 'production'] as $env)
-                    <div id="tab-panel-{{ $env }}" class="tab-panel space-y-5 animate-fade-in {{ $env !== 'simulator' ? 'hidden' : '' }}">
+                    <div id="tab-panel-{{ $env }}" class="tab-panel space-y-5 animate-fade-in {{ $env !== $activeTab ? 'hidden' : '' }}">
                         <div class="pb-2 border-b border-slate-100 dark:border-slate-800">
                             <h4 class="font-extrabold text-slate-800 dark:text-white text-xs uppercase tracking-wide">Pengaturan Kunci API {{ ucfirst($env) }}</h4>
                             <p class="text-[10px] text-slate-400 mt-0.5">Parameter ini khusus digunakan ketika sistem berjalan di mode {{ $env }}.</p>
@@ -110,14 +118,34 @@
         </div>
 
     </form>
+
+
+    @if(session('success'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('success') }}", 'success');
+            }
+        </script>
+    @endif
+    @if(session('error'))
+        <script>
+            if (typeof showToast === 'function') {
+                showToast("{{ session('error') }}", 'error');
+            }
+        </script>
+    @endif
 </div>
 
 <script>
     function switchTab(env) {
+        const panelEl = document.getElementById('tab-panel-' + env);
+        const btnEl = document.getElementById('tab-btn-' + env);
+        if (!panelEl || !btnEl) return;
+
         // Hide all panels
         document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
         // Show active panel
-        document.getElementById('tab-panel-' + env).classList.remove('remove', 'hidden');
+        panelEl.classList.remove('hidden');
         
         // Reset all header styles
         document.querySelectorAll('.tab-btn').forEach(el => {
@@ -125,13 +153,24 @@
         });
         
         // Set active header style
-        document.getElementById('tab-btn-' + env).className = "tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider border-brand-emerald text-brand-emerald dark:text-emerald-400 font-extrabold bg-white dark:bg-slate-900 border-b-2";
+        btnEl.className = "tab-btn px-6 py-4 transition focus:outline-none uppercase tracking-wider border-brand-emerald text-brand-emerald dark:text-emerald-400 font-extrabold bg-white dark:bg-slate-900 border-b-2";
         
+        // Set hidden active_tab input value
+        const activeTabInput = document.getElementById('active-tab-input');
+        if (activeTabInput) {
+            activeTabInput.value = env;
+        }
+        
+        // Update URL query parameter
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + env;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+
         localStorage.setItem('spmb_gateway_settings_active_tab_{{ $gateway->code }}', env);
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        const savedTab = localStorage.getItem('spmb_gateway_settings_active_tab_{{ $gateway->code }}');
+        const activeTabInput = document.getElementById('active-tab-input');
+        const savedTab = activeTabInput ? activeTabInput.value : (localStorage.getItem('spmb_gateway_settings_active_tab_{{ $gateway->code }}') || 'simulator');
         if (savedTab && document.getElementById('tab-btn-' + savedTab)) {
             switchTab(savedTab);
         }

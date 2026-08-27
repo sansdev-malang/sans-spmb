@@ -18,11 +18,11 @@
 
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        <button onclick="switchFormTab('crud_steps')" id="formTabBtn-crud_steps" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow">
+        <button onclick="switchFormTab('crud_steps')" id="formTabBtn-crud_steps" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'crud_steps' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
             <i data-lucide="list-ordered" class="w-4 h-4"></i> Manajemen Tahapan (Steps)
         </button>
         @foreach($steps as $step)
-            <button onclick="switchFormTab('step_{{ $step->id }}')" id="formTabBtn-step_{{ $step->id }}" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+            <button onclick="switchFormTab('step_{{ $step->id }}')" id="formTabBtn-step_{{ $step->id }}" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'step_' . $step->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="folder" class="w-4 h-4"></i> {{ $step->title }}
             </button>
         @endforeach
@@ -32,7 +32,7 @@
     <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         
         <!-- Tab 1: CRUD Steps -->
-        <div id="formTabContent-crud_steps" class="form-tab-content p-8 space-y-6">
+        <div id="formTabContent-crud_steps" class="form-tab-content p-8 space-y-6 {{ $activeTab === 'crud_steps' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Daftar Langkah Formulir</h3>
@@ -82,7 +82,7 @@
 
         <!-- Tab 2 to N: Fields for each Step -->
         @foreach($steps as $step)
-            <div id="formTabContent-step_{{ $step->id }}" class="form-tab-content p-8 space-y-6 hidden">
+            <div id="formTabContent-step_{{ $step->id }}" class="form-tab-content p-8 space-y-6 {{ $activeTab === 'step_' . $step->id ? '' : 'hidden' }}">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-extrabold text-base text-slate-800">Daftar Pertanyaan: {{ $step->title }}</h3>
@@ -153,8 +153,15 @@
             </h3>
             <button onclick="closeAddStepModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
         </div>
-        <form action="{{ route('admin.spmb-settings.form.steps.store') }}" method="POST" class="p-6 space-y-4">
+        <form action="{{ route('admin.spmb-settings.form.steps.store') }}" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
+            @if($errors->any() && session('failed_modal') && session('failed_modal') === 'step_create')
+                <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
+                    @foreach($errors->all() as $error)
+                        <p>⚠️ {{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Tahapan*</label>
                 <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: Dokumen Pendukung">
@@ -180,8 +187,15 @@
             </h3>
             <button onclick="closeEditStepModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
         </div>
-        <form id="editStepForm" method="POST" class="p-6 space-y-4">
+        <form id="editStepForm" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
+            @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'step_edit_'))
+                <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
+                    @foreach($errors->all() as $error)
+                        <p>⚠️ {{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Tahapan*</label>
                 <input type="text" id="edit-step-title" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
@@ -207,8 +221,15 @@
             </h3>
             <button onclick="closeAddFieldModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
         </div>
-        <form action="{{ route('admin.spmb-settings.form.fields.store') }}" method="POST" class="p-6 space-y-4">
+        <form action="{{ route('admin.spmb-settings.form.fields.store') }}" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
+            @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'field_create_'))
+                <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
+                    @foreach($errors->all() as $error)
+                        <p>⚠️ {{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
             <input type="hidden" id="add-field-step-id" name="form_step_id">
             
             <div>
@@ -268,8 +289,15 @@
             </h3>
             <button onclick="closeEditFieldModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
         </div>
-        <form id="editFieldForm" method="POST" class="p-6 space-y-4">
+        <form id="editFieldForm" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
+            @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'field_edit_'))
+                <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
+                    @foreach($errors->all() as $error)
+                        <p>⚠️ {{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Label Input (Dibaca Pendaftar)*</label>
                 <input type="text" id="edit-field-label" name="label" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
@@ -326,39 +354,58 @@
 <script>
     // Tab switching memory
     function switchFormTab(tabId) {
+        const panel = document.getElementById('formTabContent-' + tabId);
+        if (!panel) return;
+
         document.querySelectorAll('.form-tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('formTabContent-' + tabId).classList.remove('hidden');
+        panel.classList.remove('hidden');
 
         document.querySelectorAll('.form-tab-btn').forEach(btn => {
             btn.className = "form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
         });
         
         const activeBtn = document.getElementById('formTabBtn-' + tabId);
-        activeBtn.className = "form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+        if (activeBtn) {
+            activeBtn.className = "form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+        }
         
+        // Update URL query parameter to sync with server
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+
         localStorage.setItem('spmb_form_active_tab', tabId);
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        const savedTab = localStorage.getItem('spmb_form_active_tab') || 'crud_steps';
-        switchFormTab(savedTab);
+        // Tab state is handled server-side via Laravel view variable $activeTab
     });
+
+    // Clear validation errors
+    function clearFormErrors() {
+        document.querySelectorAll('.spmb-form-errors').forEach(el => {
+            el.classList.add('hidden');
+        });
+    }
 
     // Step Modals
     function openAddStepModal() {
+        clearFormErrors();
         document.getElementById('addStepModal').classList.remove('hidden');
     }
     function closeAddStepModal() {
+        clearFormErrors();
         document.getElementById('addStepModal').classList.add('hidden');
     }
 
     function openEditStepModal(step) {
+        clearFormErrors();
         document.getElementById('edit-step-title').value = step.title;
         document.getElementById('edit-step-order').value = step.order;
-        document.getElementById('editStepForm').action = '/admin/spmb-settings/form/steps/' + step.id;
+        document.getElementById('editStepForm').setAttribute('action', '/admin/spmb-settings/form/steps/' + step.id);
         document.getElementById('editStepModal').classList.remove('hidden');
     }
     function closeEditStepModal() {
+        clearFormErrors();
         document.getElementById('editStepModal').classList.add('hidden');
     }
 
@@ -368,22 +415,25 @@
 
     // Field Modals
     function openAddFieldModal(stepId) {
+        clearFormErrors();
         document.getElementById('add-field-step-id').value = stepId;
         document.getElementById('addFieldModal').classList.remove('hidden');
         toggleOptionsInput('add');
     }
     function closeAddFieldModal() {
+        clearFormErrors();
         document.getElementById('addFieldModal').classList.add('hidden');
     }
 
     function openEditFieldModal(field) {
+        clearFormErrors();
         document.getElementById('edit-field-label').value = field.label;
         document.getElementById('edit-field-name').value = field.field_name;
         document.getElementById('edit-field-type').value = field.type;
         document.getElementById('edit-field-options').value = field.options || '';
         document.getElementById('edit-field-required').checked = (field.is_required === 1 || field.is_required === '1' || field.is_required === true);
         document.getElementById('edit-field-order').value = field.order;
-        document.getElementById('editFieldForm').action = '/admin/spmb-settings/form/fields/' + field.id;
+        document.getElementById('editFieldForm').setAttribute('action', '/admin/spmb-settings/form/fields/' + field.id);
         
         // System fields protection
         const systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
@@ -422,6 +472,7 @@
         toggleOptionsInput('edit');
     }
     function closeEditFieldModal() {
+        clearFormErrors();
         document.getElementById('editFieldModal').classList.add('hidden');
     }
 
@@ -443,5 +494,83 @@
             optionsInput.required = false;
         }
     }
+
+    // Click outside handlers to close modals
+    document.getElementById('addStepModal').addEventListener('click', function(e) {
+        if (e.target === this) closeAddStepModal();
+    });
+    document.getElementById('editStepModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditStepModal();
+    });
+    document.getElementById('addFieldModal').addEventListener('click', function(e) {
+        if (e.target === this) closeAddFieldModal();
+    });
+    document.getElementById('editFieldModal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditFieldModal();
+    });
+
+    // Auto-reopen modal if validation failed on redirect
+    @if(session('failed_modal'))
+        document.addEventListener("DOMContentLoaded", function() {
+            let failed = "{{ session('failed_modal') }}";
+            if (failed.startsWith('step_create')) {
+                switchFormTab('crud_steps');
+                openAddStepModal();
+            } else if (failed.startsWith('step_edit_')) {
+                switchFormTab('crud_steps');
+                let id = failed.replace('step_edit_', '');
+                // Find order and title from steps array or render it
+                let title = "{{ old('title') }}";
+                let order = "{{ old('order') }}";
+                openEditStepModal({ id: id, title: title, order: order });
+            } else if (failed.startsWith('field_create_')) {
+                let stepId = failed.replace('field_create_', '');
+                switchFormTab('step_' + stepId);
+                openAddFieldModal(stepId);
+                // Fill fields with old inputs if exists
+                document.getElementsByName('label')[0].value = "{{ old('label') }}";
+                document.getElementsByName('field_name')[0].value = "{{ old('field_name') }}";
+                document.getElementById('add-field-type').value = "{{ old('type') }}";
+                document.getElementById('add-field-options').value = "{{ old('options') }}";
+                document.getElementById('add-field-required').checked = {{ old('is_required') ? 'true' : 'false' }};
+                document.getElementById('add-field-order').value = "{{ old('order') }}";
+                toggleOptionsInput('add');
+            } else if (failed.startsWith('field_edit_')) {
+                let id = failed.replace('field_edit_', '');
+                // Query or load from old session input
+                openEditFieldModal({
+                    id: id,
+                    label: "{{ old('label') }}",
+                    field_name: "{{ old('field_name') }}",
+                    type: "{{ old('type') }}",
+                    options: "{{ old('options') }}",
+                    is_required: {{ old('is_required') ? 'true' : 'false' }},
+                    order: "{{ old('order') }}"
+                });
+            }
+
+            // Unhide the failed errors block in the reopened modal
+            document.querySelectorAll('.spmb-form-errors').forEach(el => {
+                el.classList.remove('hidden');
+            });
+        });
+    @endif
+
+    // Escape key listener to close modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const stepAddModal = document.getElementById('addStepModal');
+            if (stepAddModal && !stepAddModal.classList.contains('hidden')) closeAddStepModal();
+            
+            const stepEditModal = document.getElementById('editStepModal');
+            if (stepEditModal && !stepEditModal.classList.contains('hidden')) closeEditStepModal();
+            
+            const fieldAddModal = document.getElementById('addFieldModal');
+            if (fieldAddModal && !fieldAddModal.classList.contains('hidden')) closeAddFieldModal();
+            
+            const fieldEditModal = document.getElementById('editFieldModal');
+            if (fieldEditModal && !fieldEditModal.classList.contains('hidden')) closeEditFieldModal();
+        }
+    });
 </script>
 @endsection

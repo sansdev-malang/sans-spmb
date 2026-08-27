@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Riwayat Pembayaran (Log) - Admin Panel')
-@section('page_title', 'Riwayat Pembayaran (Log)')
+@section('title', 'Data Pembayaran (Lunas) - Admin Panel')
+@section('page_title', 'Data Pembayaran')
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Summary Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800">Riwayat Transaksi Pembayaran (Log)</h1>
-            <p class="text-xs text-slate-500 mt-1">Log riwayat transaksi pembayaran pendaftaran calon siswa terintegrasi Winpay SNAP API secara real-time.</p>
+            <h1 class="text-xl font-extrabold text-slate-800">Daftar Transaksi Lunas (Data Pembayaran)</h1>
+            <p class="text-xs text-slate-500 mt-1">Menampilkan daftar seluruh transaksi pembayaran pendaftaran calon siswa yang berstatus berhasil (lunas).</p>
         </div>
         <div class="flex gap-2">
             <button class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
@@ -18,11 +18,199 @@
         </div>
     </div>
 
+    <!-- Financial Stats Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Card 1: Count -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Transaksi Lunas</span>
+                <span class="text-2xl font-black text-slate-800 block mt-1">{{ $stats['count'] }}</span>
+            </div>
+            <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+            </div>
+        </div>
+        <!-- Card 2: Revenue Bruto -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Total Revenue (Bruto)</span>
+                <span class="text-base font-black text-emerald-600 block mt-1">Rp {{ number_format($stats['revenue'], 0, ',', '.') }}</span>
+            </div>
+            <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="coins" class="w-5 h-5"></i>
+            </div>
+        </div>
+        <!-- Card 3: Admin Fee PG -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Biaya Admin PG</span>
+                <span class="text-base font-black text-amber-600 block mt-1">Rp {{ number_format($stats['admin_fee'], 0, ',', '.') }}</span>
+            </div>
+            <div class="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="percent" class="w-5 h-5"></i>
+            </div>
+        </div>
+        <!-- Card 4: Net Revenue -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Pendapatan Bersih (Netto)</span>
+                <span class="text-base font-black text-blue-600 block mt-1">Rp {{ number_format($stats['revenue'] - $stats['admin_fee'], 0, ',', '.') }}</span>
+            </div>
+            <div class="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <i data-lucide="trending-up" class="w-5 h-5"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collapsible Payment Channels breakdown -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300">
+        <button onclick="document.getElementById('financial-detail-panel').classList.toggle('hidden'); this.querySelector('.chevron-icon').classList.toggle('rotate-180');" 
+                class="w-full flex items-center justify-between px-6 py-4 bg-slate-50/50 hover:bg-slate-50 transition text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+            <span class="flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-emerald"></i>
+                Lihat Rekap Pendapatan per Metode, Jenis Biaya, & Unit
+            </span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200 chevron-icon"></i>
+        </button>
+        
+        <div id="financial-detail-panel" class="hidden p-6 border-t border-slate-100 bg-white space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Column 1: Metode Pembayaran -->
+                <div class="space-y-3">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                        <i data-lucide="wallet" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                        Per Metode Pembayaran
+                    </h4>
+                    <div class="space-y-2.5">
+                        @forelse($channelStats as $cs)
+                            @php
+                                $percent = $stats['revenue'] > 0 ? round(($cs['sum'] / $stats['revenue']) * 100) : 0;
+                            @endphp
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-650">
+                                    <span>{{ $cs['name'] }} ({{ $cs['count'] }} Tx)</span>
+                                    <span>Rp {{ number_format($cs['sum'], 0, ',', '.') }} ({{ $percent }}%)</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Column 2: Jenis Biaya -->
+                <div class="space-y-3">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                        <i data-lucide="tag" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                        Per Jenis Biaya
+                    </h4>
+                    <div class="space-y-2.5">
+                        @forelse($categoryStats as $cs)
+                            @php
+                                $percent = $stats['revenue'] > 0 ? round(($cs['sum'] / $stats['revenue']) * 100) : 0;
+                            @endphp
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-650">
+                                    <span>{{ $cs['name'] }} ({{ $cs['count'] }} Tx)</span>
+                                    <span>Rp {{ number_format($cs['sum'], 0, ',', '.') }} ({{ $percent }}%)</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Column 3: Nama Biaya -->
+                <div class="space-y-3">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                        Per Nama Biaya
+                    </h4>
+                    <div class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                        @forelse($feeNameStats as $fns)
+                            @php
+                                $percent = $stats['revenue'] > 0 ? round(($fns['sum'] / $stats['revenue']) * 100) : 0;
+                            @endphp
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[11px] font-bold text-slate-650">
+                                    <span class="truncate max-w-[120px]" title="{{ $fns['name'] }}">{{ $fns['name'] }} ({{ $fns['count'] }} Tx)</span>
+                                    <span>Rp {{ number_format($fns['sum'], 0, ',', '.') }} ({{ $percent }}%)</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Column 4: Unit / Jenjang -->
+                <div class="space-y-3">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                        Per Unit / Jenjang
+                    </h4>
+                    <div class="space-y-2.5">
+                        @forelse($unitStats as $us)
+                            @php
+                                $percent = $stats['revenue'] > 0 ? round(($us['sum'] / $stats['revenue']) * 100) : 0;
+                            @endphp
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-650">
+                                    <span>{{ $us['name'] }} ({{ $us['count'] }} Tx)</span>
+                                    <span>Rp {{ number_format($us['sum'], 0, ',', '.') }} ({{ $percent }}%)</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net Revenue Info Banner -->
+            <div class="p-4 bg-emerald-50/20 border border-emerald-100 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="space-y-1">
+                    <span class="font-extrabold text-slate-800 text-xs flex items-center gap-1">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-brand-emerald"></i>
+                        Pusat Sinkronisasi Winpay SNAP API
+                    </span>
+                    <p class="text-slate-500 text-[10px] leading-relaxed font-semibold">
+                        Semua data keuangan di atas tersinkron secara real-time dengan status transaksi sukses dari sistem payment gateway Winpay.
+                    </p>
+                </div>
+                <div class="bg-white px-4 py-2.5 rounded-xl border border-slate-100 flex items-center gap-3">
+                    <div class="h-8 w-8 bg-emerald-50 text-brand-emerald rounded-full flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="trending-up" class="w-4.5 h-4.5"></i>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Volume Pendapatan Bersih</span>
+                        <span class="text-sm font-black text-brand-emerald block">
+                            Rp {{ number_format($stats['revenue'] - $stats['admin_fee'], 0, ',', '.') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Payments List Table -->
-    <div id="mock-payments-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#mock-payments-card" hx-select="#mock-payments-card">
+    <div id="payments-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#payments-card" hx-select="#payments-card">
         
         <!-- Search & Filter Form -->
-        <form action="{{ route('admin.payments') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
+        <form action="{{ route('admin.payments.data') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
             @if(request('unit_id'))
                 <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
             @endif
@@ -50,14 +238,6 @@
                             Cari
                         </button>
                     </div>
-                    
-                    <!-- Filter Status -->
-                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                        <option value="">Semua Status</option>
-                        <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed / Expired</option>
-                    </select>
 
                     <!-- Per Page Select -->
                     <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">

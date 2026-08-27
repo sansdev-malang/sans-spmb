@@ -107,6 +107,7 @@ class SpmbRegistrationSettingsController extends Controller
             \App\Models\SpmbPaymentChannel::whereIn('id', $activeChannelIds)->update(['is_active' => true]);
         }
 
-        return redirect()->back()->with('success', 'Status aktifasi pendaftaran berhasil diperbarui.');
+        $activeTab = $request->input('active_tab', 'jalur_gelombang');
+        return redirect()->route('admin.spmb-settings.registration', ['tab' => $activeTab])->with('success', 'Status aktifasi pendaftaran berhasil diperbarui.');
     }
 }
