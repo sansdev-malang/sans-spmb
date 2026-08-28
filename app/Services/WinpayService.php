@@ -126,19 +126,26 @@ class WinpayService implements PaymentGatewayInterface
             $endpoint = '/v1.0/qr/qr-mpm-generate';
         }
 
+        $expiry = new \DateTime('now', $timezone);
+        $expiry->modify('+24 hours');
+        $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
+
         // Standard SNAP request body structure
         $body = [
             'partnerServiceId' => ' ' . $this->merchantId, // leading space is sometimes required in SNAP
             'customerNo' => '12345678', // customer reference
             'virtualAccountNo' => $this->merchantId . rand(100000, 999999),
             'virtualAccountName' => 'SPMB Candidate',
+            'virtualAccountTrxType' => 'c', // One-off
+            'expiredDate' => $expiredDate,
             'trxId' => $invoiceNo,
             'totalAmount' => [
                 'value' => number_format($amount, 2, '.', ''),
                 'currency' => 'IDR'
             ],
             'additionalInfo' => [
-                'invoiceNumber' => $invoiceNo
+                'invoiceNumber' => $invoiceNo,
+                'channel' => strtoupper($method)
             ]
         ];
 
