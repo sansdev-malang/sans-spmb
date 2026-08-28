@@ -84,7 +84,7 @@
 
             {{-- CTA Buttons --}}
             <div class="flex flex-wrap gap-3 pt-1">
-                <a href="#pendaftaran"
+                <a href="{{ route('register') }}"
                    class="inline-flex items-center gap-2 bg-custom-primary hover:opacity-90 text-white px-7 py-3.5 rounded-xl font-bold text-sm shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
                     Daftar Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </a>
@@ -161,51 +161,16 @@
                     $uDesc = \App\Models\Setting::get('unit_' . $uCode . '_desc', '');
                     $uFeatures = array_filter(explode(',', \App\Models\Setting::get('unit_' . $uCode . '_features', '')));
                     
-                    // Assign icon based on unit code
+                    // Assign icon based on education level
                     $iconName = 'book-open';
                     if ($uCode === 'paud') {
-                        $iconName = 'car';
+                        $iconName = 'baby';
                     } elseif ($uCode === 'smp') {
                         $iconName = 'flask-conical';
                     }
-                    
-                    // Highlight specifically SD as FAVORIT
-                    $isFavorit = ($uCode === 'sd');
                 @endphp
 
-                @if($isFavorit)
-                    <!-- Highlighted Card -->
-                    <div class="bg-[#f2f8f5] dark:bg-emerald-950/20 p-8 rounded-3xl border-2 border-custom-primary dark:border-emerald-600 space-y-6 shadow-xl hover:shadow-2xl transition flex flex-col justify-between relative">
-                        <!-- Highlight badge -->
-                        <span class="absolute top-4 right-4 bg-brand-yellow text-slate-900 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm">
-                            FAVORIT
-                        </span>
-                        
-                        <div class="space-y-6">
-                            <div class="h-12 w-12 bg-custom-primary text-white rounded-2xl flex items-center justify-center shadow-md">
-                                <i data-lucide="{{ $iconName }}" class="w-5 h-5 text-brand-yellow"></i>
-                            </div>
-                            <div class="space-y-2">
-                                <h3 class="font-black text-xl text-custom-primary dark:text-emerald-400">{{ $u->name }}</h3>
-                                <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed font-semibold">
-                                    {{ $uDesc }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] font-extrabold text-custom-primary dark:text-emerald-400">
-                            @foreach(array_slice($uFeatures, 0, 2) as $feat)
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i> <span>{{ trim($feat) }}</span>
-                                </div>
-                            @endforeach
-                            <a href="{{ route('unit.detail', $uCode) }}" class="text-[10px] text-brand-emerald dark:text-emerald-400 font-extrabold underline block mt-2 text-left">
-                                Lihat Detail Selengkapnya &rarr;
-                            </a>
-                        </div>
-                    </div>
-                @else
-                    <!-- Standard Card -->
-                    <div class="bg-slate-50 dark:bg-slate-950 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 space-y-6 hover:shadow-lg transition flex flex-col justify-between">
+                <div class="bg-slate-50 dark:bg-slate-950 p-8 rounded-3xl border hover:border-custom-primary dark:hover:border-emerald-400 border-slate-200/60 dark:border-slate-800 space-y-6 hover:shadow-lg transition flex flex-col justify-between">
                         <div class="space-y-6">
                             <div class="h-12 w-12 bg-custom-primary text-white rounded-2xl flex items-center justify-center shadow-md">
                                 <i data-lucide="{{ $iconName }}" class="w-5 h-5 text-brand-yellow"></i>
@@ -227,8 +192,7 @@
                                 Lihat Detail Selengkapnya &rarr;
                             </a>
                         </div>
-                    </div>
-                @endif
+                </div>
             @endforeach
         </div>
     </div>
@@ -483,128 +447,6 @@
     </div>
 </div>
 
-<!-- Form Pendaftaran Instan Section -->
-<div id="pendaftaran" class="bg-slate-50 dark:bg-slate-950 py-8 border-t border-slate-100 dark:border-slate-800 transition">
-    <div class="max-w-5xl mx-auto px-6 lg:px-8">
-        
-        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 border border-slate-100 dark:border-slate-800">
-            
-            <!-- Left Panel (Dark Green) -->
-            <div class="md:col-span-5 bg-custom-primary p-8 text-white flex flex-col justify-between space-y-12">
-                <div class="space-y-4">
-                    <h3 class="text-2xl font-black leading-tight tracking-tight">Mulai Perjalanan Pendidikan Anda</h3>
-                    <p class="text-xs text-slate-350 leading-relaxed font-medium">
-                        Isi formulir pendaftaran awal. Tim admisi kami akan segera menghubungi Anda untuk proses selanjutnya.
-                    </p>
-                </div>
-                
-                <div class="space-y-4 text-xs font-bold">
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="phone" class="w-4 h-4 text-brand-yellow"></i>
-                        <span>(021) 123-4567</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="mail" class="w-4 h-4 text-brand-yellow"></i>
-                        <span>admisi@anaksaleh.sch.id</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Panel (Form Fields) -->
-            <form action="{{ route('quick-register') }}" method="POST" class="md:col-span-7 p-8 space-y-6 text-xs text-slate-700 dark:text-slate-350">
-                @csrf
-                
-                <!-- Full Name -->
-                <div class="space-y-2">
-                    <label for="candidate_name" class="font-extrabold text-[10px] text-slate-400 uppercase block tracking-wider">Nama Lengkap Calon Siswa</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                            <i data-lucide="user" class="w-4 h-4"></i>
-                        </span>
-                        <input type="text" name="candidate_name" id="candidate_name" required placeholder="Masukkan nama lengkap" 
-                               class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition" />
-                    </div>
-                </div>
-
-                <!-- 2 Column Inputs -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    
-                    <!-- Email -->
-                    <div class="space-y-2">
-                        <label for="email" class="font-extrabold text-[10px] text-slate-400 uppercase block tracking-wider">Email Orang Tua/Wali</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                                <i data-lucide="mail" class="w-4 h-4"></i>
-                            </span>
-                            <input type="email" name="email" id="email" required placeholder="email@contoh.com" 
-                                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition" />
-                        </div>
-                    </div>
-
-                    <!-- Whatsapp -->
-                    <div class="space-y-2">
-                        <label for="parent_phone" class="font-extrabold text-[10px] text-slate-400 uppercase block tracking-wider">Nomor Whatsapp</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                                <i data-lucide="smartphone" class="w-4 h-4"></i>
-                            </span>
-                            <input type="text" name="parent_phone" id="parent_phone" required placeholder="0812-3456-789" 
-                                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition" />
-                        </div>
-                    </div>
-
-                    <!-- Password -->
-                    <div class="space-y-2">
-                        <label for="password" class="font-extrabold text-[10px] text-slate-400 uppercase block tracking-wider">Buat Password Akun</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                                <i data-lucide="lock" class="w-4 h-4"></i>
-                            </span>
-                            <input type="password" name="password" id="password" required placeholder="Min. 8 karakter" minlength="8"
-                                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition" />
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Admission Level Selector -->
-                <div class="space-y-2.5">
-                    <label class="font-extrabold text-[10px] text-slate-400 uppercase block tracking-wider">Pilih Jenjang Pendidikan</label>
-                    <input type="hidden" name="spmb_unit_id" id="spmb_unit_id" value="">
-                    
-                    <div class="grid grid-cols-3 gap-3">
-                        @foreach($activeUnits as $u)
-                            @php
-                                $uCode = strtoupper($u->code);
-                                $icon = 'book-open';
-                                if ($uCode === 'PAUD') $icon = 'car';
-                                if ($uCode === 'SMP') $icon = 'flask-conical';
-                            @endphp
-                            <button type="button" onclick="selectUnit({{ $u->id }}, '{{ $uCode }}')" id="btn-unit-{{ $u->id }}"
-                                    class="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800">
-                                <i data-lucide="{{ $icon }}" class="w-4 h-4 text-slate-500"></i>
-                                <span class="font-bold text-[10px]">{{ $uCode }}</span>
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-
-
-
-                <!-- Submit Button -->
-                <button type="submit" class="w-full bg-[#F59E0B] hover:bg-[#d97706] text-white py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-md">
-                    <span>Kirim Formulir Pendaftaran</span> <i data-lucide="send" class="w-4 h-4"></i>
-                </button>
-                
-                <p class="text-[10px] text-slate-400 text-center font-medium leading-relaxed">
-                    Dengan mengirimkan form ini, Anda menyetujui kebijakan privasi kami.
-                </p>
-            </form>
-
-        </div>
-    </div>
-</div>
-
 <script>
     // Cycle through slides automatically if there are multiple images
     document.addEventListener("DOMContentLoaded", function() {
@@ -626,51 +468,5 @@
         }, 4500);
     });
 
-    function selectUnit(unitId, unitCode) {
-        document.getElementById('spmb_unit_id').value = unitId;
-        
-        // Highlight active unit button
-        @foreach($activeUnits as $u)
-            (function() {
-                var btn = document.getElementById('btn-unit-{{ $u->id }}');
-                if (btn) {
-                    if ({{ $u->id }} === unitId) {
-                        btn.className = `border-2 border-brand-emerald bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 shadow-sm`;
-                        var icon = btn.querySelector('svg') || btn.querySelector('i');
-                        if (icon) {
-                            icon.setAttribute('class', 'w-4 h-4 text-brand-emerald dark:text-emerald-450');
-                        }
-                        var label = btn.querySelector('span');
-                        if (label) {
-                            label.className = "font-extrabold text-[10px] text-brand-emerald dark:text-emerald-450";
-                        }
-                    } else {
-                        btn.className = `border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-center transition flex flex-col items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800`;
-                        var icon = btn.querySelector('svg') || btn.querySelector('i');
-                        if (icon) {
-                            icon.setAttribute('class', 'w-4 h-4 text-slate-500');
-                        }
-                        var label = btn.querySelector('span');
-                        if (label) {
-                            label.className = "font-bold text-[10px] text-slate-600 dark:text-slate-400";
-                        }
-                    }
-                }
-            })();
-        @endforeach
-    }
-
-    // Default select SD unit on load
-    document.addEventListener("DOMContentLoaded", function() {
-        const sdUnit = @json($activeUnits->where('code', 'SD')->first());
-        if (sdUnit) {
-            selectUnit(sdUnit.id, 'SD');
-        } else {
-            const firstUnit = @json($activeUnits->first());
-            if (firstUnit) {
-                selectUnit(firstUnit.id, firstUnit.code);
-            }
-        }
-    });
 </script>
 @endsection
