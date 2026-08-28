@@ -117,7 +117,10 @@ class WinpayService implements PaymentGatewayInterface
             return $this->getMockPaymentResponse($amount, $invoiceNo, $method);
         }
 
-        $timestamp = date('c');
+        $timezone = new \DateTimeZone('Asia/Jakarta');
+        $now = new \DateTime('now', $timezone);
+        $timestamp = $now->format('Y-m-d\TH:i:sP');
+
         $endpoint = '/v1.0/transfer-va/create-va'; // Default endpoint for VA
         if ($method === 'QRIS') {
             $endpoint = '/v1.0/qr/qr-mpm-generate';
@@ -140,13 +143,17 @@ class WinpayService implements PaymentGatewayInterface
         ];
 
         if ($method === 'QRIS') {
+            $expiry = new \DateTime('now', $timezone);
+            $expiry->modify('+1 hour');
+            $validityPeriod = $expiry->format('Y-m-d\TH:i:sP');
+
             $body = [
                 'partnerReferenceNo' => $invoiceNo,
                 'amount' => [
                     'value' => number_format($amount, 2, '.', ''),
                     'currency' => 'IDR'
                 ],
-                'validityPeriod' => date('c', time() + 3600), // Valid for 1 hour
+                'validityPeriod' => $validityPeriod,
                 'additionalInfo' => [
                     'isStatic' => false
                 ]
