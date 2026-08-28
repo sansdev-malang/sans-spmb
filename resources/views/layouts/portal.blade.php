@@ -62,6 +62,10 @@
     </script>
 
     <style>
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 5.5rem;
+        }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #f7fafc;
@@ -97,21 +101,25 @@
 
         /* Dark Mode Custom Styles */
         html.dark body {
-            background-color: #0f172a;
+            background-color: #020617;
             color: #cbd5e1;
         }
-        html.dark nav, html.dark header {
-            background-color: #1e293b;
+        html.dark #main-nav {
+            background-color: transparent !important;
+            border-color: transparent !important;
+        }
+        html.dark header {
+            background-color: #0f172a;
             border-color: #334155;
         }
         html.dark footer {
-            background-color: #1e293b;
-            border-color: #334155;
+            background-color: #0f172a;
+            border-color: #1e293b;
             color: #64748b;
         }
         html.dark .bg-white {
-            background-color: #1e293b;
-            border-color: #334155;
+            background-color: #0f172a;
+            border-color: #1e293b;
         }
         html.dark .text-slate-800, html.dark h1, html.dark h2, html.dark h3, html.dark h4 {
             color: #f8fafc;
@@ -123,39 +131,40 @@
             color: #64748b;
         }
         html.dark .bg-slate-50, html.dark .bg-slate-50\/50, html.dark .bg-slate-50\/30 {
-            background-color: #0f172a;
+            background-color: #020617;
         }
         html.dark .border-slate-100, html.dark .border-slate-200 {
-            border-color: #334155;
+            border-color: #1e293b;
         }
         html.dark input, html.dark select, html.dark textarea {
             background-color: #0f172a;
-            border-color: #475569;
+            border-color: #334155;
             color: #f8fafc;
         }
         html.dark input:focus, html.dark select:focus, html.dark textarea:focus {
             border-color: #10b981;
         }
         html.dark .hover\:bg-slate-50:hover {
-            background-color: #334155;
+            background-color: #1e293b;
         }
         html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200">
 
-    <!-- Header Navigation -->
-    <nav class="bg-white border-b border-slate-100 sticky top-0 z-50 transition dark:bg-slate-900 dark:border-slate-800 text-slate-800 dark:text-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+    <!-- Header Navigation - Floating Premium (Fixed Seamless Overlay) -->
+    <nav id="main-nav" class="fixed top-0 inset-x-0 z-50 px-4 lg:px-8 py-3 bg-transparent transition-all duration-300">
+        <!-- Floating Nav Inner -->
+        <div id="nav-inner" class="max-w-7xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-sm px-4 sm:px-6 transition-all duration-300">
+            <div class="flex items-center justify-between h-14">
                 <!-- Brand logo -->
-                <a href="{{ auth()->check() ? route('dashboard') : '/' }}" class="flex items-center gap-2.5">
+                <a href="{{ auth()->check() ? route('dashboard') : '/' }}" class="flex items-center gap-2.5 flex-shrink-0">
                     @if(!empty($schoolLogo))
-                        <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-9 object-contain">
+                        <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-8 object-contain">
                     @else
-                        <div class="h-9 w-9 bg-brand-yellow rounded-xl flex items-center justify-center font-bold text-slate-900 text-sm shadow-sm">
+                        <div class="h-8 w-8 bg-brand-yellow rounded-xl flex items-center justify-center font-bold text-slate-900 text-sm shadow-sm">
                             🎓
                         </div>
                     @endif
@@ -170,18 +179,12 @@
                 <!-- Center Navigation area -->
                 <div class="hidden md:flex items-center gap-8">
                     @guest
-                        <!-- Guest Navigation links -->
-                        <div class="flex items-center gap-8 text-xs font-bold text-slate-500 dark:text-slate-400">
-                            @foreach($navbarUnits as $nu)
-                                @php
-                                    $uCode = strtolower($nu->code);
-                                    $isActive = request()->routeIs('unit.detail') && request()->route('code') === $uCode;
-                                @endphp
-                                <a href="{{ route('unit.detail', $uCode) }}" 
-                                   class="transition pb-1 {{ $isActive ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-500 dark:text-slate-400' }}">
-                                    {{ strtoupper($nu->code) }}
-                                </a>
-                            @endforeach
+                        <!-- Guest Navigation links - Editorial -->
+                        <div class="flex items-center gap-7 text-xs font-bold text-slate-500 dark:text-slate-400">
+                            <a href="/#program" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Program</a>
+                            <a href="/#panca-karakter" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Panca Karakter</a>
+                            <a href="/#partnership" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Partnership</a>
+                            <a href="/#kata-mereka" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Kata Mereka</a>
                         </div>
                     @else
                         @if(auth()->user()->isAdmin())
@@ -251,29 +254,34 @@
                 </div>
 
                 <!-- Right Area: Actions / Auth -->
-                <div class="flex items-center gap-4 text-xs font-bold">
+                <div class="flex items-center gap-3 text-xs font-bold">
                     @guest
                         <!-- Toggle Dark/Light Mode Button -->
                         <button onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Toggle Tema">
-                            <i id="theme-toggle-icon-guest" data-lucide="moon" class="w-4.5 h-4.5"></i>
+                            <i id="theme-toggle-icon-guest" data-lucide="moon" class="w-4 h-4"></i>
                         </button>
 
-                        <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
+                        <div class="hidden md:block h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
 
-                        <a href="{{ route('login') }}" class="text-custom-primary dark:text-slate-200 hover:opacity-85 transition py-2">Login</a>
-                        <a href="{{ route('register') }}" class="bg-custom-primary hover:bg-custom-primary/95 text-white px-5 py-2.5 rounded-full transition shadow-sm dark:bg-emerald-600 dark:hover:bg-emerald-500">
-                            Register Now
+                        <a href="{{ route('login') }}" class="hidden md:block text-custom-primary dark:text-emerald-400 hover:opacity-80 transition py-2 font-bold">Login</a>
+                        <a href="{{ route('register') }}" class="hidden md:inline-flex items-center gap-1.5 bg-custom-primary hover:opacity-90 text-white px-5 py-2.5 rounded-xl transition shadow-sm font-bold dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                            Daftar Sekarang
                         </a>
+
+                        <!-- Mobile Hamburger Button -->
+                        <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Menu">
+                            <i id="mobile-menu-icon" data-lucide="menu" class="w-5 h-5"></i>
+                        </button>
                     @else
                         <!-- Toggle Dark/Light Mode Button -->
                         <button onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Toggle Tema">
-                            <i id="theme-toggle-icon" data-lucide="moon" class="w-4.5 h-4.5"></i>
+                            <i id="theme-toggle-icon" data-lucide="moon" class="w-4 h-4"></i>
                         </button>
 
                         <!-- Notifications Toggles with Badge -->
                         <div class="relative">
                             <button onclick="toggleNotifDropdown(event)" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition relative" title="Notifikasi">
-                                <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+                                <i data-lucide="bell" class="w-4 h-4"></i>
                                 <span class="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
                             </button>
                             <!-- Notifications Dropdown Box -->
@@ -326,41 +334,43 @@
                 </div>
             </div>
         </div>
+
+        <!-- Mobile Menu Drawer (Guest Only) -->
+        @guest
+        <div id="mobile-menu" class="hidden md:hidden max-w-7xl mx-auto mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-lg overflow-hidden">
+            <div class="px-4 py-4 space-y-1">
+                <a href="/#program" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Program</a>
+                <a href="/#panca-karakter" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Panca Karakter</a>
+                <a href="/#partnership" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Partnership</a>
+                <a href="/#kata-mereka" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Kata Mereka</a>
+                <div class="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
+                    <a href="{{ route('login') }}" class="text-center py-3 rounded-xl border-2 border-custom-primary text-custom-primary dark:text-emerald-400 dark:border-emerald-600 font-bold text-sm transition hover:bg-emerald-50 dark:hover:bg-emerald-950/30">Login</a>
+                    <a href="{{ route('register') }}" class="text-center py-3 rounded-xl bg-custom-primary hover:opacity-90 text-white font-bold text-sm transition dark:bg-emerald-600">Daftar Sekarang</a>
+                </div>
+            </div>
+        </div>
+        @endguest
     </nav>
 
     <!-- Main Content Container -->
-    <main class="flex-grow">
+    <main class="flex-grow {{ (request()->is('/') || request()->routeIs('home')) ? '' : 'pt-20' }}">
         @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-50 text-slate-500 text-[11px] py-12 border-t border-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-450">
-        <div class="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-2">
-                @if(!empty($schoolLogo))
-                    <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-7 object-contain">
-                @else
-                    <div class="h-7 w-7 bg-brand-yellow rounded-lg flex items-center justify-center text-sm shadow-sm">
-                        🎓
-                    </div>
-                @endif
-                <div class="flex flex-col">
-                    <span class="font-extrabold text-sm leading-tight text-custom-primary dark:text-emerald-400">{{ $schoolName }}</span>
-                    @if(!empty($schoolTagline))
-                        <span class="text-[9px] text-slate-400 dark:text-slate-500 font-semibold leading-none mt-0.5">{{ $schoolTagline }}</span>
-                    @endif
-                </div>
+    <!-- Footer (Minimalist & Clean) -->
+    <footer class="bg-white dark:bg-slate-950 text-slate-500 text-xs py-8 border-t border-slate-200/60 dark:border-slate-800 transition">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            {{-- Footer Quick Links --}}
+            <div class="flex flex-wrap justify-center sm:justify-start gap-6 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                <a href="{{ $footerContactUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400 transition">Hubungi Kami</a>
+                <a href="{{ $footerPrivacyUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400 transition">Kebijakan Privasi</a>
+                <a href="{{ $footerTermsUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400 transition">Syarat & Ketentuan</a>
+                <a href="{{ $footerFaqUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400 transition">FAQ</a>
             </div>
             
-            <div class="flex flex-wrap justify-center gap-6 font-bold text-slate-500">
-                <a href="{{ $footerContactUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400">Contact Us</a>
-                <a href="{{ $footerPrivacyUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400">Privacy Policy</a>
-                <a href="{{ $footerTermsUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400">Terms of Service</a>
-                <a href="{{ $footerFaqUrl }}" target="_blank" class="hover:text-custom-primary dark:hover:text-emerald-400">FAQ</a>
-            </div>
-            
-            <div class="text-center md:text-right space-y-1">
-                <p class="text-slate-400 font-semibold dark:text-slate-500">{{ $footerCopyright }}</p>
+            {{-- Copyright --}}
+            <div class="text-center sm:text-right">
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 font-medium">{{ $footerCopyright }}</p>
             </div>
         </div>
     </footer>
@@ -459,6 +469,42 @@
         
 
         
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-menu-icon');
+            if (!menu) return;
+            const isHidden = menu.classList.contains('hidden');
+            menu.classList.toggle('hidden');
+            if (icon) {
+                icon.setAttribute('data-lucide', isHidden ? 'x' : 'menu');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-menu-icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) {
+                icon.setAttribute('data-lucide', 'menu');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        // Navbar scroll shadow effect
+        window.addEventListener('scroll', function () {
+            const navInner = document.getElementById('nav-inner');
+            if (!navInner) return;
+            if (window.scrollY > 20) {
+                navInner.classList.add('shadow-lg');
+                navInner.classList.remove('shadow-sm');
+            } else {
+                navInner.classList.remove('shadow-lg');
+                navInner.classList.add('shadow-sm');
+            }
+        });
+
         // Initialize Lucide Icons & Auto Session Toasts
         document.addEventListener("DOMContentLoaded", function() {
             if (window.lucide) {
