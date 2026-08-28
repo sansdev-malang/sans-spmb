@@ -118,9 +118,9 @@ class WinpayService implements PaymentGatewayInterface
         }
 
         $timestamp = date('c');
-        $endpoint = '/api/v1.0/transfer-va/create-va'; // Default endpoint for VA
+        $endpoint = '/v1.0/transfer-va/create-va'; // Default endpoint for VA
         if ($method === 'QRIS') {
-            $endpoint = '/api/v1.0/qr/qr-mpm-generate';
+            $endpoint = '/v1.0/qr/qr-mpm-generate';
         }
 
         // Standard SNAP request body structure

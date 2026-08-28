@@ -39,18 +39,8 @@
     .ql-editor ol, .ql-editor ul {
         padding-left: 1.5rem !important;
     }
-    .ql-editor ol {
-        counter-reset: list-0 list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
-    }
     .ql-editor li {
         margin-bottom: 0.25rem;
-        counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
-    }
-    .ql-editor li.ql-indent-1 {
-        counter-reset: list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
-    }
-    .ql-editor li.ql-indent-2 {
-        counter-reset: list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
     }
     /* Hide Quill link/formula tooltip when it has the hidden class */
     .ql-tooltip.ql-hidden {

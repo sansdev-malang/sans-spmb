@@ -115,6 +115,15 @@
             transition: opacity 0.15s ease;
             cursor: wait !important;
         }
+        /* Fix Quill flat list counter reset continuation bug in editor */
+        .ql-editor ol,
+        .ql-editor ul {
+            counter-reset: list-0 !important;
+        }
+        .ql-editor ol li:not([class*="ql-indent"]),
+        .ql-editor ul li:not([class*="ql-indent"]) {
+            counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200" hx-boost="true" hx-target="#admin-layout-wrapper" hx-select="#admin-layout-wrapper">
