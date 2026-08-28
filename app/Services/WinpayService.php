@@ -179,9 +179,45 @@ class WinpayService implements PaymentGatewayInterface
         ])->post($this->baseUrl . $endpoint, $body);
 
         if ($response->successful()) {
+            $data = $response->json();
+            
+            // Normalize VA response
+            if ($method !== 'QRIS' && isset($data['virtualAccountData'])) {
+                $vaData = $data['virtualAccountData'];
+                $normalizedData = [
+                    'trxId' => $vaData['trxId'] ?? $invoiceNo,
+                    'referenceId' => $vaData['additionalInfo']['contractId'] ?? null,
+                    'virtualAccountNo' => trim($vaData['virtualAccountNo'] ?? ''),
+                    'virtualAccountName' => $vaData['virtualAccountName'] ?? '',
+                    'bankName' => $vaData['additionalInfo']['channel'] ?? $method,
+                    'status' => 'PENDING',
+                    'message' => $data['responseMessage'] ?? 'Success'
+                ];
+                return [
+                    'success' => true,
+                    'data' => $normalizedData
+                ];
+            }
+
+            // Normalize QRIS response
+            if ($method === 'QRIS') {
+                $normalizedData = [
+                    'partnerReferenceNo' => $data['partnerReferenceNo'] ?? $invoiceNo,
+                    'referenceId' => $data['additionalInfo']['contractId'] ?? null,
+                    'qrUrl' => $data['qrUrl'] ?? null,
+                    'qrContent' => $data['qrContent'] ?? null,
+                    'status' => 'PENDING',
+                    'message' => $data['responseMessage'] ?? 'Success'
+                ];
+                return [
+                    'success' => true,
+                    'data' => $normalizedData
+                ];
+            }
+
             return [
                 'success' => true,
-                'data' => $response->json()
+                'data' => $data
             ];
         }
 
