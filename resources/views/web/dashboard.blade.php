@@ -158,21 +158,30 @@
                                     </div>
 
                                     <!-- DEVELOPER ONLY: Webhook simulation button -->
-                                    <div class="border-t border-dashed border-slate-200 dark:border-slate-800 pt-6 mt-4 bg-sky-50/10 dark:bg-sky-950/15 p-4 rounded-xl border border-sky-100 dark:border-sky-900/50 flex flex-col items-center justify-center gap-2">
-                                        <div class="flex items-center gap-1.5 text-sky-700 dark:text-sky-400">
-                                            <i data-lucide="settings" class="w-4 h-4 animate-spin"></i>
-                                            <span class="text-[10px] font-extrabold uppercase tracking-wider">Mode Simulator (Developer)</span>
+                                    @php
+                                        $gwCode = 'winpay';
+                                        if ($activePayment && str_contains(strtolower($activePayment->payment_method), 'bni')) {
+                                            $gwCode = 'bni';
+                                        }
+                                        $gwMode = \App\Models\Setting::get($gwCode . '_mode', 'simulator');
+                                    @endphp
+                                    @if($gwMode === 'simulator')
+                                        <div class="border-t border-dashed border-slate-200 dark:border-slate-800 pt-6 mt-4 bg-sky-50/10 dark:bg-sky-950/15 p-4 rounded-xl border border-sky-100 dark:border-sky-900/50 flex flex-col items-center justify-center gap-2">
+                                            <div class="flex items-center gap-1.5 text-sky-700 dark:text-sky-400">
+                                                <i data-lucide="settings" class="w-4 h-4 animate-spin"></i>
+                                                <span class="text-[10px] font-extrabold uppercase tracking-wider">Mode Simulator (Developer)</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 text-center leading-normal">
+                                                Mensimulasikan callback lunas dari gateway pembayaran Winpay/BNI secara instan.
+                                            </p>
+                                            <form action="{{ route('dashboard.simulate-payment', $activePayment->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="bg-sky-600 hover:bg-sky-750 text-white px-4 py-2 rounded-xl text-[10px] font-black shadow-sm transition">
+                                                    Simulasikan Pembayaran Sukses (Lunas)
+                                                </button>
+                                            </form>
                                         </div>
-                                        <p class="text-[10px] text-slate-400 text-center leading-normal">
-                                            Mensimulasikan callback lunas dari gateway pembayaran Winpay/BNI secara instan.
-                                        </p>
-                                        <form action="{{ route('dashboard.simulate-payment', $activePayment->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="bg-sky-600 hover:bg-sky-750 text-white px-4 py-2 rounded-xl text-[10px] font-black shadow-sm transition">
-                                                Simulasikan Pembayaran Sukses (Lunas)
-                                            </button>
-                                        </form>
-                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         @else
@@ -369,18 +378,27 @@
                                 </div>
 
                                 <!-- DEVELOPER ONLY: Webhook simulation button -->
-                                <div class="border-t border-dashed border-slate-200 dark:border-slate-800 pt-6 mt-4 bg-sky-50/10 dark:bg-sky-950/15 p-4 rounded-xl border border-sky-100 dark:border-sky-900/50 flex flex-col items-center justify-center gap-2">
-                                    <div class="flex items-center gap-1.5 text-sky-700 dark:text-sky-400">
-                                        <i data-lucide="settings" class="w-4 h-4 animate-spin"></i>
-                                        <span class="text-[10px] font-extrabold uppercase tracking-wider">Mode Simulator (Developer)</span>
+                                @php
+                                    $gwCode = 'winpay';
+                                    if ($activePayment && str_contains(strtolower($activePayment->payment_method), 'bni')) {
+                                        $gwCode = 'bni';
+                                    }
+                                    $gwMode = \App\Models\Setting::get($gwCode . '_mode', 'simulator');
+                                @endphp
+                                @if($gwMode === 'simulator')
+                                    <div class="border-t border-dashed border-slate-200 dark:border-slate-800 pt-6 mt-4 bg-sky-50/10 dark:bg-sky-950/15 p-4 rounded-xl border border-sky-100 dark:border-sky-900/50 flex flex-col items-center justify-center gap-2">
+                                        <div class="flex items-center gap-1.5 text-sky-700 dark:text-sky-400">
+                                            <i data-lucide="settings" class="w-4 h-4 animate-spin"></i>
+                                            <span class="text-[10px] font-extrabold uppercase tracking-wider">Mode Simulator (Developer)</span>
+                                        </div>
+                                        <form action="{{ route('dashboard.simulate-payment', $activePayment->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="bg-sky-600 hover:bg-sky-750 text-white px-4 py-2 rounded-xl text-[10px] font-black shadow-sm transition">
+                                                Simulasikan Pembayaran Sukses (Lunas)
+                                            </button>
+                                        </form>
                                     </div>
-                                    <form action="{{ route('dashboard.simulate-payment', $activePayment->id) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="bg-sky-600 hover:bg-sky-750 text-white px-4 py-2 rounded-xl text-[10px] font-black shadow-sm transition">
-                                            Simulasikan Pembayaran Sukses (Lunas)
-                                        </button>
-                                    </form>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     @else

@@ -318,7 +318,7 @@
                         @php
                             $gatewayMode = \App\Models\Setting::get($feeGateway . '_mode', 'simulator');
                         @endphp
-                        @if($gatewayMode === 'simulator' || $gatewayMode === 'sandbox')
+                        @if($gatewayMode === 'simulator')
                             <div class="border-t border-dashed border-slate-200 pt-6 mt-4 bg-sky-50/50 p-4 rounded-xl border border-sky-100 flex flex-col items-center justify-center gap-2">
                                 <span class="text-[10px] text-sky-800 font-extrabold uppercase tracking-widest bg-sky-100 px-2.5 py-1 rounded-full">Developer Simulator Utility</span>
                                 <p class="text-xs text-sky-700 text-center leading-relaxed max-w-md">
