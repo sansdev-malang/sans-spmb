@@ -230,13 +230,23 @@
                         @if (str_contains(strtoupper($activePayment->payment_method), 'QRIS'))
                             <!-- QRIS Display -->
                             <div class="flex flex-col items-center justify-center gap-3">
-                                <div class="bg-white p-3 border border-slate-200 rounded-xl shadow-inner">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                <div class="bg-white p-3 border border-slate-200 rounded-xl shadow-inner flex items-center justify-center">
+                                    @if(!empty($activePayment->payment_info['qrUrl']))
+                                        <img src="{{ $activePayment->payment_info['qrUrl'] }}" alt="QRIS Code" class="h-44 w-44 object-contain">
+                                    @else
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                    @endif
                                 </div>
                                 <p class="text-xs text-slate-400 font-medium">Scan QRIS menggunakan Mobile Banking atau e-Wallet pilihan Anda.</p>
-                                <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" download="QRIS-SPMB-SekolahAnakSaleh.png" target="_blank" class="bg-brand-emerald hover-emerald text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 mt-2">
-                                    <i data-lucide="download" class="w-4 h-4"></i> Unduh Kode QRIS (PNG)
-                                </a>
+                                @if(!empty($activePayment->payment_info['qrUrl']))
+                                    <a href="{{ $activePayment->payment_info['qrUrl'] }}" download="QRIS-SPMB-SekolahAnakSaleh.png" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 mt-2">
+                                        <i data-lucide="download" class="w-4 h-4"></i> Unduh/Lihat QRIS (PNG)
+                                    </a>
+                                @else
+                                    <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" download="QRIS-SPMB-SekolahAnakSaleh.png" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 mt-2">
+                                        <i data-lucide="download" class="w-4 h-4"></i> Unduh Kode QRIS (PNG)
+                                    </a>
+                                @endif
                             </div>
                         @else
                             <!-- VA Number display -->

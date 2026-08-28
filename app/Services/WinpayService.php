@@ -146,8 +146,6 @@ class WinpayService implements PaymentGatewayInterface
                     'value' => number_format($amount, 2, '.', ''),
                     'currency' => 'IDR'
                 ],
-                'merchantId' => $this->merchantId,
-                'terminalId' => 'T001',
                 'validityPeriod' => date('c', time() + 3600), // Valid for 1 hour
                 'additionalInfo' => [
                     'isStatic' => false

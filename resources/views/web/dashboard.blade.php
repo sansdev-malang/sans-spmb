@@ -121,8 +121,12 @@
 
                                     @if ($activePayment->payment_method === 'QRIS')
                                         <div class="flex flex-col items-center justify-center gap-3">
-                                            <div class="bg-white p-3 border border-slate-200 dark:border-slate-800 rounded-xl shadow-inner">
-                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                            <div class="bg-white p-3 border border-slate-200 dark:border-slate-800 rounded-xl shadow-inner flex items-center justify-center">
+                                                @if(!empty($activePayment->payment_info['qrUrl']))
+                                                    <img src="{{ $activePayment->payment_info['qrUrl'] }}" alt="QRIS Code" class="h-44 w-44 object-contain">
+                                                @else
+                                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                                @endif
                                             </div>
                                             <p class="text-xs text-slate-400 font-medium">Scan QRIS menggunakan Mobile Banking atau e-Wallet pilihan Anda.</p>
                                         </div>
@@ -329,8 +333,12 @@
 
                                 @if ($activePayment->payment_method === 'QRIS')
                                     <div class="flex flex-col items-center justify-center gap-3">
-                                        <div class="bg-white p-3 border border-slate-200 dark:border-slate-800 rounded-xl shadow-inner">
-                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                        <div class="bg-white p-3 border border-slate-200 dark:border-slate-800 rounded-xl shadow-inner flex items-center justify-center">
+                                            @if(!empty($activePayment->payment_info['qrUrl']))
+                                                <img src="{{ $activePayment->payment_info['qrUrl'] }}" alt="QRIS Code" class="h-44 w-44 object-contain">
+                                            @else
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                            @endif
                                         </div>
                                         <p class="text-xs text-slate-400 font-medium">Scan QRIS menggunakan Mobile Banking atau e-Wallet pilihan Anda.</p>
                                     </div>
