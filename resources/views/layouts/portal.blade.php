@@ -121,6 +121,9 @@
             background-color: #0f172a;
             border-color: #1e293b;
         }
+        html.dark .partnership-logo-bg {
+            background-color: #ffffff !important;
+        }
         html.dark .text-slate-800, html.dark h1, html.dark h2, html.dark h3, html.dark h4 {
             color: #f8fafc;
         }

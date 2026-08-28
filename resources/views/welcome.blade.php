@@ -374,7 +374,7 @@
             {{-- First Loop Set --}}
             @foreach($partners as $partner)
                 <div class="flex items-center gap-3.5 bg-slate-50/90 dark:bg-slate-950/70 px-6 py-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm whitespace-nowrap group hover:border-emerald-300 dark:hover:border-emerald-600 transition flex-shrink-0">
-                    <div class="h-9 w-9 rounded-xl bg-white flex items-center justify-center flex-shrink-0 p-1.5">
+                    <div class="partnership-logo-bg h-9 w-9 rounded-xl bg-slate-50 dark:bg-white flex items-center justify-center flex-shrink-0 p-1.5">
                         <img src="{{ $partner['logo'] }}"
                             alt="{{ $partner['name'] }}"
                             class="max-h-full max-w-full object-contain">
@@ -388,7 +388,7 @@
             {{-- Second Duplicate Set for Infinite Continuous Marquee --}}
             @foreach($partners as $partner)
                 <div class="flex items-center gap-3.5 bg-slate-50/90 dark:bg-slate-950/70 px-6 py-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm whitespace-nowrap group hover:border-emerald-300 dark:hover:border-emerald-600 transition flex-shrink-0">
-                    <div class="h-9 w-9 rounded-xl bg-white flex items-center justify-center flex-shrink-0 p-1.5">
+                    <div class="partnership-logo-bg h-9 w-9 rounded-xl bg-slate-50 dark:bg-white flex items-center justify-center flex-shrink-0 p-1.5">
                         <img src="{{ $partner['logo'] }}"
                             alt="{{ $partner['name'] }}"
                             class="max-h-full max-w-full object-contain">
