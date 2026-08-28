@@ -1045,45 +1045,40 @@ class WebDashboardController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        DB::beginTransaction();
         try {
-            $payment->update([
-                'status' => 'success'
-            ]);
+            // URL Callback Lokal/Eksternal
+            $callbackUrl = url('/api/payments/callback');
             
-            if ($payment->payment_type === 'final_fee') {
-                $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
-                $totalRequired = $feeDetails['total'] ?? 0;
-                
-                $totalPaid = $registration->payments()
-                    ->where('status', 'success')
-                    ->where('payment_type', 'final_fee')
-                    ->sum('base_amount');
-                
-                if ($totalPaid >= $totalRequired) {
-                    $registration->update([
-                        'payment_status' => 'paid',
-                        'registration_status' => 'completed',
-                        'committee_notes' => 'Alhamdulillah, seluruh rangkaian pendaftaran dan pembayaran administrasi akhir ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah lunas diverifikasi. Selamat bergabung di Sekolah Anak Saleh!'
-                    ]);
-                } else {
-                    $registration->update([
-                        'payment_status' => 'partially_paid',
-                        'registration_status' => 'agreement_signed',
-                        'committee_notes' => 'Pembayaran administrasi akhir sebagian berhasil diterima. Silakan selesaikan sisa tanggungan pembiayaan Anda.'
-                    ]);
-                }
+            // Format Payload asli SNAP BI
+            $payload = [
+                'trxId' => $payment->invoice_number,
+                'paymentStatus' => 'SUCCESS',
+                'paymentAmount' => [
+                    'value' => number_format($payment->amount, 2, '.', ''),
+                    'currency' => 'IDR'
+                ],
+                'additionalInfo' => [
+                    'invoiceNumber' => $payment->invoice_number
+                ]
+            ];
+
+            // Kirim request HTTP POST riil ke API callback kita
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'X-TIMESTAMP' => date('c'),
+                'X-SIGNATURE' => 'SIMULATED_SIGNATURE',
+                'X-Developer-Simulator' => 'true'
+            ])->post($callbackUrl, $payload);
+
+            if ($response->successful()) {
+                return redirect()->back()->with('success', 'Callback Berhasil! Response: ' . $response->body());
             } else {
-                $registration->update([
-                    'payment_status' => 'paid',
-                    'committee_notes' => 'Pembayaran formulir pendaftaran berhasil diterima. Silakan isi dan lengkapi formulir pendaftaran Anda.'
-                ]);
+                Log::error('Simulate callback failed', ['status' => $response->status(), 'body' => $response->body()]);
+                return redirect()->back()->with('error', 'Gagal memicu callback: (HTTP ' . $response->status() . ') ' . $response->body());
             }
 
-            DB::commit();
-            return redirect()->back()->with('success', 'Simulasi: Pembayaran sukses diterima!');
         } catch (\Exception $e) {
-            DB::rollBack();
+            Log::error('Simulate callback exception', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Gagal memproses simulasi pembayaran: ' . $e->getMessage());
         }
     }

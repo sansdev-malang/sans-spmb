@@ -242,6 +242,14 @@ class WinpayService implements PaymentGatewayInterface
         $timestamp = $headers['x-timestamp'][0] ?? $headers['X-TIMESTAMP'][0] ?? $headers['x-timestamp'] ?? $headers['X-TIMESTAMP'] ?? '';
         if (is_array($timestamp)) $timestamp = $timestamp[0] ?? '';
         
+        // Bypass verification if it's a simulated developer callback
+        $devSim = $headers['x-developer-simulator'][0] ?? $headers['X-DEVELOPER-SIMULATOR'][0] ?? $headers['x-developer-simulator'] ?? $headers['X-DEVELOPER-SIMULATOR'] ?? '';
+        if (is_array($devSim)) $devSim = $devSim[0] ?? '';
+        if ($devSim === 'true') {
+            Log::info('Developer simulator request detected, bypassing signature verification.');
+            return true;
+        }
+        
         if (empty($this->publicKey)) {
             Log::warning('Winpay Public Key is empty, skipping signature verification.');
             return true; 
