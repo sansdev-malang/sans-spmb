@@ -298,42 +298,6 @@ class SettingsController extends Controller
         return redirect()->route('admin.settings', ['tab' => $activeTab])->with('success', 'Konfigurasi Payment Gateway berhasil diperbarui.');
     }
 
-    public function toggleChannel($id)
-    {
-        $channel = SpmbPaymentChannel::findOrFail($id);
-        $channel->update([
-            'is_active' => !$channel->is_active
-        ]);
-
-        return redirect()->back()->with('success', 'Status channel ' . $channel->name . ' berhasil diperbarui.');
-    }
-
-    public function syncChannels(WinpayService $winpayService)
-    {
-        try {
-            $externalChannels = $winpayService->getPaymentMethods();
-            $activeCodes = [];
-
-            foreach ($externalChannels as $ext) {
-                $activeCodes[] = $ext['code'];
-
-                SpmbPaymentChannel::updateOrCreate(
-                    ['code' => $ext['code']],
-                    [
-                        'name' => $ext['name'],
-                        'type' => $ext['type']
-                    ]
-                );
-            }
-
-            // Sync: Mark any channels that are no longer in external list as inactive
-            SpmbPaymentChannel::whereNotIn('code', $activeCodes)->update(['is_active' => false]);
-
-            return redirect()->back()->with('success', 'Metode pembayaran Winpay berhasil disinkronkan otomatis dengan database.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal sinkronisasi channel Winpay: ' . $e->getMessage());
-        }
-    }
 
     public function uiSettings()
     {

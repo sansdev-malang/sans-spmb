@@ -331,14 +331,19 @@ class WinpayService implements PaymentGatewayInterface
     {
         // In a real API integration, this calls Winpay API endpoint:
         // /signature-service/v1.0/get-payment-methods
-        // Here we simulate the list of channels returned by Winpay, including a new one (PERMATA)
+        // Here we simulate the list of channels returned by Winpay
         return [
             ['code' => 'MANDIRI', 'name' => 'Mandiri Virtual Account', 'type' => 'Virtual Account'],
-            ['code' => 'BRI', 'name' => 'BRI Virtual Account', 'type' => 'Virtual Account'],
-            ['code' => 'BNI', 'name' => 'BNI Virtual Account', 'type' => 'Virtual Account'],
             ['code' => 'BCA', 'name' => 'BCA Virtual Account', 'type' => 'Virtual Account'],
-            ['code' => 'QRIS', 'name' => 'QRIS (GPN) - Scan e-Wallet & m-Banking', 'type' => 'QR Code Payment'],
+            ['code' => 'BNI', 'name' => 'BNI Virtual Account', 'type' => 'Virtual Account'],
+            ['code' => 'BRI', 'name' => 'BRI Virtual Account', 'type' => 'Virtual Account'],
             ['code' => 'PERMATA', 'name' => 'Permata Virtual Account', 'type' => 'Virtual Account'],
+            ['code' => 'BSI', 'name' => 'BSI Virtual Account', 'type' => 'Virtual Account'],
+            ['code' => 'MUAMALAT', 'name' => 'Muamalat Virtual Account', 'type' => 'Virtual Account'],
+            ['code' => 'CIMB', 'name' => 'CIMB Niaga Virtual Account', 'type' => 'Virtual Account'],
+            ['code' => 'SINARMAS', 'name' => 'Sinarmas Virtual Account', 'type' => 'Virtual Account'],
+            ['code' => 'BNC', 'name' => 'BNC Virtual Account', 'type' => 'Virtual Account'],
+            ['code' => 'QRIS', 'name' => 'QRIS', 'type' => 'QR Code Payment'],
         ];
     }
 }

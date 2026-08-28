@@ -263,7 +263,7 @@
 
                 <!-- 3. Pengaturan Teknis Collapsible Dropdown -->
                 @php
-                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/activity-logs*') || Request::is('admin/logs*');
+                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/payment-channels*') || Request::is('admin/activity-logs*') || Request::is('admin/logs*');
                 @endphp
                 <div class="space-y-1">
                     <button type="button" onclick="toggleTechDropdown()" 
@@ -280,6 +280,9 @@
                         </a>
                         <a href="{{ route('admin.payment-gateways.index') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.payment-gateways.index') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
                             <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> CRUD Gateway
+                        </a>
+                        <a href="{{ route('admin.payment-channels.index') }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Route::is('admin.payment-channels.index') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">
+                            <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> CRUD Channel
                         </a>
                         @foreach($sidebarGateways as $sgw)
                             <a href="{{ route('admin.payment-gateways.settings', $sgw->code) }}" class="block py-1 px-3 rounded-lg text-[10px] font-semibold transition {{ Request::is('admin/payment-gateways/' . $sgw->code . '/settings') ? 'text-brand-yellow font-bold' : 'text-slate-400 hover:text-white' }} flex items-center gap-1.5">

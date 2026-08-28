@@ -23,6 +23,7 @@ use App\Http\Controllers\Web\SpmbFeesController;
 use App\Http\Controllers\Web\SpmbRegistrationSettingsController;
 use App\Http\Controllers\Web\SpmbFormSettingsController;
 use App\Http\Controllers\Web\PaymentGatewayController;
+use App\Http\Controllers\Web\PaymentChannelController;
 
 Route::middleware('auth')->group(function () {
     // Candidate Dashboard
@@ -665,8 +666,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/admin/activity-logs', [AdminDashboardController::class, 'activityLogs'])->name('admin.activity-logs');
             Route::get('/admin/settings', [SettingsController::class, 'index'])->name('admin.settings');
             Route::post('/admin/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
-            Route::post('/admin/settings/channels/{id}/toggle', [SettingsController::class, 'toggleChannel'])->name('admin.settings.channels.toggle');
-            Route::post('/admin/settings/channels/sync', [SettingsController::class, 'syncChannels'])->name('admin.settings.channels.sync');
 
             // Payment Gateways CRUD & Settings
             Route::get('/admin/payment-gateways', [PaymentGatewayController::class, 'index'])->name('admin.payment-gateways.index');
@@ -675,6 +674,14 @@ Route::middleware('auth')->group(function () {
             Route::delete('/admin/payment-gateways/{id}', [PaymentGatewayController::class, 'destroy'])->name('admin.payment-gateways.destroy');
             Route::get('/admin/payment-gateways/{code}/settings', [PaymentGatewayController::class, 'settings'])->name('admin.payment-gateways.settings');
             Route::post('/admin/payment-gateways/{code}/settings', [PaymentGatewayController::class, 'saveSettings'])->name('admin.payment-gateways.settings.save');
+
+            // Payment Channels CRUD
+            Route::get('/admin/payment-channels', [PaymentChannelController::class, 'index'])->name('admin.payment-channels.index');
+            Route::post('/admin/payment-channels', [PaymentChannelController::class, 'store'])->name('admin.payment-channels.store');
+            Route::post('/admin/payment-channels/{id}/update', [PaymentChannelController::class, 'update'])->name('admin.payment-channels.update');
+            Route::delete('/admin/payment-channels/{id}', [PaymentChannelController::class, 'destroy'])->name('admin.payment-channels.destroy');
+            Route::post('/admin/payment-channels/{id}/toggle', [PaymentChannelController::class, 'toggle'])->name('admin.payment-channels.toggle');
+            Route::post('/admin/payment-channels/sync', [PaymentChannelController::class, 'sync'])->name('admin.payment-channels.sync');
 
             // New Config Pages
             Route::get('/admin/ui-settings', [SettingsController::class, 'uiSettings'])->name('admin.ui-settings');
