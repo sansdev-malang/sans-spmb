@@ -698,6 +698,8 @@
         const notesLabel = document.getElementById('verification-notes-label');
         const invalidFieldsInput = document.getElementById('invalid_fields_input');
         const candidateName = document.getElementById('det-name').innerText;
+        const btnApprove = document.getElementById('btn-approve');
+        const btnReject = document.getElementById('btn-reject');
 
         invalidFieldsInput.value = JSON.stringify(unchecked);
 
@@ -711,9 +713,17 @@
             });
             compiledMsg += `\nSilakan perbaiki data tersebut melalui portal pendaftar Menu Formulir agar dapat kami verifikasi kembali.`;
             notesTextarea.value = compiledMsg;
+
+            // Prevent approval when fields are unchecked (failed validation)
+            if (btnApprove) btnApprove.classList.add('hidden');
+            if (btnReject) btnReject.classList.remove('hidden');
         } else {
             notesLabel.innerText = 'Catatan Penutup Verifikasi (Opsional)';
             notesTextarea.value = `Alhamdulillah, berkas pendaftaran ananda ${candidateName} telah kami terima dan diverifikasi. Silakan persiapkan untuk mengikuti Tes Observasi.`;
+
+            // Only allow approval when all fields are checked OK
+            if (btnApprove) btnApprove.classList.remove('hidden');
+            if (btnReject) btnReject.classList.add('hidden');
         }
     }
 </script>
