@@ -52,37 +52,45 @@
     @endif
 
     <!-- Search & Filters -->
-    <form method="GET" action="{{ route('admin.payment-channels.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-        <input type="hidden" name="tab" value="{{ $activeTab }}">
-        
-        <!-- Search -->
-        <div class="relative col-span-1 md:col-span-2">
-            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                <i data-lucide="search" class="w-4 h-4"></i>
-            </span>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode channel..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-brand-emerald transition">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <!-- Type Tabs (Pills) -->
+        <div class="flex flex-wrap gap-1 p-1 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/60 dark:border-slate-800/80 w-full md:w-auto">
+            <a href="{{ route('admin.payment-channels.index', array_merge(request()->query(), ['type' => ''])) }}" class="px-4 py-2 rounded-lg text-xs font-bold transition text-center flex-1 md:flex-initial {{ !request('type') ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm border border-slate-200/50 dark:border-slate-800' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' }}">
+                Semua Tipe
+            </a>
+            <a href="{{ route('admin.payment-channels.index', array_merge(request()->query(), ['type' => 'va'])) }}" class="px-4 py-2 rounded-lg text-xs font-bold transition text-center flex-1 md:flex-initial {{ request('type') === 'va' ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm border border-slate-200/50 dark:border-slate-800' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' }}">
+                Virtual Account (VA)
+            </a>
+            <a href="{{ route('admin.payment-channels.index', array_merge(request()->query(), ['type' => 'qris'])) }}" class="px-4 py-2 rounded-lg text-xs font-bold transition text-center flex-1 md:flex-initial {{ request('type') === 'qris' ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm border border-slate-200/50 dark:border-slate-800' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' }}">
+                QRIS
+            </a>
         </div>
 
-        <!-- Filter Type -->
-        <div>
-            <select name="type" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-brand-emerald transition">
-                <option value="">Semua Tipe</option>
-                <option value="va" {{ request('type') === 'va' ? 'selected' : '' }}>Virtual Account (VA)</option>
-                <option value="qris" {{ request('type') === 'qris' ? 'selected' : '' }}>QRIS</option>
-                <option value="ewallet" {{ request('type') === 'ewallet' ? 'selected' : '' }}>E-Wallet</option>
-                <option value="retail" {{ request('type') === 'retail' ? 'selected' : '' }}>Retail Outlet</option>
-            </select>
-        </div>
+        <!-- Search & Status Filter Form -->
+        <form method="GET" action="{{ route('admin.payment-channels.index') }}" class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
+            <input type="hidden" name="tab" value="{{ $activeTab }}">
+            @if(request('type'))
+                <input type="hidden" name="type" value="{{ request('type') }}">
+            @endif
+            
+            <!-- Search -->
+            <div class="relative w-full sm:w-64">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                </span>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode channel..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+            </div>
 
-        <!-- Filter Status -->
-        <div>
-            <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-brand-emerald transition">
-                <option value="">Semua Status</option>
-                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
-                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
-            </select>
-        </div>
-    </form>
+            <!-- Status Filter -->
+            <div class="w-full sm:w-36">
+                <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                    <option value="">Semua Status</option>
+                    <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
+                </select>
+            </div>
+        </form>
+    </div>
 
     <!-- Table List -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden">
