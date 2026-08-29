@@ -325,13 +325,13 @@
         <div class="marquee-track flex items-center gap-8 md:gap-12">
             @php
                 $partners = [
-                    ['name' => 'Bank Nasional Indonesia', 'logo' => asset('partnership/bni.svg'), 'label' => 'Bank Nasional Indonesia'],
-                    ['name' => 'PT. Teknologi Kartu Indonesia', 'logo' => asset('partnership/tki.svg'), 'label' => 'PT. Teknologi Kartu Indonesia'],
-                    ['name' => 'Samsung', 'logo' => asset('partnership/samsung.svg'), 'label' => 'Samsung'],
-                    ['name' => 'Cambridge', 'logo' => asset('partnership/cambridge.svg'), 'label' => 'Cambridge'],
-                    ['name' => 'Bank Syariah Indonesia', 'logo' => asset('partnership/bsi.svg'), 'label' => 'Bank Syariah Indonesia'],
-                    ['name' => 'Meteor Cell', 'logo' => asset('partnership/meteorcell.svg'), 'label' => 'Meteor Cell'],
-                    ['name' => 'PT. Zigma Indonesia', 'logo' => asset('partnership/zigma.svg'), 'label' => 'PT. Zigma Indonesia'],
+                    ['name' => 'Bank Nasional Indonesia', 'logo' => asset('storage/partnership/bni.svg'), 'label' => 'Bank Nasional Indonesia'],
+                    ['name' => 'PT. Teknologi Kartu Indonesia', 'logo' => asset('storage/partnership/tki.svg'), 'label' => 'PT. Teknologi Kartu Indonesia'],
+                    ['name' => 'Samsung', 'logo' => asset('storage/partnership/samsung.svg'), 'label' => 'Samsung'],
+                    ['name' => 'Cambridge', 'logo' => asset('storage/partnership/cambridge.svg'), 'label' => 'Cambridge'],
+                    ['name' => 'Bank Syariah Indonesia', 'logo' => asset('storage/partnership/bsi.svg'), 'label' => 'Bank Syariah Indonesia'],
+                    ['name' => 'Meteor Cell', 'logo' => asset('storage/partnership/meteorcell.svg'), 'label' => 'Meteor Cell'],
+                    ['name' => 'PT. Zigma Indonesia', 'logo' => asset('storage/partnership/zigma.svg'), 'label' => 'PT. Zigma Indonesia'],
                 ];
             @endphp
 
