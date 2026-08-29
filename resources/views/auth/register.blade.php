@@ -4,7 +4,7 @@
 
         <!-- Name -->
         <div class="space-y-2">
-            <x-input-label for="name" :value="__('Nama Lengkap Orang Tua / Wali')" class="font-bold text-[10px] text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
+            <x-input-label for="name" :value="__('Nama Lengkap Orang Tua / Wali')" class="font-bold text-xs text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                     <i data-lucide="user" class="w-4 h-4"></i>
@@ -16,7 +16,7 @@
 
         <!-- Email Address -->
         <div class="space-y-2">
-            <x-input-label for="email" :value="__('Email')" class="font-bold text-[10px] text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
+            <x-input-label for="email" :value="__('Email')" class="font-bold text-xs text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                     <i data-lucide="mail" class="w-4 h-4"></i>
@@ -28,7 +28,7 @@
 
         <!-- Password -->
         <div class="space-y-2">
-            <x-input-label for="password" :value="__('Password')" class="font-bold text-[10px] text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
+            <x-input-label for="password" :value="__('Password')" class="font-bold text-xs text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                     <i data-lucide="lock" class="w-4 h-4"></i>
@@ -43,7 +43,7 @@
 
         <!-- Confirm Password -->
         <div class="space-y-2">
-            <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')" class="font-bold text-[10px] text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
+            <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')" class="font-bold text-xs text-slate-450 dark:text-slate-400 uppercase tracking-wider block" />
             <div class="relative">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                     <i data-lucide="shield-check" class="w-4 h-4"></i>
