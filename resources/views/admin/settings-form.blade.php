@@ -205,7 +205,10 @@
                 <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: Dokumen Pendukung">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
+                    <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline">Pilih Semua</button>
+                </div>
                 <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
                         <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -251,7 +254,10 @@
                 <input type="text" id="edit-step-title" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
+                    <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline">Pilih Semua</button>
+                </div>
                 <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
                         <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -303,7 +309,10 @@
                 <input type="text" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: blood_type">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
+                    <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline">Pilih Semua</button>
+                </div>
                 <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
                         <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -381,7 +390,10 @@
                 <input type="text" id="edit-field-name" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
+                    <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline">Pilih Semua</button>
+                </div>
                 <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
                         <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -477,6 +489,7 @@
     function openAddStepModal() {
         clearFormErrors();
         document.getElementById('addStepModal').classList.remove('hidden');
+        updateToggleUnitsText('addStepModal');
     }
     function closeAddStepModal() {
         clearFormErrors();
@@ -498,6 +511,7 @@
         }
 
         document.getElementById('editStepForm').setAttribute('action', '/admin/spmb-settings/form/steps/' + step.id + '?unit_id={{ $selectedUnitId }}');
+        updateToggleUnitsText('editStepModal');
         document.getElementById('editStepModal').classList.remove('hidden');
     }
     function closeEditStepModal() {
@@ -515,6 +529,7 @@
         document.getElementById('add-field-step-id').value = stepId;
         document.getElementById('addFieldModal').classList.remove('hidden');
         toggleOptionsInput('add');
+        updateToggleUnitsText('addFieldModal');
     }
     function closeAddFieldModal() {
         clearFormErrors();
@@ -540,6 +555,7 @@
         document.getElementById('edit-field-required').checked = (field.is_required === 1 || field.is_required === '1' || field.is_required === true);
         document.getElementById('edit-field-order').value = field.order;
         document.getElementById('editFieldForm').setAttribute('action', '/admin/spmb-settings/form/fields/' + field.id + '?unit_id={{ $selectedUnitId }}');
+        updateToggleUnitsText('editFieldModal');
         
         // System fields protection
         const systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
@@ -599,6 +615,27 @@
             wrapperEl.classList.add('hidden');
             optionsInput.required = false;
         }
+    }
+
+    function toggleSelectAllUnits(button) {
+        const parent = button.parentElement;
+        const formGroup = parent.parentElement;
+        const checkboxes = formGroup.querySelectorAll('input[name="spmb_unit_ids[]"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(cb => cb.checked = !allChecked);
+        button.textContent = allChecked ? 'Pilih Semua' : 'Kosongkan';
+    }
+
+    function updateToggleUnitsText(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        const btn = modal.querySelector('button[onclick="toggleSelectAllUnits(this)"]');
+        if (!btn) return;
+        const checkboxes = modal.querySelectorAll('input[name="spmb_unit_ids[]"]');
+        if (checkboxes.length === 0) return;
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        btn.textContent = allChecked ? 'Kosongkan' : 'Pilih Semua';
     }
 
     // Click outside handlers to close modals
