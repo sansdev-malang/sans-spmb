@@ -281,12 +281,14 @@ class WebDashboardController extends Controller
         ]);
         
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+        $grade = \App\Models\SpmbGrade::find($request->spmb_grade_id);
 
         $registration = Registration::create([
             'user_id' => auth()->id(),
             'candidate_name' => $request->candidate_name,
             'spmb_unit_id' => $request->spmb_unit_id,
             'spmb_grade_id' => $request->spmb_grade_id,
+            'admission_level' => $grade ? ($grade->name === 'KB' ? 'Play Group' : $grade->name) : null,
             'spmb_period_id' => $activePeriod?->id,
             'spmb_wave_id' => $request->spmb_wave_id,
             'spmb_type_id' => $request->spmb_type_id,
@@ -299,7 +301,17 @@ class WebDashboardController extends Controller
 
     private function getFormDetails($registration)
     {
-        $steps = SpmbFormStep::with('fields')->orderBy('order')->get();
+        $unitId = $registration->spmb_unit_id;
+        $steps = SpmbFormStep::with(['fields' => function($q) use ($unitId) {
+                $q->where(function($sub) use ($unitId) {
+                    $sub->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+                })->orderBy('order');
+            }])
+            ->where(function($q) use ($unitId) {
+                $q->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+            })
+            ->orderBy('order')
+            ->get();
         $stepsCount = $steps->count();
         $stepsCompleted = 0;
         $allStepsCompleted = true;
@@ -426,17 +438,37 @@ class WebDashboardController extends Controller
         $gate = $this->checkAccessGate($registration, 'form');
         if ($gate) return $gate;
 
-        $formDetails = $this->getFormDetails($registration);
-        
-        // Saring Step 1 (Jalur & Gelombang Pendaftaran) dari tampilan pendaftar
-        $steps = $formDetails['steps']->reject(function($step) {
-            return $step->id === 1;
-        })->values();
-        
-        // Evaluasi kelengkapan berkas hanya untuk langkah yang ditampilkan (Step 2, 3, 4)
-        $allStepsCompleted = $steps->every(function($step) {
-            return $step->is_completed;
+
+        // 2. Pindahkan field extra_services ke Step 1 dan ubah labelnya menjadi "Layanan Non-Formal"
+        \Illuminate\Support\Facades\DB::table('spmb_form_fields')
+            ->where('field_name', 'extra_services')
+            ->update([
+                'form_step_id' => 1, 
+                'label' => 'Layanan Non-Formal',
+                'order' => 5
+            ]);
+
+        // 3. Hapus field "Tingkat Pendaftaran" (admission_level) dari form wizard karena sudah diisi otomatis di awal
+        \Illuminate\Support\Facades\DB::table('spmb_form_fields')
+            ->where('field_name', 'admission_level')
+            ->delete();
+
+        // 4. Backfill data admission_level untuk pendaftaran lama yang masih kosong
+        \App\Models\Registration::where(function($q) {
+            $q->whereNull('admission_level')->orWhere('admission_level', '');
+        })->chunkById(100, function($registrations) {
+            foreach ($registrations as $reg) {
+                if ($reg->grade) {
+                    $reg->update([
+                        'admission_level' => $reg->grade->name === 'KB' ? 'Play Group' : $reg->grade->name
+                    ]);
+                }
+            }
         });
+
+        $formDetails = $this->getFormDetails($registration);
+        $steps = $formDetails['steps'];
+        $allStepsCompleted = $formDetails['allStepsCompleted'];
         
         return view('web.form', compact('registration', 'steps', 'allStepsCompleted'));
     }
@@ -770,7 +802,17 @@ class WebDashboardController extends Controller
         $registration->save();
 
         // 3. Check if all steps are completed. If yes, transition status to 'submitted'!
-        $allSteps = SpmbFormStep::with('fields')->orderBy('order')->get();
+        $unitId = $registration->spmb_unit_id;
+        $allSteps = SpmbFormStep::with(['fields' => function($q) use ($unitId) {
+                $q->where(function($sub) use ($unitId) {
+                    $sub->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+                })->orderBy('order');
+            }])
+            ->where(function($q) use ($unitId) {
+                $q->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+            })
+            ->orderBy('order')
+            ->get();
         $allCompleted = true;
         foreach ($allSteps as $s) {
             foreach ($s->fields as $f) {

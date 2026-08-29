@@ -6,13 +6,27 @@
 @section('content')
 <div class="w-full space-y-6">
     <!-- Header -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex justify-between items-center">
+    <!-- Header with Unit Filter -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
                 <i data-lucide="settings-2" class="w-5 h-5 text-brand-emerald"></i>
                 Pengaturan Tahapan & Kolom Formulir (Form Settings)
             </h1>
             <p class="text-xs text-slate-500 mt-1">Kelola tahapan wizard pendaftaran calon siswa beserta pertanyaan kolom input secara dinamis.</p>
+        </div>
+        <!-- Unit Filter -->
+        <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200/65 p-2.5 rounded-2xl shadow-inner">
+            <span class="text-xs font-extrabold text-slate-650 flex items-center gap-1.5 pl-1.5 whitespace-nowrap">
+                <i data-lucide="filter" class="w-4 h-4 text-brand-emerald"></i>
+                Unit Sekolah:
+            </span>
+            <select onchange="window.location.href = '{{ route('admin.spmb-settings.form') }}?tab={{ $activeTab }}&unit_id=' + this.value" class="bg-white border border-slate-300 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                <option value="" {{ $selectedUnitId === '' ? 'selected' : '' }}>-- Semua Unit (Global) --</option>
+                @foreach($units as $unit)
+                    <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 
@@ -49,6 +63,7 @@
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Urutan</th>
                             <th class="py-4 px-6">Nama Tahapan</th>
+                            <th class="py-4 px-6">Berlaku Untuk</th>
                             <th class="py-4 px-6 text-center">Jumlah Kolom</th>
                             <th class="py-4 px-6 text-center">Status Keaktifan</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
@@ -59,6 +74,17 @@
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-bold text-slate-700">Langkah #{{ $step->order }}</td>
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $step->title }}</td>
+                                <td class="py-4 px-6">
+                                    @if($step->unit)
+                                        <span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
+                                            {{ $step->unit->name }}
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-550 border border-slate-200">
+                                            Global (Semua)
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-6 text-center font-semibold text-slate-600">{{ $step->fields->count() }} Input</td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase {{ $step->is_active ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-slate-100 text-slate-400' }}">
@@ -72,7 +98,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada langkah formulir dikonfigurasi.</td>
+                                <td colspan="6" class="py-8 px-6 text-center text-slate-400">Belum ada langkah formulir dikonfigurasi.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -99,6 +125,7 @@
                             <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                                 <th class="py-4 px-6">Urutan</th>
                                 <th class="py-4 px-6">Label Kolom</th>
+                                <th class="py-4 px-6">Berlaku Untuk</th>
                                 <th class="py-4 px-6">Key Database</th>
                                 <th class="py-4 px-6">Tipe Form</th>
                                 <th class="py-4 px-6 text-center">Wajib Diisi</th>
@@ -111,6 +138,17 @@
                                 <tr class="hover:bg-slate-50/30 transition">
                                     <td class="py-4 px-6 font-bold text-slate-700">#{{ $field->order }}</td>
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $field->label }}</td>
+                                    <td class="py-4 px-6">
+                                        @if($field->unit)
+                                            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
+                                                {{ $field->unit->name }}
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-slate-50 text-slate-500 border border-slate-200">
+                                                Global
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="py-4 px-6 font-mono text-xs text-slate-500">{{ $field->field_name }}</td>
                                     <td class="py-4 px-6 font-semibold text-brand-emerald text-xs uppercase">{{ $field->type }}</td>
                                     <td class="py-4 px-6 text-center">
@@ -132,7 +170,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="py-8 px-6 text-center text-slate-400">Belum ada kolom input formulir di tahapan ini.</td>
+                                    <td colspan="8" class="py-8 px-6 text-center text-slate-400">Belum ada kolom input formulir di tahapan ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -153,7 +191,7 @@
             </h3>
             <button onclick="closeAddStepModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
         </div>
-        <form action="{{ route('admin.spmb-settings.form.steps.store') }}" method="POST" hx-boost="false" class="p-6 space-y-4">
+        <form action="{{ route('admin.spmb-settings.form.steps.store') }}?unit_id={{ $selectedUnitId }}" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
             @if($errors->any() && session('failed_modal') && session('failed_modal') === 'step_create')
                 <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
@@ -165,6 +203,15 @@
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Tahapan*</label>
                 <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: Dokumen Pendukung">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
+                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-850 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                    <option value="">-- Semua Unit (Global) --</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Urutan Tampil (Order)*</label>
@@ -201,6 +248,15 @@
                 <input type="text" id="edit-step-title" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
             <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
+                <select name="spmb_unit_id" id="edit-step-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-850 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                    <option value="">-- Semua Unit (Global) --</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Urutan Tampil (Order)*</label>
                 <input type="number" id="edit-step-order" name="order" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
@@ -220,8 +276,7 @@
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Kolom Input
             </h3>
             <button onclick="closeAddFieldModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
-        </div>
-        <form action="{{ route('admin.spmb-settings.form.fields.store') }}" method="POST" hx-boost="false" class="p-6 space-y-4">
+               <form action="{{ route('admin.spmb-settings.form.fields.store') }}?unit_id={{ $selectedUnitId }}" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
             @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'field_create_'))
                 <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
@@ -241,6 +296,15 @@
                 <input type="text" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: blood_type">
             </div>
             <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
+                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-855 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                    <option value="">-- Semua Unit (Global) --</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
                 <select name="type" id="add-field-type" onchange="toggleOptionsInput('add')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
                     <option value="text">Input Text (Teks Biasa)</option>
@@ -258,7 +322,7 @@
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilihan-Pilihan Dropdown (Pisahkan Dengan Koma)*</label>
                 <input type="text" name="options" id="add-field-options" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="A,B,AB,O">
             </div>
-
+ 
             <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
                 <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Wajib Diisi (Mandatory)?</span>
                 <label class="relative inline-flex items-center cursor-pointer">
@@ -266,12 +330,12 @@
                     <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked-emerald"></div>
                 </label>
             </div>
-
+ 
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Urutan Tampil (Order)*</label>
                 <input type="number" name="order" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" value="1">
             </div>
-
+ 
             <div class="flex justify-end gap-2 pt-4">
                 <button type="button" onclick="closeAddFieldModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">Kembali</button>
                 <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md">Simpan Kolom</button>
@@ -288,8 +352,7 @@
                 <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Kolom Input
             </h3>
             <button onclick="closeEditFieldModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
-        </div>
-        <form id="editFieldForm" method="POST" hx-boost="false" class="p-6 space-y-4">
+           <form id="editFieldForm" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
             @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'field_edit_'))
                 <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
@@ -305,6 +368,15 @@
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Key Database / Nama Kolom (Unik)*</label>
                 <input type="text" id="edit-field-name" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
+                <select name="spmb_unit_id" id="edit-field-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-855 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                    <option value="">-- Semua Unit (Global) --</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
@@ -323,7 +395,7 @@
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilihan-Pilihan Dropdown (Pisahkan Dengan Koma)*</label>
                 <input type="text" name="options" id="edit-field-options" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
-
+ 
             <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
                 <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Wajib Diisi (Mandatory)?</span>
                 <label class="relative inline-flex items-center cursor-pointer">
@@ -331,12 +403,12 @@
                     <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked-emerald"></div>
                 </label>
             </div>
-
+ 
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Urutan Tampil (Order)*</label>
                 <input type="number" id="edit-field-order" name="order" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
-
+ 
             <div class="flex justify-end gap-2 pt-4">
                 <button type="button" onclick="closeEditFieldModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">Kembali</button>
                 <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md">Simpan Perubahan</button>
@@ -401,7 +473,8 @@
         clearFormErrors();
         document.getElementById('edit-step-title').value = step.title;
         document.getElementById('edit-step-order').value = step.order;
-        document.getElementById('editStepForm').setAttribute('action', '/admin/spmb-settings/form/steps/' + step.id);
+        document.getElementById('edit-step-unit').value = step.spmb_unit_id || '';
+        document.getElementById('editStepForm').setAttribute('action', '/admin/spmb-settings/form/steps/' + step.id + '?unit_id={{ $selectedUnitId }}');
         document.getElementById('editStepModal').classList.remove('hidden');
     }
     function closeEditStepModal() {
@@ -410,7 +483,7 @@
     }
 
     function deleteStepItem(name, url) {
-        confirmDelete(url, `Apakah Anda yakin ingin menghapus tahapan "${name}"? Seluruh kolom input di dalam tahapan ini juga akan ikut terhapus.`);
+        confirmDelete(url + '?unit_id={{ $selectedUnitId }}', `Apakah Anda yakin ingin menghapus tahapan "${name}"? Seluruh kolom input di dalam tahapan ini juga akan ikut terhapus.`);
     }
 
     // Field Modals
@@ -430,10 +503,11 @@
         document.getElementById('edit-field-label').value = field.label;
         document.getElementById('edit-field-name').value = field.field_name;
         document.getElementById('edit-field-type').value = field.type;
+        document.getElementById('edit-field-unit').value = field.spmb_unit_id || '';
         document.getElementById('edit-field-options').value = field.options || '';
         document.getElementById('edit-field-required').checked = (field.is_required === 1 || field.is_required === '1' || field.is_required === true);
         document.getElementById('edit-field-order').value = field.order;
-        document.getElementById('editFieldForm').setAttribute('action', '/admin/spmb-settings/form/fields/' + field.id);
+        document.getElementById('editFieldForm').setAttribute('action', '/admin/spmb-settings/form/fields/' + field.id + '?unit_id={{ $selectedUnitId }}');
         
         // System fields protection
         const systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
@@ -477,7 +551,7 @@
     }
 
     function deleteFieldItem(name, url) {
-        confirmDelete(url, `Apakah Anda yakin ingin menghapus kolom input "${name}"?`);
+        confirmDelete(url + '?unit_id={{ $selectedUnitId }}', `Apakah Anda yakin ingin menghapus kolom input "${name}"?`);
     }
 
     // Toggle options field visibility for 'select' type

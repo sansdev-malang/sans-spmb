@@ -478,16 +478,7 @@ class DatabaseSeeder extends Seeder
                 'is_required' => 0,
                 'order' => 8,
             ],
-            [
-                'id' => 9,
-                'form_step_id' => 2,
-                'label' => 'Tingkat Pendaftaran',
-                'field_name' => 'admission_level',
-                'type' => 'select',
-                'options' => 'Play Group,TK A,TK B',
-                'is_required' => 1,
-                'order' => 9,
-            ],
+
             [
                 'id' => 10,
                 'form_step_id' => 3,
@@ -541,7 +532,7 @@ class DatabaseSeeder extends Seeder
             [
                 'id' => 19,
                 'form_step_id' => 1,
-                'label' => 'Layanan Tambahan',
+                'label' => 'Layanan Non-Formal',
                 'field_name' => 'extra_services',
                 'type' => 'select',
                 'options' => null,

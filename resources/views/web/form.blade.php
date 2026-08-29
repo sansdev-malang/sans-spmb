@@ -28,6 +28,44 @@
         </style>
 
         <div class="p-6 space-y-8">
+            <!-- Informasi Pendaftaran Terpilih (Premium Design) -->
+            <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 to-brand-emerald text-white rounded-3xl p-6 shadow-md border border-emerald-800/10">
+                <!-- Background patterns -->
+                <div class="absolute right-0 top-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                <div class="absolute left-1/3 bottom-0 w-28 h-28 bg-teal-500/10 rounded-full blur-2xl"></div>
+                
+                <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2 text-emerald-400 font-bold text-[10px] uppercase tracking-widest">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-glow"></span>
+                            <span>Informasi Pendaftaran Terpilih</span>
+                        </div>
+                        <h4 class="text-base font-extrabold tracking-tight text-white">
+                            {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                        </h4>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-xs">
+                        <div>
+                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Unit Sekolah</span>
+                            <span class="font-extrabold text-emerald-300 mt-0.5 block">{{ $registration->unit->name ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Tahun Pelajaran</span>
+                            <span class="font-extrabold text-white mt-0.5 block">{{ $registration->period->year ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Jalur</span>
+                            <span class="font-extrabold text-white mt-0.5 block">{{ $registration->type->name ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Gelombang</span>
+                            <span class="font-extrabold text-white mt-0.5 block">{{ $registration->wave->name ?? '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Horizontal Step Progress Timeline -->
             <div class="mb-12 mt-2 px-2 max-w-2xl mx-auto">
                 <div class="relative flex items-center justify-between w-full">
@@ -145,30 +183,6 @@
                         @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
                             <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm {{ ($step->is_completed && !$hasInvalidFields) ? 'hidden' : '' }}">
                                 @csrf
-                                
-                                @if($step->id === 1)
-                                    <div class="bg-slate-50 border border-slate-200/85 rounded-2xl p-4.5 mb-4 space-y-3.5">
-                                        <div class="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wider border-b border-slate-200/60 pb-2">
-                                            <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i>
-                                            <span>Periode Pendaftaran Terpilih</span>
-                                        </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4.5 text-xs">
-                                            <div>
-                                                <span class="text-slate-400 font-bold uppercase block text-[9px] tracking-wide">Tahun Pelajaran</span>
-                                                <span class="font-extrabold text-slate-700 mt-1 block">{{ $registration->period->year ?? '-' }}</span>
-                                            </div>
-                                            <div>
-                                                <span class="text-slate-400 font-bold uppercase block text-[9px] tracking-wide">Jalur Pendaftaran</span>
-                                                <span class="font-extrabold text-slate-700 mt-1 block">{{ $registration->type->name ?? '-' }}</span>
-                                            </div>
-                                            <div>
-                                                <span class="text-slate-400 font-bold uppercase block text-[9px] tracking-wide">Gelombang</span>
-                                                <span class="font-extrabold text-slate-700 mt-1 block">{{ $registration->wave->name ?? '-' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                                
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     @foreach($step->fields as $field)
                                         @php
@@ -205,16 +219,11 @@
                                                  @php
                                                      $activeServices = \App\Models\SpmbExtraService::where('is_active', true)->get();
                                                      $selectedServiceIds = $registration->extraServices->pluck('id')->toArray();
-                                                     $currentSelectedId = count($selectedServiceIds) > 0 ? $selectedServiceIds[0] : '';
                                                  @endphp
-                                                 <div class="flex flex-wrap gap-2.5 mt-1 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                                     <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
-                                                         <input type="radio" name="extra_services" value="" {{ empty($currentSelectedId) ? 'checked' : '' }} class="w-4 h-4 text-brand-emerald border-slate-300 focus:ring-brand-emerald">
-                                                         <span class="text-xs font-bold text-slate-700">Tidak Ada</span>
-                                                     </label>
+                                                 <div class="flex flex-wrap gap-2.5 mt-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                                                      @foreach($activeServices as $service)
-                                                         <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
-                                                             <input type="radio" name="extra_services" value="{{ $service->id }}" {{ $currentSelectedId == $service->id ? 'checked' : '' }} class="w-4 h-4 text-brand-emerald border-slate-300 focus:ring-brand-emerald">
+                                                         <label class="flex items-center gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
+                                                             <input type="checkbox" name="extra_services[]" value="{{ $service->id }}" {{ in_array($service->id, $selectedServiceIds) ? 'checked' : '' }} class="w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
                                                              <span class="text-xs font-bold text-slate-700">
                                                                  {{ $service->name }}
                                                              </span>
@@ -290,24 +299,6 @@
                         <!-- Readonly Block -->
                         @if ($step->is_completed)
                             <div id="readonly-step-{{ $step->id }}" class="text-xs text-slate-600 grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 bg-slate-50 p-4 rounded-lg border border-slate-100 {{ $hasInvalidFields ? 'hidden' : '' }}">
-                                @if($step->id === 1)
-                                    <div>
-                                        <strong class="text-slate-500 font-semibold">Unit Sekolah:</strong>
-                                        <span class="text-slate-800 font-bold ml-1">{{ $registration->unit->name ?? '-' }}</span>
-                                    </div>
-                                    <div>
-                                        <strong class="text-slate-500 font-semibold">Tahun Pelajaran:</strong>
-                                        <span class="text-slate-800 font-bold ml-1">{{ $registration->period->year ?? '-' }}</span>
-                                    </div>
-                                    <div>
-                                        <strong class="text-slate-500 font-semibold">Jalur Pendaftaran:</strong>
-                                        <span class="text-slate-800 font-bold ml-1">{{ $registration->type->name ?? '-' }}</span>
-                                    </div>
-                                    <div>
-                                        <strong class="text-slate-500 font-semibold">Gelombang:</strong>
-                                        <span class="text-slate-800 font-bold ml-1">{{ $registration->wave->name ?? '-' }}</span>
-                                    </div>
-                                @endif
                                 
                                 @foreach($step->fields as $field)
                                     @php
@@ -319,16 +310,30 @@
                                     @php
                                         $val = $registration->getFieldValue($field->field_name);
                                     @endphp
-                                    <div>
-                                        <strong class="text-slate-500 font-semibold">{{ $field->label }}:</strong> 
+                                    <div class="space-y-0.5">
+                                        <strong class="text-slate-500 font-semibold block">{{ $field->label }}:</strong> 
                                         @if($field->type === 'file' && !empty($val))
                                             <a href="{{ Storage::url($val) }}" target="_blank" class="text-brand-emerald font-bold hover:underline">Lihat Berkas 📄</a>
                                         @elseif($field->field_name === 'spmb_class_program_id')
-                                            <span class="text-slate-800 font-bold ml-1">{{ $registration->classProgram?->name ?? '-' }}</span>
+                                            <span class="text-slate-800 font-bold">{{ $registration->classProgram?->name ?? '-' }}</span>
                                         @elseif($field->field_name === 'extra_services')
-                                            <span class="text-slate-800 font-bold ml-1">{{ $val ?? 'Tidak Ada' }}</span>
+                                            @php
+                                                $services = $registration->extraServices;
+                                            @endphp
+                                            @if($services->isEmpty())
+                                                <span class="text-slate-800 font-bold">Tidak Ada</span>
+                                            @else
+                                                <div class="space-y-1 mt-1 pl-1">
+                                                    @foreach($services as $s)
+                                                        <div class="flex items-center gap-1.5 text-slate-850 font-bold">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+                                                            <span>{{ $s->name }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         @else
-                                            <span class="text-slate-800 font-bold ml-1">{{ $val ?? '-' }}</span>
+                                            <span class="text-slate-800 font-bold">{{ $val ?? '-' }}</span>
                                         @endif
                                     </div>
                                 @endforeach
