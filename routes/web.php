@@ -413,11 +413,14 @@ Route::middleware('auth')->group(function () {
                     ];
                 })->values();
 
-            // Search by Invoice or Candidate Name
+            // Search by Invoice, Reference ID, Candidate Name, or Gateway Info
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('invoice_number', 'like', "%{$search}%")
+                      ->orWhere('reference_id', 'like', "%{$search}%")
+                      ->orWhere('payment_info->virtualAccountNo', 'like', "%{$search}%")
+                      ->orWhere('payment_info->trxId', 'like', "%{$search}%")
                       ->orWhereHas('registration', function($sq) use ($search) {
                           $sq->where('candidate_name', 'like', "%{$search}%");
                       });
@@ -527,12 +530,14 @@ Route::middleware('auth')->group(function () {
                     $q->where('spmb_period_id', $selectedPeriodId);
                 });
 
-            // Search by Invoice, Reference ID, or Candidate Name
+            // Search by Invoice, Reference ID, Candidate Name, or Gateway Info
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('invoice_number', 'like', "%{$search}%")
                       ->orWhere('reference_id', 'like', "%{$search}%")
+                      ->orWhere('payment_info->virtualAccountNo', 'like', "%{$search}%")
+                      ->orWhere('payment_info->trxId', 'like', "%{$search}%")
                       ->orWhereHas('registration', function($sq) use ($search) {
                           $sq->where('candidate_name', 'like', "%{$search}%");
                       });

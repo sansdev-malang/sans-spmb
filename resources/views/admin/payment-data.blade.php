@@ -221,7 +221,7 @@
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice atau nama pendaftar..." 
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice, ref, atau nama..." 
                                class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
                         
                         <!-- Clear (X) Button -->
@@ -355,7 +355,7 @@
                         <th class="py-4 px-6">Nama Biaya</th>
                         <th class="py-4 px-6">Metode</th>
                         <th class="py-4 px-6">Nominal</th>
-                        <th class="py-4 px-6">Referensi</th>
+                        <th class="py-4 px-6">Ref (Merchant)</th>
                         <th class="py-4 px-6">Waktu Transaksi</th>
                         <th class="py-4 px-6 text-center">Status</th>
                     </tr>
@@ -384,13 +384,17 @@
                                 {{ $fee->name }}
                             </td>
                             <td class="py-4 px-6 text-slate-600 font-bold">
-                                {{ $pay->payment_method }}
+                                <div>{{ $pay->payment_method }}</div>
+                                @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
+                                    <div class="text-[10px] text-slate-400 font-mono font-medium mt-0.5 select-all">VA: {{ $pay->payment_info['virtualAccountNo'] }}</div>
+                                @endif
                             </td>
                             <td class="py-4 px-6 font-bold text-slate-800">
                                 Rp {{ number_format($pay->amount, 0, ',', '.') }}
                             </td>
-                            <td class="py-4 px-6 font-mono text-xs text-slate-400">
-                                {{ $pay->reference_id ?? '-' }}
+                            <td class="py-4 px-6">
+                                <div class="font-mono text-xs text-slate-700 font-semibold select-all">{{ $pay->reference_id ?? '-' }}</div>
+                                <div class="text-[9px] text-slate-400 mt-0.5 uppercase font-bold tracking-wider">Merchant Ref</div>
                             </td>
                             <td class="py-4 px-6 text-slate-500 text-xs">
                                 {{ $pay->created_at->format('d M Y, H:i') }} WIB
