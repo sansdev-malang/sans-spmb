@@ -64,6 +64,12 @@
             <a href="{{ route('admin.payment-channels.index', array_merge(request()->query(), ['type' => 'qris'])) }}" class="px-4 py-2 rounded-lg text-xs font-bold transition text-center flex-1 md:flex-initial {{ request('type') === 'qris' ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm border border-slate-200/50 dark:border-slate-800' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' }}">
                 QRIS
             </a>
+            <a href="{{ route('admin.payment-channels.index', array_merge(request()->query(), ['type' => 'ewallet'])) }}" class="px-4 py-2 rounded-lg text-xs font-bold transition text-center flex-1 md:flex-initial {{ request('type') === 'ewallet' ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm border border-slate-200/50 dark:border-slate-800' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' }}">
+                E-Wallet
+            </a>
+            <a href="{{ route('admin.payment-channels.index', array_merge(request()->query(), ['type' => 'retail'])) }}" class="px-4 py-2 rounded-lg text-xs font-bold transition text-center flex-1 md:flex-initial {{ request('type') === 'retail' ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm border border-slate-200/50 dark:border-slate-800' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300' }}">
+                Modern Retail
+            </a>
         </div>
 
         <!-- Search & Status Filter Form -->
