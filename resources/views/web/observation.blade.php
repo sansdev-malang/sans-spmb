@@ -251,12 +251,12 @@
                             </div>
 
                             <!-- Scroll warning badge -->
-                            <div id="scroll-warning-badge" class="mt-3.5 p-3 rounded-xl border bg-amber-50 border-amber-255 dark:bg-amber-950/20 dark:border-amber-900/30 text-amber-700 dark:text-amber-400 flex items-center justify-between gap-2.5 transition duration-300">
+                            <div id="scroll-warning-badge" class="mt-3 py-2 px-3.5 rounded-xl border bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30 text-[11px] text-amber-700 dark:text-amber-400 flex items-center justify-between gap-2.5 transition duration-300">
                                 <span class="flex items-center gap-2 font-semibold">
-                                    <i data-lucide="info" class="w-4.5 h-4.5 animate-bounce"></i>
+                                    <i data-lucide="info" class="w-3.5 h-3.5 animate-bounce"></i>
                                     <span>Mohon scroll dokumen di atas sampai akhir untuk mengaktifkan persetujuan.</span>
                                 </span>
-                                <span class="text-[9px] font-bold uppercase bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded shadow-sm">Belum Dibaca</span>
+                                <span class="text-[8px] font-bold uppercase bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded shadow-sm">Belum Dibaca</span>
                             </div>
                         </div>
 
@@ -377,13 +377,13 @@
                  }
 
                  // Update badge to success state
-                 warningBadge.className = "mt-3.5 p-3 rounded-xl border bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex items-center justify-between gap-2.5 transition duration-300";
+                 warningBadge.className = "mt-3 py-2 px-3.5 rounded-xl border bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/30 text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center justify-between gap-2.5 transition duration-300";
                  warningBadge.innerHTML = `
                      <span class="flex items-center gap-2 font-semibold">
-                         <i data-lucide="check-circle" class="w-4.5 h-4.5 text-emerald-600"></i>
+                         <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
                          <span>Terima kasih, dokumen selesai dibaca. Silakan isi form persetujuan di bawah.</span>
                      </span>
-                     <span class="text-[9px] font-bold uppercase bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded shadow-sm">Selesai Baca</span>
+                     <span class="text-[8px] font-bold uppercase bg-emerald-100 dark:bg-emerald-900/40 px-1.5 py-0.5 rounded shadow-sm">Selesai Baca</span>
                  `;
                  if (window.lucide) {
                      lucide.createIcons();
