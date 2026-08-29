@@ -38,9 +38,6 @@
                     <p class="text-xs text-brand-yellow/90 font-medium">
                         Pengumuman kelulusan resmi dan rincian pembiayaan pendidikan.
                     </p>
-                    <span class="bg-emerald-800/80 text-emerald-100 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-emerald-700/40 select-none">
-                        No. Registrasi: SANS-{{ substr($registration->period->year ?? '2026', 0, 4) }}-{{ str_pad($registration->id, 4, '0', STR_PAD_LEFT) }}
-                    </span>
                 </div>
             </div>
             @if($registration->registration_status === 'completed')
@@ -70,7 +67,11 @@
             </div>
 
             <!-- STUDENT PROFILE META -->
-            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-5 border border-slate-100 dark:border-slate-850 grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">
+            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-5 border border-slate-100 dark:border-slate-850 grid grid-cols-2 sm:grid-cols-6 gap-4 text-xs">
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">No. Registrasi</span>
+                    <span class="font-extrabold text-brand-emerald dark:text-emerald-450 mt-1 block">SANS-{{ substr($registration->period->year ?? '2026', 0, 4) }}-{{ str_pad($registration->id, 4, '0', STR_PAD_LEFT) }}</span>
+                </div>
                 <div>
                     <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Nama Calon Siswa</span>
                     <span class="font-extrabold text-slate-800 dark:text-slate-200 mt-1 block">{{ $registration->candidate_name }}</span>
@@ -91,7 +92,7 @@
                 </div>
                 <div>
                     <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Tahun Pelajaran</span>
-                    <span class="font-extrabold text-slate-800 dark:text-slate-200 mt-1 block">{{ $registration->period->year ?? '2026/2027' }}</span>
+                    <span class="font-extrabold text-slate-800 dark:text-slate-200 mt-1 block">{{ $registration->period->year ?? '2027-2028' }}</span>
                 </div>
             </div>
 
