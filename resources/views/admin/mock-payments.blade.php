@@ -33,7 +33,7 @@
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice, ref, atau nama..." 
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice, Winpay ID (215584), VA, atau nama siswa..." 
                                class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
                         
                         <!-- Clear (X) Button -->
@@ -175,7 +175,7 @@
                         <th class="py-4 px-6">Nama Biaya</th>
                         <th class="py-4 px-6">Metode</th>
                         <th class="py-4 px-6">Nominal</th>
-                        <th class="py-4 px-6">Ref (Merchant)</th>
+                        <th class="py-4 px-6">Ref Gateway (Winpay)</th>
                         <th class="py-4 px-6">Waktu Transaksi</th>
                         <th class="py-4 px-6 text-center">Status</th>
                     </tr>
@@ -186,8 +186,9 @@
                             <td class="py-4 px-6 text-center text-slate-500 font-bold text-xs">
                                 {{ ($payments->currentPage() - 1) * $payments->perPage() + $loop->iteration }}
                             </td>
-                            <td class="py-4 px-6 font-mono text-xs font-bold text-slate-700">
-                                {{ $pay->invoice_number }}
+                            <td class="py-4 px-6">
+                                <div class="font-mono text-xs font-bold text-slate-700 select-all">{{ $pay->invoice_number }}</div>
+                                <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Merchant Ref di Winpay</div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-slate-800">
                                 {{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}
@@ -214,7 +215,7 @@
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-mono text-xs text-slate-700 font-semibold select-all">{{ $pay->reference_id ?? '-' }}</div>
-                                <div class="text-[9px] text-slate-400 mt-0.5 uppercase font-bold tracking-wider">Merchant Ref</div>
+                                <div class="text-[9px] text-slate-400 mt-0.5 uppercase font-bold tracking-wider">Gateway Reference</div>
                                 @php
                                     $gatewayId = null;
                                     if (is_array($pay->payment_info)) {
@@ -223,11 +224,16 @@
                                     }
                                 @endphp
                                 @if($gatewayId)
-                                    <div class="text-[10px] text-emerald-600 font-mono font-extrabold mt-1.5 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 inline-block">Winpay ID: {{ $gatewayId }}</div>
+                                    <div class="mt-1.5 flex items-center gap-1">
+                                        <span class="text-[10px] text-emerald-700 font-mono font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 select-all">Winpay ID: {{ $gatewayId }}</span>
+                                    </div>
+                                @else
+                                    <div class="mt-1.5 text-[9px] text-slate-400 italic">Waiting callback...</div>
                                 @endif
                             </td>
-                            <td class="py-4 px-6 text-slate-500 text-xs font-mono">
-                                {{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }}
+                            <td class="py-4 px-6 text-slate-500 text-xs">
+                                <div class="font-semibold text-slate-750">{{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }} <span class="text-[9px] font-bold text-slate-400">WIB</span></div>
+                                <div class="font-mono text-[10px] text-slate-400 mt-0.5">{{ $pay->created_at->format('Y-m-d H:i:s') }} <span class="text-[8px] font-bold">UTC (Winpay)</span></div>
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
