@@ -184,7 +184,7 @@
 
 <!-- Modal A: Add Step Modal -->
 <div id="addStepModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden">
         <div class="bg-brand-emerald text-white px-6 py-4 flex justify-between items-center">
             <h3 class="font-extrabold text-base flex items-center gap-1.5">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Tahapan Formulir
@@ -206,7 +206,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-850 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
                     <option value="">-- Semua Unit (Global) --</option>
                     @foreach($units as $unit)
                         <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
@@ -227,7 +227,7 @@
 
 <!-- Modal B: Edit Step Modal -->
 <div id="editStepModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden">
         <div class="bg-brand-emerald text-white px-6 py-4 flex justify-between items-center">
             <h3 class="font-extrabold text-base flex items-center gap-1.5">
                 <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Tahapan Formulir
@@ -249,7 +249,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" id="edit-step-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-850 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select name="spmb_unit_id" id="edit-step-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
                     <option value="">-- Semua Unit (Global) --</option>
                     @foreach($units as $unit)
                         <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -270,7 +270,7 @@
 
 <!-- Modal C: Add Field Modal -->
 <div id="addFieldModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden">
         <div class="bg-brand-emerald text-white px-6 py-4 flex justify-between items-center">
             <h3 class="font-extrabold text-base flex items-center gap-1.5">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Kolom Input
@@ -297,7 +297,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-855 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
                     <option value="">-- Semua Unit (Global) --</option>
                     @foreach($units as $unit)
                         <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
@@ -306,7 +306,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
-                <select name="type" id="add-field-type" onchange="toggleOptionsInput('add')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select name="type" id="add-field-type" onchange="toggleOptionsInput('add')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
                     <option value="text">Input Text (Teks Biasa)</option>
                     <option value="number">Input Number (Angka NIK/Telp)</option>
                     <option value="email">Input Email</option>
@@ -346,7 +346,7 @@
 
 <!-- Modal D: Edit Field Modal -->
 <div id="editFieldModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden">
         <div class="bg-brand-emerald text-white px-6 py-4 flex justify-between items-center">
             <h3 class="font-extrabold text-base flex items-center gap-1.5">
                 <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Kolom Input
@@ -371,7 +371,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" id="edit-field-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-855 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select name="spmb_unit_id" id="edit-field-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
                     <option value="">-- Semua Unit (Global) --</option>
                     @foreach($units as $unit)
                         <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -380,7 +380,7 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
-                <select name="type" id="edit-field-type" onchange="toggleOptionsInput('edit')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                <select name="type" id="edit-field-type" onchange="toggleOptionsInput('edit')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
                     <option value="text">Input Text (Teks Biasa)</option>
                     <option value="number">Input Number (Angka NIK/Telp)</option>
                     <option value="email">Input Email</option>
