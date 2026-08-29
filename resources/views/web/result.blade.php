@@ -67,7 +67,7 @@
             </div>
 
             <!-- STUDENT PROFILE META -->
-            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-5 border border-slate-100 dark:border-slate-850 grid grid-cols-2 sm:grid-cols-6 gap-4 text-xs">
+            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-6 border border-slate-100 dark:border-slate-850 grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-5 text-xs">
                 <div>
                     <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">No. Registrasi</span>
                     <span class="font-extrabold text-brand-emerald dark:text-emerald-450 mt-1 block">SANS-{{ substr($registration->period->year ?? '2026', 0, 4) }}-{{ str_pad($registration->id, 4, '0', STR_PAD_LEFT) }}</span>
