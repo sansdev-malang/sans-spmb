@@ -465,7 +465,7 @@
             <p id="confirmDeleteMessage" class="text-xs text-slate-500 leading-relaxed font-semibold">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold transition">Batal</button>
-                <form id="confirmDeleteForm" method="POST" action="" class="inline-block">
+                <form id="confirmDeleteForm" method="POST" action="" hx-boost="false" class="inline-block">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm">Ya, Hapus</button>
