@@ -209,7 +209,7 @@
                         
                         <div class="space-y-4">
                             <h4 class="font-extrabold text-sm text-slate-800 dark:text-white">Surat Pernyataan Kesanggupan Orang Tua / Wali</h4>
-                                                      <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-96 overflow-y-auto leading-relaxed">
+                                                   <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-[500px] overflow-y-auto leading-relaxed">
                                 @if($agreementTemplate)
                                     <div class="flex flex-col items-end mb-5 select-none">
                                         <div class="border border-brand-emerald/20 bg-brand-emerald/5 dark:border-emerald-950/40 dark:bg-emerald-950/10 p-2.5 rounded-xl flex flex-col items-center text-center max-w-[280px]">
@@ -227,45 +227,10 @@
                                     </div>
 
                                     <!-- Dynamic Signature Footer Mockup -->
-                                    <div class="border-t border-slate-200 dark:border-slate-800 pt-6 mt-6 select-none text-[10px] text-slate-650 dark:text-slate-400">
+                                    <div class="border-t border-slate-200 dark:border-slate-800 pt-6 mt-6 select-none text-[10px] text-slate-655 dark:text-slate-400">
                                         <!-- Date row -->
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div></div>
-                                            <div class="text-center">
-                                                <p>{{ $agreementTemplate->place }}, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Title row -->
-                                        <div class="grid grid-cols-2 gap-4 mt-2">
-                                            <div class="text-center">
-                                                <p class="font-bold text-slate-750 dark:text-slate-300">{{ $agreementTemplate->principal_title }}</p>
-                                                <p class="font-medium text-slate-500">{{ $registration->unit->name }}</p>
-                                            </div>
-                                            <div class="text-center flex flex-col justify-between">
-                                                <p class="font-bold text-slate-750 dark:text-slate-300">Orangtua/Wali Murid,</p>
-                                                <p class="invisible select-none">Spacer</p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Spacing / Meterai row -->
-                                        <div class="grid grid-cols-2 gap-4 my-6">
-                                            <div class="h-12"></div>
-                                            <div class="text-center flex items-center justify-center">
-                                                <div class="inline-block border border-dashed border-slate-350 dark:border-slate-700 px-3 py-1.5 rounded bg-slate-50 dark:bg-slate-900/50 text-[9px] text-slate-400 font-semibold">
-                                                    Meterai Rp10.000
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Name row -->
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="text-center">
-                                                <p class="font-extrabold text-slate-850 dark:text-slate-250 underline">{{ $agreementTemplate->principal_name }}</p>
-                                            </div>
-                                            <div class="text-center">
-                                                <p class="font-extrabold text-slate-850 dark:text-slate-250 underline">(<span class="dynamic-signature-name">{{ $registration->father_name ?? ($registration->mother_name ?? '____________________') }}</span>)</p>
-                                            </div>
+                                        <div class="flex justify-end pr-4">
+                                            <p class="font-bold text-slate-750 dark:text-slate-300">{{ $agreementTemplate->place }}, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</p>
                                         </div>
                                     </div>
                                 @else
