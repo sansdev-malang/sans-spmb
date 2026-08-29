@@ -170,29 +170,13 @@
                     </div>
                 </div>
 
-                <!-- Kustomisasi Tempat & Tanda Tangan -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-4">
-                    <div class="space-y-2">
+                <!-- Kustomisasi Tempat Penandatanganan -->
+                <div class="border-t border-slate-100 pt-4">
+                    <div class="space-y-2 max-w-sm">
                         <label class="block text-xs font-bold text-slate-700">Tempat Penandatanganan</label>
                         <input type="text" 
                                name="place" 
                                value="{{ $unit->agreementTemplate->place ?? 'Malang' }}" 
-                               class="w-full rounded-xl border border-slate-200 bg-white text-xs px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-slate-700" 
-                               required>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold text-slate-700">Nama Kepala Sekolah</label>
-                        <input type="text" 
-                               name="principal_name" 
-                               value="{{ $unit->agreementTemplate->principal_name ?? 'Dra. Hj. Mike Supraptiwi, S.Psi, M.Pd' }}" 
-                               class="w-full rounded-xl border border-slate-200 bg-white text-xs px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-slate-700 font-semibold" 
-                               required>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold text-slate-700">Jabatan Kepala Sekolah</label>
-                        <input type="text" 
-                               name="principal_title" 
-                               value="{{ $unit->agreementTemplate->principal_title ?? 'Kepala Sekolah' }}" 
                                class="w-full rounded-xl border border-slate-200 bg-white text-xs px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-slate-700" 
                                required>
                     </div>

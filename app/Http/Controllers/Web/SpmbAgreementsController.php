@@ -34,8 +34,8 @@ class SpmbAgreementsController extends Controller
             'rules_consent_label' => 'required|string|max:255',
             'fees_consent_label' => 'required|string|max:255',
             'place' => 'required|string|max:255',
-            'principal_name' => 'required|string|max:255',
-            'principal_title' => 'required|string|max:255',
+            'principal_name' => 'nullable|string|max:255',
+            'principal_title' => 'nullable|string|max:255',
         ]);
 
         $template = SpmbAgreementTemplate::updateOrCreate(
@@ -46,8 +46,8 @@ class SpmbAgreementsController extends Controller
                 'rules_consent_label' => $request->rules_consent_label,
                 'fees_consent_label' => $request->fees_consent_label,
                 'place' => $request->place,
-                'principal_name' => $request->principal_name,
-                'principal_title' => $request->principal_title,
+                'principal_name' => $request->principal_name ?? '',
+                'principal_title' => $request->principal_title ?? '',
             ]
         );
 
