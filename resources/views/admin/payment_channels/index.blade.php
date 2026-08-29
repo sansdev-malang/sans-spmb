@@ -127,19 +127,7 @@
                                             <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" class="max-h-full max-w-full object-contain">
                                         @else
                                             <span class="font-extrabold text-[10px] text-slate-500 uppercase">
-                                                @if(str_contains(strtoupper($channel->code), 'BCA'))
-                                                    BCA
-                                                @elseif(str_contains(strtoupper($channel->code), 'BNI'))
-                                                    BNI
-                                                @elseif(str_contains(strtoupper($channel->code), 'MANDIRI'))
-                                                    MDR
-                                                @elseif(str_contains(strtoupper($channel->code), 'BRI'))
-                                                    BRI
-                                                @elseif(str_contains(strtoupper($channel->code), 'QRIS'))
-                                                    QR
-                                                @else
-                                                    {{ substr($channel->code, 0, 3) }}
-                                                @endif
+                                                {{ substr($channel->code, 0, 3) }}
                                             </span>
                                         @endif
                                     </div>
@@ -210,7 +198,7 @@
             </button>
         </div>
 
-        <form action="{{ route('admin.payment-channels.store') }}" method="POST" class="p-6 space-y-4">
+        <form action="{{ route('admin.payment-channels.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
             @csrf
             
             @if($activeGateway)
@@ -246,6 +234,12 @@
                 </select>
             </div>
 
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Logo / Gambar Channel</label>
+                <input type="file" name="logo" accept="image/*" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                <span class="text-[9px] text-slate-400 mt-1 block">Format: JPG, PNG, atau SVG. Maksimal 2MB.</span>
+            </div>
+
             <div class="flex items-center">
                 <input id="create_is_active" name="is_active" type="checkbox" checked value="1" class="h-4 w-4 rounded border-slate-300 text-brand-emerald focus:ring-brand-emerald">
                 <label for="create_is_active" class="ml-2 block text-xs font-bold text-slate-650 dark:text-slate-350">
@@ -277,7 +271,7 @@
             </button>
         </div>
 
-        <form id="editForm" method="POST" class="p-6 space-y-4">
+        <form id="editForm" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
             @csrf
             
             <input type="hidden" name="payment_gateway_id" id="edit_gateway_id">
@@ -300,6 +294,12 @@
                     <option value="ewallet">E-Wallet</option>
                     <option value="retail">Retail Outlet</option>
                 </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Logo / Gambar Channel</label>
+                <input type="file" name="logo" accept="image/*" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                <span class="text-[9px] text-slate-400 mt-1 block">Format: JPG, PNG, atau SVG. Maksimal 2MB. Kosongkan jika tidak ingin mengubah logo.</span>
             </div>
 
             <div class="flex items-center">

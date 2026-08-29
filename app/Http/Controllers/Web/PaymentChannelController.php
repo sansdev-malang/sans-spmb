@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\SpmbPaymentChannel;
 use App\Models\PaymentGateway;
 use App\Services\WinpayService;
+use Illuminate\Support\Facades\Storage;
 
 class PaymentChannelController extends Controller
 {
@@ -70,14 +71,21 @@ class PaymentChannelController extends Controller
             'code' => 'required|string|max:50|unique:spmb_payment_channels,code',
             'type' => 'required|string|max:50',
             'payment_gateway_id' => 'required|exists:payment_gateways,id',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $gateway = PaymentGateway::findOrFail($request->payment_gateway_id);
+
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('payment-logos', 'public');
+        }
 
         SpmbPaymentChannel::create([
             'name' => $request->name,
             'code' => strtoupper($request->code),
             'type' => strtolower($request->type),
+            'logo' => $logoPath,
             'payment_gateway_id' => $request->payment_gateway_id,
             'is_active' => $request->has('is_active')
         ]);
@@ -98,17 +106,28 @@ class PaymentChannelController extends Controller
             'code' => 'required|string|max:50|unique:spmb_payment_channels,code,' . $id,
             'type' => 'required|string|max:50',
             'payment_gateway_id' => 'required|exists:payment_gateways,id',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         $gateway = PaymentGateway::findOrFail($request->payment_gateway_id);
 
-        $channel->update([
+        $data = [
             'name' => $request->name,
             'code' => strtoupper($request->code),
             'type' => strtolower($request->type),
             'payment_gateway_id' => $request->payment_gateway_id,
             'is_active' => $request->has('is_active')
-        ]);
+        ];
+
+        if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            if ($channel->logo) {
+                Storage::disk('public')->delete($channel->logo);
+            }
+            $data['logo'] = $request->file('logo')->store('payment-logos', 'public');
+        }
+
+        $channel->update($data);
 
         return redirect()->route('admin.payment-channels.index', ['tab' => $gateway->code])
             ->with('success', 'Channel pembayaran berhasil diperbarui.');
@@ -122,6 +141,11 @@ class PaymentChannelController extends Controller
         $channel = SpmbPaymentChannel::findOrFail($id);
         $gatewayCode = $channel->gateway->code ?? '';
         $channelName = $channel->name;
+
+        // Delete logo if exists
+        if ($channel->logo) {
+            Storage::disk('public')->delete($channel->logo);
+        }
 
         $channel->delete();
 

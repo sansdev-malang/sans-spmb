@@ -195,7 +195,7 @@
                                         @if($channel->getLogoUrl())
                                             <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" class="max-h-full max-w-full object-contain">
                                         @else
-                                            <div class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded font-black text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                            <div class="px-2.5 py-1 bg-slate-150 dark:bg-slate-800 rounded font-black text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                                                 {{ substr($channel->code, 0, 3) }}
                                             </div>
                                         @endif
