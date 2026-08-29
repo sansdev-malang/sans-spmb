@@ -86,9 +86,15 @@
                 </div>
                 <div>
                     <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Layanan Tambahan</span>
-                    <span class="font-extrabold text-brand-emerald dark:text-emerald-450 mt-1 block">
-                        {{ $registration->extraServices->count() > 0 ? $registration->extraServices->pluck('name')->implode(', ') : 'Tidak Ada' }}
-                    </span>
+                    @if($registration->extraServices->count() > 0)
+                        <ul class="list-disc pl-3.5 mt-1 font-extrabold text-brand-emerald dark:text-emerald-450 space-y-0.5">
+                            @foreach($registration->extraServices as $service)
+                                <li>{{ $service->name }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <span class="font-extrabold text-slate-500 dark:text-slate-400 mt-1 block">Tidak Ada</span>
+                    @endif
                 </div>
                 <div>
                     <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Tahun Pelajaran</span>
