@@ -198,11 +198,13 @@
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-semibold text-slate-800">{{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}</div>
-                                @if($pay->registration && ($pay->registration->admission_level || ($pay->registration->spmbUnit && $pay->registration->spmbUnit->name)))
+                                @if($pay->registration)
                                     <div class="text-[9px] text-slate-400 font-medium mt-0.5">
-                                        {{ $pay->registration->admission_level ?? '' }}
-                                        {{ $pay->registration->admission_level && $pay->registration->spmbUnit ? '•' : '' }}
-                                        {{ $pay->registration->spmbUnit->name ?? '' }}
+                                        {{ $pay->registration->admission_level ?: ($pay->registration->grade->name ?? '') }}
+                                        @if(($pay->registration->admission_level || isset($pay->registration->grade)) && isset($pay->registration->unit))
+                                            •
+                                        @endif
+                                        {{ $pay->registration->unit->name ?? '' }}
                                     </div>
                                 @else
                                     <div class="text-[9px] text-slate-400 font-medium mt-0.5 italic">Draft Pendaftaran</div>

@@ -427,8 +427,16 @@ class WebDashboardController extends Controller
         if ($gate) return $gate;
 
         $formDetails = $this->getFormDetails($registration);
-        $steps = $formDetails['steps'];
-        $allStepsCompleted = $formDetails['allStepsCompleted'];
+        
+        // Saring Step 1 (Jalur & Gelombang Pendaftaran) dari tampilan pendaftar
+        $steps = $formDetails['steps']->reject(function($step) {
+            return $step->id === 1;
+        })->values();
+        
+        // Evaluasi kelengkapan berkas hanya untuk langkah yang ditampilkan (Step 2, 3, 4)
+        $allStepsCompleted = $steps->every(function($step) {
+            return $step->is_completed;
+        });
         
         return view('web.form', compact('registration', 'steps', 'allStepsCompleted'));
     }
