@@ -107,7 +107,11 @@
                                 <a href="{{ Storage::url($registration->birth_certificate_path) }}" target="_blank" class="text-brand-emerald font-bold hover:underline flex items-center gap-1">
                                     📄 Buka Berkas
                                 </a>
-                                @if($registration->registration_status === 'failed')
+                                @if($registration->registration_status === 'submitted')
+                                    <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span> Menunggu Verifikasi
+                                    </span>
+                                @elseif($registration->registration_status === 'failed')
                                     @if(is_array($registration->invalid_fields) && in_array('birth_certificate_path', $registration->invalid_fields))
                                         <span class="bg-red-50 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
                                             <span class="h-1.5 w-1.5 rounded-full bg-rose-650 animate-pulse"></span> Perlu Perbaikan (Ditolak)
@@ -134,7 +138,11 @@
                                 <a href="{{ Storage::url($registration->family_card_path) }}" target="_blank" class="text-brand-emerald font-bold hover:underline flex items-center gap-1">
                                     📄 Buka Berkas
                                 </a>
-                                @if($registration->registration_status === 'failed')
+                                @if($registration->registration_status === 'submitted')
+                                    <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span> Menunggu Verifikasi
+                                    </span>
+                                @elseif($registration->registration_status === 'failed')
                                     @if(is_array($registration->invalid_fields) && in_array('family_card_path', $registration->invalid_fields))
                                         <span class="bg-red-50 text-red-700 border border-red-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
                                             <span class="h-1.5 w-1.5 rounded-full bg-rose-650 animate-pulse"></span> Perlu Perbaikan (Ditolak)
