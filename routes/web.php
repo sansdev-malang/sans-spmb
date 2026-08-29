@@ -527,11 +527,12 @@ Route::middleware('auth')->group(function () {
                     $q->where('spmb_period_id', $selectedPeriodId);
                 });
 
-            // Search by Invoice or Candidate Name
+            // Search by Invoice, Reference ID, or Candidate Name
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
                     $q->where('invoice_number', 'like', "%{$search}%")
+                      ->orWhere('reference_id', 'like', "%{$search}%")
                       ->orWhereHas('registration', function($sq) use ($search) {
                           $sq->where('candidate_name', 'like', "%{$search}%");
                       });
