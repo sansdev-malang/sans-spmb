@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\AdminRegistrationController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/payments/callback', [PaymentController::class, 'callback']);
+Route::post('/payments/callback/v1.0/transfer-va/payment', [PaymentController::class, 'callback']);
+Route::post('/payments/callback/v1.0/qr/qr-mpm-notify', [PaymentController::class, 'callback']);
 
 // Protected Routes (Requires Token)
 Route::middleware('auth:sanctum')->group(function () {
