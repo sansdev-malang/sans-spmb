@@ -198,7 +198,7 @@
             </button>
         </div>
 
-        <form action="{{ route('admin.payment-channels.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+        <form action="{{ route('admin.payment-channels.store') }}" method="POST" enctype="multipart/form-data" hx-boost="false" class="p-6 space-y-4">
             @csrf
             
             @if($activeGateway)
@@ -271,7 +271,7 @@
             </button>
         </div>
 
-        <form id="editForm" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+        <form id="editForm" method="POST" enctype="multipart/form-data" hx-boost="false" class="p-6 space-y-4">
             @csrf
             
             <input type="hidden" name="payment_gateway_id" id="edit_gateway_id">
@@ -294,6 +294,14 @@
                     <option value="ewallet">E-Wallet</option>
                     <option value="retail">Retail Outlet</option>
                 </select>
+            </div>
+
+            <!-- Current Logo Preview -->
+            <div id="edit_logo_preview_container" class="hidden">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Logo Saat Ini</label>
+                <div class="h-16 w-32 border border-slate-200 dark:border-slate-800 rounded-xl p-2 bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden mb-2">
+                    <img id="edit_logo_preview" src="" alt="Current Logo" class="max-h-full max-w-full object-contain">
+                </div>
             </div>
 
             <div>
@@ -350,6 +358,17 @@
         document.getElementById('edit_code').value = channel.code;
         document.getElementById('edit_type').value = channel.type;
         document.getElementById('edit_is_active').checked = !!channel.is_active;
+        
+        // Show/hide current logo preview
+        const previewContainer = document.getElementById('edit_logo_preview_container');
+        const previewImg = document.getElementById('edit_logo_preview');
+        if (channel.logo) {
+            previewImg.src = `/storage/${channel.logo}`;
+            previewContainer.classList.remove('hidden');
+        } else {
+            previewImg.src = '';
+            previewContainer.classList.add('hidden');
+        }
         
         // Dynamic action URL
         const form = document.getElementById('editForm');
