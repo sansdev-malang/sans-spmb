@@ -276,7 +276,8 @@
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Kolom Input
             </h3>
             <button onclick="closeAddFieldModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
-               <form action="{{ route('admin.spmb-settings.form.fields.store') }}?unit_id={{ $selectedUnitId }}" method="POST" hx-boost="false" class="p-6 space-y-4">
+        </div>
+        <form action="{{ route('admin.spmb-settings.form.fields.store') }}?unit_id={{ $selectedUnitId }}" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
             @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'field_create_'))
                 <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
@@ -352,7 +353,8 @@
                 <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Kolom Input
             </h3>
             <button onclick="closeEditFieldModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
-           <form id="editFieldForm" method="POST" hx-boost="false" class="p-6 space-y-4">
+        </div>
+        <form id="editFieldForm" method="POST" hx-boost="false" class="p-6 space-y-4">
             @csrf
             @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'field_edit_'))
                 <div class="spmb-form-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold space-y-1">
