@@ -319,6 +319,11 @@ class PaymentController extends Controller
         $invoiceNo = $body['trxId'] ?? $body['partnerReferenceNo'] ?? ($body['additionalInfo']['invoiceNumber'] ?? null);
         $status = $body['paymentStatus'] ?? $body['latestStatus'] ?? null;
 
+        // Standard SNAP BI VA / QRIS payment notification implies SUCCESS status
+        if (is_null($status) && ($request->is('*transfer-va/payment*') || $request->is('*qr-mpm-notify*'))) {
+            $status = 'SUCCESS';
+        }
+
         if (!$invoiceNo) {
             return response()->json([
                 'responseCode' => '4002700',
