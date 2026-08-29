@@ -10,6 +10,44 @@
     $heroTitle = \App\Models\Setting::get('portal_hero_title', 'Membangun Generasi Cerdas, Sholeh, dan Berakhlak Mulia.');
     $heroDesc = \App\Models\Setting::get('portal_hero_description', 'Bergabunglah bersama Sekolah Anak Saleh. Kami menyajikan kurikulum yang mengintegrasikan nilai-nilai Islam dengan pendidikan modern untuk menyiapkan pemimpin masa depan.');
     $heroImages = json_decode(\App\Models\Setting::get('school_hero_images', '[]'), true) ?: [];
+    if (empty($heroImages)) {
+        $heroImages = [
+            'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-SD-18.jpg',
+            'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-SD-3.jpg',
+        ];
+    }
+    $heroSlides = collect($heroImages)->map(function ($img, $index) use ($schoolName) {
+        $slides = [
+            [
+                'title' => 'Belajar dengan Hati, Bertumbuh dengan Adab',
+                'desc' => "Lingkungan belajar yang hangat dan terarah di {$schoolName}, agar anak tumbuh percaya diri, disiplin, dan berakhlak mulia.",
+            ],
+            [
+                'title' => 'Kurikulum Modern, Jiwa Islami, Karakter Unggul',
+                'desc' => "Perpaduan pembelajaran akademik dan pembinaan karakter yang menyiapkan generasi siap menghadapi masa depan.",
+            ],
+            [
+                'title' => 'Rumah Tumbuh untuk Generasi Cerdas dan Saleh',
+                'desc' => "Setiap aktivitas dirancang untuk menumbuhkan kecintaan belajar, kemandirian, dan kebiasaan baik sejak dini.",
+            ],
+        ];
+
+        $meta = $slides[$index % count($slides)];
+
+        return array_merge([
+            'image' => $img,
+        ], $meta);
+    })->values()->all();
+
+    if (empty($heroSlides)) {
+        $heroSlides = [
+            [
+                'image' => 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=800',
+                'title' => $heroTitle,
+                'desc' => $heroDesc,
+            ],
+        ];
+    }
     $activeUnits = \App\Models\SpmbUnit::where('is_active', true)->get();
 @endphp
 
@@ -27,6 +65,7 @@
     .hero-image-animate { animation: scaleIn 0.8s ease-out 0.25s both; }
     .floating-card-1    { animation: fadeUp  0.6s ease-out 0.55s both; }
     .floating-card-2    { animation: fadeUp  0.6s ease-out 0.75s both; }
+    .hero-copy-fade     { animation: fadeUp  0.55s ease-out both; }
 </style>
 
 <!-- Hero Section -->
@@ -53,10 +92,10 @@
         <div class="absolute bottom-12 right-8 w-24 h-24 bg-amber-400/15 dark:bg-amber-400/8 rounded-full blur-xl"></div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-28 pb-20 md:pt-36 md:pb-28">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center pt-28 pb-20 md:pt-36 md:pb-28">
 
         {{-- Hero Text (Left 7 Columns) --}}
-        <div class="lg:col-span-7 space-y-7 hero-text-animate">
+        <div class="lg:col-span-7 space-y-6 hero-text-animate">
 
             {{-- Badge --}}
             <div class="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold text-[11px] px-4 py-2 rounded-full border border-emerald-100 dark:border-emerald-800/60 shadow-sm">
@@ -71,15 +110,13 @@
             </div>
 
             {{-- Headline Editorial --}}
-            <h1 class="text-4xl md:text-5xl lg:text-[3.25rem] xl:text-[3.75rem] font-black leading-[1.08] tracking-tight text-slate-800 dark:text-slate-100">
-                Membangun Generasi<br>
-                <span class="text-custom-primary dark:text-emerald-400">Cerdas, Sholeh,</span><br>
-                dan Berakhlak Mulia.
+            <h1 class="text-4xl md:text-5xl lg:text-[2.85rem] xl:text-[3.15rem] font-black leading-[1.05] tracking-tight text-slate-800 dark:text-slate-100 max-w-lg">
+                <span data-hero-title>{{ $heroSlides[0]['title'] }}</span>
             </h1>
 
             {{-- Description --}}
-            <p class="text-slate-500 dark:text-slate-400 text-base leading-relaxed max-w-lg">
-                Bergabunglah bersama {{ $schoolName }} dan nikmati pendidikan yang mengintegrasikan nilai-nilai Islam dengan kurikulum modern untuk menyiapkan pemimpin masa depan.
+            <p class="text-slate-500 dark:text-slate-400 text-base leading-relaxed max-w-md" data-hero-desc>
+                {{ $heroSlides[0]['desc'] }}
             </p>
 
             {{-- CTA Buttons --}}
@@ -97,18 +134,18 @@
 
         {{-- Hero Image (Right 5 Columns) --}}
         <div class="lg:col-span-5 relative flex justify-center hero-image-animate">
-            <div class="relative w-full max-w-md">
+            <div class="relative w-full max-w-[27rem]">
                 {{-- Decorative orbs behind image --}}
                 <div class="absolute -top-8 -left-8 w-48 h-48 bg-amber-300/15 dark:bg-amber-300/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div class="absolute -bottom-8 -right-8 w-48 h-48 bg-emerald-400/15 dark:bg-emerald-400/10 rounded-full blur-2xl pointer-events-none"></div>
 
                 {{-- Main Image Container --}}
-                <div class="relative overflow-hidden rounded-3xl shadow-2xl border border-white/60 dark:border-slate-700 aspect-[4/3] bg-slate-100 dark:bg-slate-800">
-                    @if(count($heroImages) > 0)
-                        @foreach($heroImages as $index => $img)
-                            <img src="{{ $img }}"
-                                 alt="Slide {{ $index }}"
-                                 class="hero-slide absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out {{ $index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0' }}" />
+                <div class="relative overflow-hidden rounded-3xl shadow-2xl border border-white/60 dark:border-slate-700 h-[360px] md:h-[430px] bg-slate-100 dark:bg-slate-800" data-hero-slideshow>
+                    @if(count($heroSlides) > 0)
+                        @foreach($heroSlides as $index => $slide)
+                            <img src="{{ $slide['image'] }}"
+                                 alt="{{ $schoolName }} - slide hero {{ $index + 1 }}"
+                                 class="hero-slide absolute inset-0 w-full h-full object-cover transition-opacity duration-[1800ms] ease-in-out will-change-opacity {{ $index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0' }}" />
                         @endforeach
                     @else
                         {{-- Fallback default image --}}
@@ -116,10 +153,11 @@
                              alt="Siswa Sekolah"
                              class="absolute inset-0 w-full h-full object-cover" />
                     @endif
+
                 </div>
 
                 {{-- Floating Card 1 — Terakreditasi (bottom-left) --}}
-                <div class="floating-card-1 absolute -bottom-5 -left-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-3.5 rounded-2xl shadow-xl border border-white dark:border-slate-700/80 flex items-center gap-3 z-20 max-w-[220px]">
+                <div class="floating-card-1 absolute -bottom-4 -left-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-3 rounded-2xl shadow-xl border border-white dark:border-slate-700/80 flex items-center gap-3 z-20 max-w-[200px]">
                     <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center flex-shrink-0">
                         <i data-lucide="award" class="w-5 h-5 text-emerald-600 dark:text-emerald-400"></i>
                     </div>
@@ -130,8 +168,8 @@
                 </div>
 
                 {{-- Floating Card 2 — 20+ Tahun (top-right) --}}
-                <div class="floating-card-2 absolute -top-5 -right-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-4 py-3 rounded-2xl shadow-xl border border-white dark:border-slate-700/80 z-20 text-center min-w-[90px]">
-                    <p class="font-black text-xl text-custom-primary dark:text-emerald-400 leading-none">20+</p>
+                <div class="floating-card-2 absolute -top-4 -right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-3.5 py-2.5 rounded-2xl shadow-xl border border-white dark:border-slate-700/80 z-20 text-center min-w-[84px]">
+                    <p class="font-black text-lg text-custom-primary dark:text-emerald-400 leading-none">20+</p>
                     <p class="text-[9px] text-slate-400 font-semibold mt-0.5 whitespace-nowrap">Tahun Pengalaman</p>
                 </div>
             </div>
@@ -448,25 +486,71 @@
 </div>
 
 <script>
-    // Cycle through slides automatically if there are multiple images
     document.addEventListener("DOMContentLoaded", function() {
-        const slides = document.querySelectorAll('.hero-slide');
+        const hero = document.querySelector('[data-hero-slideshow]');
+        if (!hero) return;
+
+        const slides = Array.from(hero.querySelectorAll('.hero-slide'));
+        const heroTitle = document.querySelector('[data-hero-title]');
+        const heroDesc = document.querySelector('[data-hero-desc]');
+        const slideData = @json($heroSlides);
+        const heroTextNodes = [heroTitle, heroDesc].filter(Boolean);
         if (slides.length <= 1) return;
-        
+
         let currentSlide = 0;
-        setInterval(() => {
-            // Hide current slide
+        let intervalId = null;
+        let textAnimId = null;
+
+        const animateHeroText = () => {
+            heroTextNodes.forEach((node) => {
+                node.classList.remove('hero-copy-fade');
+                void node.offsetWidth;
+                node.classList.add('hero-copy-fade');
+            });
+
+            if (textAnimId) {
+                clearTimeout(textAnimId);
+            }
+
+            textAnimId = setTimeout(() => {
+                heroTextNodes.forEach((node) => node.classList.remove('hero-copy-fade'));
+            }, 700);
+        };
+
+        const showSlide = (nextSlide) => {
             slides[currentSlide].classList.remove('opacity-100', 'z-10');
             slides[currentSlide].classList.add('opacity-0', 'z-0');
-            
-            // Increment index
-            currentSlide = (currentSlide + 1) % slides.length;
-            
-            // Show next slide
+
+            currentSlide = nextSlide;
+
             slides[currentSlide].classList.remove('opacity-0', 'z-0');
             slides[currentSlide].classList.add('opacity-100', 'z-10');
-        }, 4500);
-    });
 
+            if (heroTitle && slideData[nextSlide]) {
+                heroTitle.textContent = slideData[nextSlide].title || '';
+            }
+
+            if (heroDesc && slideData[nextSlide]) {
+                heroDesc.textContent = slideData[nextSlide].desc || '';
+            }
+
+            animateHeroText();
+        };
+
+        const nextSlide = () => showSlide((currentSlide + 1) % slides.length);
+
+        const start = () => {
+            if (intervalId) return;
+            intervalId = setInterval(nextSlide, 5500);
+        };
+
+        const stop = () => {
+            if (!intervalId) return;
+            clearInterval(intervalId);
+            intervalId = null;
+        };
+
+        start();
+    });
 </script>
 @endsection
