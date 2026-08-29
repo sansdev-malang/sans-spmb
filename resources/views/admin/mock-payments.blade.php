@@ -298,7 +298,7 @@
                             </td>
                             <td class="py-4 px-6 text-center">
                                 @if($pay->status === 'success')
-                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200" title="Unduh Bukti Pembayaran Resmi">
+                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200" title="Unduh Bukti Pembayaran Resmi">
                                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                         <span>Bukti Bayar</span>
                                     </a>
