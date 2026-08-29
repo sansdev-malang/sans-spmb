@@ -199,7 +199,7 @@
                         <div>
                             <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">Observasi / Ta'aruf Selesai</h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                                Ananda telah menyelesaikan rangkaian ujian observasi kesiapan belajar. Selanjutnya, silakan baca dan setujui Surat Pernyataan Kesanggupan berikut ini untuk melanjutkan ke tahap administrasi keuangan.
+                                Ananda telah menyelesaikan rangkaian ujian observasi kesiapan belajar. Selanjutnya, silakan baca dan setujui Pernyataan Kesanggupan berikut ini untuk melanjutkan ke tahap administrasi keuangan.
                             </p>
                         </div>
                     </div>
@@ -208,7 +208,7 @@
                         @csrf
                         
                         <div class="space-y-4">
-                            <h4 class="font-extrabold text-sm text-slate-800 dark:text-white">Surat Pernyataan Kesanggupan Orang Tua / Wali</h4>
+                            <h4 class="font-extrabold text-sm text-slate-800 dark:text-white">Pernyataan Kesanggupan Orang Tua / Wali</h4>
                                                    <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-[500px] overflow-y-auto leading-relaxed">
                                 @if($agreementTemplate)
                                     <div class="flex flex-col items-end mb-5 select-none">
@@ -273,7 +273,7 @@
 
                         <div class="pt-4 flex justify-end">
                             <button type="submit" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5">
-                                <i data-lucide="check-square" class="w-4 h-4"></i> Setujui & Tandatangani Surat Pernyataan
+                                <i data-lucide="check-square" class="w-4 h-4"></i> Setujui & Tandatangani Pernyataan Kesanggupan
                             </button>
                         </div>
                     </form>
@@ -285,9 +285,9 @@
                     <div class="h-16 w-16 bg-green-50 dark:bg-green-950/20 text-green-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
                         <i data-lucide="award" class="w-8 h-8"></i>
                     </div>
-                    <h3 class="text-base font-extrabold text-slate-800 dark:text-white">Pernyataan Kesanggupan Ditandatangani</h3>
+                    <h3 class="text-base font-extrabold text-slate-800 dark:text-white">Pernyataan Kesanggupan Disepakati</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Terima kasih. Anda telah menandatangani Surat Pernyataan Kesanggupan Tata Tertib dan Biaya Masuk Yayasan.
+                        Terima kasih. Anda telah menyetujui Pernyataan Kesanggupan Tata Tertib dan Biaya Masuk Yayasan.
                     </p>
                     <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-xl text-left text-xs space-y-2">
                         <p class="font-bold text-slate-800 dark:text-white text-center border-b border-slate-100 dark:border-slate-800 pb-2">Status Persetujuan Digital</p>
