@@ -122,19 +122,25 @@
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-650 dark:text-slate-350 text-xs shadow-inner">
-                                        @if(str_contains(strtoupper($channel->code), 'BCA'))
-                                            BCA
-                                        @elseif(str_contains(strtoupper($channel->code), 'BNI'))
-                                            BNI
-                                        @elseif(str_contains(strtoupper($channel->code), 'MANDIRI'))
-                                            MDR
-                                        @elseif(str_contains(strtoupper($channel->code), 'BRI'))
-                                            BRI
-                                        @elseif(str_contains(strtoupper($channel->code), 'QRIS'))
-                                            QR
+                                    <div class="h-8 w-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm overflow-hidden select-none">
+                                        @if($channel->getLogoUrl())
+                                            <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" class="max-h-full max-w-full object-contain">
                                         @else
-                                            {{ substr($channel->code, 0, 3) }}
+                                            <span class="font-extrabold text-[10px] text-slate-500 uppercase">
+                                                @if(str_contains(strtoupper($channel->code), 'BCA'))
+                                                    BCA
+                                                @elseif(str_contains(strtoupper($channel->code), 'BNI'))
+                                                    BNI
+                                                @elseif(str_contains(strtoupper($channel->code), 'MANDIRI'))
+                                                    MDR
+                                                @elseif(str_contains(strtoupper($channel->code), 'BRI'))
+                                                    BRI
+                                                @elseif(str_contains(strtoupper($channel->code), 'QRIS'))
+                                                    QR
+                                                @else
+                                                    {{ substr($channel->code, 0, 3) }}
+                                                @endif
+                                            </span>
                                         @endif
                                     </div>
                                     <div class="font-extrabold text-slate-800 dark:text-slate-200">{{ $channel->name }}</div>

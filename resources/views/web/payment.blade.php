@@ -186,11 +186,25 @@
                         <input type="hidden" name="items" value="{{ request()->query('items') }}">
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Pilih Metode Pembayaran</label>
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            @forelse($channels as $channel)
-                                <label class="border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
+                             @forelse($channels as $channel)
+                                <label class="border border-slate-200 hover:border-brand-emerald hover:bg-emerald-50/5 dark:border-slate-800 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/5 rounded-xl p-4 flex flex-col items-center justify-center gap-3 cursor-pointer transition relative">
                                     <input type="radio" name="payment_method" value="{{ $channel->code }}" data-type="{{ $channel->type }}" data-gateway="{{ $channel->gateway->code ?? '' }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
-                                    <span class="text-sm font-bold text-slate-800 text-center leading-tight">{{ $channel->name }}</span>
-                                    <span class="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">{{ $channel->type }}</span>
+                                    
+                                    <!-- Logo Container -->
+                                    <div class="h-8 w-20 flex items-center justify-center p-0.5 select-none">
+                                        @if($channel->getLogoUrl())
+                                            <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" class="max-h-full max-w-full object-contain">
+                                        @else
+                                            <div class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded font-black text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                                {{ substr($channel->code, 0, 3) }}
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="text-center">
+                                        <span class="text-xs font-extrabold text-slate-850 dark:text-slate-200 block leading-tight">{{ $channel->name }}</span>
+                                        <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-1">{{ $channel->type }}</span>
+                                    </div>
                                 </label>
                             @empty
                                 <div class="col-span-full py-6 text-center text-xs text-slate-400 font-bold">
