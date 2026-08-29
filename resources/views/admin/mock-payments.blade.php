@@ -171,8 +171,7 @@
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">No. Invoice</th>
                         <th class="py-4 px-6">Calon Siswa</th>
-                        <th class="py-4 px-6">Jenis Biaya</th>
-                        <th class="py-4 px-6">Nama Biaya</th>
+                        <th class="py-4 px-6">Keterangan Biaya</th>
                         <th class="py-4 px-6">Metode</th>
                         <th class="py-4 px-6">Nominal</th>
                         <th class="py-4 px-6">Ref Gateway (Winpay)</th>
@@ -182,40 +181,60 @@
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-100">
                     @forelse($payments as $pay)
-                        <tr class="hover:bg-slate-50/50 transition">
-                            <td class="py-4 px-6 text-center text-slate-500 font-bold text-xs">
+                        <tr class="hover:bg-slate-50/55 transition group">
+                            <td class="py-4 px-6 text-center text-slate-400 font-bold text-xs">
                                 {{ ($payments->currentPage() - 1) * $payments->perPage() + $loop->iteration }}
                             </td>
                             <td class="py-4 px-6">
-                                <div class="font-mono text-xs font-bold text-slate-700 select-all">{{ $pay->invoice_number }}</div>
-                                <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Merchant Ref di Winpay</div>
+                                <div class="flex items-center gap-2">
+                                    <div class="p-1.5 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-white group-hover:text-brand-emerald border border-transparent group-hover:border-slate-100 transition duration-200">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-mono text-xs font-bold text-slate-700 select-all tracking-tight">{{ $pay->invoice_number }}</div>
+                                        <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Merchant Ref di Winpay</div>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="py-4 px-6 font-semibold text-slate-800">
-                                {{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}
+                            <td class="py-4 px-6">
+                                <div class="font-semibold text-slate-800">{{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}</div>
+                                @if($pay->registration)
+                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $pay->registration->admission_level ?? '' }} - {{ $pay->registration->spmbUnit->name ?? '' }}</div>
+                                @endif
                             </td>
-                            <td class="py-4 px-6 text-slate-600 font-medium">
+                            <td class="py-4 px-6">
                                 @php
                                     $fee = \App\Models\SpmbFee::where('name', 'like', '%' . ($pay->registration->admission_level ?? 'TK A') . '%')->first()
                                         ?? \App\Models\SpmbFee::where('is_active', true)->first()
                                         ?? (object)['name' => 'Pendaftaran TK A'];
                                 @endphp
-                                {{ $fee->category->name ?? 'Formulir Pendaftaran' }}
+                                <div class="font-semibold text-slate-700 text-xs">{{ $fee->name }}</div>
+                                <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $fee->category->name ?? 'Formulir Pendaftaran' }}</div>
                             </td>
-                            <td class="py-4 px-6 text-slate-600 font-medium">
-                                {{ $fee->name }}
-                            </td>
-                            <td class="py-4 px-6 text-slate-600 font-bold">
-                                <div>{{ $pay->payment_method }}</div>
+                            <td class="py-4 px-6">
+                                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-650 text-[11px] font-bold">
+                                    <i data-lucide="credit-card" class="w-3 h-3 text-slate-400"></i>
+                                    <span>{{ $pay->payment_method }}</span>
+                                </div>
                                 @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
-                                    <div class="text-[10px] text-slate-400 font-mono font-medium mt-0.5 select-all">VA: {{ $pay->payment_info['virtualAccountNo'] }}</div>
+                                    <div class="text-[10px] text-brand-emerald font-mono font-bold mt-1.5 select-all bg-emerald-50/50 px-2 py-0.5 rounded border border-emerald-100/50 inline-block">VA: {{ $pay->payment_info['virtualAccountNo'] }}</div>
                                 @endif
                             </td>
-                            <td class="py-4 px-6 font-bold text-slate-800">
+                            <td class="py-4 px-6 font-bold text-slate-850 text-xs">
                                 Rp {{ number_format($pay->amount, 0, ',', '.') }}
                             </td>
                             <td class="py-4 px-6">
-                                <div class="font-mono text-xs text-slate-700 font-semibold select-all">{{ $pay->reference_id ?? '-' }}</div>
-                                <div class="text-[9px] text-slate-400 mt-0.5 uppercase font-bold tracking-wider">Gateway Reference</div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-mono text-xs text-slate-500 font-semibold select-all" title="{{ $pay->reference_id ?? '-' }}">
+                                        {{ $pay->reference_id ? (substr($pay->reference_id, 0, 8) . '...' . substr($pay->reference_id, -4)) : '-' }}
+                                    </span>
+                                    @if($pay->reference_id)
+                                        <button onclick="navigator.clipboard.writeText('{{ $pay->reference_id }}'); toastr.success('Ref ID disalin ke clipboard')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Full Ref ID">
+                                            <i data-lucide="copy" class="w-3 h-3"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                                <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Gateway Reference</div>
                                 @php
                                     $gatewayId = null;
                                     if (is_array($pay->payment_info)) {
@@ -225,22 +244,39 @@
                                     }
                                 @endphp
                                 @if($gatewayId)
-                                    <div class="mt-1.5 flex items-center gap-1">
-                                        <span class="text-[10px] text-emerald-700 font-mono font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 select-all">Winpay ID: {{ $gatewayId }}</span>
+                                    <div class="mt-1.5 flex">
+                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-mono font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 select-all">
+                                            <i data-lucide="check-circle" class="w-2.5 h-2.5 text-emerald-500"></i>
+                                            Winpay ID: {{ $gatewayId }}
+                                        </span>
                                     </div>
                                 @else
-                                    <div class="mt-1.5 text-[9px] text-slate-400 italic">Waiting callback...</div>
+                                    <div class="mt-1.5 text-[9px] text-slate-400 italic flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                                        Menunggu callback...
+                                    </div>
                                 @endif
                             </td>
-                            <td class="py-4 px-6 text-slate-500 text-xs">
-                                <div class="font-semibold text-slate-750">{{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }} <span class="text-[9px] font-bold text-slate-400">WIB</span></div>
-                                <div class="font-mono text-[10px] text-slate-400 mt-0.5">{{ $pay->created_at->format('Y-m-d H:i:s') }} <span class="text-[8px] font-bold">UTC (Winpay)</span></div>
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-1 text-slate-700 text-xs font-semibold">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>{{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }}</span>
+                                    <span class="text-[8px] bg-slate-100 text-slate-500 px-1 rounded font-bold">WIB</span>
+                                </div>
+                                <div class="flex items-center gap-1 font-mono text-[9px] text-slate-400 mt-1 pl-4.5">
+                                    <span>{{ $pay->created_at->format('Y-m-d H:i:s') }}</span>
+                                    <span class="text-[7px] border border-slate-200 px-0.5 rounded font-bold uppercase">UTC (Winpay)</span>
+                                </div>
                             </td>
                             <td class="py-4 px-6 text-center">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
                                     @if($pay->status === 'success') bg-green-50 text-green-700 border border-green-200
                                     @elseif($pay->status === 'pending') bg-yellow-50 text-yellow-700 border border-yellow-200
                                     @else bg-red-50 text-red-700 border border-red-200 @endif">
+                                    <span class="w-1.5 h-1.5 rounded-full 
+                                        @if($pay->status === 'success') bg-green-500
+                                        @elseif($pay->status === 'pending') bg-yellow-500
+                                        @else bg-red-500 @endif"></span>
                                     {{ $pay->status }}
                                 </span>
                             </td>
