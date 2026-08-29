@@ -209,7 +209,7 @@
                         
                         <div class="space-y-4">
                             <h4 class="font-extrabold text-sm text-slate-800 dark:text-white">Pernyataan Kesanggupan Orang Tua / Wali</h4>
-                                                   <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-[500px] overflow-y-auto leading-relaxed">
+                            <div id="agreement-scrollbox" class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-[500px] overflow-y-auto leading-relaxed">
                                 @if($agreementTemplate)
                                     <div class="flex flex-col items-end mb-5 select-none">
                                         <div class="border border-brand-emerald/20 bg-brand-emerald/5 dark:border-emerald-950/40 dark:bg-emerald-950/10 p-2.5 rounded-xl flex flex-col items-center text-center max-w-[280px]">
@@ -249,32 +249,43 @@
                                     <p>Demikian surat pernyataan ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
                                 @endif
                             </div>
-                        </div>
 
-                        <div class="space-y-3">
-                            <label class="flex items-start gap-3 cursor-pointer">
-                                <input type="checkbox" name="agree_rules" class="rounded text-brand-emerald focus:ring-brand-emerald mt-0.5" required>
-                                <span class="text-xs text-slate-600 dark:text-slate-400">
-                                    {{ $agreementTemplate->rules_consent_label ?? 'Saya menyetujui seluruh tata tertib dan peraturan akademik Sekolah Anak Saleh.' }}
+                            <!-- Scroll warning badge -->
+                            <div id="scroll-warning-badge" class="mt-3.5 p-3 rounded-xl border bg-amber-50 border-amber-255 dark:bg-amber-950/20 dark:border-amber-900/30 text-amber-700 dark:text-amber-400 flex items-center justify-between gap-2.5 transition duration-300">
+                                <span class="flex items-center gap-2 font-semibold">
+                                    <i data-lucide="info" class="w-4.5 h-4.5 animate-bounce"></i>
+                                    <span>Mohon scroll dokumen di atas sampai akhir untuk mengaktifkan persetujuan.</span>
                                 </span>
-                            </label>
-                            <label class="flex items-start gap-3 cursor-pointer">
-                                <input type="checkbox" name="agree_fees" class="rounded text-brand-emerald focus:ring-brand-emerald mt-0.5" required>
-                                <span class="text-xs text-slate-600 dark:text-slate-400">
-                                    {{ $agreementTemplate->fees_consent_label ?? 'Saya menyanggupi pemenuhan seluruh rincian biaya pendidikan dan administrasi masuk yayasan.' }}
-                                </span>
-                            </label>
+                                <span class="text-[9px] font-bold uppercase bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded shadow-sm">Belum Dibaca</span>
+                            </div>
                         </div>
 
-                        <div class="space-y-2">
-                            <label for="signature_name" class="block text-xs font-bold text-slate-650 dark:text-slate-350">Nama Lengkap Penandatangan (Orang Tua / Wali)</label>
-                            <input type="text" id="signature_name" name="signature_name" value="{{ $registration->father_name ?? ($registration->mother_name ?? '') }}" class="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:text-white" placeholder="Ketik nama lengkap Anda di sini..." required>
-                        </div>
+                        <div id="agreement-fields-container" class="space-y-6">
+                            <div class="space-y-3">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" name="agree_rules" class="rounded text-brand-emerald focus:ring-brand-emerald mt-0.5" required>
+                                    <span class="text-xs text-slate-650 dark:text-slate-400">
+                                        {{ $agreementTemplate->rules_consent_label ?? 'Saya menyetujui seluruh tata tertib dan peraturan akademik Sekolah Anak Saleh.' }}
+                                    </span>
+                                </label>
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" name="agree_fees" class="rounded text-brand-emerald focus:ring-brand-emerald mt-0.5" required>
+                                    <span class="text-xs text-slate-650 dark:text-slate-400">
+                                        {{ $agreementTemplate->fees_consent_label ?? 'Saya menyanggupi pemenuhan seluruh rincian biaya pendidikan dan administrasi masuk yayasan.' }}
+                                    </span>
+                                </label>
+                            </div>
 
-                        <div class="pt-4 flex justify-end">
-                            <button type="submit" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5">
-                                <i data-lucide="check-square" class="w-4 h-4"></i> Setujui & Tandatangani Pernyataan Kesanggupan
-                            </button>
+                            <div class="space-y-2">
+                                <label for="signature_name" class="block text-xs font-bold text-slate-650 dark:text-slate-350">Nama Lengkap Penandatangan (Orang Tua / Wali)</label>
+                                <input type="text" id="signature_name" name="signature_name" value="{{ $registration->father_name ?? ($registration->mother_name ?? '') }}" class="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:text-white" placeholder="Ketik nama lengkap Anda di sini..." required>
+                            </div>
+
+                            <div class="pt-4 flex justify-end">
+                                <button type="submit" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                                    <i data-lucide="check-square" class="w-4 h-4"></i> Setujui & Tandatangani Pernyataan Kesanggupan
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -335,6 +346,74 @@
              signatureInput.addEventListener('input', function() {
                  syncParentNames(this.value);
              });
+         }
+
+         // Scroll to Agree Logic
+         const scrollBox = document.getElementById('agreement-scrollbox');
+         const fieldsContainer = document.getElementById('agreement-fields-container');
+         const warningBadge = document.getElementById('scroll-warning-badge');
+         
+         if (scrollBox && fieldsContainer && warningBadge) {
+             const checkboxes = fieldsContainer.querySelectorAll('input[type="checkbox"]');
+             const submitBtn = fieldsContainer.querySelector('button[type="submit"]');
+
+             const disableFields = () => {
+                 fieldsContainer.classList.add('opacity-40', 'pointer-events-none');
+                 checkboxes.forEach(cb => cb.disabled = true);
+                 if (signatureInput) signatureInput.disabled = true;
+                 if (submitBtn) {
+                     submitBtn.disabled = true;
+                     submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                 }
+             };
+
+             const enableFields = () => {
+                 fieldsContainer.classList.remove('opacity-40', 'pointer-events-none');
+                 checkboxes.forEach(cb => cb.disabled = false);
+                 if (signatureInput) signatureInput.disabled = false;
+                 if (submitBtn) {
+                     submitBtn.disabled = false;
+                     submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                 }
+
+                 // Update badge to success state
+                 warningBadge.className = "mt-3.5 p-3 rounded-xl border bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex items-center justify-between gap-2.5 transition duration-300";
+                 warningBadge.innerHTML = `
+                     <span class="flex items-center gap-2 font-semibold">
+                         <i data-lucide="check-circle" class="w-4.5 h-4.5 text-emerald-600"></i>
+                         <span>Terima kasih, dokumen selesai dibaca. Silakan isi form persetujuan di bawah.</span>
+                     </span>
+                     <span class="text-[9px] font-bold uppercase bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded shadow-sm">Selesai Baca</span>
+                 `;
+                 if (window.lucide) {
+                     lucide.createIcons();
+                 }
+             };
+
+             const checkScroll = () => {
+                 // Determine if box has scrollbar
+                 const isScrollable = scrollBox.scrollHeight > scrollBox.clientHeight;
+                 // If not scrollable (fits on screen) or scrolled near the bottom (within 15px)
+                 if (!isScrollable || (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 15)) {
+                     enableFields();
+                     scrollBox.removeEventListener('scroll', handleScroll);
+                 }
+             };
+
+             const handleScroll = () => {
+                 checkScroll();
+             };
+
+             disableFields();
+             
+             // Attach scroll listener
+             scrollBox.addEventListener('scroll', handleScroll);
+             
+             // Initial check (after layout calculation)
+             setTimeout(checkScroll, 250);
+             
+             // Recheck on window resize
+             window.addEventListener('resize', checkScroll);
          }
      });
  </script>
