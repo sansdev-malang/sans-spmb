@@ -21,7 +21,7 @@
                 <i data-lucide="filter" class="w-4 h-4 text-brand-emerald"></i>
                 Unit Sekolah:
             </span>
-            <select onchange="window.location.href = '{{ route('admin.spmb-settings.form') }}?tab={{ $activeTab }}&unit_id=' + this.value" class="bg-white border border-slate-300 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+            <select onchange="const bar = document.getElementById('top-loading-bar'); if(bar){ bar.style.opacity = '1'; bar.style.width = '60%'; setTimeout(() => { if(bar.style.opacity === '1') bar.style.width = '90%'; }, 500); }; window.location.href = '{{ route('admin.spmb-settings.form') }}?tab={{ $activeTab }}&unit_id=' + this.value" class="bg-white border border-slate-300 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                 <option value="" {{ $selectedUnitId === '' ? 'selected' : '' }}>-- Semua Unit (Global) --</option>
                 @foreach($units as $unit)
                     <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
