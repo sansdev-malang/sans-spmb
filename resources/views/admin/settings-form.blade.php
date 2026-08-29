@@ -74,16 +74,16 @@
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-bold text-slate-700">Langkah #{{ $step->order }}</td>
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $step->title }}</td>
-                                <td class="py-4 px-6">
-                                    @if($step->unit)
+                                <td class="py-4 px-6 space-x-1 space-y-1">
+                                    @forelse($step->units as $u)
                                         <span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
-                                            {{ $step->unit->name }}
+                                            {{ $u->code }}
                                         </span>
-                                    @else
+                                    @empty
                                         <span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-550 border border-slate-200">
                                             Global (Semua)
                                         </span>
-                                    @endif
+                                    @endforelse
                                 </td>
                                 <td class="py-4 px-6 text-center font-semibold text-slate-600">{{ $step->fields->count() }} Input</td>
                                 <td class="py-4 px-6 text-center">
@@ -138,16 +138,16 @@
                                 <tr class="hover:bg-slate-50/30 transition">
                                     <td class="py-4 px-6 font-bold text-slate-700">#{{ $field->order }}</td>
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $field->label }}</td>
-                                    <td class="py-4 px-6">
-                                        @if($field->unit)
+                                    <td class="py-4 px-6 space-x-1 space-y-1">
+                                        @forelse($field->units as $u)
                                             <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
-                                                {{ $field->unit->name }}
+                                                {{ $u->code }}
                                             </span>
-                                        @else
+                                        @empty
                                             <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-slate-50 text-slate-500 border border-slate-200">
                                                 Global
                                             </span>
-                                        @endif
+                                        @endforelse
                                     </td>
                                     <td class="py-4 px-6 font-mono text-xs text-slate-500">{{ $field->field_name }}</td>
                                     <td class="py-4 px-6 font-semibold text-brand-emerald text-xs uppercase">{{ $field->type }}</td>
@@ -205,13 +205,16 @@
                 <input type="text" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: Dokumen Pendukung">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
-                    <option value="">-- Semua Unit (Global) --</option>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
-                        <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'checked' : '' }} class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
+                            <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara Global (Semua Unit).</p>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Urutan Tampil (Order)*</label>
@@ -248,13 +251,16 @@
                 <input type="text" id="edit-step-title" name="title" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" id="edit-step-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
-                    <option value="">-- Semua Unit (Global) --</option>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
-                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
+                            <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara Global (Semua Unit).</p>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Urutan Tampil (Order)*</label>
@@ -297,13 +303,16 @@
                 <input type="text" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: blood_type">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
-                    <option value="">-- Semua Unit (Global) --</option>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
-                        <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'checked' : '' }} class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
+                            <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara Global (Semua Unit).</p>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
@@ -372,13 +381,16 @@
                 <input type="text" id="edit-field-name" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Berlaku Untuk Unit Sekolah</label>
-                <select name="spmb_unit_id" id="edit-field-unit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
-                    <option value="">-- Semua Unit (Global) --</option>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Berlaku Untuk Unit Sekolah (Bisa Pilih Lebih Dari 1)</label>
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
                     @foreach($units as $unit)
-                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
+                            <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara Global (Semua Unit).</p>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
@@ -475,7 +487,16 @@
         clearFormErrors();
         document.getElementById('edit-step-title').value = step.title;
         document.getElementById('edit-step-order').value = step.order;
-        document.getElementById('edit-step-unit').value = step.spmb_unit_id || '';
+        
+        // Reset and check spmb_unit_ids checkboxes
+        document.querySelectorAll('#editStepModal input[name="spmb_unit_ids[]"]').forEach(cb => cb.checked = false);
+        if (step.units) {
+            step.units.forEach(u => {
+                const cb = document.querySelector(`#editStepModal input[name="spmb_unit_ids[]"][value="${u.id}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+
         document.getElementById('editStepForm').setAttribute('action', '/admin/spmb-settings/form/steps/' + step.id + '?unit_id={{ $selectedUnitId }}');
         document.getElementById('editStepModal').classList.remove('hidden');
     }
@@ -505,7 +526,16 @@
         document.getElementById('edit-field-label').value = field.label;
         document.getElementById('edit-field-name').value = field.field_name;
         document.getElementById('edit-field-type').value = field.type;
-        document.getElementById('edit-field-unit').value = field.spmb_unit_id || '';
+        
+        // Reset and check spmb_unit_ids checkboxes
+        document.querySelectorAll('#editFieldModal input[name="spmb_unit_ids[]"]').forEach(cb => cb.checked = false);
+        if (field.units) {
+            field.units.forEach(u => {
+                const cb = document.querySelector(`#editFieldModal input[name="spmb_unit_ids[]"][value="${u.id}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+
         document.getElementById('edit-field-options').value = field.options || '';
         document.getElementById('edit-field-required').checked = (field.is_required === 1 || field.is_required === '1' || field.is_required === true);
         document.getElementById('edit-field-order').value = field.order;

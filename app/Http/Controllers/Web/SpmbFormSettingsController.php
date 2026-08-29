@@ -15,16 +15,24 @@ class SpmbFormSettingsController extends Controller
         $selectedUnitId = request()->get('unit_id', ''); // '' means 'All Units' / Global
 
         $steps = SpmbFormStep::with(['fields' => function($q) use ($selectedUnitId) {
+                $q->with('units');
                 if ($selectedUnitId !== '') {
                     $q->where(function($sub) use ($selectedUnitId) {
-                        $sub->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $selectedUnitId);
+                        $sub->whereDoesntHave('units')
+                            ->orWhereHas('units', function($u) use ($selectedUnitId) {
+                                $u->where('spmb_units.id', $selectedUnitId);
+                            });
                     });
                 }
                 $q->orderBy('order');
             }])
+            ->with('units')
             ->when($selectedUnitId !== '', function($q) use ($selectedUnitId) {
                 $q->where(function($sub) use ($selectedUnitId) {
-                    $sub->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $selectedUnitId);
+                    $sub->whereDoesntHave('units')
+                        ->orWhereHas('units', function($u) use ($selectedUnitId) {
+                            $u->where('spmb_units.id', $selectedUnitId);
+                        });
                 });
             })
             ->orderBy('order')
@@ -39,38 +47,44 @@ class SpmbFormSettingsController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'order' => 'required|integer',
-            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'spmb_unit_ids' => 'nullable|array',
+            'spmb_unit_ids.*' => 'exists:spmb_units,id',
         ]);
 
+        $unitIdParam = $request->get('unit_id', '');
+
         if ($validator->fails()) {
-            return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $request->spmb_unit_id])
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $unitIdParam])
                 ->withErrors($validator)
                 ->withInput()
                 ->with('failed_modal', 'step_create');
         }
 
-        SpmbFormStep::create([
+        $step = SpmbFormStep::create([
             'title' => $request->title,
             'order' => $request->order,
-            'spmb_unit_id' => $request->spmb_unit_id ?: null,
             'is_active' => true,
         ]);
 
-        return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $request->spmb_unit_id])->with('success', 'Langkah formulir berhasil ditambahkan.');
+        $step->units()->sync((array)$request->input('spmb_unit_ids', []));
+
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $unitIdParam])->with('success', 'Langkah formulir berhasil ditambahkan.');
     }
 
     public function updateStep(Request $request, $id)
     {
         $step = SpmbFormStep::findOrFail($id);
+        $unitIdParam = $request->get('unit_id', '');
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'order' => 'required|integer',
-            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'spmb_unit_ids' => 'nullable|array',
+            'spmb_unit_ids.*' => 'exists:spmb_units,id',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $request->spmb_unit_id])
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $unitIdParam])
                 ->withErrors($validator)
                 ->withInput()
                 ->with('failed_modal', 'step_edit_' . $id);
@@ -79,10 +93,11 @@ class SpmbFormSettingsController extends Controller
         $step->update([
             'title' => $request->title,
             'order' => $request->order,
-            'spmb_unit_id' => $request->spmb_unit_id ?: null,
         ]);
 
-        return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $request->spmb_unit_id])->with('success', 'Langkah formulir berhasil diperbarui.');
+        $step->units()->sync((array)$request->input('spmb_unit_ids', []));
+
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps', 'unit_id' => $unitIdParam])->with('success', 'Langkah formulir berhasil diperbarui.');
     }
 
     public function destroyStep($id)
@@ -101,6 +116,8 @@ class SpmbFormSettingsController extends Controller
 
     public function storeField(Request $request)
     {
+        $unitIdParam = $request->get('unit_id', '');
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'form_step_id' => 'required|exists:spmb_form_steps,id',
             'label' => 'required|string|max:255',
@@ -109,17 +126,18 @@ class SpmbFormSettingsController extends Controller
             'options' => 'nullable|string',
             'is_required' => 'nullable|boolean',
             'order' => 'required|integer',
-            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'spmb_unit_ids' => 'nullable|array',
+            'spmb_unit_ids.*' => 'exists:spmb_units,id',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $request->form_step_id, 'unit_id' => $request->spmb_unit_id])
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $request->form_step_id, 'unit_id' => $unitIdParam])
                 ->withErrors($validator)
                 ->withInput()
                 ->with('failed_modal', 'field_create_' . $request->form_step_id);
         }
 
-        SpmbFormField::create([
+        $field = SpmbFormField::create([
             'form_step_id' => $request->form_step_id,
             'label' => $request->label,
             'field_name' => $request->field_name,
@@ -127,15 +145,17 @@ class SpmbFormSettingsController extends Controller
             'options' => $request->options,
             'is_required' => $request->has('is_required'),
             'order' => $request->order,
-            'spmb_unit_id' => $request->spmb_unit_id ?: null,
         ]);
 
-        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $request->form_step_id, 'unit_id' => $request->spmb_unit_id])->with('success', 'Kolom input formulir berhasil ditambahkan.');
+        $field->units()->sync((array)$request->input('spmb_unit_ids', []));
+
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $request->form_step_id, 'unit_id' => $unitIdParam])->with('success', 'Kolom input formulir berhasil ditambahkan.');
     }
 
     public function updateField(Request $request, $id)
     {
         $field = SpmbFormField::findOrFail($id);
+        $unitIdParam = $request->get('unit_id', '');
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'label' => 'required|string|max:255',
@@ -144,11 +164,12 @@ class SpmbFormSettingsController extends Controller
             'options' => 'nullable|string',
             'is_required' => 'nullable|boolean',
             'order' => 'required|integer',
-            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'spmb_unit_ids' => 'nullable|array',
+            'spmb_unit_ids.*' => 'exists:spmb_units,id',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $request->spmb_unit_id])
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitIdParam])
                 ->withErrors($validator)
                 ->withInput()
                 ->with('failed_modal', 'field_edit_' . $id);
@@ -156,7 +177,7 @@ class SpmbFormSettingsController extends Controller
 
         $systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
         if (in_array($field->field_name, $systemFields) && $request->field_name !== $field->field_name) {
-            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $request->spmb_unit_id])->with('error', 'Key database kolom sistem utama tidak boleh diubah.');
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitIdParam])->with('error', 'Key database kolom sistem utama tidak boleh diubah.');
         }
 
         $field->update([
@@ -166,10 +187,11 @@ class SpmbFormSettingsController extends Controller
             'options' => $request->options,
             'is_required' => $request->has('is_required'),
             'order' => $request->order,
-            'spmb_unit_id' => $request->spmb_unit_id ?: null,
         ]);
 
-        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $request->spmb_unit_id])->with('success', 'Kolom input formulir berhasil diperbarui.');
+        $field->units()->sync((array)$request->input('spmb_unit_ids', []));
+
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitIdParam])->with('success', 'Kolom input formulir berhasil diperbarui.');
     }
 
     public function destroyField($id)

@@ -304,11 +304,17 @@ class WebDashboardController extends Controller
         $unitId = $registration->spmb_unit_id;
         $steps = SpmbFormStep::with(['fields' => function($q) use ($unitId) {
                 $q->where(function($sub) use ($unitId) {
-                    $sub->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+                    $sub->whereDoesntHave('units')
+                        ->orWhereHas('units', function($u) use ($unitId) {
+                            $u->where('spmb_units.id', $unitId);
+                        });
                 })->orderBy('order');
             }])
             ->where(function($q) use ($unitId) {
-                $q->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+                $q->whereDoesntHave('units')
+                    ->orWhereHas('units', function($u) use ($unitId) {
+                        $u->where('spmb_units.id', $unitId);
+                    });
             })
             ->orderBy('order')
             ->get();
@@ -805,11 +811,17 @@ class WebDashboardController extends Controller
         $unitId = $registration->spmb_unit_id;
         $allSteps = SpmbFormStep::with(['fields' => function($q) use ($unitId) {
                 $q->where(function($sub) use ($unitId) {
-                    $sub->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+                    $sub->whereDoesntHave('units')
+                        ->orWhereHas('units', function($u) use ($unitId) {
+                            $u->where('spmb_units.id', $unitId);
+                        });
                 })->orderBy('order');
             }])
             ->where(function($q) use ($unitId) {
-                $q->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+                $q->whereDoesntHave('units')
+                    ->orWhereHas('units', function($u) use ($unitId) {
+                        $u->where('spmb_units.id', $unitId);
+                    });
             })
             ->orderBy('order')
             ->get();
