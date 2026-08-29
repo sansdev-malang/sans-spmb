@@ -219,8 +219,9 @@
                                 @php
                                     $gatewayId = null;
                                     if (is_array($pay->payment_info)) {
-                                        $gatewayId = $pay->payment_info['callback_payload']['additionalInfo']['paymentSysId'] 
-                                            ?? ($pay->payment_info['callback_payload']['id_transaksi'] ?? null);
+                                        $gatewayId = $pay->payment_info['callback_payload']['paymentRequestId']
+                                            ?? ($pay->payment_info['callback_payload']['additionalInfo']['paymentSysId'] 
+                                                ?? ($pay->payment_info['callback_payload']['id_transaksi'] ?? null));
                                     }
                                 @endphp
                                 @if($gatewayId)
