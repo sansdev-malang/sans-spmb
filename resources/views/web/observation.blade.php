@@ -124,7 +124,7 @@
                 <i data-lucide="video" class="w-5 h-5 text-brand-yellow"></i>
                 Observasi & Pernyataan Kesanggupan
             </h2>
-            <p class="text-xs text-brand-yellow font-medium mt-0.5">Ujian wawancara ta'aruf serta persetujuan surat komitmen biaya pendidikan.</p>
+            <p class="text-xs text-brand-yellow font-medium mt-0.5">Ujian wawancara ta'aruf serta persetujuan komitmen biaya pendidikan.</p>
         </div>
 
         <div class="p-8">
