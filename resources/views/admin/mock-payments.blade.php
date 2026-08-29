@@ -177,6 +177,7 @@
                         <th class="py-4 px-6">Ref Gateway (Winpay)</th>
                         <th class="py-4 px-6">Waktu Transaksi</th>
                         <th class="py-4 px-6 text-center">Status</th>
+                        <th class="py-4 px-6 text-center w-28">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-100">
@@ -295,10 +296,20 @@
                                     {{ $pay->status }}
                                 </span>
                             </td>
+                            <td class="py-4 px-6 text-center">
+                                @if($pay->status === 'success')
+                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200" title="Unduh Bukti Pembayaran Resmi">
+                                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                        <span>Bukti Bayar</span>
+                                    </a>
+                                @else
+                                    <span class="text-slate-400 text-xs font-medium">-</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="py-12 px-6 text-center text-slate-400">
+                            <td colspan="11" class="py-12 px-6 text-center text-slate-400">
                                 Belum ada riwayat transaksi pembayaran.
                             </td>
                         </tr>

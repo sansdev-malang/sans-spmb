@@ -1168,23 +1168,26 @@ class WebDashboardController extends Controller
     {
         $payment = \App\Models\Payment::findOrFail($id);
         
-        // Verify ownership
-        $registration = \App\Models\Registration::where('id', $payment->registration_id)
-            ->where('user_id', auth()->id())
-            ->first();
-        if (!$registration) {
+        // Verifikasi kepemilikan ATAU akses Admin
+        $user = auth()->user();
+        $registration = \App\Models\Registration::find($payment->registration_id);
+        
+        $hasAccess = ($user->role === 'admin' || $user->role === 'super_admin' || $user->role === 'superadmin')
+            || ($registration && $registration->user_id === $user->id);
+
+        if (!$hasAccess || !$registration) {
             abort(403, 'Unauthorized action.');
         }
 
         if ($payment->status !== 'success') {
-            return redirect()->back()->with('error', 'Kwitansi hanya tersedia untuk transaksi yang sudah lunas.');
+            return redirect()->back()->with('error', 'Bukti pembayaran hanya tersedia untuk transaksi yang sudah lunas.');
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('web.payment-receipt-pdf', compact('payment', 'registration'));
         
         $response = response()->make($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="Kwitansi-SPMB-' . $payment->invoice_number . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="Bukti-Bayar-SPMB-' . $payment->invoice_number . '.pdf"',
         ]);
         
         if (request()->has('download_token')) {
