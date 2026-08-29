@@ -395,6 +395,16 @@
                             <td class="py-4 px-6">
                                 <div class="font-mono text-xs text-slate-700 font-semibold select-all">{{ $pay->reference_id ?? '-' }}</div>
                                 <div class="text-[9px] text-slate-400 mt-0.5 uppercase font-bold tracking-wider">Merchant Ref</div>
+                                @php
+                                    $gatewayId = null;
+                                    if (is_array($pay->payment_info)) {
+                                        $gatewayId = $pay->payment_info['callback_payload']['additionalInfo']['paymentSysId'] 
+                                            ?? ($pay->payment_info['callback_payload']['id_transaksi'] ?? null);
+                                    }
+                                @endphp
+                                @if($gatewayId)
+                                    <div class="text-[10px] text-emerald-600 font-mono font-extrabold mt-1.5 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 inline-block">Winpay ID: {{ $gatewayId }}</div>
+                                @endif
                             </td>
                             <td class="py-4 px-6 text-slate-500 text-xs">
                                 {{ $pay->created_at->format('d M Y, H:i') }} WIB

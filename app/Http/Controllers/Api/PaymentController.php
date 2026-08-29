@@ -407,8 +407,17 @@ class PaymentController extends Controller
         if (strtoupper($status) === 'SUCCESS' || $status === '00') {
             DB::beginTransaction();
             try {
+                $currentInfo = $payment->payment_info ?? [];
+                if (!is_array($currentInfo)) {
+                    $currentInfo = [];
+                }
+                $newInfo = array_merge($currentInfo, [
+                    'callback_payload' => $body
+                ]);
+
                 $payment->update([
-                    'status' => 'success'
+                    'status' => 'success',
+                    'payment_info' => $newInfo
                 ]);
 
                 if ($payment->payment_type === 'final_fee') {
@@ -459,8 +468,17 @@ class PaymentController extends Controller
         if (in_array(strtoupper($status), ['FAILED', 'EXPIRED'])) {
             DB::beginTransaction();
             try {
+                $currentInfo = $payment->payment_info ?? [];
+                if (!is_array($currentInfo)) {
+                    $currentInfo = [];
+                }
+                $newInfo = array_merge($currentInfo, [
+                    'callback_payload' => $body
+                ]);
+
                 $payment->update([
-                    'status' => strtolower($status)
+                    'status' => strtolower($status),
+                    'payment_info' => $newInfo
                 ]);
 
                 $registration->update([
