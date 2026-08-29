@@ -378,8 +378,14 @@
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-semibold text-slate-800">{{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}</div>
-                                @if($pay->registration)
-                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $pay->registration->admission_level ?? '' }} - {{ $pay->registration->spmbUnit->name ?? '' }}</div>
+                                @if($pay->registration && ($pay->registration->admission_level || ($pay->registration->spmbUnit && $pay->registration->spmbUnit->name)))
+                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5">
+                                        {{ $pay->registration->admission_level ?? '' }}
+                                        {{ $pay->registration->admission_level && $pay->registration->spmbUnit ? '•' : '' }}
+                                        {{ $pay->registration->spmbUnit->name ?? '' }}
+                                    </div>
+                                @else
+                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5 italic">Draft Pendaftaran</div>
                                 @endif
                             </td>
                             <td class="py-4 px-6">
@@ -392,12 +398,19 @@
                                 <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $fee->category->name ?? 'Formulir Pendaftaran' }}</div>
                             </td>
                             <td class="py-4 px-6">
-                                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-650 text-[11px] font-bold">
-                                    <i data-lucide="credit-card" class="w-3 h-3 text-slate-400"></i>
+                                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
                                     <span>{{ $pay->payment_method }}</span>
                                 </div>
                                 @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
-                                    <div class="text-[10px] text-brand-emerald font-mono font-bold mt-1.5 select-all bg-emerald-50/50 px-2 py-0.5 rounded border border-emerald-100/50 inline-block">VA: {{ $pay->payment_info['virtualAccountNo'] }}</div>
+                                    <div class="mt-1 flex items-center gap-1">
+                                        <span class="font-mono text-[10px] text-slate-500 font-bold select-all bg-slate-50 border border-slate-200/50 px-1.5 py-0.5 rounded">
+                                            {{ $pay->payment_info['virtualAccountNo'] }}
+                                        </span>
+                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Nomor VA">
+                                            <i data-lucide="copy" class="w-2.5 h-2.5"></i>
+                                        </button>
+                                    </div>
                                 @endif
                             </td>
                             <td class="py-4 px-6 font-bold text-slate-850 text-xs">
