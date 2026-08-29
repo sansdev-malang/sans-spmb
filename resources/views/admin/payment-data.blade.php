@@ -407,7 +407,7 @@
                                 @endif
                             </td>
                             <td class="py-4 px-6 text-slate-500 text-xs">
-                                {{ $pay->created_at->format('d M Y, H:i') }} WIB
+                                {{ $pay->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
