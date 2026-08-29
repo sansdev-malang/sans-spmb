@@ -153,9 +153,25 @@
         html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
         }
+
+        /* YouTube-style dynamic top progress loading bar */
+        #top-loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background-color: {{ $primaryColor }};
+            z-index: 99999;
+            width: 0;
+            opacity: 0;
+            transition: width 0.4s ease, opacity 0.2s ease;
+            box-shadow: 0 0 10px {{ $primaryColor }}, 0 0 5px {{ $primaryColor }};
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200">
+    <!-- YouTube-style dynamic top progress loading bar -->
+    <div id="top-loading-bar"></div>
 
     <!-- Header Navigation - Floating Premium (Fixed Seamless Overlay) -->
     <nav id="main-nav" class="fixed top-0 inset-x-0 z-50 px-4 lg:px-8 py-3 bg-transparent transition-all duration-300">
@@ -505,6 +521,30 @@
             } else {
                 navInner.classList.remove('shadow-lg');
                 navInner.classList.add('shadow-sm');
+            }
+        });
+
+        // Show loading bar & spinner on native form submits
+        document.addEventListener('submit', function(e) {
+            const bar = document.getElementById('top-loading-bar');
+            if (bar) {
+                bar.style.opacity = '1';
+                bar.style.width = '40%';
+                setTimeout(() => {
+                    if (bar.style.opacity === '1') {
+                        bar.style.width = '80%';
+                    }
+                }, 500);
+            }
+            
+            // Disable submit button to prevent double-submitting
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                setTimeout(() => {
+                    submitBtn.disabled = true;
+                    submitBtn.style.pointerEvents = 'none';
+                    submitBtn.style.opacity = '0.7';
+                }, 10);
             }
         });
 
