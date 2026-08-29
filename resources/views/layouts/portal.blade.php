@@ -548,6 +548,35 @@
             }
         });
 
+        // Show loading bar on menu/link clicks (instant transition feedback)
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+            
+            const href = link.getAttribute('href');
+            const target = link.getAttribute('target');
+            
+            // Skip empty/javascript/anchor/external-tab links
+            if (!href || href.startsWith('#') || href.startsWith('javascript:') || target === '_blank') {
+                return;
+            }
+            
+            // Check if link is internal (same origin)
+            const isInternal = href.startsWith('/') || href.startsWith(window.location.origin);
+            if (isInternal) {
+                const bar = document.getElementById('top-loading-bar');
+                if (bar) {
+                    bar.style.opacity = '1';
+                    bar.style.width = '50%';
+                    setTimeout(() => {
+                        if (bar.style.opacity === '1') {
+                            bar.style.width = '85%';
+                        }
+                    }, 400);
+                }
+            }
+        });
+
         // Initialize Lucide Icons & Auto Session Toasts
         document.addEventListener("DOMContentLoaded", function() {
             if (window.lucide) {
