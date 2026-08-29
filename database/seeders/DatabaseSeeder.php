@@ -347,7 +347,7 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $formSteps = [
-            ['id' => 1, 'title' => 'Jalur & Gelombang Pendaftaran', 'order' => 1, 'is_active' => 1],
+            ['id' => 1, 'title' => 'Pilihan Program & Layanan', 'order' => 1, 'is_active' => 1],
             ['id' => 2, 'title' => 'Informasi Calon Siswa', 'order' => 2, 'is_active' => 1],
             ['id' => 3, 'title' => 'Data Orang Tua / Wali', 'order' => 3, 'is_active' => 1],
             ['id' => 4, 'title' => 'Dokumen Persyaratan', 'order' => 4, 'is_active' => 1],
@@ -540,7 +540,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'id' => 19,
-                'form_step_id' => 2,
+                'form_step_id' => 1,
                 'label' => 'Layanan Tambahan',
                 'field_name' => 'extra_services',
                 'type' => 'select',

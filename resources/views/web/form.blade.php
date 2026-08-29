@@ -145,10 +145,44 @@
                         @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
                             <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm {{ ($step->is_completed && !$hasInvalidFields) ? 'hidden' : '' }}">
                                 @csrf
+                                
+                                @if($step->id === 1)
+                                    <div class="bg-slate-50 border border-slate-200/85 rounded-2xl p-4.5 mb-4 space-y-3.5">
+                                        <div class="flex items-center gap-2 text-slate-800 font-bold text-xs uppercase tracking-wider border-b border-slate-200/60 pb-2">
+                                            <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i>
+                                            <span>Periode Pendaftaran Terpilih</span>
+                                        </div>
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4.5 text-xs">
+                                            <div>
+                                                <span class="text-slate-400 font-bold uppercase block text-[9px] tracking-wide">Tahun Pelajaran</span>
+                                                <span class="font-extrabold text-slate-700 mt-1 block">{{ $registration->period->year ?? '-' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400 font-bold uppercase block text-[9px] tracking-wide">Jalur Pendaftaran</span>
+                                                <span class="font-extrabold text-slate-700 mt-1 block">{{ $registration->type->name ?? '-' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400 font-bold uppercase block text-[9px] tracking-wide">Gelombang</span>
+                                                <span class="font-extrabold text-slate-700 mt-1 block">{{ $registration->wave->name ?? '-' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                                
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     @foreach($step->fields as $field)
                                         @php
                                             $val = $registration->getFieldValue($field->field_name);
+                                            
+                                            $isHiddenField = in_array($field->field_name, ['spmb_period_id', 'spmb_wave_id', 'spmb_type_id']);
+                                        @endphp
+                                        
+                                        @if($isHiddenField)
+                                            <input type="hidden" name="{{ $field->field_name }}" value="{{ $val }}">
+                                            @continue
+                                        @endif
+                                        
+                                        @php
                                             $fieldLabel = $field->label;
                                             if ($field->field_name === 'previous_school' && isset($registration->unit)) {
                                                 $uCode = strtoupper($registration->unit->code);
@@ -256,13 +290,32 @@
                         <!-- Readonly Block -->
                         @if ($step->is_completed)
                             <div id="readonly-step-{{ $step->id }}" class="text-xs text-slate-600 grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 bg-slate-50 p-4 rounded-lg border border-slate-100 {{ $hasInvalidFields ? 'hidden' : '' }}">
-                                @if($index === 0)
+                                @if($step->id === 1)
                                     <div>
                                         <strong class="text-slate-500 font-semibold">Unit Sekolah:</strong>
                                         <span class="text-slate-800 font-bold ml-1">{{ $registration->unit->name ?? '-' }}</span>
                                     </div>
+                                    <div>
+                                        <strong class="text-slate-500 font-semibold">Tahun Pelajaran:</strong>
+                                        <span class="text-slate-800 font-bold ml-1">{{ $registration->period->year ?? '-' }}</span>
+                                    </div>
+                                    <div>
+                                        <strong class="text-slate-500 font-semibold">Jalur Pendaftaran:</strong>
+                                        <span class="text-slate-800 font-bold ml-1">{{ $registration->type->name ?? '-' }}</span>
+                                    </div>
+                                    <div>
+                                        <strong class="text-slate-500 font-semibold">Gelombang:</strong>
+                                        <span class="text-slate-800 font-bold ml-1">{{ $registration->wave->name ?? '-' }}</span>
+                                    </div>
                                 @endif
+                                
                                 @foreach($step->fields as $field)
+                                    @php
+                                        $isHiddenField = in_array($field->field_name, ['spmb_period_id', 'spmb_wave_id', 'spmb_type_id']);
+                                    @endphp
+                                    @if($isHiddenField)
+                                        @continue
+                                    @endif
                                     @php
                                         $val = $registration->getFieldValue($field->field_name);
                                     @endphp
@@ -270,12 +323,6 @@
                                         <strong class="text-slate-500 font-semibold">{{ $field->label }}:</strong> 
                                         @if($field->type === 'file' && !empty($val))
                                             <a href="{{ Storage::url($val) }}" target="_blank" class="text-brand-emerald font-bold hover:underline">Lihat Berkas 📄</a>
-                                        @elseif($field->field_name === 'spmb_period_id')
-                                            <span class="text-slate-800 font-bold ml-1">{{ $registration->period?->year ?? '-' }}</span>
-                                        @elseif($field->field_name === 'spmb_wave_id')
-                                            <span class="text-slate-800 font-bold ml-1">{{ $registration->wave?->name ?? '-' }}</span>
-                                        @elseif($field->field_name === 'spmb_type_id')
-                                            <span class="text-slate-800 font-bold ml-1">{{ $registration->type?->name ?? '-' }}</span>
                                         @elseif($field->field_name === 'spmb_class_program_id')
                                             <span class="text-slate-800 font-bold ml-1">{{ $registration->classProgram?->name ?? '-' }}</span>
                                         @elseif($field->field_name === 'extra_services')
