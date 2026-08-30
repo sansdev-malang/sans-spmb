@@ -47,6 +47,32 @@
                 font-family: 'Plus Jakarta Sans', sans-serif;
                 transition: background-color 0.3s, color 0.3s;
             }
+            .guest-panel-orb {
+                position: absolute;
+                border-radius: 9999px;
+                filter: blur(56px);
+                pointer-events: none;
+            }
+            .guest-panel-shimmer {
+                position: absolute;
+                inset: -30%;
+                background:
+                    linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.16) 50%, transparent 65%);
+                mix-blend-mode: screen;
+                pointer-events: none;
+            }
+            .guest-panel-particles {
+                position: absolute;
+                inset: 0;
+                background-image:
+                    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0 2px, transparent 3px),
+                    radial-gradient(circle at 80% 30%, rgba(255,255,255,0.12) 0 1.5px, transparent 3px),
+                    radial-gradient(circle at 35% 75%, rgba(255,255,255,0.12) 0 1.5px, transparent 3px),
+                    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.16) 0 2px, transparent 3px);
+                background-size: 240px 240px;
+                opacity: 0.55;
+                pointer-events: none;
+            }
             /* Custom Brand Colors for Tailwind */
             .bg-brand-emerald { background-color: {{ $primaryColor }}; }
             .text-brand-emerald { color: {{ $primaryColor }}; }
@@ -134,68 +160,80 @@
         <div class="w-full min-h-screen flex flex-col md:flex-row">
             
             <!-- Left Panel: Branding & Info (Hidden on mobile) -->
-            <div class="hidden md:flex md:w-1/2 bg-custom-primary relative overflow-hidden flex-col justify-between p-12 text-white">
+            <div class="hidden md:flex md:w-1/2 bg-custom-primary relative overflow-hidden flex-col justify-center p-8 lg:p-10 text-white">
+                <!-- Glass background -->
+                <div class="absolute inset-0 bg-gradient-to-br from-custom-primary via-[#0f4f3a] to-[#081c15]"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,199,0,0.16),transparent_30%)]"></div>
+                <div class="absolute inset-0 bg-black/5"></div>
+
                 <!-- Background decorative elements -->
-                <div class="absolute top-[-10%] left-[-10%] w-[50%] aspect-square bg-white/5 rounded-full blur-3xl"></div>
-                <div class="absolute bottom-[-10%] right-[-10%] w-[60%] aspect-square bg-brand-yellow/10 rounded-full blur-3xl"></div>
-                
-                <!-- Top Brand Header -->
-                <div class="relative z-10 flex items-center gap-3">
-                    @if(!empty($schoolLogo))
-                        <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
-                    @else
-                        <div class="h-10 w-10 bg-brand-yellow rounded-xl flex items-center justify-center font-bold text-slate-900 text-base shadow-sm">
-                            🎓
-                        </div>
-                    @endif
-                    <div class="flex flex-col text-left">
-                        <span class="font-extrabold text-base tracking-tight leading-tight">{{ $schoolName }}</span>
-                        @if(!empty($schoolTagline))
-                            <span class="text-[10px] text-white/70 font-semibold leading-none mt-0.5">{{ $schoolTagline }}</span>
+                <div class="guest-panel-orb top-[-12%] left-[-12%] w-[54%] aspect-square bg-white/15"></div>
+                <div class="guest-panel-orb bottom-[-16%] right-[-10%] w-[64%] aspect-square bg-brand-yellow/18" style="animation-delay:-6s;"></div>
+                <div class="guest-panel-shimmer"></div>
+                <div class="guest-panel-particles"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20"></div>
+
+                <div class="relative z-10 h-full w-full rounded-[2rem] border border-white/15 bg-white/8 backdrop-blur-2xl shadow-2xl p-10 lg:p-12 flex flex-col justify-between overflow-hidden">
+                    <div class="absolute inset-0 bg-white/[0.03]"></div>
+
+                    <!-- Top Brand Header -->
+                    <div class="relative z-10 flex items-center gap-3">
+                        @if(!empty($schoolLogo))
+                            <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
+                        @else
+                            <div class="h-10 w-10 bg-white/15 rounded-xl flex items-center justify-center font-bold text-brand-yellow text-base shadow-sm border border-white/10">
+                                🎓
+                            </div>
                         @endif
-                    </div>
-                </div>
-
-                <!-- Center Content: Title & Features -->
-                <div class="relative z-10 my-auto max-w-md space-y-6">
-                    <span class="inline-flex items-center gap-1 bg-white/10 backdrop-blur-md text-brand-yellow font-extrabold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
-                        ✨ Sistem SPMB Online
-                    </span>
-                    <h1 class="text-3xl lg:text-4xl font-black leading-tight">
-                        Penerimaan Siswa Baru Berbasis Karakter Islami
-                    </h1>
-                    <p class="text-xs text-white/80 leading-relaxed font-medium">
-                        Selamat datang di portal pendaftaran {{ $schoolName }}. Daftarkan putra-putri terbaik Anda untuk bergabung bersama kami.
-                    </p>
-                    
-                    <div class="space-y-3.5 pt-4 text-xs font-semibold text-white/95">
-                        <div class="flex items-center gap-3">
-                            <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
-                                <i data-lucide="check" class="w-4 h-4"></i>
-                            </div>
-                            <span>Proses pendaftaran cepat, online, dan transparan</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
-                                <i data-lucide="check" class="w-4 h-4"></i>
-                            </div>
-                            <span>Pengumuman hasil observasi & administrasi terintegrasi</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
-                                <i data-lucide="check" class="w-4 h-4"></i>
-                            </div>
-                            <span>Layanan bantuan cepat via Whatsapp Panitia</span>
+                        <div class="flex flex-col text-left">
+                            <span class="font-extrabold text-base tracking-tight leading-tight">{{ $schoolName }}</span>
+                            @if(!empty($schoolTagline))
+                                <span class="text-xs text-white/70 font-semibold leading-none mt-0.5">{{ $schoolTagline }}</span>
+                            @endif
                         </div>
                     </div>
-                </div>
 
-                <!-- Footer: Back to main page -->
-                <div class="relative z-10 flex justify-between items-center text-xs text-white/60 font-semibold border-t border-white/10 pt-6">
-                    <span>© {{ date('Y') }} {{ $schoolName }}</span>
-                    <a href="/" class="flex items-center gap-1.5 hover:text-brand-yellow transition text-white/85">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Portal Utama
-                    </a>
+                    <!-- Center Content: Title & Features -->
+                    <div class="relative z-10 my-auto max-w-md space-y-6">
+                        <span class="guest-panel-badge inline-flex items-center gap-1 bg-white/12 backdrop-blur-md text-brand-yellow font-extrabold text-xs uppercase tracking-widest px-3 py-1 rounded-full border border-white/10">
+                            ✨ SPMB Online
+                        </span>
+                        <h1 class="guest-panel-title text-3xl lg:text-4xl font-black leading-tight">
+                            Penerimaan Siswa Baru Berbasis Karakter Islami
+                        </h1>
+                        <p class="guest-panel-text text-sm text-white/82 leading-relaxed font-medium">
+                            Selamat datang di portal pendaftaran {{ $schoolName }}. Daftarkan putra-putri terbaik Anda untuk bergabung bersama kami.
+                        </p>
+
+                        <div class="space-y-3.5 pt-4 text-sm font-semibold text-white/95">
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-lg">
+                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </div>
+                                <span>Proses pendaftaran cepat, online, dan transparan</span>
+                            </div>
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-lg">
+                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </div>
+                                <span>Pengumuman hasil observasi & administrasi terintegrasi</span>
+                            </div>
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-lg">
+                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </div>
+                                <span>Layanan bantuan cepat via Whatsapp Panitia</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer: Back to main page -->
+                    <div class="guest-panel-footer relative z-10 flex justify-between items-center text-xs text-white/65 font-semibold border-t border-white/10 pt-6">
+                        <span>© {{ date('Y') }} {{ $schoolName }}</span>
+                        <a href="/" class="flex items-center gap-1.5 hover:text-brand-yellow transition text-white/90">
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Portal Utama
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -255,7 +293,8 @@
             
         </div>
         
-        <!-- Lucide Icons CDN -->
+        <!-- Anime.js + Lucide Icons CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
         <script src="https://unpkg.com/lucide@latest"></script>
         <script>
             // Initialize Lucide Icons
@@ -284,6 +323,97 @@
             
             document.addEventListener("DOMContentLoaded", function() {
                 updateThemeIcon();
+
+                if (window.anime) {
+                    const orbs = document.querySelectorAll('.guest-panel-orb');
+                    const shimmer = document.querySelector('.guest-panel-shimmer');
+                    const particles = document.querySelector('.guest-panel-particles');
+                    const panelTitle = document.querySelector('.guest-panel-title');
+                    const panelBadge = document.querySelector('.guest-panel-badge');
+                    const panelText = document.querySelector('.guest-panel-text');
+                    const panelItems = document.querySelectorAll('.guest-panel-item');
+                    const panelFooter = document.querySelector('.guest-panel-footer');
+
+                    anime({
+                        targets: orbs,
+                        translateX: [
+                            { value: 0 },
+                            { value: 20 },
+                            { value: -16 },
+                            { value: 0 },
+                        ],
+                        translateY: [
+                            { value: 0 },
+                            { value: -18 },
+                            { value: 12 },
+                            { value: 0 },
+                        ],
+                        scale: [
+                            { value: 1 },
+                            { value: 1.06 },
+                            { value: 0.98 },
+                            { value: 1 },
+                        ],
+                        duration: 15000,
+                        easing: 'easeInOutSine',
+                        loop: true,
+                        delay: anime.stagger(800),
+                    });
+
+                    anime({
+                        targets: shimmer,
+                        translateX: ['-28%', '28%'],
+                        opacity: [0.25, 0.65, 0.25],
+                        rotate: ['10deg', '10deg'],
+                        duration: 9000,
+                        easing: 'easeInOutSine',
+                        loop: true,
+                        direction: 'alternate',
+                    });
+
+                    anime({
+                        targets: particles,
+                        translateY: [0, -10, 0],
+                        duration: 8000,
+                        easing: 'easeInOutSine',
+                        loop: true,
+                    });
+
+                    anime.timeline({
+                        easing: 'easeOutQuad',
+                    })
+                    .add({
+                        targets: panelBadge,
+                        opacity: [0, 1],
+                        translateY: [18, 0],
+                        duration: 700,
+                    })
+                    .add({
+                        targets: panelTitle,
+                        opacity: [0, 1],
+                        translateY: [24, 0],
+                        duration: 750,
+                    }, '-=420')
+                    .add({
+                        targets: panelText,
+                        opacity: [0, 1],
+                        translateY: [18, 0],
+                        duration: 650,
+                    }, '-=380')
+                    .add({
+                        targets: panelItems,
+                        opacity: [0, 1],
+                        translateX: [-14, 0],
+                        duration: 600,
+                        delay: anime.stagger(140),
+                    }, '-=260')
+                    .add({
+                        targets: panelFooter,
+                        opacity: [0, 1],
+                        translateY: [16, 0],
+                        duration: 650,
+                    }, '-=260');
+                }
             });
         </script>
     </body>
