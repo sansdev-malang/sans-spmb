@@ -1,9 +1,19 @@
+@php
+    $schoolLogo = \App\Models\Setting::get('school_logo_url', '');
+    $schoolFavicon = \App\Models\Setting::get('school_favicon_url', '');
+    $schoolName = \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh');
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Admin Panel - Sekolah Anak Saleh')</title>
+    <title>@yield('title', 'Admin Panel - ' . $schoolName)</title>
+    @if(!empty($schoolFavicon))
+        <link rel="icon" href="{{ $schoolFavicon }}" type="image/x-icon">
+    @else
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+    @endif
     <!-- Plus Jakarta Sans Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -135,12 +145,18 @@
     <aside id="sidebar-left" class="w-64 bg-admin-dark text-slate-300 flex flex-col fixed inset-y-0 left-0 z-40 border-r border-slate-800 transition-transform duration-300 transform -translate-x-full lg:translate-x-0">
         <!-- Brand Logo / Info -->
         <div class="h-16 bg-slate-950 flex items-center gap-3 px-6 border-b border-slate-800">
-            <div class="h-8 w-8 bg-brand-yellow rounded-lg flex items-center justify-center font-bold text-slate-900 text-xs shadow">
-                SANS
-            </div>
-            <div>
-                <span class="font-extrabold text-sm tracking-wider block text-white leading-none">SANS SPMB</span>
-                <span class="text-[9px] text-brand-yellow tracking-widest font-semibold uppercase">Admin Panel</span>
+            @if(!empty($schoolLogo))
+                <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center p-1 shadow overflow-hidden shrink-0 select-none">
+                    <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="max-h-full max-w-full object-contain">
+                </div>
+            @else
+                <div class="h-8 w-8 bg-brand-yellow rounded-lg flex items-center justify-center font-bold text-slate-900 text-[10px] shadow shrink-0 select-none">
+                    SANS
+                </div>
+            @endif
+            <div class="min-w-0">
+                <span class="font-extrabold text-sm tracking-wider block text-white leading-none truncate max-w-[150px]" title="{{ $schoolName }}">{{ $schoolName }}</span>
+                <span class="text-[9px] text-brand-yellow tracking-widest font-semibold uppercase block mt-1">Admin Panel</span>
             </div>
         </div>
  
@@ -364,7 +380,7 @@
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
                 <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <span class="hidden sm:inline">Sekolah Anak Saleh</span>
+                    <span class="hidden sm:inline">{{ $schoolName }}</span>
                     <span class="hidden sm:inline">/</span>
                     <span class="text-brand-emerald font-bold">@yield('page_title', 'Dashboard')</span>
                 </div>
