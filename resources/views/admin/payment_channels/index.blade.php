@@ -164,7 +164,7 @@
                                     <button onclick="openEditModal({{ json_encode($channel) }})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
                                         Edit
                                     </button>
-                                    <button type="button" onclick="confirmDelete('{{ route('admin.payment-channels.destroy', $channel->id) }}', 'Apakah Anda yakin ingin menghapus channel {{ $channel->name }} ini?')" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
+                                    <button type="button" onclick="confirmDelete('{{ route('admin.payment-channels.destroy', $channel->id) }}' + window.location.search, 'Apakah Anda yakin ingin menghapus channel {{ $channel->name }} ini?')" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
                                         Hapus
                                     </button>
                                 </div>
@@ -198,7 +198,7 @@
             </button>
         </div>
 
-        <form action="{{ route('admin.payment-channels.store') }}" method="POST" enctype="multipart/form-data" hx-boost="false" class="p-6 space-y-4">
+        <form action="{{ route('admin.payment-channels.store', request()->query()) }}" method="POST" enctype="multipart/form-data" hx-boost="false" class="p-6 space-y-4">
             @csrf
             
             @if($activeGateway)
@@ -372,7 +372,7 @@
         
         // Dynamic action URL
         const form = document.getElementById('editForm');
-        form.action = `/admin/payment-channels/${channel.id}/update`;
+        form.action = `/admin/payment-channels/${channel.id}/update` + window.location.search;
 
         const modal = document.getElementById('editModal');
         const body = document.getElementById('editModalBody');

@@ -90,7 +90,10 @@ class PaymentChannelController extends Controller
             'is_active' => $request->has('is_active')
         ]);
 
-        return redirect()->route('admin.payment-channels.index', ['tab' => $gateway->code])
+        $queryParams = $request->query();
+        $queryParams['tab'] = $gateway->code;
+
+        return redirect()->route('admin.payment-channels.index', $queryParams)
             ->with('success', 'Channel pembayaran baru berhasil ditambahkan.');
     }
 
@@ -129,14 +132,17 @@ class PaymentChannelController extends Controller
 
         $channel->update($data);
 
-        return redirect()->route('admin.payment-channels.index', ['tab' => $gateway->code])
+        $queryParams = $request->query();
+        $queryParams['tab'] = $gateway->code;
+
+        return redirect()->route('admin.payment-channels.index', $queryParams)
             ->with('success', 'Channel pembayaran berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $channel = SpmbPaymentChannel::findOrFail($id);
         $gatewayCode = $channel->gateway->code ?? '';
@@ -149,7 +155,12 @@ class PaymentChannelController extends Controller
 
         $channel->delete();
 
-        return redirect()->route('admin.payment-channels.index', ['tab' => $gatewayCode])
+        $queryParams = $request->query();
+        if ($gatewayCode) {
+            $queryParams['tab'] = $gatewayCode;
+        }
+
+        return redirect()->route('admin.payment-channels.index', $queryParams)
             ->with('success', 'Channel ' . $channelName . ' berhasil dihapus.');
     }
 
