@@ -2,6 +2,13 @@
     $schoolLogo = \App\Models\Setting::get('school_logo_url', '');
     $schoolFavicon = \App\Models\Setting::get('school_favicon_url', '');
     $schoolName = \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh');
+
+    // Global Academic Year Queries
+    $globalPeriods = \App\Models\SpmbPeriod::orderBy('year', 'desc')->get();
+    $selectedPeriodId = session('selected_period_id', function() {
+        return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
+            ?? \App\Models\SpmbPeriod::value('id');
+    });
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -158,6 +165,21 @@
                 <span class="font-extrabold text-sm tracking-wider block text-white leading-none truncate max-w-[150px]" title="{{ $schoolName }}">{{ $schoolName }}</span>
                 <span class="text-[9px] text-brand-yellow tracking-widest font-semibold uppercase block mt-1">Admin Panel</span>
             </div>
+        </div>
+
+        <!-- Mobile Academic Year Selector (Only visible on mobile sidebar) -->
+        <div class="px-6 py-3.5 border-b border-slate-800 lg:hidden bg-slate-950/20">
+            <form action="{{ route('admin.change-period') }}" method="POST" id="globalPeriodFormMobile">
+                @csrf
+                <label for="global_period_selector_mobile" class="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tahun Ajaran</label>
+                <select name="selected_period_id" id="global_period_selector_mobile" onchange="document.getElementById('globalPeriodFormMobile').submit()" class="w-full bg-slate-900 border border-slate-800 text-[11px] font-bold text-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
+                    @foreach($globalPeriods as $p)
+                        <option value="{{ $p->id }}" {{ $p->id == $selectedPeriodId ? 'selected' : '' }}>
+                            TA {{ $p->year }} {{ $p->is_active ? '● (Aktif)' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
         </div>
  
         <!-- Navigation Menus -->
@@ -370,15 +392,8 @@
             </div>
             
             <div class="flex items-center gap-3 text-xs font-medium">
-                @php
-                    $globalPeriods = \App\Models\SpmbPeriod::orderBy('year', 'desc')->get();
-                    $selectedPeriodId = session('selected_period_id', function() {
-                        return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
-                            ?? \App\Models\SpmbPeriod::value('id');
-                    });
-                @endphp
                 <!-- Global Academic Year Selector Form -->
-                <form action="{{ route('admin.change-period') }}" method="POST" id="globalPeriodForm" class="mr-1">
+                <form action="{{ route('admin.change-period') }}" method="POST" id="globalPeriodForm" class="mr-1 hidden lg:block">
                     @csrf
                     <label for="global_period_selector" class="sr-only">Tahun Ajaran</label>
                     <select name="selected_period_id" id="global_period_selector" onchange="document.getElementById('globalPeriodForm').submit()" class="bg-slate-50 border border-slate-205 dark:bg-slate-800 dark:border-slate-700 dark:text-white rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">
