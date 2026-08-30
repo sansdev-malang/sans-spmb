@@ -540,7 +540,9 @@
         function toggleNotifDropdown(event) {
             event.stopPropagation();
             const dropdown = document.getElementById('notifDropdown');
-            dropdown.classList.toggle('hidden');
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+            }
         }
 
         // Profile dropdown handler
