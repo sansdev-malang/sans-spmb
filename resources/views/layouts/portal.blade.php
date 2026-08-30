@@ -652,8 +652,23 @@
             const target = link.getAttribute('target');
             
             // Skip empty/javascript/anchor/external-tab links
-            if (!href || href.startsWith('#') || href.startsWith('javascript:') || target === '_blank') {
+            if (!href || href.startsWith('javascript:') || target === '_blank') {
                 return;
+            }
+
+            // Skip anchor links on the current page (e.g. "/#program" on home page)
+            try {
+                const url = new URL(href, window.location.href);
+                if (url.origin === window.location.origin && 
+                    url.pathname === window.location.pathname && 
+                    url.search === window.location.search && 
+                    url.hash) {
+                    return;
+                }
+            } catch (err) {
+                if (href.startsWith('#')) {
+                    return;
+                }
             }
             
             // Check if link is internal (same origin)
