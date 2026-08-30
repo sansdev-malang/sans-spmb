@@ -161,6 +161,18 @@ class AdminDashboardController extends Controller
 
         SpmbActivityLog::log('VERIFY_CANDIDATE', "Memverifikasi berkas pendaftaran ananda " . ($registration->candidate_name ?? 'Draft') . " (ID: {$registration->id})");
 
+        // Trigger notification to candidate
+        try {
+            $registration->user->notify(new \App\Notifications\SpmbNotification([
+                'title' => 'Berkas Pendaftaran Terverifikasi',
+                'message' => 'Alhamdulillah, berkas pendaftaran ananda "' . $registration->candidate_name . '" telah diverifikasi. Silakan persiapkan diri untuk mengikuti Observasi/Ta\'Aruf.',
+                'url' => route('dashboard.verification', $registration->id),
+                'type' => 'success',
+            ]));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send candidate verification notification', ['error' => $e->getMessage()]);
+        }
+
         return redirect()->back()->with('success', 'Candidate registration verified successfully.');
     }
 
@@ -192,6 +204,18 @@ class AdminDashboardController extends Controller
 
         SpmbActivityLog::log('REJECT_CANDIDATE', "Menolak berkas pendaftaran ananda " . ($registration->candidate_name ?? 'Draft') . " (ID: {$registration->id}) dengan alasan: {$reason}");
 
+        // Trigger notification to candidate
+        try {
+            $registration->user->notify(new \App\Notifications\SpmbNotification([
+                'title' => 'Perbaikan Berkas Pendaftaran',
+                'message' => 'Terdapat berkas pendaftaran ananda "' . $registration->candidate_name . '" yang perlu diperbaiki: ' . $reason,
+                'url' => route('dashboard.form', $registration->id),
+                'type' => 'warning',
+            ]));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send candidate rejection notification', ['error' => $e->getMessage()]);
+        }
+
         return redirect()->back()->with('success', 'Candidate registration rejected with reason.');
     }
 
@@ -205,6 +229,18 @@ class AdminDashboardController extends Controller
         ]);
 
         SpmbActivityLog::log('COMPLETE_TAARUF', "Menyelesaikan tahapan observasi/ta'aruf ananda " . ($registration->candidate_name ?? 'Draft') . " (ID: {$registration->id})");
+
+        // Trigger notification to candidate
+        try {
+            $registration->user->notify(new \App\Notifications\SpmbNotification([
+                'title' => 'Tahapan Ta\'Aruf Selesai',
+                'message' => 'Observasi/Ta\'aruf ananda "' . $registration->candidate_name . '" telah selesai dilaksanakan. Silakan isi Surat Pernyataan Kesanggupan Biaya.',
+                'url' => route('dashboard.observation', $registration->id),
+                'type' => 'success',
+            ]));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send candidate taaruf completion notification', ['error' => $e->getMessage()]);
+        }
 
         return redirect()->back()->with('success', 'Status Ta\'aruf calon siswa berhasil diselesaikan.');
     }

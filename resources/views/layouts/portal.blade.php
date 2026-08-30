@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SPMB Sekolah Anak Saleh')</title>
     @php
         $primaryColor = \App\Models\Setting::get('portal_primary_color', '#0D3B2C');
@@ -299,28 +300,12 @@
 
                         <!-- Notifications Toggles with Badge -->
                         <div class="relative">
-                            <button onclick="toggleNotifDropdown(event)" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition relative" title="Notifikasi">
+                            <button id="notifBellButton" type="button" onclick="toggleNotifDropdown(event)" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition relative" title="Notifikasi">
                                 <i data-lucide="bell" class="w-4 h-4"></i>
-                                <span class="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
+                                <span id="unread-notifications-badge" class="absolute top-1.5 right-1.5 flex h-2 w-2"></span>
                             </button>
                             <!-- Notifications Dropdown Box -->
-                            <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-2 z-50 text-xs text-slate-700 dark:text-slate-300">
-                                <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 font-bold text-slate-850 dark:text-white flex justify-between items-center">
-                                    <span>Notifikasi Masuk</span>
-                                    <span class="bg-red-50 dark:bg-red-950/30 text-red-650 dark:text-red-400 text-[9px] px-2 py-0.5 rounded-full font-bold">3 Baru</span>
-                                </div>
-                                <div class="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
-                                    <a href="#" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                        <div class="font-bold text-slate-800 dark:text-slate-200">Pembayaran Terkonfirmasi</div>
-                                        <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Terima kasih, tagihan pendaftaran Anda telah lunas diverifikasi.</div>
-                                        <div class="text-[9px] text-brand-emerald dark:text-emerald-400 font-bold mt-1">Baru saja</div>
-                                    </a>
-                                    <a href="#" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                        <div class="font-bold text-slate-800 dark:text-slate-200">Jadwal Observasi Rilis</div>
-                                        <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Jadwal wawancara/observasi ananda Ahmad Raihan telah dijadwalkan.</div>
-                                        <div class="text-[9px] text-brand-emerald dark:text-emerald-400 font-bold mt-1">10 menit yang lalu</div>
-                                    </a>
-                                </div>
+                            <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-2 z-50 animate-fade-in text-xs text-slate-700 dark:text-slate-300">
                             </div>
                         </div>
 
@@ -437,14 +422,115 @@
         }
 
         // Notification dropdown handler
+        @auth
+        let isFetchingNotif = false;
         function toggleNotifDropdown(event) {
             event.stopPropagation();
-            document.getElementById('profileDropdown')?.classList.add('hidden');
             const dropdown = document.getElementById('notifDropdown');
             if (dropdown) {
-                dropdown.classList.toggle('hidden');
+                const isHidden = dropdown.classList.contains('hidden');
+                document.getElementById('profileDropdown')?.classList.add('hidden');
+                
+                if (isHidden) {
+                    dropdown.classList.remove('hidden');
+                } else {
+                    dropdown.classList.add('hidden');
+                    fetchNotifications(true); // Fetch silently in background after closing!
+                }
             }
         }
+
+        function fetchNotifications(silent = false) {
+            if (isFetchingNotif) return;
+            isFetchingNotif = true;
+
+            const dropdown = document.getElementById('notifDropdown');
+            if (!dropdown) {
+                isFetchingNotif = false;
+                return;
+            }
+            
+            // Show a simple text loader ONLY if the dropdown is completely empty
+            if (!silent && (!dropdown.innerHTML || dropdown.innerHTML.trim() === '')) {
+                dropdown.innerHTML = `
+                    <div class="px-4 py-8 text-center text-slate-400">
+                        <p class="text-[10px]">Memuat...</p>
+                    </div>
+                `;
+            }
+
+            fetch('/dashboard/notifications/dropdown')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load');
+                    return response.text();
+                })
+                .then(html => {
+                    dropdown.innerHTML = html;
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                })
+                .finally(() => {
+                    isFetchingNotif = false;
+                });
+        }
+
+        // Notification badge count fetcher
+        function fetchNotificationCount() {
+            fetch('/dashboard/notifications/unread-count')
+                .then(response => {
+                    if (!response.ok) throw new Error();
+                    return response.text();
+                })
+                .then(html => {
+                    const badge = document.getElementById('unread-notifications-badge');
+                    if (badge) {
+                        badge.innerHTML = html;
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Mark all notifications as read handler
+        function markAllNotificationsAsRead(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) return;
+
+            fetch('/dashboard/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'text/html'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to mark all as read');
+                return response.text();
+            })
+            .then(html => {
+                const dropdown = document.getElementById('notifDropdown');
+                if (dropdown) {
+                    dropdown.innerHTML = html;
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                }
+                // Refresh unread count badge
+                fetchNotificationCount();
+            })
+            .catch(error => {
+                console.error('Error marking all read:', error);
+            });
+        }
+        @else
+        function toggleNotifDropdown(event) {}
+        @endauth
 
         // Profile dropdown handler
         function toggleProfileDropdown(event) {
@@ -457,8 +543,15 @@
         document.addEventListener('click', function(e) {
             const notifDropdown = document.getElementById('notifDropdown');
             const profileDropdown = document.getElementById('profileDropdown');
-            if (notifDropdown && !notifDropdown.classList.contains('hidden') && !notifDropdown.contains(e.target)) {
-                notifDropdown.classList.add('hidden');
+            const bellButton = document.getElementById('notifBellButton');
+            
+            if (notifDropdown && !notifDropdown.classList.contains('hidden')) {
+                if (!notifDropdown.contains(e.target) && (!bellButton || !bellButton.contains(e.target))) {
+                    notifDropdown.classList.add('hidden');
+                    @auth
+                    fetchNotifications(true); // Fetch silently in background after closing!
+                    @endauth
+                }
             }
             if (profileDropdown && !profileDropdown.classList.contains('hidden') && !profileDropdown.contains(e.target)) {
                 profileDropdown.classList.add('hidden');
@@ -585,6 +678,27 @@
                 lucide.createIcons();
             }
             updateThemeIcon();
+            
+            @auth
+            // Fetch initial notification count and pre-load notifications silently
+            fetchNotificationCount();
+            fetchNotifications(true); // Silent pre-load on page load!
+            
+            setInterval(fetchNotificationCount, 45000);
+            // Silently auto-refresh notifications list every 45s ONLY if dropdown is closed
+            setInterval(() => {
+                const dropdown = document.getElementById('notifDropdown');
+                if (dropdown && dropdown.classList.contains('hidden')) {
+                    fetchNotifications(true);
+                }
+            }, 45000);
+            
+            // Listen to refresh count triggers if dispatched anywhere
+            document.addEventListener('refresh-notification-count', () => {
+                fetchNotificationCount();
+                fetchNotifications(true);
+            });
+            @endauth
             
             @if(session('success'))
                 showToast("{{ session('success') }}", 'success');

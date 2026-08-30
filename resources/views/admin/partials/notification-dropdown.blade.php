@@ -9,8 +9,11 @@
         @php
             $data = $n->data;
             $bgClass = $n->read_at ? 'bg-white' : 'bg-emerald-50/20';
+            $redirectUrl = auth()->user()->isAdmin() 
+                ? route('admin.notifications.read-redirect', $n->id) 
+                : route('dashboard.notifications.read-redirect', $n->id);
         @endphp
-        <a href="{{ route('admin.notifications.read-redirect', $n->id) }}" class="block px-4 py-3 hover:bg-slate-50 transition {{ $bgClass }}">
+        <a href="{{ $redirectUrl }}" class="block px-4 py-3 hover:bg-slate-50 transition {{ $bgClass }}">
             <div class="font-bold text-slate-800 flex justify-between items-center gap-2">
                 <span class="truncate max-w-[180px]">{{ $data['title'] ?? 'Notifikasi' }}</span>
                 @if(!$n->read_at)
@@ -28,5 +31,9 @@
     @endforelse
 </div>
 <div class="px-4 py-2 border-t border-slate-100 text-center bg-slate-50/50 rounded-b-2xl">
-    <a href="{{ route('admin.verification') }}" class="text-[10px] text-brand-emerald font-bold hover:underline">Lihat Semua Aktivitas</a>
+    @if(auth()->user()->isAdmin())
+        <a href="{{ route('admin.verification') }}" class="text-[10px] text-brand-emerald font-bold hover:underline">Lihat Semua Aktivitas</a>
+    @else
+        <a href="{{ route('dashboard') }}" class="text-[10px] text-brand-emerald font-bold hover:underline">Kembali ke Beranda</a>
+    @endif
 </div>

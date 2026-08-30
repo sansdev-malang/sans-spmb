@@ -31,6 +31,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebDashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/registration/create', [WebDashboardController::class, 'createRegistration'])->name('dashboard.registration.create');
     
+    // Candidate In-App Notifications Routes
+    Route::get('/dashboard/notifications/unread-count', [AdminNotificationController::class, 'unreadCount'])->name('dashboard.notifications.count');
+    Route::get('/dashboard/notifications/dropdown', [AdminNotificationController::class, 'dropdownList'])->name('dashboard.notifications.dropdown');
+    Route::post('/dashboard/notifications/mark-all-read', [AdminNotificationController::class, 'markAllRead'])->name('dashboard.notifications.mark-all-read');
+    Route::get('/dashboard/notifications/{id}/read', [AdminNotificationController::class, 'markAsReadAndRedirect'])->name('dashboard.notifications.read-redirect');
+    
     // Single Registration Details
     Route::get('/dashboard/registration/{id}/detail', [WebDashboardController::class, 'detail'])->name('dashboard.detail');
     Route::get('/dashboard/registration/{id}/form', [WebDashboardController::class, 'form'])->name('dashboard.form');

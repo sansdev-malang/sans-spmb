@@ -453,6 +453,18 @@ class PaymentController extends Controller
                         } catch (\Exception $e) {
                             Log::error('Failed to send DSP success notification', ['error' => $e->getMessage()]);
                         }
+
+                        // Trigger notification to candidate
+                        try {
+                            $registration->user->notify(new \App\Notifications\SpmbNotification([
+                                'title' => 'Pembayaran DSP Lunas',
+                                'message' => 'Alhamdulillah, Uang Pangkal (DSP) untuk ananda "' . $registration->candidate_name . '" telah lunas diverifikasi. Selamat bergabung di Sekolah Anak Saleh!',
+                                'url' => route('dashboard.result', $registration->id),
+                                'type' => 'success',
+                            ]));
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send candidate DSP success notification', ['error' => $e->getMessage()]);
+                        }
                     } else {
                         $registration->update([
                             'payment_status' => 'partially_paid',
@@ -470,6 +482,18 @@ class PaymentController extends Controller
                             ]));
                         } catch (\Exception $e) {
                             Log::error('Failed to send DSP partial success notification', ['error' => $e->getMessage()]);
+                        }
+
+                        // Trigger notification to candidate
+                        try {
+                            $registration->user->notify(new \App\Notifications\SpmbNotification([
+                                'title' => 'Pembayaran DSP Sebagian',
+                                'message' => 'Pembayaran DSP sebagian untuk ananda "' . $registration->candidate_name . '" sebesar Rp ' . number_format($payment->amount, 0, ',', '.') . ' telah diverifikasi. Silakan selesaikan sisa tanggungan pembiayaan Anda.',
+                                'url' => route('dashboard.result', $registration->id),
+                                'type' => 'info',
+                            ]));
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send candidate DSP partial success notification', ['error' => $e->getMessage()]);
                         }
                     }
                 } else {
@@ -489,6 +513,18 @@ class PaymentController extends Controller
                         ]));
                     } catch (\Exception $e) {
                         Log::error('Failed to send payment success notification', ['error' => $e->getMessage()]);
+                    }
+
+                    // Trigger notification to candidate
+                    try {
+                        $registration->user->notify(new \App\Notifications\SpmbNotification([
+                            'title' => 'Pembayaran Formulir Sukses',
+                            'message' => 'Alhamdulillah, pembayaran formulir pendaftaran untuk ananda "' . $registration->candidate_name . '" telah sukses diverifikasi. Silakan isi dan lengkapi formulir pendaftaran Anda.',
+                            'url' => route('dashboard.form', $registration->id),
+                            'type' => 'success',
+                        ]));
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send candidate payment success notification', ['error' => $e->getMessage()]);
                     }
                 }
 
