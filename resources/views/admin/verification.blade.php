@@ -20,9 +20,6 @@
             <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-slate-300 rounded-xl shadow-sm text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-750 transition">
                 <i data-lucide="layout-dashboard" class="w-4 h-4 mr-1 text-slate-500"></i> Dashboard Utama
             </a>
-            <a href="{{ route('dashboard') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-sm text-xs font-bold text-white bg-brand-emerald hover-emerald transition">
-                <i data-lucide="monitor" class="w-4 h-4 mr-1 text-brand-yellow"></i> Portal Pendaftar
-            </a>
         </div>
     </div>
 
