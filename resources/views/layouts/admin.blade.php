@@ -233,7 +233,7 @@
             <div class="space-y-1">
                 <button type="button" onclick="toggleMasterDropdown()" 
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition
-                    {{ $isMasterActive ? 'bg-slate-800 text-white font-bold' : 'hover:bg-slate-800/50 hover:text-white text-slate-400' }}">
+                    {{ $isMasterActive ? 'bg-slate-800 text-white font-bold' : 'hover:bg-slate-800/50 hover:text-white' }}">
                     <span class="flex items-center gap-3">
                         <i data-lucide="database" class="w-4 h-4"></i> Data Master
                     </span>
@@ -273,7 +273,7 @@
                 <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mt-6 mb-2">Desain & Tampilan</span>
                 <a href="{{ route('admin.ui-settings') }}" 
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition mb-2
-                    {{ Route::is('admin.ui-settings') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white text-slate-400' }}">
+                    {{ Route::is('admin.ui-settings') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
                     <i data-lucide="palette" class="w-4 h-4"></i> Tampilan Portal
                 </a>
 
@@ -284,7 +284,7 @@
                 <div class="space-y-1">
                     <button type="button" onclick="toggleTechDropdown()" 
                         class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition
-                        {{ $isTechActive ? 'bg-slate-800 text-white font-bold' : 'hover:bg-slate-800/50 hover:text-white text-slate-400' }}">
+                        {{ $isTechActive ? 'bg-slate-800 text-white font-bold' : 'hover:bg-slate-800/50 hover:text-white' }}">
                         <span class="flex items-center gap-3">
                             <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan Teknis
                         </span>
