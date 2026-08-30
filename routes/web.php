@@ -24,6 +24,7 @@ use App\Http\Controllers\Web\SpmbRegistrationSettingsController;
 use App\Http\Controllers\Web\SpmbFormSettingsController;
 use App\Http\Controllers\Web\PaymentGatewayController;
 use App\Http\Controllers\Web\PaymentChannelController;
+use App\Http\Controllers\Web\AdminNotificationController;
 
 Route::middleware('auth')->group(function () {
     // Candidate Dashboard
@@ -63,6 +64,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/registrations/{id}/verify', [AdminDashboardController::class, 'verify'])->name('admin.registrations.verify');
         Route::post('/admin/registrations/{id}/reject', [AdminDashboardController::class, 'reject'])->name('admin.registrations.reject');
         Route::post('/admin/registrations/{id}/complete-taaruf', [AdminDashboardController::class, 'completeTaaruf'])->name('admin.registrations.complete-taaruf');
+
+        // Admin In-App Notifications Routes
+        Route::get('/admin/notifications/unread-count', [AdminNotificationController::class, 'unreadCount'])->name('admin.notifications.count');
+        Route::get('/admin/notifications/dropdown', [AdminNotificationController::class, 'dropdownList'])->name('admin.notifications.dropdown');
+        Route::post('/admin/notifications/mark-all-read', [AdminNotificationController::class, 'markAllRead'])->name('admin.notifications.mark-all-read');
+        Route::get('/admin/notifications/{id}/read', [AdminNotificationController::class, 'markAsReadAndRedirect'])->name('admin.notifications.read-redirect');
 
         // Route to change selected academic period session
         Route::post('/admin/spmb-settings/change-period', function(\Illuminate\Http\Request $request) {

@@ -496,6 +496,20 @@ class WebDashboardController extends Controller
                 'registration_status' => 'submitted',
                 'committee_notes' => 'Formulir pendaftaran berhasil dikirim kembali. Berkas pendaftaran ananda sedang dalam proses verifikasi ulang oleh panitia SPMB.'
             ]);
+
+            // Trigger notification to all admins
+            try {
+                $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                    'title' => 'Berkas Pendaftaran Dikirim',
+                    'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja mengirim berkas pendaftaran untuk diverifikasi.',
+                    'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
+                    'type' => 'info',
+                ]));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send form submission notification', ['error' => $e->getMessage()]);
+            }
+
             return redirect()->route('dashboard.detail', $id)->with('success', 'Formulir pendaftaran berhasil dikirim kembali! Silakan menunggu verifikasi berkas dari panitia.');
         }
 
@@ -691,6 +705,19 @@ class WebDashboardController extends Controller
             'signed_at' => \Carbon\Carbon::now(),
             'committee_notes' => 'Pernyataan kesanggupan ditandatangani oleh: ' . $request->signature_name . '. Silakan lakukan pembayaran biaya administrasi seleksi akhir.'
         ]);
+
+        // Trigger notification to all admins
+        try {
+            $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                'title' => 'Surat Pernyataan Disetujui',
+                'message' => 'Surat pernyataan & rincian biaya masuk untuk calon siswa "' . $registration->candidate_name . '" telah ditandatangani oleh ' . $request->signature_name . '.',
+                'url' => route('admin.payments.data') . '?search=' . urlencode($registration->candidate_name),
+                'type' => 'success',
+            ]));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send agreement signature notification', ['error' => $e->getMessage()]);
+        }
 
         return redirect()->route('dashboard.result', $id)->with('success', 'Pernyataan kesanggupan berhasil disetujui. Silakan pelajari rincian administrasi di bawah ini.');
     }

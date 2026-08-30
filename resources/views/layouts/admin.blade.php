@@ -412,35 +412,23 @@
 
                 <!-- Notifications Toggles with Badge -->
                 <div class="relative">
-                    <button onclick="toggleNotifDropdown(event)" class="p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-slate-50 transition relative" title="Notifikasi">
+                    <button onclick="toggleNotifDropdown(event)" class="p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-slate-50 transition relative" title="Notifikasi"
+                        hx-get="{{ route('admin.notifications.dropdown') }}"
+                        hx-trigger="click"
+                        hx-target="#notifDropdown"
+                        hx-swap="innerHTML">
                         <i data-lucide="bell" class="w-4.5 h-4.5"></i>
-                        <span class="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
+                        <span id="unread-notifications-badge"
+                            hx-get="{{ route('admin.notifications.count') }}"
+                            hx-trigger="load, every 45s, refresh-notification-count from:body"
+                            hx-swap="outerHTML">
+                        </span>
                     </button>
                     <!-- Notifications Dropdown Box -->
                     <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-150 py-2 z-50 animate-fade-in text-xs text-slate-700">
-                        <div class="px-4 py-2 border-b border-slate-100 font-bold text-slate-800 flex justify-between items-center">
-                            <span>Notifikasi Masuk</span>
-                            <span class="bg-red-50 text-red-600 text-[9px] px-2 py-0.5 rounded-full font-bold">3 Baru</span>
-                        </div>
-                        <div class="divide-y divide-slate-55 max-h-64 overflow-y-auto">
-                            <a href="{{ route('admin.verification') }}" class="block px-4 py-3 hover:bg-slate-50 transition">
-                                <div class="font-bold text-slate-800">Pendaftaran Baru Berkas Masuk</div>
-                                <div class="text-[10px] text-slate-400 mt-0.5">Calon siswa Ahmad Raihan telah mengunggah berkas.</div>
-                                <div class="text-[9px] text-brand-emerald font-bold mt-1">2 menit yang lalu</div>
-                            </a>
-                            <a href="{{ route('admin.payments') }}" class="block px-4 py-3 hover:bg-slate-50 transition">
-                                <div class="font-bold text-slate-800">Pembayaran Sukses (Winpay)</div>
-                                <div class="text-[10px] text-slate-400 mt-0.5">Invoice INV-SPMB-20260819-2-622 telah lunas via Mandiri.</div>
-                                <div class="text-[9px] text-brand-emerald font-bold mt-1">15 menit yang lalu</div>
-                            </a>
-                            <a href="{{ route('admin.users') }}" class="block px-4 py-3 hover:bg-slate-50 transition">
-                                <div class="font-bold text-slate-800">User Baru Terdaftar</div>
-                                <div class="text-[10px] text-slate-400 mt-0.5">Akun wali murid Siti Aminah telah didaftarkan.</div>
-                                <div class="text-[9px] text-brand-emerald font-bold mt-1">1 jam yang lalu</div>
-                            </a>
-                        </div>
-                        <div class="px-4 py-2 border-t border-slate-100 text-center">
-                            <a href="{{ route('admin.verification') }}" class="text-[10px] text-brand-emerald font-bold hover:underline">Lihat Semua Aktifitas</a>
+                        <div class="px-4 py-8 text-center text-slate-400">
+                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-brand-emerald border-t-transparent mx-auto mb-2"></div>
+                            <p class="text-[10px]">Memuat notifikasi...</p>
                         </div>
                     </div>
                 </div>

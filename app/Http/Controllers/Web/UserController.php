@@ -270,6 +270,19 @@ class UserController extends Controller
             'payment_status' => 'unpaid',
         ]);
 
+        // Trigger notification to all admins
+        try {
+            $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                'title' => 'Pendaftaran Akun Baru',
+                'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja membuat akun pendaftaran.',
+                'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
+                'type' => 'info',
+            ]));
+        } catch (\Exception $e) {
+            // Ignore or log error
+        }
+
         // Log the user in
         Auth::login($user);
 

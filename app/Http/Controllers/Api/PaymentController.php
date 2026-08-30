@@ -440,17 +440,56 @@ class PaymentController extends Controller
                             'registration_status' => 'completed',
                             'committee_notes' => 'Alhamdulillah, seluruh rangkaian pendaftaran dan pembayaran administrasi akhir ananda ' . ($registration->candidate_name ?? 'Ananda') . ' telah lunas diverifikasi. Selamat bergabung di Sekolah Anak Saleh!'
                         ]);
+
+                        // Trigger notification to all admins for full DSP payment
+                        try {
+                            $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                                'title' => 'Pembayaran DSP Lunas',
+                                'message' => 'Pembayaran Uang Pangkal (DSP) calon siswa "' . $registration->candidate_name . '" telah lunas (Total: Rp ' . number_format($totalPaid, 0, ',', '.') . ').',
+                                'url' => route('admin.payments.data') . '?search=' . urlencode($registration->candidate_name),
+                                'type' => 'success',
+                            ]));
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send DSP success notification', ['error' => $e->getMessage()]);
+                        }
                     } else {
                         $registration->update([
                             'payment_status' => 'partially_paid',
                             'committee_notes' => 'Pembayaran administrasi akhir sebagian berhasil diterima. Silakan selesaikan sisa tanggungan pembiayaan Anda.'
                         ]);
+
+                        // Trigger notification to all admins for partial DSP payment
+                        try {
+                            $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                                'title' => 'Pembayaran DSP Sebagian',
+                                'message' => 'Diterima pembayaran DSP sebagian untuk calon siswa "' . $registration->candidate_name . '" sebesar Rp ' . number_format($payment->amount, 0, ',', '.') . ' (Masuk: Rp ' . number_format($totalPaid, 0, ',', '.') . ' / ' . number_format($totalRequired, 0, ',', '.') . ').',
+                                'url' => route('admin.payments.data') . '?search=' . urlencode($registration->candidate_name),
+                                'type' => 'info',
+                            ]));
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send DSP partial success notification', ['error' => $e->getMessage()]);
+                        }
                     }
                 } else {
                     $registration->update([
                         'payment_status' => 'paid',
                         'committee_notes' => 'Pembayaran formulir pendaftaran berhasil diterima. Silakan isi dan lengkapi formulir pendaftaran Anda.'
                     ]);
+
+                    // Trigger notification to all admins for form payment
+                    try {
+                        $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                            'title' => 'Pembayaran Formulir Sukses',
+                            'message' => 'Pembayaran formulir untuk calon siswa "' . $registration->candidate_name . '" sebesar Rp ' . number_format($payment->amount, 0, ',', '.') . ' telah lunas.',
+                            'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
+                            'type' => 'success',
+                        ]));
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send payment success notification', ['error' => $e->getMessage()]);
+                    }
                 }
 
                 DB::commit();
