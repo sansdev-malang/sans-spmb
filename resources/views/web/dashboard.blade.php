@@ -203,11 +203,27 @@
                                     @if($feeGateway === 'bni' || $feeGateway === 'BNI SNAP')
                                         <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
                                             <input type="radio" name="payment_method" value="BNI" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" checked>
+                                            
+                                            <!-- Logo Placeholder -->
+                                            <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
+                                                <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                    BNI
+                                                </div>
+                                            </div>
+
                                             <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">BNI VA</span>
                                             <span class="text-[9px] text-slate-450 uppercase font-semibold">VIRTUAL ACCOUNT</span>
                                         </label>
                                         <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
                                             <input type="radio" name="payment_method" value="QRIS" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald">
+                                            
+                                            <!-- Logo Placeholder -->
+                                            <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
+                                                <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                    QRIS
+                                                </div>
+                                            </div>
+
                                             <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">QRIS</span>
                                             <span class="text-[9px] text-slate-450 uppercase font-semibold">QR CODE SCAN</span>
                                         </label>
@@ -215,6 +231,18 @@
                                         @foreach($channels as $channel)
                                             <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
                                                 <input type="radio" name="payment_method" value="{{ $channel->code }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
+                                                
+                                                <!-- Logo Container -->
+                                                <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
+                                                    @if($channel->getLogoUrl())
+                                                        <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" class="max-h-full max-w-full object-contain">
+                                                    @else
+                                                        <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                            {{ substr($channel->code, 0, 3) }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+
                                                 <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">{{ $channel->name }}</span>
                                                 <span class="text-[9px] text-slate-450 uppercase font-semibold">{{ $channel->type }}</span>
                                             </label>
@@ -452,11 +480,27 @@
                                 @if($feeGateway === 'bni' || $feeGateway === 'BNI SNAP')
                                     <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
                                         <input type="radio" name="payment_method" value="BNI" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" checked>
+                                        
+                                        <!-- Logo Placeholder -->
+                                        <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
+                                            <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                BNI
+                                            </div>
+                                        </div>
+
                                         <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">BNI VA</span>
                                         <span class="text-[9px] text-slate-450 uppercase font-semibold">VIRTUAL ACCOUNT</span>
                                     </label>
                                     <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
                                         <input type="radio" name="payment_method" value="QRIS" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald">
+                                        
+                                        <!-- Logo Placeholder -->
+                                        <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
+                                            <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                QRIS
+                                            </div>
+                                        </div>
+
                                         <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">QRIS</span>
                                         <span class="text-[9px] text-slate-450 uppercase font-semibold">QR CODE SCAN</span>
                                     </label>
@@ -464,6 +508,18 @@
                                     @foreach($channels as $channel)
                                         <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
                                             <input type="radio" name="payment_method" value="{{ $channel->code }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
+                                            
+                                            <!-- Logo Container -->
+                                            <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
+                                                @if($channel->getLogoUrl())
+                                                    <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" class="max-h-full max-w-full object-contain">
+                                                @else
+                                                    <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                        {{ substr($channel->code, 0, 3) }}
+                                                    </div>
+                                                @endif
+                                            </div>
+
                                             <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">{{ $channel->name }}</span>
                                             <span class="text-[9px] text-slate-450 uppercase font-semibold">{{ $channel->type }}</span>
                                         </label>
