@@ -447,7 +447,7 @@
                     </div>
                 </div>
 
-                <a href="{{ route('dashboard') }}" target="_blank" class="bg-emerald-50 text-brand-emerald hover:bg-emerald-100 px-2 sm:px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5" title="Buka Portal Pendaftar">
+                <a href="{{ url('/') }}" target="_blank" class="bg-emerald-50 text-brand-emerald hover:bg-emerald-100 px-2 sm:px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5" title="Buka Portal Pendaftar">
                     <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                     <span class="hidden md:inline">Buka Portal Pendaftar</span>
                 </a>
