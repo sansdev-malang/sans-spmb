@@ -15,6 +15,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel - ' . $schoolName)</title>
     @if(!empty($schoolFavicon))
         <link rel="icon" href="{{ $schoolFavicon }}" type="image/x-icon">
@@ -324,7 +325,7 @@
         <!-- User profile section bottom -->
         <div class="p-4 border-t border-slate-800 bg-slate-950/40 relative text-xs select-none">
             <!-- Profile Capsule Button (Click to toggle dropdown) -->
-            <button type="button" onclick="toggleProfileDropdown(event)" class="w-full flex items-center justify-between hover:bg-slate-800/30 p-1.5 rounded-xl transition duration-200 text-left">
+            <button id="profileDropdownButton" type="button" onclick="toggleProfileDropdown(event)" class="w-full flex items-center justify-between hover:bg-slate-800/30 p-1.5 rounded-xl transition duration-200 text-left">
                 <div class="flex items-center gap-2">
                     <div class="h-8 w-8 rounded-full bg-brand-emerald text-brand-yellow font-black flex items-center justify-center border border-emerald-800 shadow-inner uppercase">
                         {{ substr(auth()->user()->name ?? 'A', 0, 1) }}
@@ -412,24 +413,12 @@
 
                 <!-- Notifications Toggles with Badge -->
                 <div class="relative">
-                    <button onclick="toggleNotifDropdown(event)" class="p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-slate-50 transition relative" title="Notifikasi"
-                        hx-get="{{ route('admin.notifications.dropdown') }}"
-                        hx-trigger="click"
-                        hx-target="#notifDropdown"
-                        hx-swap="innerHTML">
+                    <button id="notifBellButton" type="button" onclick="toggleNotifDropdown(event)" class="p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-slate-50 transition relative" title="Notifikasi">
                         <i data-lucide="bell" class="w-4.5 h-4.5"></i>
-                        <span id="unread-notifications-badge"
-                            hx-get="{{ route('admin.notifications.count') }}"
-                            hx-trigger="load, every 45s, refresh-notification-count from:body"
-                            hx-swap="outerHTML">
-                        </span>
+                        <span id="unread-notifications-badge" class="absolute top-1.5 right-1.5 flex h-2 w-2"></span>
                     </button>
                     <!-- Notifications Dropdown Box -->
                     <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-150 py-2 z-50 animate-fade-in text-xs text-slate-700">
-                        <div class="px-4 py-8 text-center text-slate-400">
-                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-brand-emerald border-t-transparent mx-auto mb-2"></div>
-                            <p class="text-[10px]">Memuat notifikasi...</p>
-                        </div>
                     </div>
                 </div>
 
@@ -536,13 +525,113 @@
             }
         }
 
+
+
         // Notification dropdown handler
+        let isFetchingNotif = false;
         function toggleNotifDropdown(event) {
             event.stopPropagation();
             const dropdown = document.getElementById('notifDropdown');
             if (dropdown) {
-                dropdown.classList.toggle('hidden');
+                const isHidden = dropdown.classList.contains('hidden');
+                
+                // Close profile dropdown first
+                const profileDropdown = document.getElementById('profileDropdown');
+                if (profileDropdown) {
+                    profileDropdown.classList.add('hidden');
+                }
+                
+                if (isHidden) {
+                    dropdown.classList.remove('hidden');
+                } else {
+                    dropdown.classList.add('hidden');
+                    fetchNotifications(true); // Fetch silently in background after closing!
+                }
             }
+        }
+
+        function fetchNotifications(silent = false) {
+            if (isFetchingNotif) return;
+            isFetchingNotif = true;
+
+            const dropdown = document.getElementById('notifDropdown');
+            
+            // Show a simple text loader ONLY if the dropdown is completely empty
+            if (!silent && (!dropdown.innerHTML || dropdown.innerHTML.trim() === '')) {
+                dropdown.innerHTML = `
+                    <div class="px-4 py-8 text-center text-slate-400">
+                        <p class="text-[10px]">Memuat...</p>
+                    </div>
+                `;
+            }
+
+            fetch('/admin/notifications/dropdown')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load');
+                    return response.text();
+                })
+                .then(html => {
+                    dropdown.innerHTML = html;
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching notifications:', error);
+                })
+                .finally(() => {
+                    isFetchingNotif = false;
+                });
+        }
+
+        // Notification badge count fetcher
+        function fetchNotificationCount() {
+            fetch('/admin/notifications/unread-count')
+                .then(response => {
+                    if (!response.ok) throw new Error();
+                    return response.text();
+                })
+                .then(html => {
+                    const badge = document.getElementById('unread-notifications-badge');
+                    if (badge) {
+                        badge.innerHTML = html;
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Mark all notifications as read handler
+        function markAllNotificationsAsRead(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            fetch('/admin/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'text/html'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to mark all as read');
+                return response.text();
+            })
+            .then(html => {
+                const dropdown = document.getElementById('notifDropdown');
+                if (dropdown) {
+                    dropdown.innerHTML = html;
+                    if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
+                }
+                // Refresh unread count badge
+                fetchNotificationCount();
+            })
+            .catch(error => {
+                console.error('Error marking all read:', error);
+            });
         }
 
         // Profile dropdown handler
@@ -575,13 +664,20 @@
 
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('notifDropdown');
-            if (dropdown && !dropdown.classList.contains('hidden') && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
+            const bellButton = document.getElementById('notifBellButton');
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                if (!dropdown.contains(e.target) && (!bellButton || !bellButton.contains(e.target))) {
+                    dropdown.classList.add('hidden');
+                    fetchNotifications(true); // Fetch silently in background after closing!
+                }
             }
 
             const profileDropdown = document.getElementById('profileDropdown');
-            if (profileDropdown && !profileDropdown.classList.contains('hidden') && !profileDropdown.contains(e.target)) {
-                profileDropdown.classList.add('hidden');
+            const profileButton = document.getElementById('profileDropdownButton');
+            if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
+                if (!profileDropdown.contains(e.target) && (!profileButton || !profileButton.contains(e.target))) {
+                    profileDropdown.classList.add('hidden');
+                }
             }
         });
 
@@ -610,6 +706,32 @@
             } else {
                 document.documentElement.classList.remove('dark');
             }
+            updateThemeIcon();
+            
+            // Fetch initial notification count and pre-load notifications silently
+            fetchNotificationCount();
+            fetchNotifications(true); // Silent pre-load on page load!
+            
+            setInterval(fetchNotificationCount, 45000);
+            // Silently auto-refresh notifications list every 45s ONLY if dropdown is closed
+            setInterval(() => {
+                const dropdown = document.getElementById('notifDropdown');
+                if (dropdown && dropdown.classList.contains('hidden')) {
+                    fetchNotifications(true);
+                }
+            }, 45000);
+            
+            // Listen to refresh count triggers if dispatched anywhere
+            document.addEventListener('refresh-notification-count', () => {
+                fetchNotificationCount();
+                fetchNotifications(true);
+            });
+            
+            // Listen to HTMX page swaps to re-initialize notifications count and content silently
+            document.addEventListener('htmx:afterSwap', () => {
+                fetchNotificationCount();
+                fetchNotifications(true);
+            });
         })();
 
         // Toast Engine function
@@ -660,7 +782,11 @@
             });
             
             // HTMX top loading bar animation
-            document.body.addEventListener('htmx:configRequest', function() {
+            document.body.addEventListener('htmx:configRequest', function(evt) {
+                const path = evt.detail.path || '';
+                if (path.includes('/notifications')) {
+                    return;
+                }
                 const bar = document.getElementById('top-loading-bar');
                 if (bar) {
                     bar.style.opacity = '1';
@@ -673,7 +799,11 @@
                 }
             });
             
-            document.body.addEventListener('htmx:afterRequest', function() {
+            document.body.addEventListener('htmx:afterRequest', function(evt) {
+                const path = evt.detail.path || '';
+                if (path.includes('/notifications')) {
+                    return;
+                }
                 const bar = document.getElementById('top-loading-bar');
                 if (bar) {
                     bar.style.width = '100%';

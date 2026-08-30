@@ -275,8 +275,8 @@ class UserController extends Controller
             $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
             \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                 'title' => 'Pendaftaran Akun Baru',
-                'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja membuat akun pendaftaran.',
-                'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
+                'message' => 'Wali murid "' . $user->name . '" (' . $user->email . ') baru saja mendaftarkan akun baru.',
+                'url' => route('admin.users') . '?search=' . urlencode($user->email),
                 'type' => 'info',
             ]));
         } catch (\Exception $e) {

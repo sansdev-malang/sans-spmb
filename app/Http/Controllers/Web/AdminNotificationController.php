@@ -14,9 +14,10 @@ class AdminNotificationController extends Controller
     {
         $count = auth()->user()->unreadNotifications()->count();
         if ($count > 0) {
-            return '<span id="unread-notifications-badge" class="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 rounded-full animate-pulse pointer-events-none"></span>';
+            return '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>' .
+                   '<span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>';
         }
-        return '<span id="unread-notifications-badge" class="hidden"></span>';
+        return '';
     }
 
     /**
@@ -24,7 +25,7 @@ class AdminNotificationController extends Controller
      */
     public function dropdownList()
     {
-        $notifications = auth()->user()->notifications()->take(10)->get();
+        $notifications = auth()->user()->unreadNotifications()->take(10)->get();
         $unreadCount = auth()->user()->unreadNotifications()->count();
 
         return view('admin.partials.notification-dropdown', compact('notifications', 'unreadCount'));
@@ -39,7 +40,7 @@ class AdminNotificationController extends Controller
 
         // Return updated dropdown view and trigger event to refresh the badge count
         return response(view('admin.partials.notification-dropdown', [
-            'notifications' => auth()->user()->notifications()->take(10)->get(),
+            'notifications' => auth()->user()->unreadNotifications()->take(10)->get(),
             'unreadCount' => 0
         ])->render())
         ->header('HX-Trigger', 'refresh-notification-count');

@@ -501,8 +501,8 @@ class WebDashboardController extends Controller
             try {
                 $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
                 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
-                    'title' => 'Berkas Pendaftaran Dikirim',
-                    'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja mengirim berkas pendaftaran untuk diverifikasi.',
+                    'title' => 'Formulir Pendaftaran Dikirim',
+                    'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja mengirimkan formulir & berkas pendaftaran untuk diverifikasi.',
                     'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
                     'type' => 'info',
                 ]));

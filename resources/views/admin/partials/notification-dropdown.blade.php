@@ -1,7 +1,7 @@
 <div class="px-4 py-2.5 border-b border-slate-100 font-bold text-slate-800 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
     <span>Notifikasi Masuk</span>
     @if($unreadCount > 0)
-        <button hx-post="{{ route('admin.notifications.mark-all-read') }}" hx-target="#notifDropdown" hx-swap="innerHTML" class="text-[10px] text-brand-emerald hover:underline font-bold transition">Tandai Semua Dibaca</button>
+        <button onclick="markAllNotificationsAsRead(event)" class="text-[10px] text-brand-emerald hover:underline font-bold transition">Tandai Semua Dibaca</button>
     @endif
 </div>
 <div class="divide-y divide-slate-100 max-h-64 overflow-y-auto">
