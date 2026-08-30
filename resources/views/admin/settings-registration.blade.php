@@ -345,13 +345,24 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-2">
                         @forelse($gw->paymentChannels as $chan)
                             <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
-                                <div>
-                                    <span class="text-xs font-bold text-slate-700 block">
-                                        {{ $chan->name }}
-                                    </span>
-                                    <span class="text-[9px] uppercase font-black text-slate-400 tracking-wider">
-                                        Code: {{ $chan->code }} | Type: {{ $chan->type }}
-                                    </span>
+                                <div class="flex items-center gap-3">
+                                    <div class="h-8 w-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-150 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm overflow-hidden select-none flex-shrink-0">
+                                        @if($chan->getLogoUrl())
+                                            <img src="{{ $chan->getLogoUrl() }}" alt="{{ $chan->name }}" class="max-h-full max-w-full object-contain">
+                                        @else
+                                            <span class="font-extrabold text-[10px] text-slate-450 uppercase">
+                                                {{ substr($chan->code, 0, 3) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-slate-700 block">
+                                            {{ $chan->name }}
+                                        </span>
+                                        <span class="text-[9px] uppercase font-black text-slate-400 tracking-wider">
+                                            Code: {{ $chan->code }} | Type: {{ $chan->type }}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" name="active_channels[]" value="{{ $chan->id }}" {{ $chan->is_active ? 'checked' : '' }} class="sr-only peer">
