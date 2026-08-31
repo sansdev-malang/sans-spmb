@@ -13,10 +13,10 @@
         </div>
         <div class="flex gap-2">
             <button class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
-                📥 Ekspor Excel
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2"></i> Ekspor Excel
             </button>
             <button class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
-                🖨️ Cetak PDF
+                <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Cetak PDF
             </button>
         </div>
     </div>
@@ -26,7 +26,7 @@
         <!-- Card 1: Total -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Total Aktif</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Aktif</span>
                 <span class="text-2xl font-black text-slate-800 block mt-1">{{ $stats['total'] }}</span>
             </div>
             <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -36,27 +36,27 @@
         <!-- Card 2: Laki-laki -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Laki-Laki (L)</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Laki-Laki (L)</span>
                 <span class="text-2xl font-black text-blue-600 block mt-1">{{ $stats['male'] }}</span>
             </div>
             <div class="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="user-check" class="w-5 h-5 text-blue-600"></i>
+                <i data-lucide="mars" class="w-5 h-5 text-blue-600"></i>
             </div>
         </div>
         <!-- Card 3: Perempuan -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Perempuan (P)</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Perempuan (P)</span>
                 <span class="text-2xl font-black text-rose-600 block mt-1">{{ $stats['female'] }}</span>
             </div>
             <div class="h-10 w-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="user-check" class="w-5 h-5 text-rose-600"></i>
+                <i data-lucide="venus" class="w-5 h-5 text-rose-600"></i>
             </div>
         </div>
         <!-- Card 4: Terverifikasi -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
                 <span class="text-2xl font-black text-green-600 block mt-1">{{ $stats['verified'] }}</span>
             </div>
             <div class="h-10 w-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -66,7 +66,7 @@
         <!-- Card 5: Menunggu Verifikasi -->
         <div class="col-span-2 md:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Menunggu Verif</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Menunggu Verif</span>
                 <span class="text-2xl font-black text-amber-600 block mt-1">{{ $stats['pending'] }}</span>
             </div>
             <div class="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -90,7 +90,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Column 1: Gelombang -->
                 <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Distribusi Gelombang
                     </h4>
@@ -109,14 +109,14 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Tidak ada data gelombang.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Tidak ada data gelombang.</p>
                         @endforelse
                     </div>
                 </div>
 
                 <!-- Column 2: Jalur Pendaftaran -->
                 <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="git-branch" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Jalur Pendaftaran
                     </h4>
@@ -135,14 +135,14 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Tidak ada data jalur.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Tidak ada data jalur.</p>
                         @endforelse
                     </div>
                 </div>
 
                 <!-- Column 3: Program Kelas -->
                 <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="award" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Program Kelas
                     </h4>
@@ -161,7 +161,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Tidak ada data program kelas.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Tidak ada data program kelas.</p>
                         @endforelse
                     </div>
                 </div>
@@ -196,14 +196,14 @@
                         @endif
 
                         <!-- Integrated Search Button -->
-                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-[10px] font-bold shadow-sm transition">
+                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition">
                             Cari
                         </button>
                     </div>
                     
                     @if(auth()->user()->isSuperAdmin())
                         <!-- Filter Level / Unit -->
-                        <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-5.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jenjang</option>
                             @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
                                 <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
@@ -212,7 +212,7 @@
                     @endif
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -233,19 +233,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <!-- Date Range: Start -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tgl Mulai Daftar</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Tgl Mulai Daftar</label>
                         <input type="date" name="start_date" value="{{ request('start_date') }}" 
                                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     </div>
                     <!-- Date Range: End -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tgl Selesai Daftar</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Tgl Selesai Daftar</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" 
                                class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     </div>
                     <!-- Filter: Gender -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Jenis Kelamin</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Jenis Kelamin</label>
                         <select name="gender" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua</option>
                             <option value="Laki-laki" {{ request('gender') === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
@@ -254,7 +254,7 @@
                     </div>
                     <!-- Filter: Wave -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Gelombang</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Gelombang</label>
                         <select name="wave_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Gelombang</option>
                             @foreach(\App\Models\SpmbWave::all() as $wave)
@@ -264,7 +264,7 @@
                     </div>
                     <!-- Filter: Type -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Jalur Pendaftaran</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Jalur Pendaftaran</label>
                         <select name="type_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jalur</option>
                             @foreach(\App\Models\SpmbType::all() as $type)
@@ -274,7 +274,7 @@
                     </div>
                     <!-- Filter: Class Program -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Program Kelas</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Program Kelas</label>
                         <select name="class_program_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Program</option>
                             @foreach(\App\Models\SpmbClassProgram::all() as $program)
@@ -284,7 +284,7 @@
                     </div>
                     <!-- Filter: Document Status -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Status Berkas (KK/Akte)</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Status Berkas (KK/Akte)</label>
                         <select name="doc_status" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Status</option>
                             <option value="complete" {{ request('doc_status') === 'complete' ? 'selected' : '' }}>Lengkap</option>
@@ -320,7 +320,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
+                    <tr class="border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">ID Pendaftaran</th>
                         <th class="py-4 px-6">Nama Lengkap / Kontak</th>
@@ -409,20 +409,20 @@
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800">{{ $cand->candidate_name }}</div>
-                                <div class="text-[10px] text-slate-400">WA: {{ $cand->parent_phone ?: '-' }}</div>
+                                <div class="text-xs text-slate-400">WA: {{ $cand->parent_phone ?: '-' }}</div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-brand-emerald">
                                 {{ $cand->admission_level }}
                                 <div class="mt-0.5">
                                     @if($cand->classProgram && $cand->classProgram->name === 'Inklusi')
-                                        <span class="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-bold border border-indigo-200">Inklusi</span>
+                                        <span class="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-xs font-bold border border-indigo-200">Inklusi</span>
                                     @else
-                                        <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold border border-slate-200">Reguler</span>
+                                        <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs font-bold border border-slate-200">Reguler</span>
                                     @endif
                                 </div>
                             </td>
                             <td class="py-4 px-6">
-                                <span class="px-2 py-1.5 rounded-xl text-[10px] font-extrabold border {{ $currentStageColor }}">
+                                <span class="px-2 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
                                     {{ $currentStageText }}
                                 </span>
                             </td>
@@ -463,12 +463,12 @@
                                 <div class="flex items-center justify-center gap-1.5">
                                     <button type="button" 
                                         onclick="openCandidateDetailModal({{ json_encode($candJson) }})" 
-                                        class="bg-brand-emerald hover-emerald text-white px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-sm transition flex items-center gap-1">
+                                        class="bg-brand-emerald hover-emerald text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i> Detail
                                     </button>
                                     @if(!empty($cleanPhone))
                                         <a href="{{ $waUrl }}" target="_blank" 
-                                           class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-sm transition flex items-center gap-1"
+                                           class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1"
                                            title="Hubungi Wali via WhatsApp">
                                             <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Hubungi
                                         </a>
@@ -505,7 +505,7 @@
                     <i data-lucide="user" class="w-5 h-5 text-brand-yellow"></i>
                     Detail Data Pendaftar
                 </h3>
-                <p id="det-id-label" class="text-[10px] text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
+                <p id="det-id-label" class="text-xs text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
             </div>
             <button onclick="closeDetailModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
         </div>
@@ -519,20 +519,20 @@
             <!-- Grid: SPMB Admission Stats -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-150">
                 <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Periode</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase block">Periode</span>
                     <span id="det-period" class="font-bold text-slate-700">2024-2025</span>
                 </div>
                 <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Gelombang</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase block">Gelombang</span>
                     <span id="det-wave" class="font-bold text-slate-700">Gelombang 1</span>
                 </div>
                 <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Jalur Masuk</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase block">Jalur Masuk</span>
                     <span id="det-type" class="font-bold text-slate-700">Reguler</span>
                 </div>
                 <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Status Berkas</span>
-                    <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase">SUBMITTED</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase block">Status Berkas</span>
+                    <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-xs font-bold uppercase">SUBMITTED</span>
                 </div>
             </div>
 
@@ -543,43 +543,43 @@
                 </h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Lengkap</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Nama Lengkap</span>
                         <span id="det-name" class="font-semibold text-slate-800">Ahmad Raihan</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Panggilan</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Nama Panggilan</span>
                         <span id="det-nickname" class="font-semibold text-slate-800">Raihan</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">NIK (Nomor Induk Kependudukan)</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">NIK (Nomor Induk Kependudukan)</span>
                         <span id="det-nik" class="font-mono text-slate-800">3578091234560002</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Jenis Kelamin</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Jenis Kelamin</span>
                         <span id="det-gender" class="font-semibold text-slate-800">Laki-laki</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
                         <span id="det-birth" class="font-semibold text-slate-800">Malang, 12 Oktober 2018</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Agama</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Agama</span>
                         <span id="det-religion" class="font-semibold text-slate-800">Islam</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Asal Sekolah (TK/PAUD)</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Asal Sekolah (TK/PAUD)</span>
                         <span id="det-previous-school" class="font-semibold text-slate-800">TK Anak Saleh</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Tingkat Pendaftaran</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Tingkat Pendaftaran</span>
                         <span id="det-level" class="font-bold text-slate-800">SD Kelas 1</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Program Kelas</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Program Kelas</span>
                         <span id="det-program" class="font-bold text-brand-emerald">Reguler</span>
                     </div>
                     <div class="md:col-span-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
                         <span id="det-extras" class="font-bold text-slate-800">-</span>
                     </div>
                 </div>
@@ -592,15 +592,15 @@
                 </h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ayah Kandung</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Nama Ayah Kandung</span>
                         <span id="det-father" class="font-semibold text-slate-800">Budi Santoso</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ibu Kandung</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">Nama Ibu Kandung</span>
                         <span id="det-mother" class="font-semibold text-slate-800">Siti Aminah</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">No. HP Wali (WhatsApp)</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase block">No. HP Wali (WhatsApp)</span>
                         <span id="det-phone" class="font-mono text-slate-800">081234567890</span>
                     </div>
                 </div>
@@ -616,11 +616,11 @@
                         <div class="flex items-center gap-2">
                             <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
                             <div>
-                                <span class="text-[10px] font-bold text-slate-700 block">Akta Kelahiran</span>
-                                <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
+                                <span class="text-xs font-bold text-slate-700 block">Akta Kelahiran</span>
+                                <span class="text-xs text-slate-400">PDF/Gambar Asli</span>
                             </div>
                         </div>
-                        <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition">
+                        <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">
                             Buka File
                         </a>
                     </div>
@@ -628,11 +628,11 @@
                         <div class="flex items-center gap-2">
                             <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
                             <div>
-                                <span class="text-[10px] font-bold text-slate-700 block">Kartu Keluarga</span>
-                                <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
+                                <span class="text-xs font-bold text-slate-700 block">Kartu Keluarga</span>
+                                <span class="text-xs text-slate-400">PDF/Gambar Asli</span>
                             </div>
                         </div>
-                        <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition">
+                        <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">
                             Buka File
                         </a>
                     </div>
@@ -644,8 +644,8 @@
         <!-- Modal Footer -->
         <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex justify-between items-center flex-shrink-0">
             <div>
-                <span class="text-[9px] font-bold text-slate-400 uppercase block">Tanggal Masuk Formulir</span>
-                <span id="det-created" class="text-[10px] font-semibold text-slate-600">20 Aug 2026, 03:00 WIB</span>
+                <span class="text-xs font-bold text-slate-400 uppercase block">Tanggal Masuk Formulir</span>
+                <span id="det-created" class="text-xs font-semibold text-slate-600">20 Aug 2026, 03:00 WIB</span>
             </div>
             <button onclick="closeDetailModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
                 Tutup Detail
@@ -695,7 +695,7 @@
         
         let html = `
             <div class="space-y-3 bg-slate-50/70 dark:bg-slate-900/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <h4 class="font-extrabold text-[10px] text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 mb-4">
+                <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 mb-4">
                     <i data-lucide="activity" class="w-4 h-4"></i>
                     Status Progres Pendaftaran Calon Siswa
                 </h4>
@@ -722,11 +722,11 @@
                     iconHtml = '<i data-lucide="check" class="w-3.5 h-3.5 text-white"></i>';
                 } else {
                     state = 'active';
-                    iconHtml = `<span class="text-[10px] font-black text-slate-900">${index + 1}</span>`;
+                    iconHtml = `<span class="text-xs font-black text-slate-900">${index + 1}</span>`;
                 }
             } else {
                 state = 'pending';
-                iconHtml = `<span class="text-[10px] font-bold text-slate-400 dark:text-slate-600">${index + 1}</span>`;
+                iconHtml = `<span class="text-xs font-bold text-slate-400 dark:text-slate-600">${index + 1}</span>`;
             }
             
             let circleClass = '';
@@ -754,7 +754,7 @@
                     </div>
                     <!-- Label Text -->
                     <div class="flex flex-col md:items-center leading-none">
-                        <span class="text-[10px] ${labelClass}">${step.title}</span>
+                        <span class="text-xs ${labelClass}">${step.title}</span>
                         <span class="text-[8px] text-slate-400 dark:text-slate-500 hidden md:block mt-1 max-w-[100px] leading-tight">${step.desc}</span>
                     </div>
                 </div>
@@ -781,7 +781,7 @@
         // Status Badge Style
         const statusEl = document.getElementById('det-status');
         statusEl.innerText = cand.status;
-        statusEl.className = "inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase";
+        statusEl.className = "inline-block mt-0.5 px-2 py-0.5 rounded text-xs font-bold uppercase";
         if (cand.status === 'VERIFIED') {
             statusEl.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
         } else if (cand.status === 'SUBMITTED') {

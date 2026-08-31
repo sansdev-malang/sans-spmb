@@ -37,12 +37,12 @@
     </div>
 
     <!-- Stats Grid: 5 Premium Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 dashboard-stat-grid">
         <!-- Stat 1 -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
-                <span class="text-2xl font-black text-slate-800 block mt-1">{{ $totalCandidates }}</span>
+                <span class="text-2xl font-black text-slate-800 block mt-1 stat-counter" data-target="{{ $totalCandidates }}">0</span>
             </div>
             <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="users" class="w-5 h-5"></i>
@@ -52,7 +52,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Berkas Masuk</span>
-                <span class="text-2xl font-black text-amber-600 block mt-1">{{ $submittedCandidates }}</span>
+                <span class="text-2xl font-black text-amber-600 block mt-1 stat-counter" data-target="{{ $submittedCandidates }}">0</span>
             </div>
             <div class="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="file-text" class="w-5 h-5"></i>
@@ -62,7 +62,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
-                <span class="text-2xl font-black text-green-600 block mt-1">{{ $verifiedCandidates }}</span>
+                <span class="text-2xl font-black text-green-600 block mt-1 stat-counter" data-target="{{ $verifiedCandidates }}">0</span>
             </div>
             <div class="h-10 w-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="check-circle" class="w-5 h-5"></i>
@@ -72,7 +72,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Transaksi Lunas</span>
-                <span class="text-2xl font-black text-emerald-600 block mt-1">{{ $paidTransactions }}</span>
+                <span class="text-2xl font-black text-emerald-600 block mt-1 stat-counter" data-target="{{ $paidTransactions }}">0</span>
             </div>
             <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="wallet" class="w-5 h-5"></i>
@@ -82,7 +82,7 @@
         <div class="col-span-2 md:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Revenue</span>
-                <span class="text-lg font-black text-slate-800 block mt-1">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</span>
+                <span class="text-lg font-black text-slate-800 block mt-1 stat-counter" data-target="{{ $totalRevenue }}" data-prefix="Rp " data-format="currency">Rp 0</span>
             </div>
             <div class="h-10 w-10 bg-brand-yellow/10 text-brand-yellow rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="coins" class="w-5 h-5"></i>
@@ -94,7 +94,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <!-- Graph 1: Target Pendaftaran Level (Bar Progress) -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4 dashboard-animate-card">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
                     <i data-lucide="graduation-cap" class="w-4 h-4 text-brand-emerald"></i>
@@ -112,7 +112,7 @@
                             <span>{{ $stat->count }} Siswa ({{ $percentage }}%)</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                            <div class="bg-brand-emerald h-full rounded-full transition-all duration-500" style="width: {{ $percentage }}%"></div>
+                            <div class="bg-brand-emerald h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: 0%"></div>
                         </div>
                     </div>
                 @empty
@@ -122,7 +122,7 @@
         </div>
 
         <!-- Graph 2: Form Status Metrics (Circular Progress Bars) -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4 dashboard-animate-card">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
                     <i data-lucide="pie-chart" class="w-4 h-4 text-brand-emerald"></i>
@@ -143,7 +143,7 @@
                             <span class="text-xs font-bold {{ $textColor }}">{{ $percentage }}%</span>
                         </div>
                         <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                            <div class="{{ $colorClass }} h-full rounded-full" style="width: {{ $percentage }}%"></div>
+                            <div class="{{ $colorClass }} h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: 0%"></div>
                         </div>
                     </div>
                 @endforeach
@@ -151,7 +151,7 @@
         </div>
 
         <!-- Graph 3: Payment Status Metrics -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4 dashboard-animate-card">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
                     <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-emerald"></i>
@@ -173,7 +173,7 @@
                             <span>{{ $count }} Transaksi ({{ $percentage }}%)</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                            <div class="{{ $colorClass }} h-full rounded-full transition-all duration-500" style="width: {{ $percentage }}%"></div>
+                            <div class="{{ $colorClass }} h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: 0%"></div>
                         </div>
                     </div>
                 @endforeach
@@ -186,7 +186,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <!-- Column 1 & 2: Recent Registrations -->
-        <div class="md:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+        <div class="md:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4 dashboard-animate-card">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
                     <i data-lucide="history" class="w-4 h-4 text-brand-emerald"></i>
@@ -208,9 +208,9 @@
                             <th class="py-3 px-4 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-xs divide-y divide-slate-100">
+                    <tbody class="text-xs divide-y divide-slate-100 dashboard-table-body">
                         @forelse($recentRegistrations as $reg)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            <tr class="hover:bg-slate-50/30 transition table-row-reveal">
                                 <td class="py-3 px-4 text-center text-slate-400 font-bold">{{ $loop->iteration }}</td>
                                 <td class="py-3 px-4">
                                     <div class="font-bold text-slate-800">{{ $reg->candidate_name }}</div>
@@ -251,7 +251,7 @@
         </div>
 
         <!-- Column 3: System Info & Recent Activity Logs -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4 dashboard-animate-card">
             @if(auth()->user()->isSuperAdmin())
                 <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                     <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
@@ -262,11 +262,11 @@
                 
                 <!-- System Indicators -->
                 <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl mini-card-reveal">
                         <span class="text-xs font-bold text-slate-400 block uppercase">Total User</span>
                         <span class="font-extrabold text-slate-800 text-sm mt-0.5 block">{{ $totalUsersCount }} Akun</span>
                     </div>
-                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl mini-card-reveal">
                         <span class="text-xs font-bold text-slate-400 block uppercase">Gelombang Aktif</span>
                         <span class="font-extrabold text-brand-emerald text-xs mt-0.5 block truncate" title="{{ $activeWave->name ?? 'Tidak ada' }}">
                             {{ $activeWave->name ?? 'Tidak ada' }}
@@ -279,7 +279,7 @@
                     <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Log Aktivitas Terbaru</span>
                     <div class="space-y-2.5">
                         @forelse($recentLogs as $log)
-                            <div class="text-[11px] leading-relaxed border-l-2 border-brand-emerald pl-2 py-0.5">
+                            <div class="text-[11px] leading-relaxed border-l-2 border-brand-emerald pl-2 py-0.5 log-item-reveal">
                                 <div class="flex justify-between text-xs text-slate-400 font-semibold">
                                     <span class="font-bold text-slate-600 truncate max-w-[80px]" title="{{ $log->user_name }}">{{ $log->user_name }}</span>
                                     <span>{{ $log->created_at->diffForHumans() }}</span>
@@ -303,7 +303,7 @@
                 </div>
                 
                 <div class="space-y-4 pt-2">
-                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2.5">
+                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2.5 mini-card-reveal">
                         <div>
                             <span class="text-xs font-bold text-slate-400 block uppercase">Unit Operasional</span>
                             <span class="font-extrabold text-slate-800 text-sm mt-0.5 block">{{ auth()->user()->spmbUnit->name ?? 'Unit' }}</span>
@@ -316,7 +316,7 @@
                         </div>
                     </div>
 
-                    <div class="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-xs text-brand-emerald leading-relaxed">
+                    <div class="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-xs text-brand-emerald leading-relaxed mini-card-reveal">
                         <div class="flex gap-2 items-start">
                             <i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-brand-emerald flex-shrink-0 mt-0.5"></i>
                             <div>
@@ -334,4 +334,127 @@
 
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js" referrerpolicy="no-referrer"></script>
+<script>
+    (function () {
+        let hasAnimated = false;
+
+        const formatNumber = (value) => new Intl.NumberFormat('id-ID').format(Math.round(value));
+
+        const animateCounter = (element) => {
+            const target = parseFloat(element.dataset.target || '0');
+            const prefix = element.dataset.prefix || '';
+            const isCurrency = element.dataset.format === 'currency';
+
+            anime({
+                targets: { value: 0 },
+                value: target,
+                duration: 1400,
+                easing: 'easeOutExpo',
+                round: 1,
+                update: function(anim) {
+                    const current = anim.animations[0].currentValue;
+                    element.textContent = prefix + (isCurrency ? formatNumber(current) : formatNumber(current));
+                }
+            });
+        };
+
+        const initDashboardAnimations = () => {
+            if (typeof anime === 'undefined' || hasAnimated) {
+                return;
+            }
+
+            const root = document.querySelector('.space-y-8');
+            if (!root) {
+                return;
+            }
+
+            hasAnimated = true;
+
+            anime({
+                targets: '.space-y-8 > *',
+                opacity: [0, 1],
+                translateY: [18, 0],
+                delay: anime.stagger(110),
+                duration: 750,
+                easing: 'easeOutQuad'
+            });
+
+            anime({
+                targets: '.space-y-8 .bg-gradient-to-r',
+                translateY: [-12, 0],
+                opacity: [0, 1],
+                duration: 900,
+                easing: 'easeOutCubic'
+            });
+
+            anime({
+                targets: '.dashboard-stat-grid > div',
+                scale: [0.96, 1],
+                opacity: [0, 1],
+                delay: anime.stagger(70, { start: 150 }),
+                duration: 650,
+                easing: 'easeOutQuad'
+            });
+
+            anime({
+                targets: '.dashboard-animate-card',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(90, { start: 180 }),
+                duration: 700,
+                easing: 'easeOutQuad'
+            });
+
+            document.querySelectorAll('.stat-counter').forEach(animateCounter);
+
+            anime({
+                targets: '.progress-bar',
+                width: function(el) {
+                    return el.dataset.width + '%';
+                },
+                delay: anime.stagger(70, { start: 350 }),
+                duration: 1200,
+                easing: 'easeOutCubic'
+            });
+
+            anime({
+                targets: '.table-row-reveal',
+                opacity: [0, 1],
+                translateX: [-12, 0],
+                delay: anime.stagger(45, { start: 400 }),
+                duration: 650,
+                easing: 'easeOutQuad'
+            });
+
+            anime({
+                targets: '.mini-card-reveal',
+                opacity: [0, 1],
+                translateY: [14, 0],
+                delay: anime.stagger(70, { start: 420 }),
+                duration: 650,
+                easing: 'easeOutQuad'
+            });
+
+            anime({
+                targets: '.log-item-reveal',
+                opacity: [0, 1],
+                translateX: [10, 0],
+                delay: anime.stagger(85, { start: 500 }),
+                duration: 600,
+                easing: 'easeOutQuad'
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', initDashboardAnimations);
+        document.body.addEventListener('htmx:afterSwap', function (event) {
+            if (event.target && event.target.querySelector && event.target.querySelector('.space-y-8')) {
+                hasAnimated = false;
+                requestAnimationFrame(initDashboardAnimations);
+            }
+        });
+
+    })();
+</script>
 @endsection

@@ -6,19 +6,16 @@
 @section('content')
 <div class="space-y-8">
     
-    <!-- Header -->
-    <div class="md:flex md:items-center md:justify-between mb-8">
-        <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-extrabold leading-7 text-slate-900 sm:text-3xl sm:truncate dark:text-white">
-                Verifikasi Data Calon Siswa
-            </h2>
-            <p class="text-xs text-brand-emerald font-semibold uppercase tracking-wider mt-1">
-                Sekolah Anak Saleh • Panel Administrasi
-            </p>
+    <!-- Header Summary Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-extrabold text-slate-800">Verifikasi Data Calon Siswa</h1>
+            <p class="text-xs text-slate-500 mt-1">Kelola review berkas, status pembayaran, dan validasi data calon siswa dari satu tempat.</p>
         </div>
-        <div class="mt-4 flex md:mt-0 md:ml-4 gap-3">
-            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-slate-300 rounded-xl shadow-sm text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-750 transition">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-1 text-slate-500"></i> Dashboard Utama
+        <div class="flex gap-2">
+            <a href="{{ route('admin.dashboard') }}" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-1.5">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                Dashboard Utama
             </a>
         </div>
     </div>
@@ -29,27 +26,27 @@
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
         <!-- Stat Item -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
-            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
+            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
             <span class="text-2xl font-black text-slate-800 dark:text-white block mt-1">{{ $stats['total'] }}</span>
         </div>
         <!-- Stat Item -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-yellow-500">
-            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Perlu Review</span>
+            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Perlu Review</span>
             <span class="text-2xl font-black text-yellow-600 block mt-1">{{ $stats['submitted'] }}</span>
         </div>
         <!-- Stat Item -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-green-500">
-            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
+            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
             <span class="text-2xl font-black text-green-600 block mt-1">{{ $stats['verified'] }}</span>
         </div>
         <!-- Stat Item -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-red-500">
-            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Ditolak / Gagal</span>
+            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Ditolak / Gagal</span>
             <span class="text-2xl font-black text-red-600 block mt-1">{{ $stats['failed'] }}</span>
         </div>
         <!-- Stat Item -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-emerald-500">
-            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Lunas Biaya</span>
+            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Lunas Biaya</span>
             <span class="text-2xl font-black text-brand-emerald dark:text-emerald-400 block mt-1">{{ $stats['paid'] }}</span>
         </div>
     </div>
@@ -60,7 +57,7 @@
             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daftar Pendaftaran Calon Siswa</span>
             
             <!-- Quick Filter Links -->
-            <div class="flex flex-wrap gap-2 text-[10px] font-bold">
+            <div class="flex flex-wrap gap-2 text-xs font-bold">
                 <a href="{{ route('admin.verification', request()->except(['status', 'page'])) }}" class="px-2.5 py-1 rounded-full {{ !request()->has('status') ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Semua</a>
                 @foreach(['submitted' => 'Perlu Review', 'verified' => 'Terverifikasi', 'taaruf_completed' => 'Ta\'aruf Selesai', 'agreement_signed' => 'Persetujuan', 'completed' => 'Lulus', 'failed' => 'Ditolak'] as $statusVal => $statusLabel)
                     <a href="{{ route('admin.verification', array_merge(request()->except(['page']), ['status' => $statusVal])) }}" class="px-2.5 py-1 rounded-full {{ request()->status === $statusVal ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">{{ $statusLabel }}</a>
@@ -92,14 +89,14 @@
                     @endif
 
                     <!-- Integrated Search Button -->
-                    <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-[10px] font-bold shadow-sm transition">
+                    <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition">
                         Cari
                     </button>
                 </div>
                 
                 @if(auth()->user()->isSuperAdmin())
                     <!-- Filter Level / Unit -->
-                    <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-5.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="">Semua Jenjang</option>
                         @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
                             <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
@@ -108,7 +105,7 @@
                 @endif
 
                 <!-- Per Page Select -->
-                <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                     <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
                     <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -120,7 +117,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-950/20">
+                    <tr class="border-b border-slate-100 dark:border-slate-800 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-950/20">
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">ID / No. Reg</th>
                         <th class="py-4 px-6">Calon Siswa</th>
@@ -169,7 +166,7 @@
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->candidate_name ?? 'Draft' }}</div>
-                                <div class="text-[10px] text-slate-400">Ortu: {{ $reg->user->name }} ({{ $reg->parent_phone ?? '-' }})</div>
+                                <div class="text-xs text-slate-400">Ortu: {{ $reg->user->name }} ({{ $reg->parent_phone ?? '-' }})</div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-slate-600 dark:text-slate-400">
                                 {{ $reg->admission_level ?? '-' }}
@@ -197,7 +194,7 @@
                                 @endif
                             </td>
                             <td class="py-4 px-6 text-center">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
                                     @if($reg->payment_status === 'paid') bg-green-50 text-green-700 border border-green-200
                                     @elseif($reg->payment_status === 'pending') bg-yellow-50 text-yellow-700 border border-yellow-200
                                     @else bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 @endif">
@@ -205,7 +202,7 @@
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-center">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
                                     @if(in_array($reg->registration_status, ['verified', 'completed'])) bg-green-50 text-green-700 border border-green-200
                                     @elseif($reg->registration_status === 'submitted') bg-blue-50 text-blue-700 border border-blue-200
                                     @elseif($reg->registration_status === 'taaruf_completed') bg-indigo-50 text-indigo-700 border border-indigo-200
@@ -221,14 +218,14 @@
                                         <!-- Verifikasi Modal Trigger -->
                                         <button type="button" 
                                             onclick="openCandidateDetailModal({{ json_encode($candJson) }}, true, {{ $reg->id }})" 
-                                            class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition flex items-center gap-1.5">
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5">
                                             <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-yellow"></i> Verifikasi Data
                                         </button>
                                     @else
                                         <!-- Detail Modal Trigger -->
                                         <button type="button" 
                                             onclick="openCandidateDetailModal({{ json_encode($candJson) }}, false)" 
-                                            class="bg-slate-600 hover:bg-slate-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition flex items-center gap-1">
+                                            class="bg-slate-600 hover:bg-slate-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1">
                                             <i data-lucide="eye" class="w-3 h-3"></i> Detail
                                         </button>
                                     @endif
@@ -237,7 +234,7 @@
                                         <!-- Selesaikan Ta'aruf -->
                                         <form action="{{ route('admin.registrations.complete-taaruf', $reg->id) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
                                                 Selesaikan Ta'aruf
                                             </button>
                                         </form>
@@ -280,7 +277,7 @@
                         <i data-lucide="user" class="w-5 h-5 text-brand-yellow"></i>
                         <span id="det-title-label">Detail Data Pendaftar</span>
                     </h3>
-                    <p id="det-id-label" class="text-[10px] text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
+                    <p id="det-id-label" class="text-xs text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
                 </div>
                 <button type="button" onclick="closeDetailModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
             </div>
@@ -485,7 +482,7 @@
                                 <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
                                 <div>
                                     <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350 block">Akta Kelahiran</span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-350 block">Akta Kelahiran</span>
                                         <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
                                             <input type="checkbox" data-field="birth_certificate_path" data-label="Scan Akta Kelahiran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                                             <span>OK</span>
@@ -503,7 +500,7 @@
                                 <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
                                 <div>
                                     <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350 block">Kartu Keluarga</span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-350 block">Kartu Keluarga</span>
                                         <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
                                             <input type="checkbox" data-field="family_card_path" data-label="Scan Kartu Keluarga" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
                                             <span>OK</span>
@@ -531,7 +528,7 @@
             <div class="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center flex-shrink-0">
                 <div>
                     <span class="text-[9px] font-bold text-slate-400 uppercase block">Tanggal Masuk Formulir</span>
-                    <span id="det-created" class="text-[10px] font-semibold text-slate-650 dark:text-slate-350">20 Aug 2026, 03:00 WIB</span>
+                    <span id="det-created" class="text-xs font-semibold text-slate-650 dark:text-slate-350">20 Aug 2026, 03:00 WIB</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition">
