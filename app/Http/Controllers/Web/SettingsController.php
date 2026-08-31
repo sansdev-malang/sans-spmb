@@ -483,11 +483,17 @@ class SettingsController extends Controller
             $path = $request->file('school_logo')->store('branding', 'public');
             Setting::set('school_logo_url', \Illuminate\Support\Facades\Storage::url($path));
         }
+        if ($request->input('clear_school_logo_url') == '1') {
+            Setting::set('school_logo_url', '');
+        }
 
         // Process favicon upload
         if ($request->hasFile('school_favicon')) {
             $path = $request->file('school_favicon')->store('branding', 'public');
             Setting::set('school_favicon_url', \Illuminate\Support\Facades\Storage::url($path));
+        }
+        if ($request->input('clear_school_favicon_url') == '1') {
+            Setting::set('school_favicon_url', '');
         }
 
         // Process deleted hero images

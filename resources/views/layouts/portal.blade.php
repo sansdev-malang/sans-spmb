@@ -39,13 +39,14 @@
     @if(!empty($schoolFavicon))
         <link rel="icon" href="{{ $schoolFavicon }}" type="image/x-icon">
     @else
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%236366f1'/><stop offset='100%' stop-color='%23a855f7'/></linearGradient></defs><rect width='100' height='100' rx='25' fill='url(%23g)'/><text x='50' y='75' font-family='Arial, sans-serif' font-size='65' font-weight='bold' fill='white' text-anchor='middle'>S</text></svg>">
     @endif
 
     <!-- Plus Jakarta Sans Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
     
     <!-- Local Compiled CSS/JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -184,8 +185,8 @@
                     @if(!empty($schoolLogo))
                         <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-8 object-contain">
                     @else
-                        <div class="h-8 w-8 bg-brand-yellow rounded-xl flex items-center justify-center font-bold text-slate-900 text-sm shadow-sm">
-                            🎓
+                        <div class="h-8 w-8 bg-brand-yellow rounded-xl flex items-center justify-center shadow-sm">
+                            <span class="flex items-center justify-center text-lg leading-none font-bold text-black" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700; color: #000000; line-height: 1; transform: translateY(-0.5px);">S</span>
                         </div>
                     @endif
                     <div class="flex flex-col text-left">

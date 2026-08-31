@@ -19,13 +19,14 @@
         @if(!empty($schoolFavicon))
             <link rel="icon" href="{{ $schoolFavicon }}" type="image/x-icon">
         @else
-            <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+            <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%236366f1'/><stop offset='100%' stop-color='%23a855f7'/></linearGradient></defs><rect width='100' height='100' rx='25' fill='url(%23g)'/><text x='50' y='75' font-family='Arial, sans-serif' font-size='65' font-weight='bold' fill='white' text-anchor='middle'>S</text></svg>">
         @endif
 
         <!-- Plus Jakarta Sans Font -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -153,11 +154,28 @@
                 border-color: #475569;
                 color: #f8fafc;
             }
+
+            .auth-shell {
+                background:
+                    radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 28%),
+                    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.10), transparent 26%),
+                    #f8fafc;
+            }
+            html.dark .auth-shell {
+                background:
+                    radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 24%),
+                    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.08), transparent 24%),
+                    #020817;
+            }
+            .auth-panel-card {
+                backdrop-filter: blur(12px);
+                box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+            }
         </style>
     </head>
     <body class="font-sans text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200 min-h-screen flex antialiased">
         <!-- Split Layout Container -->
-        <div class="w-full min-h-screen flex flex-col md:flex-row">
+        <div class="auth-shell w-full min-h-screen flex flex-col md:flex-row">
             
             <!-- Left Panel: Branding & Info (Hidden on mobile) -->
             <div class="hidden md:flex md:w-1/2 bg-custom-primary relative overflow-hidden flex-col justify-center p-8 lg:p-10 text-white">
@@ -182,7 +200,7 @@
                             <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
                         @else
                             <div class="h-10 w-10 bg-white/15 rounded-xl flex items-center justify-center font-bold text-brand-yellow text-base shadow-sm border border-white/10">
-                                🎓
+                                <span class="text-lg font-bold" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700;">S</span>
                             </div>
                         @endif
                         <div class="flex flex-col text-left">
@@ -241,8 +259,8 @@
             <div class="w-full md:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-slate-50 dark:bg-slate-950">
                 <!-- Theme toggle button (Top Right) -->
                 <div class="absolute top-6 right-6 flex items-center gap-3">
-                    <button onclick="toggleDarkMode()" class="p-2.5 text-slate-500 hover:text-custom-primary dark:text-slate-455 dark:hover:text-emerald-400 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transition shadow-sm" title="Toggle Tema">
-                        <i id="theme-toggle-icon" data-lucide="moon" class="w-4.5 h-4.5"></i>
+                    <button onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-455 dark:hover:text-emerald-400 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 transition shadow-md hover:shadow-lg" title="Toggle Tema">
+                        <i id="theme-toggle-icon" data-lucide="moon" class="w-4 h-4"></i>
                     </button>
                 </div>
 
@@ -252,7 +270,7 @@
                         <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
                     @else
                         <div class="h-12 w-12 bg-custom-primary rounded-2xl flex items-center justify-center font-bold text-brand-yellow text-xl shadow-md">
-                            🎓
+                            <span class="text-lg font-bold" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700;">S</span>
                         </div>
                     @endif
                     <div class="text-center">
@@ -264,7 +282,7 @@
                 </div>
 
                 <!-- Card Form wrapper -->
-                <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-8 shadow-xl">
+                <div class="auth-panel-card w-full max-w-md bg-white/90 dark:bg-slate-900/90 border border-slate-100/80 dark:border-slate-800/80 rounded-[2rem] p-8 shadow-xl">
                     <!-- Dynamic header text based on page -->
                     <div class="text-center space-y-2 mb-6">
                         @if(Request::is('login'))

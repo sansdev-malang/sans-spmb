@@ -182,14 +182,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
                     <!-- Logo Upload -->
                     <div class="border border-slate-200 rounded-2xl p-6 flex flex-col gap-3 bg-slate-50/20">
-                        <div class="text-xs font-extrabold text-slate-700">Logo Instansi Sekolah</div>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="text-xs font-extrabold text-slate-700">Logo Instansi Sekolah</div>
+                            @if(!empty($settings['school_logo_url']))
+                                <button type="button" onclick="clearExistingAsset('school_logo_url')" class="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-[9px] font-bold text-red-600 hover:bg-red-100 transition" title="Hapus logo yang tersimpan">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    Hapus
+                                </button>
+                            @endif
+                        </div>
                         
                         <!-- Preview container -->
                         <div class="h-24 w-full flex items-center justify-center border border-slate-150 rounded-xl bg-white p-3" id="logo-preview-box">
                             @if(!empty($settings['school_logo_url']))
                                 <img src="{{ $settings['school_logo_url'] }}" alt="Logo" class="max-h-full object-contain" />
                             @else
-                                <span class="text-[10px] text-slate-400 font-bold">Belum Ada Logo (Fallback: 🎓)</span>
+                                <span class="text-[10px] text-slate-400 font-bold">Belum Ada Logo</span>
                             @endif
                         </div>
 
@@ -199,14 +207,22 @@
 
                     <!-- Favicon Upload -->
                     <div class="border border-slate-200 rounded-2xl p-6 flex flex-col gap-3 bg-slate-50/20">
-                        <div class="text-xs font-extrabold text-slate-700">Favicon Browser</div>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="text-xs font-extrabold text-slate-700">Favicon Browser</div>
+                            @if(!empty($settings['school_favicon_url']))
+                                <button type="button" onclick="clearExistingAsset('school_favicon_url')" class="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-[9px] font-bold text-red-600 hover:bg-red-100 transition" title="Hapus favicon yang tersimpan">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    Hapus
+                                </button>
+                            @endif
+                        </div>
                         
                         <!-- Preview container -->
                         <div class="h-24 w-full flex items-center justify-center border border-slate-150 rounded-xl bg-white p-3" id="favicon-preview-box">
                             @if(!empty($settings['school_favicon_url']))
                                 <img src="{{ $settings['school_favicon_url'] }}" alt="Favicon" class="max-h-full object-contain" />
                             @else
-                                <span class="text-[10px] text-slate-400 font-bold">Default (Fallback: 🎓)</span>
+                                <span class="text-[10px] text-slate-400 font-bold">Default</span>
                             @endif
                         </div>
 
@@ -416,6 +432,23 @@
                     }
                 }
                 reader.readAsDataURL(file);
+            }
+        }
+
+        function clearExistingAsset(fieldName) {
+            const fieldInput = document.createElement('input');
+            fieldInput.type = 'hidden';
+            fieldInput.name = 'clear_' + fieldName;
+            fieldInput.value = '1';
+            document.getElementById('ui-settings-form').appendChild(fieldInput);
+
+            const previewId = fieldName === 'school_logo_url' ? 'logo-preview-box' : 'favicon-preview-box';
+            const previewBox = document.getElementById(previewId);
+            if (previewBox) {
+                previewBox.innerHTML = '<span class="text-[10px] text-slate-400 font-bold">Belum Ada Logo</span>';
+                if (fieldName === 'school_favicon_url') {
+                    previewBox.innerHTML = '<span class="text-[10px] text-slate-400 font-bold">Default</span>';
+                }
             }
         }
 

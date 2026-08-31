@@ -21,7 +21,7 @@
                     Pusat Kendali {{ auth()->user()->spmbUnit->name ?? 'Unit' }}
                 @endif
             </p>
-            <p class="text-[11px] text-emerald-100 max-w-xl font-medium leading-relaxed mt-2">
+            <p class="text-xs text-emerald-100 max-w-xl font-medium leading-relaxed mt-2">
                 @if(auth()->user()->isSuperAdmin())
                     Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru secara real-time. Kelola verifikasi data berkas secara berkala pada menu Verifikasi Data.
                 @else
@@ -30,8 +30,8 @@
             </p>
         </div>
         <div class="flex gap-2 relative z-10 flex-shrink-0">
-            <a href="{{ route('admin.verification') }}" class="bg-brand-yellow hover:bg-yellow-500 text-slate-900 px-5 py-3 rounded-2xl text-xs font-black shadow-md transition flex items-center gap-1.5">
-                <i data-lucide="check-square" class="w-4 h-4 text-slate-900"></i> Verifikasi Berkas Masuk
+            <a href="{{ route('admin.verification') }}" class="bg-brand-yellow hover:bg-yellow-500 text-slate-900 px-5 py-3 rounded-2xl text-sm font-black shadow-md transition flex items-center gap-1.5">
+                <i data-lucide="file-check-corner" class="w-4 h-4 text-slate-900"></i> Verifikasi Berkas Masuk
             </a>
         </div>
     </div>
@@ -41,7 +41,7 @@
         <!-- Stat 1 -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
                 <span class="text-2xl font-black text-slate-800 block mt-1">{{ $totalCandidates }}</span>
             </div>
             <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -51,7 +51,7 @@
         <!-- Stat 2 -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Berkas Masuk</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Berkas Masuk</span>
                 <span class="text-2xl font-black text-amber-600 block mt-1">{{ $submittedCandidates }}</span>
             </div>
             <div class="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -61,7 +61,7 @@
         <!-- Stat 3 -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
                 <span class="text-2xl font-black text-green-600 block mt-1">{{ $verifiedCandidates }}</span>
             </div>
             <div class="h-10 w-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -71,7 +71,7 @@
         <!-- Stat 4 -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Transaksi Lunas</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Transaksi Lunas</span>
                 <span class="text-2xl font-black text-emerald-600 block mt-1">{{ $paidTransactions }}</span>
             </div>
             <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -81,7 +81,7 @@
         <!-- Stat 5 (Span full on mobile) -->
         <div class="col-span-2 md:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Total Revenue</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Revenue</span>
                 <span class="text-lg font-black text-slate-800 block mt-1">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-brand-yellow/10 text-brand-yellow rounded-xl flex items-center justify-center flex-shrink-0">
@@ -137,10 +137,10 @@
                         $textColor = $label === 'Verified' ? 'text-green-600' : ($label === 'Submitted' ? 'text-blue-600' : ($label === 'Failed' ? 'text-red-600' : 'text-slate-500'));
                     @endphp
                     <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2 flex flex-col justify-between">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{{ $label }}</span>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">{{ $label }}</span>
                         <div class="flex items-baseline justify-between">
                             <span class="text-xl font-black text-slate-800">{{ $count }}</span>
-                            <span class="text-[10px] font-bold {{ $textColor }}">{{ $percentage }}%</span>
+                            <span class="text-xs font-bold {{ $textColor }}">{{ $percentage }}%</span>
                         </div>
                         <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                             <div class="{{ $colorClass }} h-full rounded-full" style="width: {{ $percentage }}%"></div>
@@ -192,7 +192,7 @@
                     <i data-lucide="history" class="w-4 h-4 text-brand-emerald"></i>
                     5 Pendaftaran Terbaru
                 </h3>
-                <a href="{{ route('admin.verification') }}" class="text-[10px] font-bold text-brand-emerald hover:underline flex items-center gap-1">
+                <a href="{{ route('admin.verification') }}" class="text-xs font-bold text-brand-emerald hover:underline flex items-center gap-1">
                     Lihat Semua <i data-lucide="chevron-right" class="w-3 h-3"></i>
                 </a>
             </div>
@@ -200,7 +200,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-100 text-[9px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
+                        <tr class="border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-3 px-4 text-center w-10">No.</th>
                             <th class="py-3 px-4">Calon Siswa</th>
                             <th class="py-3 px-4">Unit</th>
@@ -214,7 +214,7 @@
                                 <td class="py-3 px-4 text-center text-slate-400 font-bold">{{ $loop->iteration }}</td>
                                 <td class="py-3 px-4">
                                     <div class="font-bold text-slate-800">{{ $reg->candidate_name }}</div>
-                                    <div class="text-[10px] text-slate-400 mt-0.5">Wali: {{ $reg->father_name ?? $reg->mother_name ?? '-' }}</div>
+                                    <div class="text-xs text-slate-400 mt-0.5">Wali: {{ $reg->father_name ?? $reg->mother_name ?? '-' }}</div>
                                 </td>
                                 <td class="py-3 px-4 font-bold text-slate-650">{{ strtoupper($reg->unit->name ?? '-') }}</td>
                                 <td class="py-3 px-4 text-center">
@@ -230,7 +230,7 @@
                                         ];
                                         $color = $statusColors[$reg->registration_status] ?? 'bg-slate-100 text-slate-600 border-slate-200';
                                     @endphp
-                                    <span class="inline-block px-2.5 py-0.5 rounded-full border {{ $color }} text-[9px] font-extrabold uppercase">
+                                    <span class="inline-block px-2.5 py-0.5 rounded-full border {{ $color }} text-xs font-extrabold uppercase">
                                         {{ $reg->registration_status }}
                                     </span>
                                 </td>
@@ -263,11 +263,11 @@
                 <!-- System Indicators -->
                 <div class="grid grid-cols-2 gap-2 text-xs pt-1">
                     <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                        <span class="text-[9px] font-bold text-slate-400 block uppercase">Total User</span>
+                        <span class="text-xs font-bold text-slate-400 block uppercase">Total User</span>
                         <span class="font-extrabold text-slate-800 text-sm mt-0.5 block">{{ $totalUsersCount }} Akun</span>
                     </div>
                     <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                        <span class="text-[9px] font-bold text-slate-400 block uppercase">Gelombang Aktif</span>
+                        <span class="text-xs font-bold text-slate-400 block uppercase">Gelombang Aktif</span>
                         <span class="font-extrabold text-brand-emerald text-xs mt-0.5 block truncate" title="{{ $activeWave->name ?? 'Tidak ada' }}">
                             {{ $activeWave->name ?? 'Tidak ada' }}
                         </span>
@@ -276,21 +276,21 @@
 
                 <!-- Recent Mini Logs -->
                 <div class="space-y-3 pt-2">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Log Aktivitas Terbaru</span>
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-wider block">Log Aktivitas Terbaru</span>
                     <div class="space-y-2.5">
                         @forelse($recentLogs as $log)
                             <div class="text-[11px] leading-relaxed border-l-2 border-brand-emerald pl-2 py-0.5">
-                                <div class="flex justify-between text-[9px] text-slate-400 font-semibold">
+                                <div class="flex justify-between text-xs text-slate-400 font-semibold">
                                     <span class="font-bold text-slate-600 truncate max-w-[80px]" title="{{ $log->user_name }}">{{ $log->user_name }}</span>
                                     <span>{{ $log->created_at->diffForHumans() }}</span>
                                 </div>
                                 <p class="text-slate-650 font-medium mt-0.5">{{ $log->description }}</p>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold text-center py-4">Belum ada log terekam.</p>
+                            <p class="text-xs text-slate-400 font-semibold text-center py-4">Belum ada log terekam.</p>
                         @endforelse
                     </div>
-                    <a href="{{ route('admin.activity-logs') }}" class="text-[9px] font-bold text-brand-emerald hover:underline block pt-2">
+                    <a href="{{ route('admin.activity-logs') }}" class="text-xs font-bold text-brand-emerald hover:underline block pt-2">
                         Lihat Semua Log →
                     </a>
                 </div>
@@ -305,11 +305,11 @@
                 <div class="space-y-4 pt-2">
                     <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2.5">
                         <div>
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Unit Operasional</span>
+                            <span class="text-xs font-bold text-slate-400 block uppercase">Unit Operasional</span>
                             <span class="font-extrabold text-slate-800 text-sm mt-0.5 block">{{ auth()->user()->spmbUnit->name ?? 'Unit' }}</span>
                         </div>
                         <div>
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Alamat / Keterangan</span>
+                            <span class="text-xs font-bold text-slate-400 block uppercase">Alamat / Keterangan</span>
                             <span class="text-xs text-slate-600 font-semibold mt-0.5 block leading-relaxed">
                                 {{ auth()->user()->spmbUnit->address ?? 'Pusat Kendali Administrasi Unit Sekolah Anak Saleh.' }}
                             </span>
