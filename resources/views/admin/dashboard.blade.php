@@ -23,7 +23,7 @@
             </p>
             <p class="text-xs text-emerald-100 max-w-xl font-medium leading-relaxed mt-2">
                 @if(auth()->user()->isSuperAdmin())
-                    Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru secara real-time. Kelola verifikasi data berkas secara berkala pada menu Verifikasi Data.
+                    Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru secara real-time. <br>Kelola verifikasi data berkas secara berkala pada menu Verifikasi Data.
                 @else
                     Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru pada unit {{ auth()->user()->spmbUnit->name ?? 'Unit' }} secara real-time. Kelola verifikasi data berkas secara berkala pada menu Verifikasi Data.
                 @endif

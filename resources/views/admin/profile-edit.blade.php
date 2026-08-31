@@ -32,7 +32,7 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">Nama Lengkap*</label>
                     <input type="text" name="name" required 
-                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
+                        class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
                         value="{{ old('name', $user->name) }}">
                 </div>
 
@@ -40,7 +40,7 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">Alamat Email*</label>
                     <input type="email" name="email" required 
-                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
+                        class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
                         value="{{ old('email', $user->email) }}">
                 </div>
             </div>

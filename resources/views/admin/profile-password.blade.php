@@ -31,25 +31,40 @@
                 <!-- Current Password -->
                 <div>
                     <label class="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">Kata Sandi Saat Ini*</label>
-                    <input type="password" name="current_password" required 
-                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                        placeholder="Masukkan kata sandi lama">
+                    <div class="relative">
+                        <input type="password" id="current_password" name="current_password" required 
+                            class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 pr-11 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                            placeholder="Masukkan kata sandi lama">
+                        <button type="button" onclick="togglePasswordVisibility('current_password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition">
+                            <i id="current_password_icon" data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- New Password -->
                 <div>
                     <label class="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">Kata Sandi Baru*</label>
-                    <input type="password" name="password" required 
-                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                        placeholder="Min. 8 karakter">
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required 
+                            class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 pr-11 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                            placeholder="Min. 8 karakter">
+                        <button type="button" onclick="togglePasswordVisibility('password')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition">
+                            <i id="password_icon" data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Confirm Password -->
                 <div>
                     <label class="block text-xs font-bold text-slate-650 uppercase tracking-wider mb-2">Konfirmasi Kata Sandi Baru*</label>
-                    <input type="password" name="password_confirmation" required 
-                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                        placeholder="Masukkan ulang kata sandi baru">
+                    <div class="relative">
+                        <input type="password" id="password_confirmation" name="password_confirmation" required 
+                            class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 pr-11 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                            placeholder="Masukkan ulang kata sandi baru">
+                        <button type="button" onclick="togglePasswordVisibility('password_confirmation')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition">
+                            <i id="password_confirmation_icon" data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -68,5 +83,25 @@
             }
         </script>
     @endif
+
+    <script>
+        function togglePasswordVisibility(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + '_icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-closed');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            
+            // Re-initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    </script>
 </div>
 @endsection
