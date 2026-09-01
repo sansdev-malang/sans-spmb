@@ -159,6 +159,17 @@ Route::middleware('auth')->group(function () {
                 return $item['count'] > 0;
             });
 
+            // Calculate Stage Counts for Pills
+            $stageCounts = [
+                'all' => (clone $baseStatsQuery)->count(),
+                'draft' => (clone $baseStatsQuery)->whereIn('registration_status', ['draft', 'failed'])->count(),
+                'submitted' => (clone $baseStatsQuery)->where('registration_status', 'submitted')->count(),
+                'verified' => (clone $baseStatsQuery)->where('registration_status', 'verified')->count(),
+                'taaruf_completed' => (clone $baseStatsQuery)->where('registration_status', 'taaruf_completed')->count(),
+                'agreement_signed' => (clone $baseStatsQuery)->where('registration_status', 'agreement_signed')->count(),
+                'completed' => (clone $baseStatsQuery)->where('registration_status', 'completed')->count(),
+            ];
+
             // Search by Name, WhatsApp, or NIK
             if ($request->filled('search')) {
                 $search = $request->search;
@@ -167,6 +178,15 @@ Route::middleware('auth')->group(function () {
                       ->orWhere('parent_phone', 'like', "%{$search}%")
                       ->orWhere('nik', 'like', "%{$search}%");
                 });
+            }
+
+            // Filter by Stage / Status Pill
+            if ($request->filled('stage') && $request->stage !== 'all') {
+                if ($request->stage === 'draft') {
+                    $query->whereIn('registration_status', ['draft', 'failed']);
+                } else {
+                    $query->where('registration_status', $request->stage);
+                }
             }
 
             // Filter by Unit/Jenjang School
@@ -223,8 +243,10 @@ Route::middleware('auth')->group(function () {
 
             $candidates = $query->latest()->paginate($perPage)->withQueryString();
 
-            return view('admin.candidates', compact('candidates', 'stats', 'waveStats', 'typeStats', 'classProgramStats'));
+            return view('admin.candidates', compact('candidates', 'stats', 'waveStats', 'typeStats', 'classProgramStats', 'stageCounts'));
         })->name('admin.candidates');
+
+        Route::post('/admin/candidates/{id}/installment-settings', [AdminDashboardController::class, 'updateInstallmentSettings'])->name('admin.candidates.installment-settings');
 
         Route::get('/admin/history', function (Illuminate\Http\Request $request) {
             $selectedPeriodId = session('selected_period_id', function() {

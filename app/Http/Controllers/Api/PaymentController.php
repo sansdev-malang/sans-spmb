@@ -22,150 +22,12 @@ class PaymentController extends Controller
 
     private function getRegistrationFee($registration)
     {
-        $feeCategory = \App\Models\SpmbFeeCategory::where('name', 'Formulir Pendaftaran')->first();
-        if ($feeCategory) {
-            if (!empty($registration->spmb_unit_id)) {
-                $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                    ->where('spmb_unit_id', $registration->spmb_unit_id)
-                    ->where('is_active', true)
-                    ->first();
-                if (!$fee) {
-                    $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                        ->where('spmb_unit_id', $registration->spmb_unit_id)
-                        ->first();
-                }
-                if ($fee) return $fee;
-            }
-
-            $admissionLevel = $registration->admission_level ?? '';
-            $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                ->where(function($q) use ($admissionLevel) {
-                    if ($admissionLevel) {
-                        $q->where('name', 'like', '%' . $admissionLevel . '%')
-                          ->orWhere('name', 'Formulir Pendaftaran');
-                    } else {
-                        $q->where('name', 'Formulir Pendaftaran');
-                    }
-                })->first();
-            
-            if (!$fee) {
-                $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)->first();
-            }
-            return $fee;
-        }
-        return null;
+        return app(\App\Http\Controllers\Web\WebDashboardController::class)->getRegistrationFee($registration);
     }
 
     private function getFinalFeeDetails($registration)
     {
-        $unitId = $registration->spmb_unit_id;
-        $unitName = $registration->unit->name ?? '';
-        $gradeName = $registration->grade->name ?? '';
-
-        $category = \App\Models\SpmbFeeCategory::where('name', 'Biaya Adminstrasi')
-            ->orWhere('name', 'Biaya Administrasi')
-            ->first();
-
-        $fees = null;
-        if ($category && $unitId) {
-            $fees = \App\Models\SpmbFee::where('spmb_fee_category_id', $category->id)
-                ->where('spmb_unit_id', $unitId)
-                ->where('is_active', true)
-                ->get();
-        }
-
-        $details = [
-            'uang_gedung' => 0,
-            'seragam' => 0,
-            'spp' => 0,
-            'kegiatan' => 0,
-            'items' => [],
-        ];
-
-        if ($fees && $fees->count() > 0) {
-            foreach ($fees as $fee) {
-                $feeNameUpper = strtoupper($fee->name);
-                $gradeNameUpper = strtoupper($gradeName);
-
-                $gradeKeywords = ['TK A', 'TK B', 'KB', 'TPA', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 7'];
-                $hasKeyword = false;
-                foreach ($gradeKeywords as $kw) {
-                    if (strpos($feeNameUpper, $kw) !== false) {
-                        $hasKeyword = true;
-                        if (strpos($gradeNameUpper, $kw) !== false || ($kw === 'PLAY GROUP' && strpos($gradeNameUpper, 'KB') !== false) || ($kw === 'KB' && strpos($gradeNameUpper, 'PLAY GROUP') !== false)) {
-                            $hasKeyword = false;
-                            break;
-                        }
-                    }
-                }
-
-                if ($hasKeyword) {
-                    continue;
-                }
-
-                if (strpos($feeNameUpper, 'GEDUNG') !== false || strpos($feeNameUpper, 'MUSA\'ADAH') !== false || strpos($feeNameUpper, 'MUSAADAH') !== false) {
-                    $details['uang_gedung'] = $fee->amount;
-                } elseif (strpos($feeNameUpper, 'SERAGAM') !== false) {
-                    $details['seragam'] = $fee->amount;
-                } elseif (strpos($feeNameUpper, 'SPP') !== false) {
-                    $details['spp'] = $fee->amount;
-                } elseif (strpos($feeNameUpper, 'KEGIATAN') !== false) {
-                    $details['kegiatan'] = $fee->amount;
-                } else {
-                    $details[strtolower(str_replace(' ', '_', $fee->name))] = $fee->amount;
-                }
-
-                $details['items'][] = [
-                    'name' => $fee->name,
-                    'amount' => $fee->amount,
-                    'gateways' => is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]
-                ];
-            }
-
-            $details['total'] = array_sum(array_map(function($item) {
-                return $item['amount'];
-            }, $details['items']));
-
-            return $details;
-        }
-
-        if (stripos($unitName, 'PAUD') !== false || stripos($gradeName, 'KB') !== false || stripos($gradeName, 'TK') !== false || stripos($gradeName, 'TPA') !== false) {
-            if (stripos($gradeName, 'KB Saja') !== false) {
-                $details = ['uang_gedung' => 3000000, 'seragam' => 1000000, 'spp' => 250000, 'kegiatan' => 750000];
-            } elseif (stripos($gradeName, 'TK A') !== false || stripos($gradeName, 'TK B') !== false) {
-                $details = ['uang_gedung' => 3500000, 'seragam' => 1200000, 'spp' => 300000, 'kegiatan' => 800000];
-            } elseif (stripos($gradeName, 'TPA Saja') !== false) {
-                $details = ['uang_gedung' => 2500000, 'seragam' => 800000, 'spp' => 200000, 'kegiatan' => 500000];
-            } elseif (stripos($gradeName, 'KB + TPA') !== false) {
-                $details = ['uang_gedung' => 4500000, 'seragam' => 1500000, 'spp' => 400000, 'kegiatan' => 1100000];
-            } elseif (stripos($gradeName, 'TK + TPA') !== false) {
-                $details = ['uang_gedung' => 5000000, 'seragam' => 1600000, 'spp' => 450000, 'kegiatan' => 1150000];
-            } else {
-                $details = ['uang_gedung' => 3200000, 'seragam' => 1100000, 'spp' => 280000, 'kegiatan' => 780000];
-            }
-        } elseif (stripos($unitName, 'SMP') !== false) {
-            if (stripos($gradeName, 'Pindahan') !== false || stripos($gradeName, 'Mutasi') !== false) {
-                $details = ['uang_gedung' => 6000000, 'seragam' => 2000000, 'spp' => 600000, 'kegiatan' => 1100000];
-            } else {
-                $details = ['uang_gedung' => 8500000, 'seragam' => 2000000, 'spp' => 600000, 'kegiatan' => 1400000];
-            }
-        } else {
-            if (stripos($gradeName, 'Pindahan') !== false || stripos($gradeName, 'Mutasi') !== false) {
-                $details = ['uang_gedung' => 5000000, 'seragam' => 1800000, 'spp' => 500000, 'kegiatan' => 1000000];
-            } else {
-                $details = ['uang_gedung' => 7000000, 'seragam' => 1800000, 'spp' => 500000, 'kegiatan' => 1200000];
-            }
-        }
-
-        $details['items'] = [
-            ['name' => 'Uang Gedung', 'amount' => $details['uang_gedung'], 'gateways' => ['winpay']],
-            ['name' => 'Biaya Seragam', 'amount' => $details['seragam'], 'gateways' => ['winpay']],
-            ['name' => 'SPP Bulanan', 'amount' => $details['spp'], 'gateways' => ['winpay']],
-            ['name' => 'Uang Kegiatan', 'amount' => $details['kegiatan'], 'gateways' => ['winpay']],
-        ];
-
-        $details['total'] = $details['uang_gedung'] + $details['seragam'] + $details['spp'] + $details['kegiatan'];
-        return $details;
+        return app(\App\Http\Controllers\Web\WebDashboardController::class)->getFinalFeeDetails($registration);
     }
 
     public function charge(Request $request)
@@ -428,13 +290,8 @@ class PaymentController extends Controller
                 ]);
 
                 if ($payment->payment_type === 'final_fee') {
-                    $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
-                    $totalRequired = $feeDetails['total'] ?? 0;
-                    
-                    $totalPaid = $registration->payments()
-                        ->where('status', 'success')
-                        ->where('payment_type', 'final_fee')
-                        ->sum('base_amount');
+                    $totalRequired = $registration->net_fee;
+                    $totalPaid = $registration->total_paid_final_fee;
                     
                     if ($totalPaid >= $totalRequired) {
                         $registration->update([

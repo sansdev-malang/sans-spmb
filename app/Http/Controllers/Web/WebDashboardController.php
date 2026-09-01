@@ -30,65 +30,143 @@ class WebDashboardController extends Controller
         return Registration::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
     }
 
-    private function getRegistrationFee($registration)
+    public function getRegistrationFee($registration)
     {
-        $feeCategory = \App\Models\SpmbFeeCategory::where('name', 'Formulir Pendaftaran')->first();
-        if ($feeCategory) {
-            // 1. Try to find fee by spmb_unit_id and fee category
-            if (!empty($registration->spmb_unit_id)) {
+        $unitId = $registration->spmb_unit_id;
+
+        // 1. Try finding fee category for registration form (match 'Formulir', 'Pendaftaran', 'Registrasi')
+        $feeCategory = \App\Models\SpmbFeeCategory::where(function($q) {
+            $q->where('name', 'like', '%Formulir%')
+              ->orWhere('name', 'like', '%Pendaftaran%')
+              ->orWhere('name', 'like', '%Registrasi%');
+        })->first() ?? \App\Models\SpmbFeeCategory::first();
+
+        if ($feeCategory && $unitId) {
+            $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
+                ->where('spmb_unit_id', $unitId)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$fee) {
                 $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                    ->where('spmb_unit_id', $registration->spmb_unit_id)
-                    ->where('is_active', true)
+                    ->where('spmb_unit_id', $unitId)
                     ->first();
-                if (!$fee) {
-                    $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                        ->where('spmb_unit_id', $registration->spmb_unit_id)
-                        ->first();
-                }
-                if ($fee) return $fee;
             }
 
-            // 2. Fallback to admission_level mapping if present
-            $admissionLevel = $registration->admission_level ?? '';
-            $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                ->where(function($q) use ($admissionLevel) {
-                    if ($admissionLevel) {
-                        $q->where('name', 'like', '%' . $admissionLevel . '%')
-                          ->orWhere('name', 'Formulir Pendaftaran');
-                    } else {
-                        $q->where('name', 'Formulir Pendaftaran');
-                    }
-                })->first();
-            
-            if (!$fee) {
-                $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)->first();
+            if ($fee) {
+                return $fee;
             }
-            return $fee;
         }
-        return null;
+
+        // 2. Check if unit has a configured registration_fee
+        if ($registration->unit && !empty($registration->unit->registration_fee) && $registration->unit->registration_fee > 0) {
+            return (object) [
+                'id' => null,
+                'name' => 'Formulir Pendaftaran ' . ($registration->unit->name ?? ''),
+                'amount' => (float) $registration->unit->registration_fee,
+                'payment_gateway' => ['winpay'],
+                'is_active' => true,
+            ];
+        }
+
+        // 3. Fallback to any active fee in the registration category
+        if ($feeCategory) {
+            $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
+                ->where('is_active', true)
+                ->first();
+            if ($fee) {
+                return $fee;
+            }
+        }
+
+        // 4. Default fallback object
+        return (object) [
+            'id' => null,
+            'name' => 'Formulir Pendaftaran',
+            'amount' => 350000.0,
+            'payment_gateway' => ['winpay'],
+            'is_active' => true,
+        ];
     }
 
     public function getFinalFeeDetails($registration)
     {
         $unitId = $registration->spmb_unit_id;
-        $unitName = $registration->unit->name ?? '';
         $gradeName = $registration->grade->name ?? '';
+        $extraServices = $registration->extraServices ?? collect();
 
-        // Get category "Biaya Administrasi" (handling typo in fc2 "Biaya Adminstrasi" or correct "Biaya Administrasi")
-        $category = \App\Models\SpmbFeeCategory::where('name', 'Biaya Adminstrasi')
-            ->orWhere('name', 'Biaya Administrasi')
-            ->first();
+        // 1. Identify Registration Fee Category ID so we exclude form fees from final admission fees
+        $regCatIds = \App\Models\SpmbFeeCategory::where(function($q) {
+            $q->where('name', 'like', '%Formulir%')
+              ->orWhere('name', 'like', '%Pendaftaran%')
+              ->orWhere('name', 'like', '%Registrasi%');
+        })->pluck('id')->toArray();
 
-        // Fetch active fees for this unit & category
-        $fees = null;
-        if ($category && $unitId) {
-            $fees = \App\Models\SpmbFee::where('spmb_fee_category_id', $category->id)
-                ->where('spmb_unit_id', $unitId)
-                ->where('is_active', true)
-                ->get();
+        // 2. Identify Extra Services / Biaya Tambahan Category IDs
+        $extraCatIds = \App\Models\SpmbFeeCategory::where(function($q) {
+            $q->where('name', 'like', '%Tambahan%')
+              ->orWhere('name', 'like', '%Extra%')
+              ->orWhere('name', 'like', '%Layanan%');
+        })->pluck('id')->toArray();
+
+        // 3. Fetch all active fees for this unit excluding registration form fees
+        $unitFeesQuery = \App\Models\SpmbFee::with('category')
+            ->where('spmb_unit_id', $unitId)
+            ->where('is_active', true);
+
+        if (!empty($regCatIds)) {
+            $unitFeesQuery->whereNotIn('spmb_fee_category_id', $regCatIds);
         }
 
-        // Initialize details with 0
+        $allUnitFees = $unitFeesQuery->get();
+        $selectedFees = collect();
+
+        foreach ($allUnitFees as $fee) {
+            $isExtraCat = in_array($fee->spmb_fee_category_id, $extraCatIds);
+
+            if ($isExtraCat) {
+                // If it is in the "Biaya Tambahan" category, only include if candidate chose this extra service
+                if ($extraServices->isNotEmpty()) {
+                    $feeNameClean = strtolower(trim($fee->name));
+                    $matches = $extraServices->contains(function($es) use ($feeNameClean) {
+                        $esName = strtolower(trim($es->name ?? ''));
+                        $esCode = strtolower(trim($es->code ?? ''));
+                        return ($feeNameClean === $esName)
+                            || ($feeNameClean === $esCode)
+                            || (!empty($esCode) && str_contains($feeNameClean, $esCode))
+                            || (!empty($feeNameClean) && str_contains($esName, $feeNameClean));
+                    });
+                    if ($matches) {
+                        $selectedFees->push($fee);
+                    }
+                }
+            } else {
+                // Regular admission fee (Biaya Administrasi / Gedung / Seragam / SPP, etc.)
+                $feeNameUpper = strtoupper($fee->name);
+                $gradeNameUpper = strtoupper($gradeName);
+
+                // Check if this fee is explicitly specific to another grade
+                $gradeKeywords = ['TK A', 'TK B', 'KB', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 7'];
+                $hasKeyword = false;
+                foreach ($gradeKeywords as $kw) {
+                    if (strpos($feeNameUpper, $kw) !== false) {
+                        $hasKeyword = true;
+                        if (strpos($gradeNameUpper, $kw) !== false 
+                            || ($kw === 'PLAY GROUP' && strpos($gradeNameUpper, 'KB') !== false) 
+                            || ($kw === 'KB' && strpos($gradeNameUpper, 'PLAY GROUP') !== false)) {
+                            $hasKeyword = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$hasKeyword) {
+                    $selectedFees->push($fee);
+                }
+            }
+        }
+
+        // 4. Build dynamic items array and sum total
         $details = [
             'uang_gedung' => 0,
             'seragam' => 0,
@@ -97,93 +175,32 @@ class WebDashboardController extends Controller
             'items' => [],
         ];
 
-        if ($fees && $fees->count() > 0) {
-            foreach ($fees as $fee) {
-                $feeNameUpper = strtoupper($fee->name);
-                $gradeNameUpper = strtoupper($gradeName);
+        foreach ($selectedFees as $fee) {
+            $feeNameUpper = strtoupper($fee->name);
 
-                // Skip if fee name contains a specific grade that does not match candidate's grade
-                $gradeKeywords = ['TK A', 'TK B', 'KB', 'TPA', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 7'];
-                $hasKeyword = false;
-                foreach ($gradeKeywords as $kw) {
-                    if (strpos($feeNameUpper, $kw) !== false) {
-                        $hasKeyword = true;
-                        if (strpos($gradeNameUpper, $kw) !== false || ($kw === 'PLAY GROUP' && strpos($gradeNameUpper, 'KB') !== false) || ($kw === 'KB' && strpos($gradeNameUpper, 'PLAY GROUP') !== false)) {
-                            $hasKeyword = false;
-                            break;
-                        }
-                    }
-                }
-
-                if ($hasKeyword) {
-                    continue;
-                }
-
-                // Map to corresponding keys for legacy rendering if applicable
-                if (strpos($feeNameUpper, 'GEDUNG') !== false || strpos($feeNameUpper, 'MUSA\'ADAH') !== false || strpos($feeNameUpper, 'MUSAADAH') !== false) {
-                    $details['uang_gedung'] = $fee->amount;
-                } elseif (strpos($feeNameUpper, 'SERAGAM') !== false) {
-                    $details['seragam'] = $fee->amount;
-                } elseif (strpos($feeNameUpper, 'SPP') !== false) {
-                    $details['spp'] = $fee->amount;
-                } elseif (strpos($feeNameUpper, 'KEGIATAN') !== false) {
-                    $details['kegiatan'] = $fee->amount;
-                } else {
-                    $details[strtolower(str_replace(' ', '_', $fee->name))] = $fee->amount;
-                }
-
-                $details['items'][] = [
-                    'name' => $fee->name,
-                    'amount' => $fee->amount,
-                    'gateways' => is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]
-                ];
+            // Populate legacy keys dynamically if name matches (for backward compatibility)
+            if (strpos($feeNameUpper, 'GEDUNG') !== false || strpos($feeNameUpper, "MUSA'ADAH") !== false || strpos($feeNameUpper, 'MUSAADAH') !== false) {
+                $details['uang_gedung'] = $fee->amount;
+            } elseif (strpos($feeNameUpper, 'SERAGAM') !== false) {
+                $details['seragam'] = $fee->amount;
+            } elseif (strpos($feeNameUpper, 'SPP') !== false) {
+                $details['spp'] = $fee->amount;
+            } elseif (strpos($feeNameUpper, 'KEGIATAN') !== false) {
+                $details['kegiatan'] = $fee->amount;
+            } else {
+                $details[strtolower(str_replace(' ', '_', $fee->name))] = $fee->amount;
             }
 
-            $details['total'] = array_sum(array_map(function($item) {
-                return $item['amount'];
-            }, $details['items']));
-
-            return $details;
+            $details['items'][] = [
+                'id' => $fee->id,
+                'name' => $fee->name,
+                'amount' => (float) $fee->amount,
+                'gateways' => is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway],
+            ];
         }
 
-        // Fallback: Hardcoded details for backward compatibility with seeder defaults
-        if (stripos($unitName, 'PAUD') !== false || stripos($gradeName, 'KB') !== false || stripos($gradeName, 'TK') !== false || stripos($gradeName, 'TPA') !== false) {
-            if (stripos($gradeName, 'KB Saja') !== false) {
-                $details = ['uang_gedung' => 3000000, 'seragam' => 1000000, 'spp' => 250000, 'kegiatan' => 750000];
-            } elseif (stripos($gradeName, 'TK A') !== false || stripos($gradeName, 'TK B') !== false) {
-                $details = ['uang_gedung' => 3500000, 'seragam' => 1200000, 'spp' => 300000, 'kegiatan' => 800000];
-            } elseif (stripos($gradeName, 'TPA Saja') !== false) {
-                $details = ['uang_gedung' => 2500000, 'seragam' => 800000, 'spp' => 200000, 'kegiatan' => 500000];
-            } elseif (stripos($gradeName, 'KB + TPA') !== false) {
-                $details = ['uang_gedung' => 4500000, 'seragam' => 1500000, 'spp' => 400000, 'kegiatan' => 1100000];
-            } elseif (stripos($gradeName, 'TK + TPA') !== false) {
-                $details = ['uang_gedung' => 5000000, 'seragam' => 1600000, 'spp' => 450000, 'kegiatan' => 1150000];
-            } else {
-                $details = ['uang_gedung' => 3200000, 'seragam' => 1100000, 'spp' => 280000, 'kegiatan' => 780000];
-            }
-        } elseif (stripos($unitName, 'SMP') !== false) {
-            if (stripos($gradeName, 'Pindahan') !== false || stripos($gradeName, 'Mutasi') !== false) {
-                $details = ['uang_gedung' => 6000000, 'seragam' => 2000000, 'spp' => 600000, 'kegiatan' => 1100000];
-            } else {
-                $details = ['uang_gedung' => 8500000, 'seragam' => 2000000, 'spp' => 600000, 'kegiatan' => 1400000];
-            }
-        } else {
-            if (stripos($gradeName, 'Pindahan') !== false || stripos($gradeName, 'Mutasi') !== false) {
-                $details = ['uang_gedung' => 5000000, 'seragam' => 1800000, 'spp' => 500000, 'kegiatan' => 1000000];
-            } else {
-                $details = ['uang_gedung' => 7000000, 'seragam' => 1800000, 'spp' => 500000, 'kegiatan' => 1200000];
-            }
-        }
+        $details['total'] = array_sum(array_column($details['items'], 'amount'));
 
-        // Add to items list for fallback too
-        $details['items'] = [
-            ['name' => 'Uang Gedung', 'amount' => $details['uang_gedung'], 'gateways' => ['winpay']],
-            ['name' => 'Biaya Seragam', 'amount' => $details['seragam'], 'gateways' => ['winpay']],
-            ['name' => 'SPP Bulanan', 'amount' => $details['spp'], 'gateways' => ['winpay']],
-            ['name' => 'Uang Kegiatan', 'amount' => $details['kegiatan'], 'gateways' => ['winpay']],
-        ];
-
-        $details['total'] = $details['uang_gedung'] + $details['seragam'] + $details['spp'] + $details['kegiatan'];
         return $details;
     }
 
@@ -586,29 +603,57 @@ class WebDashboardController extends Controller
                 $feeDetails['total'] = $latestSuccessPayment->base_amount ?? ($latestSuccessPayment->amount - $latestSuccessPayment->admin_fee);
                 $feeAmount = $latestSuccessPayment->amount;
             } else {
-                $feeDetails['items'] = $unpaidItems;
-
-                // Apply manual checked items filter if passed in query string
+                $allSnapshotItems = $feeDetails['items'];
                 $selectedIndices = request()->query('items');
+
                 if ($selectedIndices !== null && $selectedIndices !== '') {
                     $indices = explode(',', $selectedIndices);
                     $filteredItems = [];
-                    foreach ($indices as $index) {
-                        if (isset($unpaidItems[$index])) {
-                            $filteredItems[] = $unpaidItems[$index];
+                    foreach ($indices as $idx) {
+                        $idx = trim($idx);
+                        if (isset($allSnapshotItems[$idx])) {
+                            $candItem = $allSnapshotItems[$idx];
+                            if (!in_array($candItem['name'], $paidItemNames)) {
+                                $filteredItems[] = $candItem;
+                            }
+                        } elseif (isset($unpaidItems[$idx])) {
+                            $filteredItems[] = $unpaidItems[$idx];
+                        } else {
+                            foreach ($unpaidItems as $uItem) {
+                                if ((isset($uItem['id']) && (string)$uItem['id'] === $idx) || strcasecmp(trim($uItem['name']), $idx) === 0) {
+                                    $filteredItems[] = $uItem;
+                                    break;
+                                }
+                            }
                         }
                     }
-                    if (!empty($filteredItems)) {
-                        $feeDetails['items'] = $filteredItems;
-                    }
+                    $feeDetails['items'] = !empty($filteredItems) ? $filteredItems : $unpaidItems;
+                } else {
+                    $feeDetails['items'] = $unpaidItems;
                 }
 
-                // Calculate final total based on unpaid/filtered items
-                $feeDetails['total'] = array_sum(array_map(function($item) {
-                    return $item['amount'];
-                }, $feeDetails['items']));
+                $feeDetails['total'] = (float) array_sum(array_column($feeDetails['items'], 'amount'));
+                $selectedTotal = (float) $feeDetails['total'];
+                $discountAmount = (float) ($registration->discount_amount ?? 0);
+                $netSelectedTotal = max(0, $selectedTotal - $discountAmount);
 
-                $feeAmount = ($activePayment && $activePayment->status === 'pending') ? $activePayment->amount : $feeDetails['total'];
+                $grossFee = $registration->getGrossFee() ?: $selectedTotal;
+                $discountNotes = $registration->discount_notes;
+                $netFee = $registration->net_fee;
+                $totalPaid = (float) ($registration->total_paid_final_fee ?? 0);
+                $remainingBalance = (float) ($registration->remaining_balance ?? $netFee);
+                $installmentMode = $registration->installment_mode ?? 'none';
+                $minPaymentRequired = $registration->getMinimumPaymentRequired();
+
+                // Annotate items with installment allowed flag
+                foreach ($feeDetails['items'] as &$item) {
+                    $item['is_installment_allowed'] = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
+                }
+                unset($item);
+
+                $feeAmount = ($activePayment && $activePayment->status === 'pending') 
+                    ? (float) $activePayment->amount 
+                    : (float) min($remainingBalance ?: $netSelectedTotal, $netSelectedTotal);
             }
             
             // Calculate the intersection of gateways for the selected items
@@ -630,6 +675,14 @@ class WebDashboardController extends Controller
             $feeDetails = null;
             $feeGateways = $fee ? (is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]) : ['winpay'];
             $feeName = $fee ? $fee->name : 'Formulir Pendaftaran';
+            $grossFee = $feeAmount;
+            $discountAmount = 0;
+            $discountNotes = null;
+            $netFee = $feeAmount;
+            $totalPaid = 0;
+            $remainingBalance = $feeAmount;
+            $installmentMode = 'none';
+            $minPaymentRequired = $feeAmount;
         }
 
         $channels = SpmbPaymentChannel::where('is_active', true)
@@ -641,7 +694,11 @@ class WebDashboardController extends Controller
             ->get();
         $feeGateway = reset($feeGateways) ?: 'winpay';
 
-        return view('web.payment', compact('registration', 'activePayment', 'channels', 'feeAmount', 'feeGateway', 'feeDetails', 'feeName'));
+        return view('web.payment', compact(
+            'registration', 'activePayment', 'channels', 'feeAmount', 'feeGateway', 
+            'feeDetails', 'feeName', 'grossFee', 'discountAmount', 'discountNotes', 
+            'netFee', 'totalPaid', 'remainingBalance', 'installmentMode', 'minPaymentRequired'
+        ));
     }
 
     public function verification($id)
@@ -771,7 +828,28 @@ class WebDashboardController extends Controller
             }
         }
         
-        return view('web.result', compact('registration', 'feeDetails', 'paidItemNames'));
+        $grossFee = $registration->getGrossFee() ?: ($feeDetails['total'] ?? 0);
+        $discountAmount = (float) ($registration->discount_amount ?? 0);
+        $discountNotes = $registration->discount_notes;
+        $netFee = $registration->net_fee;
+        $totalPaid = $registration->total_paid_final_fee;
+        $remainingBalance = $registration->remaining_balance;
+        $installmentMode = $registration->installment_mode ?? 'none';
+        $minPaymentRequired = $registration->getMinimumPaymentRequired();
+
+        // Annotate items with installment allowed flag
+        if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
+            foreach ($feeDetails['items'] as &$item) {
+                $item['is_installment_allowed'] = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
+            }
+            unset($item);
+        }
+        
+        return view('web.result', compact(
+            'registration', 'feeDetails', 'paidItemNames', 'grossFee', 
+            'discountAmount', 'discountNotes', 'netFee', 'totalPaid', 
+            'remainingBalance', 'installmentMode', 'minPaymentRequired'
+        ));
     }
 
     public function saveStep(Request $request, $id, $stepId)
@@ -1039,30 +1117,61 @@ class WebDashboardController extends Controller
                     $unpaidItems[] = $item;
                 }
             }
-            unset($item);
-            $feeDetails['items'] = $unpaidItems;
-
+            $allSnapshotItems = $feeDetails['items'];
             // Apply manual checked items filter if passed in query string or POST input
             $selectedIndices = $request->input('items') ?? request()->query('items');
             if ($selectedIndices !== null && $selectedIndices !== '') {
                 $indices = explode(',', $selectedIndices);
                 $filteredItems = [];
-                foreach ($indices as $index) {
-                    if (isset($unpaidItems[$index])) {
-                        $filteredItems[] = $unpaidItems[$index];
+                foreach ($indices as $idx) {
+                    $idx = trim($idx);
+                    if (isset($allSnapshotItems[$idx])) {
+                        $candItem = $allSnapshotItems[$idx];
+                        if (!in_array($candItem['name'], $paidItemNames)) {
+                            $filteredItems[] = $candItem;
+                        }
+                    } elseif (isset($unpaidItems[$idx])) {
+                        $filteredItems[] = $unpaidItems[$idx];
+                    } else {
+                        foreach ($unpaidItems as $uItem) {
+                            if ((isset($uItem['id']) && (string)$uItem['id'] === $idx) || strcasecmp(trim($uItem['name']), $idx) === 0) {
+                                $filteredItems[] = $uItem;
+                                break;
+                            }
+                        }
                     }
                 }
-                if (!empty($filteredItems)) {
-                    $feeDetails['items'] = $filteredItems;
-                }
+                $feeDetails['items'] = !empty($filteredItems) ? $filteredItems : $unpaidItems;
+            } else {
+                $feeDetails['items'] = $unpaidItems;
             }
 
             // Calculate final total based on unpaid/filtered items
-            $feeDetails['total'] = array_sum(array_map(function($item) {
+            $selectedTotal = (float) array_sum(array_map(function($item) {
                 return $item['amount'];
             }, $feeDetails['items']));
+            $feeDetails['total'] = $selectedTotal;
 
-            $amount = $feeDetails['total'];
+            $discountAmount = (float) ($registration->discount_amount ?? 0);
+            $netSelectedTotal = max(0, $selectedTotal - $discountAmount);
+            $remaining = (float) ($registration->remaining_balance ?: $netSelectedTotal);
+
+            // Handle Installment Choice (Full vs Partial)
+            if ($registration->installment_mode !== 'none' && $request->input('payment_type_choice') === 'partial') {
+                $rawCustom = str_replace(['.', ',', ' '], '', $request->input('custom_amount', 0));
+                $customAmount = (float) $rawCustom;
+                $minRequired = $registration->getMinimumPaymentRequired();
+
+                if ($customAmount < $minRequired) {
+                    return redirect()->back()->with('error', 'Nominal pembayaran cicilan tidak boleh kurang dari batas minimal Rp ' . number_format($minRequired, 0, ',', '.'));
+                }
+                if ($customAmount > $remaining) {
+                    return redirect()->back()->with('error', 'Nominal pembayaran cicilan tidak boleh melebihi sisa tagihan Anda (Rp ' . number_format($remaining, 0, ',', '.') . ').');
+                }
+                $amount = $customAmount;
+            } else {
+                $amount = min($remaining, $netSelectedTotal);
+            }
             
             // Calculate the intersection of gateways for the selected items
             $commonGateways = null;

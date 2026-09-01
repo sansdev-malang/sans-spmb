@@ -11,9 +11,11 @@
             <h1 class="text-xl font-extrabold text-slate-800">Riwayat Transaksi Pembayaran (Log)</h1>
             <p class="text-xs text-slate-500 mt-1">Log riwayat transaksi pembayaran pendaftaran calon siswa terintegrasi Winpay SNAP API secara real-time.</p>
         </div>
-        <div class="flex gap-2">
-            <button class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
-                📥 Ekspor CSV
+        <div class="flex gap-2 items-center">
+            <button type="button" onclick="showFeatureComingSoon('Ekspor Log Pembayaran (CSV)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
+                <span>Ekspor CSV</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400 text-amber-950 shadow-2xs">Soon</span>
             </button>
         </div>
     </div>

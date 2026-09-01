@@ -1071,15 +1071,15 @@
             if (!container) return;
             
             const toast = document.createElement('div');
-            toast.className = `flex items-center gap-3 bg-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg border border-slate-100 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm`;
+            toast.className = `flex items-center gap-3 bg-white dark:bg-slate-900 text-xs font-bold px-4 py-3 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm`;
             
-            let iconColor = type === 'success' ? 'text-emerald-600' : 'text-red-600';
+            let iconColor = type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
             let iconName = type === 'success' ? 'check-circle' : 'alert-circle';
             
             toast.innerHTML = `
                 <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} flex-shrink-0"></i>
-                <span class="text-slate-700 flex-grow">${message}</span>
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-0.5">&times;</button>
+                <span class="text-slate-700 dark:text-slate-200 flex-grow">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5">&times;</button>
             `;
             
             container.appendChild(toast);
@@ -1097,7 +1097,46 @@
                 setTimeout(() => {
                     toast.remove();
                 }, 300);
-            }, 4000);
+            }, 2000);
+        }
+
+        // Coming Soon Feature Notifier
+        function showFeatureComingSoon(featureName = 'Fitur') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 bg-white dark:bg-slate-900 text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl border border-amber-200 dark:border-amber-900/60 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm`;
+            
+            toast.innerHTML = `
+                <div class="h-8 w-8 rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                </div>
+                <div class="flex-grow space-y-0.5 pr-1">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-amber-900 dark:text-amber-300 font-extrabold text-xs">${featureName}</span>
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200">Soon</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Sedang dalam tahap finalisasi pengembangan & integrasi.</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 text-base leading-none">&times;</button>
+            `;
+            
+            container.appendChild(toast);
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 2000);
         }
         
         // Initialize Lucide Icons & Auto Session Toasts

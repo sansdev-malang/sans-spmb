@@ -11,12 +11,16 @@
             <h1 class="text-xl font-extrabold text-slate-800">Daftar Lengkap Pendaftar (Aktif)</h1>
             <p class="text-xs text-slate-500 mt-1">Menampilkan data calon pendaftar aktif yang telah melakukan pembayaran biaya pendaftaran formulir Sekolah Anak Saleh.</p>
         </div>
-        <div class="flex gap-2">
-            <button class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
-                <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2"></i> Ekspor Excel
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="showFeatureComingSoon('Ekspor Data Pendaftar (Excel)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
+                <span>Ekspor Excel</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400 text-amber-950 shadow-2xs">Soon</span>
             </button>
-            <button class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
-                <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Cetak PDF
+            <button type="button" onclick="showFeatureComingSoon('Cetak Rekap Pendaftar (PDF)')" class="border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer">
+                <i data-lucide="printer" class="w-4 h-4 text-slate-400"></i>
+                <span>Cetak PDF</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Soon</span>
             </button>
         </div>
     </div>
@@ -172,14 +176,83 @@
     <!-- Candidate List Table -->
     <div id="candidates-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#candidates-card" hx-select="#candidates-card">
          <!-- Search & Filter Form -->
-        <form action="{{ route('admin.candidates') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
+        <form id="candidateFilterForm" action="{{ route('admin.candidates') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
             @if(request('unit_id'))
                 <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
             @endif
-            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            @if(request('stage') && request('stage') !== 'all')
+                <input type="hidden" name="stage" value="{{ request('stage') }}">
+            @endif
+
+            @php
+                $currentStage = request('stage', 'all');
+                if (empty($currentStage)) $currentStage = 'all';
+
+                $stagePills = [
+                    'all' => [
+                        'label' => 'Semua',
+                        'count' => $stageCounts['all'] ?? $stats['total'] ?? 0,
+                        'active_class' => 'bg-brand-emerald text-white border-brand-emerald shadow-sm ring-2 ring-emerald-600/20',
+                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-slate-100 text-slate-600'
+                    ],
+                    'draft' => [
+                        'label' => 'Formulir',
+                        'count' => $stageCounts['draft'] ?? 0,
+                        'active_class' => 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-600/20',
+                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-blue-50 text-blue-700'
+                    ],
+                    'submitted' => [
+                        'label' => 'Verifikasi',
+                        'count' => $stageCounts['submitted'] ?? 0,
+                        'active_class' => 'bg-purple-600 text-white border-purple-600 shadow-sm ring-2 ring-purple-600/20',
+                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-purple-50 text-purple-700'
+                    ],
+                    'verified' => [
+                        'label' => "Ta'aruf",
+                        'count' => $stageCounts['verified'] ?? 0,
+                        'active_class' => 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-600/20',
+                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-indigo-50 text-indigo-700'
+                    ],
+                    'taaruf_completed' => [
+                        'label' => 'Persetujuan',
+                        'count' => $stageCounts['taaruf_completed'] ?? 0,
+                        'active_class' => 'bg-amber-600 text-white border-amber-600 shadow-sm ring-2 ring-amber-600/20',
+                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-amber-50 text-amber-700'
+                    ],
+                    'agreement_signed' => [
+                        'label' => 'Administrasi',
+                        'count' => $stageCounts['agreement_signed'] ?? 0,
+                        'active_class' => 'bg-pink-600 text-white border-pink-600 shadow-sm ring-2 ring-pink-600/20',
+                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-pink-50 hover:text-pink-700 hover:border-pink-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-pink-50 text-pink-700'
+                    ],
+                    'completed' => [
+                        'label' => 'Selesai',
+                        'count' => $stageCounts['completed'] ?? 0,
+                        'active_class' => 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-600/20',
+                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-emerald-50 text-emerald-700'
+                    ],
+                ];
+            @endphp
+
+            <div class="flex flex-col 2xl:flex-row gap-3.5 items-start 2xl:items-center justify-between">
+                <!-- Left: Search & Filter Controls -->
+                <div class="flex flex-wrap items-center gap-2.5 w-full 2xl:w-auto">
                     <!-- Search Input Container -->
-                    <div class="relative w-full md:w-80 flex items-center">
+                    <div class="relative w-full sm:w-72 flex items-center">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
@@ -188,7 +261,7 @@
                         
                         <!-- Clear (X) Button -->
                         @if(request('search'))
-                            <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; this.form.submit();" 
+                            <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; htmx.trigger(this.form, 'submit');" 
                                     class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition"
                                     title="Hapus Pencarian">
                                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
@@ -203,7 +276,7 @@
                     
                     @if(auth()->user()->isSuperAdmin())
                         <!-- Filter Level / Unit -->
-                        <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-5.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jenjang</option>
                             @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
                                 <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
@@ -212,11 +285,11 @@
                     @endif
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
+                        <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
                     </select>
 
                     <!-- Advanced Filter Toggle Button -->
@@ -225,6 +298,25 @@
                         <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
                         Filter Lanjutan
                     </button>
+                </div>
+
+                <!-- Right: Stage Filter Pills (Pill Tahapan) -->
+                <div class="flex items-center gap-1.5 overflow-x-auto w-full 2xl:w-auto pb-1 2xl:pb-0 select-none">
+                    @foreach($stagePills as $sKey => $sData)
+                        @php 
+                            $isActive = ($currentStage === $sKey); 
+                            $pillUrl = ($sKey === 'all') 
+                                ? route('admin.candidates', request()->except(['stage', 'page']))
+                                : route('admin.candidates', array_merge(request()->except(['page']), ['stage' => $sKey]));
+                        @endphp
+                        <a href="{{ $pillUrl }}" 
+                           class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap cursor-pointer {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
+                            <span>{{ $sData['label'] }}</span>
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
+                                {{ $sData['count'] }}
+                            </span>
+                        </a>
+                    @endforeach
                 </div>
             </div>
 
@@ -313,7 +405,7 @@
                 form.querySelector('select[name=type_id]').value = '';
                 form.querySelector('select[name=class_program_id]').value = '';
                 form.querySelector('select[name=doc_status]').value = '';
-                form.submit();
+                htmx.trigger(form, 'submit');
             }
         </script>
 
@@ -331,6 +423,9 @@
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-100">
+                    @php
+                        $feeCategories = \App\Models\SpmbFeeCategory::with(['fees', 'units'])->get();
+                    @endphp
                     @forelse($candidates as $cand)
                         @php
                             $formPaid = $cand->payments->where('payment_type', 'registration_fee')->where('status', 'success')->isNotEmpty();
@@ -360,7 +455,7 @@
                                 $currentStageText = 'Persetujuan Pernyataan';
                                 $currentStageColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900';
                             } elseif ($status === 'agreement_signed') {
-                                $currentStageText = 'Administrasi Akhir';
+                                $currentStageText = 'Administrasi';
                                 $currentStageColor = 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/20 dark:text-pink-400 dark:border-pink-900';
                             } elseif ($status === 'completed') {
                                 $currentStageText = 'Selesai & Lulus';
@@ -431,6 +526,20 @@
                             </td>
                             <td class="py-4 px-6 text-center">
                                 @php
+                                    $finalFeeCalc = app(\App\Http\Controllers\Web\WebDashboardController::class)->getFinalFeeDetails($cand);
+                                    $tab3FeeItems = $cand->final_fee_snapshot['items'] ?? $finalFeeCalc['items'] ?? [];
+                                    if ($cand->extraServices && $cand->extraServices->isNotEmpty() && !empty($finalFeeCalc['items'])) {
+                                        $existingNames = array_map('strtoupper', array_column($tab3FeeItems, 'name'));
+                                        foreach ($finalFeeCalc['items'] as $calcItem) {
+                                            if (!in_array(strtoupper($calcItem['name']), $existingNames)) {
+                                                $tab3FeeItems[] = $calcItem;
+                                            }
+                                        }
+                                    }
+                                    $calcGross = array_sum(array_column($tab3FeeItems, 'amount'));
+                                    $calcDisc = (float) ($cand->discount_amount ?? 0);
+                                    $calcNet = max(0, $calcGross - $calcDisc);
+
                                     // Prepare JSON data to pass to Javascript modal
                                     $candJson = [
                                         'id_label' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
@@ -491,21 +600,216 @@
                                         'extra_services' => $cand->extraServices->pluck('name')->join(', ') ?: '-',
                                         'form_paid' => $formPaid,
                                         'stage_text' => $currentStageText,
+
+                                        // Keringanan & Cicilan
+                                        'id' => $cand->id,
+                                        'discount_amount' => (float) ($cand->discount_amount ?? 0),
+                                        'discount_notes' => $cand->discount_notes ?? '',
+                                        'installment_mode' => $cand->installment_mode ?? 'none',
+                                        'installment_allowed_fee_ids' => $cand->installment_allowed_fee_ids ?? [],
+                                        'min_installment_amount' => (float) ($cand->min_installment_amount ?? 0),
+                                        'gross_fee' => (float) $calcGross,
+                                        'net_fee' => (float) $calcNet,
+                                        'total_paid' => (float) ($cand->total_paid_final_fee ?? 0),
+                                        'remaining_balance' => (float) max(0, $calcNet - ($cand->total_paid_final_fee ?? 0)),
+                                        'fee_items' => $tab3FeeItems,
+                                        'save_installment_url' => route('admin.candidates.installment-settings', $cand->id),
+                                        'unit_name' => $cand->unit->name ?? 'Anak Saleh',
+                                        'registration_fee_nominal' => (float) ($cand->unit->registration_fee ?? (app(\App\Http\Controllers\Web\WebDashboardController::class)->getRegistrationFee($cand)->amount ?? 350000)),
+
+                                        // Riwayat Transaksi Payments
+                                        'payments' => $cand->payments->map(function($p) use ($cand) {
+                                            $catName = $p->payment_type === 'registration_fee' ? 'Formulir Pendaftaran' : 'Biaya Administrasi Masuk';
+                                            $feeName = $p->payment_type === 'registration_fee' 
+                                                ? ('Formulir Pendaftaran ' . ($cand->unit->name ?? ''))
+                                                : (!empty($p->payment_info['selected_items']) 
+                                                    ? collect($p->payment_info['selected_items'])->pluck('name')->join(', ')
+                                                    : 'Biaya Masuk Siswa Baru');
+
+                                            return [
+                                                'id' => $p->id,
+                                                'order_id' => $p->invoice_number ?: ('PAY-' . $p->id),
+                                                'invoice_number' => $p->invoice_number ?: ('PAY-' . $p->id),
+                                                'payment_type' => $p->payment_type,
+                                                'category_name' => $catName,
+                                                'fee_name' => $feeName,
+                                                'amount' => (float) $p->amount,
+                                                'status' => strtolower($p->status),
+                                                'payment_channel' => $p->payment_channel ?: ($p->payment_method ?: 'Online'),
+                                                'payment_method' => $p->payment_method ?: '-',
+                                                'va_number' => $p->va_number ?: '-',
+                                                'created_at_formatted' => $p->created_at ? $p->created_at->format('d M Y, H:i') . ' WIB' : '-',
+                                                'paid_at_formatted' => $p->paid_at ? $p->paid_at->format('d M Y, H:i') . ' WIB' : ($p->status === 'success' && $p->updated_at ? $p->updated_at->format('d M Y, H:i') . ' WIB' : '-'),
+                                                'selected_items' => $p->payment_info['selected_items'] ?? [],
+                                            ];
+                                        })->values()->all(),
+
+                                        // Pengelompokan Kategori Tarif & Biaya Dinamis Sesuai Unit & Layanan Siswa & Persetujuan Pernyataan
+                                        ...((function() use ($cand, $feeCategories) {
+                                            $candUnitId = $cand->spmb_unit_id;
+                                            $candPayments = $cand->payments ?? collect();
+                                            $candSuccessPayments = $candPayments->whereIn('status', ['success', 'settled']);
+                                            $regPayment = $candSuccessPayments->where('payment_type', 'registration_fee')->sortByDesc('id')->first()
+                                                ?? $candPayments->where('payment_type', 'registration_fee')->sortByDesc('id')->first();
+                                            $finalSuccessPayments = $candSuccessPayments->where('payment_type', 'final_fee');
+                                            $isAllFinalPaid = ($cand->remaining_balance <= 0 && $cand->total_paid_final_fee > 0);
+
+                                            $hasAgreed = !is_null($cand->signed_at) 
+                                                || in_array($cand->registration_status, ['agreement_signed', 'completed', 'registered', 're_registration']) 
+                                                || !empty($cand->final_fee_snapshot);
+
+                                            $categoriesResult = [];
+                                            $totalGross = 0;
+                                            $totalPaid = 0;
+                                            $paidCount = 0;
+
+                                            foreach ($feeCategories as $cat) {
+                                                $catName = $cat->name;
+                                                $isFormulir = (stripos($catName, 'Formulir') !== false);
+
+                                                // Biaya Administrasi & Biaya Tambahan hanya muncul jika pendaftar sudah menyetujui surat pernyataan
+                                                if (!$hasAgreed && !$isFormulir) {
+                                                    continue;
+                                                }
+
+                                                // Filter fees strictly belonging to this candidate's unit
+                                                $unitFees = $cat->fees->filter(function($f) use ($candUnitId) {
+                                                    return $f->is_active && ($f->spmb_unit_id == $candUnitId);
+                                                });
+
+                                                // Filter Biaya Tambahan: check against both name and code of candidate's extraServices
+                                                if (stripos($catName, 'Tambahan') !== false) {
+                                                    $extraServices = $cand->extraServices ?? collect();
+                                                    if ($extraServices->isEmpty()) {
+                                                        continue; // Skip Biaya Tambahan category entirely if candidate chose none
+                                                    }
+                                                    $unitFees = $unitFees->filter(function($f) use ($extraServices) {
+                                                        $feeNameClean = strtolower(trim($f->name));
+                                                        return $extraServices->contains(function($es) use ($feeNameClean) {
+                                                            $esNameClean = strtolower(trim($es->name ?? ''));
+                                                            $esCodeClean = strtolower(trim($es->code ?? ''));
+
+                                                            return ($feeNameClean === $esNameClean)
+                                                                || ($feeNameClean === $esCodeClean)
+                                                                || (!empty($esCodeClean) && str_contains($feeNameClean, $esCodeClean))
+                                                                || (!empty($feeNameClean) && str_contains($esNameClean, $feeNameClean));
+                                                        });
+                                                    });
+                                                }
+
+                                                if ($unitFees->isEmpty()) {
+                                                    continue;
+                                                }
+
+                                                $items = [];
+                                                foreach ($unitFees as $fee) {
+                                                    $feeName = $fee->name;
+                                                    $feeAmount = (float) $fee->amount;
+                                                    
+                                                    $isPaid = false;
+                                                    $status = 'unpaid';
+                                                    $invoiceNo = '-';
+                                                    $method = '-';
+                                                    $paidTime = '-';
+                                                    $amountPaid = $feeAmount;
+
+                                                    if ($isFormulir) {
+                                                        if ($cand->form_paid || ($regPayment && in_array($regPayment->status, ['success', 'settled']))) {
+                                                            $isPaid = true;
+                                                            $status = 'paid';
+                                                            $invoiceNo = $regPayment->invoice_number ?: ($regPayment->order_id ?: ('PAY-' . $regPayment->id));
+                                                            $method = $regPayment->payment_channel ?: ($regPayment->payment_method ?: 'Online');
+                                                            $paidTime = $regPayment->paid_at ? $regPayment->paid_at->format('d M Y, H:i') . ' WIB' : ($regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : '-');
+                                                            $amountPaid = (float) ($regPayment->amount ?: $feeAmount);
+                                                        } elseif ($regPayment && $regPayment->status === 'pending') {
+                                                            $status = 'pending';
+                                                            $invoiceNo = $regPayment->invoice_number ?: ($regPayment->order_id ?: ('PAY-' . $regPayment->id));
+                                                            $method = $regPayment->payment_channel ?: ($regPayment->payment_method ?: 'Online');
+                                                            $paidTime = $regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : '-';
+                                                            $amountPaid = (float) $regPayment->amount;
+                                                        }
+                                                    } else {
+                                                        if ($isAllFinalPaid) {
+                                                            $isPaid = true;
+                                                            $status = 'paid';
+                                                            $latestPay = $finalSuccessPayments->sortByDesc('id')->first();
+                                                            if ($latestPay) {
+                                                                $invoiceNo = $latestPay->invoice_number ?: ($latestPay->order_id ?: ('PAY-' . $latestPay->id));
+                                                                $method = $latestPay->payment_channel ?: ($latestPay->payment_method ?: 'Online');
+                                                                $paidTime = $latestPay->paid_at ? $latestPay->paid_at->format('d M Y, H:i') . ' WIB' : ($latestPay->created_at ? $latestPay->created_at->format('d M Y, H:i') . ' WIB' : '-');
+                                                            }
+                                                        } else {
+                                                            $matchedPay = $finalSuccessPayments->first(function($p) use ($feeName) {
+                                                                if (!isset($p->payment_info['selected_items'])) return false;
+                                                                $itemsList = collect($p->payment_info['selected_items']);
+                                                                return $itemsList->contains(function($si) use ($feeName) {
+                                                                    $siName = strtolower(trim($si['name'] ?? ''));
+                                                                    $fName = strtolower(trim($feeName));
+                                                                    return $siName === $fName || str_contains($siName, $fName) || str_contains($fName, $siName);
+                                                                });
+                                                            });
+
+                                                            if ($matchedPay) {
+                                                                $isPaid = true;
+                                                                $status = 'paid';
+                                                                $invoiceNo = $matchedPay->invoice_number ?: ($matchedPay->order_id ?: ('PAY-' . $matchedPay->id));
+                                                                $method = $matchedPay->payment_channel ?: ($matchedPay->payment_method ?: 'Online');
+                                                                $paidTime = $matchedPay->paid_at ? $matchedPay->paid_at->format('d M Y, H:i') . ' WIB' : ($matchedPay->created_at ? $matchedPay->created_at->format('d M Y, H:i') . ' WIB' : '-');
+                                                            }
+                                                        }
+                                                    }
+
+                                                    $totalGross += $feeAmount;
+                                                    if ($isPaid) {
+                                                        $totalPaid += $feeAmount;
+                                                        $paidCount++;
+                                                    }
+
+                                                    $items[] = [
+                                                        'fee_id' => $fee->id,
+                                                        'name' => $feeName,
+                                                        'amount' => $feeAmount,
+                                                        'is_paid' => $isPaid,
+                                                        'status' => $status,
+                                                        'invoice_no' => $invoiceNo,
+                                                        'payment_method' => $method,
+                                                        'paid_time' => $paidTime,
+                                                        'amount_paid' => $amountPaid,
+                                                    ];
+                                                }
+
+                                                $categoriesResult[] = [
+                                                    'category_id' => $cat->id,
+                                                    'category_name' => strtoupper($catName),
+                                                    'items' => $items,
+                                                ];
+                                            }
+
+                                            $discount = (float) ($cand->discount_amount ?? 0);
+                                            $totalNet = max(0, $totalGross - $discount);
+                                            $remBalance = max(0, $totalNet - $totalPaid);
+
+                                            return [
+                                                'has_agreed_statement' => $hasAgreed,
+                                                'signed_at_formatted' => $cand->signed_at ? $cand->signed_at->format('d M Y, H:i') . ' WIB' : null,
+                                                'signature_name' => $cand->signature_name,
+                                                'fee_categories' => $categoriesResult,
+                                                'all_gross_fee' => $totalGross,
+                                                'all_net_fee' => $totalNet,
+                                                'all_total_paid' => $totalPaid,
+                                                'all_remaining_balance' => $remBalance,
+                                                'all_paid_items_count' => $paidCount,
+                                            ];
+                                        })()),
                                     ];
                                 @endphp
-                                <div class="flex items-center justify-center gap-1.5">
+                                <div class="flex items-center justify-center">
                                     <button type="button" 
+                                        id="cand-btn-{{ $cand->id }}"
                                         onclick="openCandidateDetailModal({{ json_encode($candJson) }})" 
-                                        class="bg-brand-emerald hover-emerald text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1">
+                                        class="bg-brand-emerald hover-emerald text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i> Detail
                                     </button>
-                                    @if(!empty($cleanPhone))
-                                        <a href="{{ $waUrl }}" target="_blank" 
-                                           class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1"
-                                           title="Hubungi Wali via WhatsApp">
-                                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Hubungi
-                                        </a>
-                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -529,239 +833,538 @@
 </div>
 
 <!-- Candidate Detail Modal Overlay -->
-<div id="detailModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-100 flex flex-col">
+<div id="detailModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full h-[88vh] max-h-[88vh] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col transition-all duration-200">
         <!-- Modal Header -->
-        <div class="bg-brand-emerald text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
-            <div>
-                <h3 class="font-extrabold text-base flex items-center gap-2">
-                    <i data-lucide="user" class="w-5 h-5 text-brand-yellow"></i>
-                    Detail Data Pendaftar
-                </h3>
-                <p id="det-id-label" class="text-xs text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
+        <div class="text-white px-6 py-4 flex items-center justify-between flex-shrink-0 border-b border-emerald-900/40 shadow-sm" style="background-color: #064e3b;">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center text-amber-300 flex-shrink-0">
+                    <i data-lucide="user" class="w-5 h-5 text-amber-300"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 id="modal-header-cand-name" class="font-extrabold text-base text-white">Detail Calon Siswa</h3>
+                        <span id="det-status-chip" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-white/20 text-white border border-white/20">SUBMITTED</span>
+                    </div>
+                    <p id="det-id-label" class="text-xs text-emerald-200 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
+                </div>
             </div>
-            <button onclick="closeDetailModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
+            <button type="button" onclick="closeDetailModal()" class="text-white hover:text-emerald-100 bg-white/15 hover:bg-white/25 p-2 rounded-xl transition flex items-center justify-center cursor-pointer shadow-sm">
+                <i data-lucide="x" class="w-5 h-5 text-white"></i>
+            </button>
         </div>
 
-        <!-- Modal Body (Scrollable) -->
-        <div class="p-6 space-y-6 overflow-y-auto flex-grow text-xs text-slate-700">
+        <!-- Pinned Candidate Progress Timeline (Above Tabs) -->
+        <div id="det-timeline-container" class="bg-slate-50/80 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex-shrink-0"></div>
+
+        <!-- Sticky Tab Navigation Bar (4 Tabs) -->
+        <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-2.5 flex items-center gap-2 flex-shrink-0 overflow-x-auto select-none">
+            <button type="button" id="tab-btn-biodata" onclick="switchCandidateTab('biodata')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-emerald-600 text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/60 shadow-sm whitespace-nowrap">
+                <i data-lucide="user-check" class="w-4 h-4"></i> Biodata & Orang Tua
+            </button>
+            <button type="button" id="tab-btn-documents" onclick="switchCandidateTab('documents')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
+                <i data-lucide="folder" class="w-4 h-4"></i> Berkas Lampiran
+            </button>
+            <button type="button" id="tab-btn-installment" onclick="switchCandidateTab('installment')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i> Kebijakan Cicilan & Diskon
+                <span id="tab-installment-badge" class="hidden px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"></span>
+            </button>
+            <button type="button" id="tab-btn-payments" onclick="switchCandidateTab('payments')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
+                <i data-lucide="credit-card" class="w-4 h-4"></i> Data Pembayaran
+                <span id="tab-payments-badge" class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Belum Bayar</span>
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable Tab Panes with Consistent Height) -->
+        <div id="modalDetailBody" class="p-6 overflow-y-auto flex-1 min-h-0 text-xs text-slate-700 dark:text-slate-300 space-y-6">
             
-            <!-- Progress Timeline -->
-            <div id="det-timeline-container"></div>
-            
-            <!-- Grid: SPMB Admission Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-150">
-                <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase block">Periode</span>
-                    <span id="det-period" class="font-bold text-slate-700">2024-2025</span>
+            <!-- TAB PANE 1: BIODATA & ORANG TUA -->
+            <div id="tab-pane-biodata" class="cand-tab-pane space-y-6">
+                <!-- Grid: SPMB Admission Stats -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Periode</span>
+                        <span id="det-period" class="font-bold text-slate-700 dark:text-slate-200 text-xs">2024-2025</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Gelombang</span>
+                        <span id="det-wave" class="font-bold text-slate-700 dark:text-slate-200 text-xs">Gelombang 1</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Jalur Masuk</span>
+                        <span id="det-type" class="font-bold text-slate-700 dark:text-slate-200 text-xs">Reguler</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Status Berkas</span>
+                        <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">SUBMITTED</span>
+                    </div>
                 </div>
-                <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase block">Gelombang</span>
-                    <span id="det-wave" class="font-bold text-slate-700">Gelombang 1</span>
-                </div>
-                <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase block">Jalur Masuk</span>
-                    <span id="det-type" class="font-bold text-slate-700">Reguler</span>
-                </div>
-                <div>
-                    <span class="text-xs font-bold text-slate-400 uppercase block">Status Berkas</span>
-                    <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-xs font-bold uppercase">SUBMITTED</span>
-                </div>
-            </div>
 
-            <!-- Segment 1: Personal Information -->
-            <div class="space-y-3">
-                <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="info" class="w-4 h-4"></i> Informasi Calon Siswa
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Nama Lengkap</span>
-                        <span id="det-name" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Nama Panggilan</span>
-                        <span id="det-nickname" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">NIK Siswa</span>
-                        <span id="det-nik" class="font-mono text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Nomor Kartu Keluarga (KK)</span>
-                        <span id="det-family-card-no" class="font-mono text-slate-800 font-bold text-brand-emerald">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Jenis Kelamin</span>
-                        <span id="det-gender" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
-                        <span id="det-birth" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Agama</span>
-                        <span id="det-religion" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Asal Sekolah</span>
-                        <span id="det-previous-school" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Program Kelas</span>
-                        <span id="det-program" class="font-bold text-brand-emerald">-</span>
-                    </div>
-                    <div class="md:col-span-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
-                        <span id="det-extras" class="font-bold text-slate-800">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Segment 2: Tempat Tinggal -->
-            <div class="space-y-3 pt-2">
-                <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="map-pin" class="w-4 h-4"></i> Tempat Tinggal
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="md:col-span-2">
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Alamat</span>
-                        <span id="det-address" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Nomor Rumah</span>
-                        <span id="det-house-no" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">RT / RW</span>
-                        <span id="det-rt-rw" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Kelurahan / Desa</span>
-                        <span id="det-kelurahan" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Kecamatan</span>
-                        <span id="det-kecamatan" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Kabupaten / Kota</span>
-                        <span id="det-city" class="font-semibold text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="text-xs font-bold text-slate-400 uppercase block">Provinsi</span>
-                        <span id="det-province" class="font-semibold text-slate-800">-</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Segment 3: Data Orang Tua -->
-            <div class="space-y-3 pt-2">
-                <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="users" class="w-4 h-4"></i> Data Orang Tua
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Ayah -->
-                    <div class="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
-                        <span class="text-xs font-extrabold text-brand-emerald uppercase block">Data Ayah Kandung</span>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div><span class="text-slate-400 font-bold block">Nama:</span> <span id="det-father-name" class="font-semibold text-slate-800">-</span></div>
-                            <div><span class="text-slate-400 font-bold block">NIK:</span> <span id="det-father-nik" class="font-mono text-slate-800">-</span></div>
-                            <div><span class="text-slate-400 font-bold block">No. HP:</span> <span id="det-father-phone" class="font-mono text-slate-800">-</span></div>
-                            <div><span class="text-slate-400 font-bold block">Alamat:</span> <span id="det-father-addr" class="text-slate-800">-</span></div>
+                <!-- Segment 1: Personal Information -->
+                <div class="space-y-4 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                        <i data-lucide="info" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Informasi Pribadi Calon Siswa
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nama Lengkap</span>
+                            <span id="det-name" class="font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
-                    </div>
-                    <!-- Ibu -->
-                    <div class="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
-                        <span class="text-xs font-extrabold text-brand-emerald uppercase block">Data Ibu Kandung</span>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div><span class="text-slate-400 font-bold block">Nama:</span> <span id="det-mother-name" class="font-semibold text-slate-800">-</span></div>
-                            <div><span class="text-slate-400 font-bold block">NIK:</span> <span id="det-mother-nik" class="font-mono text-slate-800">-</span></div>
-                            <div><span class="text-slate-400 font-bold block">No. HP:</span> <span id="det-mother-phone" class="font-mono text-slate-800">-</span></div>
-                            <div><span class="text-slate-400 font-bold block">Alamat:</span> <span id="det-mother-addr" class="text-slate-800">-</span></div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nama Panggilan</span>
+                            <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">NIK Siswa</span>
+                            <span id="det-nik" class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nomor Kartu Keluarga (KK)</span>
+                            <span id="det-family-card-no" class="font-mono text-slate-800 dark:text-slate-100 font-bold text-brand-emerald dark:text-emerald-400 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Jenis Kelamin</span>
+                            <span id="det-gender" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
+                            <span id="det-birth" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Agama</span>
+                            <span id="det-religion" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Asal Sekolah</span>
+                            <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Program Kelas</span>
+                            <span id="det-program" class="font-bold text-brand-emerald dark:text-emerald-400 text-xs">-</span>
+                        </div>
+                        <div class="sm:col-span-2 md:col-span-3 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
+                            <span id="det-extras" class="font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Segment 4: Data Wali -->
-            <div class="space-y-3 pt-2">
-                <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="user-check" class="w-4 h-4"></i> Data Wali (Jika Bukan Orang Tua Kandung)
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-                    <div>
-                        <span class="font-bold text-slate-400 uppercase block">Nama Wali</span>
-                        <span id="det-guardian-name" class="font-semibold text-slate-800">-</span>
+                <!-- Segment 2: Tempat Tinggal -->
+                <div class="space-y-4 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Domisili & Tempat Tinggal
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                        <div class="sm:col-span-2">
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Alamat Jalan</span>
+                            <span id="det-address" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nomor Rumah</span>
+                            <span id="det-house-no" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">RT / RW</span>
+                            <span id="det-rt-rw" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Kelurahan / Desa</span>
+                            <span id="det-kelurahan" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Kecamatan</span>
+                            <span id="det-kecamatan" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Kabupaten / Kota</span>
+                            <span id="det-city" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Provinsi</span>
+                            <span id="det-province" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
                     </div>
-                    <div>
-                        <span class="font-bold text-slate-400 uppercase block">NIK Wali</span>
-                        <span id="det-guardian-nik" class="font-mono text-slate-800">-</span>
+                </div>
+
+                <!-- Segment 3: Data Orang Tua & Wali -->
+                <div class="space-y-4 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                        <i data-lucide="users" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Data Orang Tua & Wali
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Ayah -->
+                        <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                            <span class="text-[11px] font-extrabold text-brand-emerald dark:text-emerald-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-700 pb-2">Data Ayah Kandung</span>
+                            <div class="grid grid-cols-2 gap-3.5 text-xs">
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Nama:</span> <span id="det-father-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">NIK:</span> <span id="det-father-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">No. HP:</span> <span id="det-father-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Alamat:</span> <span id="det-father-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
+                            </div>
+                        </div>
+                        <!-- Ibu -->
+                        <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                            <span class="text-[11px] font-extrabold text-brand-emerald dark:text-emerald-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-700 pb-2">Data Ibu Kandung</span>
+                            <div class="grid grid-cols-2 gap-3.5 text-xs">
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Nama:</span> <span id="det-mother-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">NIK:</span> <span id="det-mother-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">No. HP:</span> <span id="det-mother-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Alamat:</span> <span id="det-mother-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <span class="font-bold text-slate-400 uppercase block">No. HP Wali</span>
-                        <span id="det-guardian-phone" class="font-mono text-slate-800">-</span>
-                    </div>
-                    <div>
-                        <span class="font-bold text-slate-400 uppercase block">Alamat Wali</span>
-                        <span id="det-guardian-addr" class="text-slate-800">-</span>
+                    <!-- Wali -->
+                    <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 mt-4">
+                        <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-700 pb-2">Data Wali (Jika Ada)</span>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 text-xs">
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Nama Wali:</span> <span id="det-guardian-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">NIK Wali:</span> <span id="det-guardian-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">No. HP:</span> <span id="det-guardian-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Alamat:</span> <span id="det-guardian-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Segment 5: Uploaded Documents -->
-            <div class="space-y-3 pt-2">
-                <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Data Lampiran Dokumen
-                </h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- TAB PANE 2: BERKAS & DOKUMEN -->
+            <div id="tab-pane-documents" class="cand-tab-pane hidden space-y-4">
+                <div class="p-4.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">Data Berkas & Dokumen Pendaftaran</h4>
+                        <p class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Seluruh dokumen pendukung yang diunggah oleh wali murid saat melengkapi formulir.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 rounded-xl font-extrabold text-xs border border-emerald-200 dark:border-slate-700 shadow-sm">
+                        Total 6 Berkas
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                     <!-- Foto -->
-                    <div id="det-photo-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="image" class="w-5 h-5 text-brand-emerald"></i>
-                            <div><span class="text-xs font-bold text-slate-700 block">Pas Foto Murid</span><span class="text-[10px] text-slate-400">Formal</span></div>
+                    <div id="det-photo-box" class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex flex-col justify-between space-y-3 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Pas Foto Murid</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Formal Siswa</span>
+                            </div>
                         </div>
-                        <a id="det-photo-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                        <a id="det-photo-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Foto
+                        </a>
                     </div>
+
                     <!-- Akta -->
-                    <div id="det-cert-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="file-digit" class="w-5 h-5 text-brand-emerald"></i>
-                            <div><span class="text-xs font-bold text-slate-700 block">Akta Kelahiran</span><span class="text-[10px] text-slate-400">Scan Asli</span></div>
+                    <div id="det-cert-box" class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex flex-col justify-between space-y-3 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="file-digit" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Akta Kelahiran</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Scan Asli</span>
+                            </div>
                         </div>
-                        <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                        <a id="det-cert-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Akta
+                        </a>
                     </div>
+
                     <!-- KK -->
-                    <div id="det-card-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="file-digit" class="w-5 h-5 text-brand-emerald"></i>
-                            <div><span class="text-xs font-bold text-slate-700 block">Kartu Keluarga</span><span class="text-[10px] text-slate-400">Scan Asli</span></div>
+                    <div id="det-card-box" class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex flex-col justify-between space-y-3 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Kartu Keluarga</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Scan Asli</span>
+                            </div>
                         </div>
-                        <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                        <a id="det-card-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Kartu Keluarga
+                        </a>
                     </div>
+
                     <!-- Ijazah -->
-                    <div id="det-diploma-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="award" class="w-5 h-5 text-brand-emerald"></i>
-                            <div><span class="text-xs font-bold text-slate-700 block">Ijazah Terakhir</span><span class="text-[10px] text-slate-400">Dokumen</span></div>
+                    <div id="det-diploma-box" class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex flex-col justify-between space-y-3 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="award" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Ijazah Terakhir</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Dokumen Kelulusan</span>
+                            </div>
                         </div>
-                        <a id="det-diploma-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                        <a id="det-diploma-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Ijazah
+                        </a>
                     </div>
+
                     <!-- NISN -->
-                    <div id="det-nisn-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="credit-card" class="w-5 h-5 text-brand-emerald"></i>
-                            <div><span class="text-xs font-bold text-slate-700 block">NISN / Kartu Pelajar</span><span class="text-[10px] text-slate-400">Opsional</span></div>
+                    <div id="det-nisn-box" class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex flex-col justify-between space-y-3 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">NISN / Kartu Pelajar</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Identitas Siswa</span>
+                            </div>
                         </div>
-                        <a id="det-nisn-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                        <a id="det-nisn-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Kartu Pelajar
+                        </a>
                     </div>
+
                     <!-- Assesmen Khusus -->
-                    <div id="det-special-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="file-heart" class="w-5 h-5 text-brand-emerald"></i>
-                            <div><span class="text-xs font-bold text-slate-700 block">Assesmen Kebutuhan Khusus</span><span class="text-[10px] text-slate-400">Jika Ada</span></div>
+                    <div id="det-special-box" class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex flex-col justify-between space-y-3 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="file-heart" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Assesmen Khusus</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Kebutuhan Khusus</span>
+                            </div>
                         </div>
-                        <a id="det-special-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                        <a id="det-special-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Assesmen
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB PANE 3: KERINGANAN & KEBIJAKAN CICILAN -->
+            <div id="tab-pane-installment" class="cand-tab-pane hidden space-y-5">
+                <!-- Already Paid Notice (Shown only if candidate is already fully paid) -->
+                <div id="modal_already_paid_notice" class="hidden p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 rounded-2xl text-xs flex items-center gap-3 shadow-sm font-semibold">
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+                    <div>
+                        <span class="font-extrabold block text-[13px] text-emerald-900 dark:text-emerald-100">Tagihan Calon Siswa Telah Lunas</span>
+                        <span class="text-[11px] text-emerald-700 dark:text-emerald-300 font-normal">Seluruh kewajiban biaya masuk telah diselesaikan (Rp 0 sisa tagihan). Pengaturan cicilan sudah tidak berlaku lagi.</span>
+                    </div>
+                </div>
+
+                <div class="p-4.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-extrabold text-xs text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5">
+                            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Persetujuan Keringanan Biaya & Kebijakan Cicilan
+                        </h4>
+                        <p class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Tentukan potongan diskon khusus serta izin pembayaran bertahap (cicilan) untuk calon siswa ini.</p>
+                    </div>
+                    <span id="det-installment-status-badge" class="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-emerald-200 dark:border-slate-700 shadow-sm">
+                        Standar (Lunas)
+                    </span>
+                </div>
+
+                <!-- In-Modal Success Alert Banner -->
+                <div id="modal_installment_success_alert" class="hidden p-4 bg-emerald-600 dark:bg-emerald-700 text-white rounded-2xl text-xs font-bold flex items-center justify-between shadow-md transition-all duration-300">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <div>
+                            <span class="block text-white font-black text-xs">Perubahan Berhasil Disimpan!</span>
+                            <span class="block text-emerald-100 font-normal text-[11px] mt-0.5">Kebijakan diskon & cicilan untuk calon siswa ini telah berhasil diperbarui di sistem.</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('modal_installment_success_alert').classList.add('hidden')" class="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form id="det-installment-form" method="POST" action="" hx-boost="false" onsubmit="window.saveInstallmentSettings(event); return false;" class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-5">
+                    @csrf
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Potongan Diskon -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                                Potongan Biaya (Diskon / Keringanan)
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400 dark:text-slate-500 font-mono">Rp</span>
+                                <input type="number" name="discount_amount" id="modal_discount_amount" min="0" step="50000"
+                                    oninput="recalcModalInstallment()"
+                                    class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    placeholder="0">
+                            </div>
+                        </div>
+
+                        <!-- Catatan Alasan -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                                Alasan / Catatan Persetujuan
+                            </label>
+                            <input type="text" name="discount_notes" id="modal_discount_notes"
+                                class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                placeholder="Misal: Disetujui Yayasan (Anak Guru/Prestasi)">
+                        </div>
+                    </div>
+
+                    <!-- Mode Cicilan -->
+                    <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                            Kebijakan Pembayaran Masuk
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                            <label class="flex items-center gap-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition">
+                                <input type="radio" name="installment_mode" value="none" id="mode_none" onchange="onModalModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                                <div>
+                                    <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Wajib Lunas Sekaligus</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Tidak ada fasilitas cicilan</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition">
+                                <input type="radio" name="installment_mode" value="all" id="mode_all" onchange="onModalModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                                <div>
+                                    <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Cicil Semua (Global)</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Seluruh tagihan boleh dicicil</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition">
+                                <input type="radio" name="installment_mode" value="selective" id="mode_selective" onchange="onModalModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                                <div>
+                                    <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Cicil Komponen Tertentu</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Pilih komponen tertentu</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Selective Fees Checklist Container -->
+                    <div id="modal_selective_fees_container" class="hidden space-y-3 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
+                        <span class="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-300 block mb-1">
+                            Pilih Komponen Biaya Yang Boleh Dicicil:
+                        </span>
+                        <div id="modal_selective_fees_list" class="space-y-2">
+                            <!-- Injected via JavaScript -->
+                        </div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 italic pt-1">
+                            * Komponen yang tidak dicentang otomatis berstatus <strong>Wajib Lunas Awal</strong> (harus dilunasi pada pembayaran pertama).
+                        </p>
+                    </div>
+
+                    <!-- Batas Minimal Sekali Cicil -->
+                    <div id="modal_min_installment_box" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                                Batas Minimal Cicilan per Transaksi
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400 dark:text-slate-500 font-mono">Rp</span>
+                                <input type="number" name="min_installment_amount" id="modal_min_installment_amount" min="0" step="50000"
+                                    oninput="recalcModalInstallment()"
+                                    class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    placeholder="500000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Calculation Summary Box -->
+                    <div class="p-5 bg-emerald-50/80 dark:bg-slate-900/90 rounded-2xl border border-emerald-200 dark:border-slate-700 space-y-2.5 text-xs shadow-sm">
+                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                            <span>Total Biaya Awal (Kotor):</span>
+                            <span id="modal_calc_gross" class="font-mono font-bold text-slate-800 dark:text-slate-100">Rp 0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-rose-600 dark:text-rose-400">
+                            <span>Potongan Diskon:</span>
+                            <span id="modal_calc_discount" class="font-mono font-bold">- Rp 0</span>
+                        </div>
+                        <div class="flex items-center justify-between font-extrabold text-slate-900 dark:text-white border-t border-emerald-200 dark:border-slate-700 pt-2">
+                            <span>Total Tagihan Bersih (Net):</span>
+                            <span id="modal_calc_net" class="font-mono text-emerald-700 dark:text-emerald-400 font-black">Rp 0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-dashed border-emerald-200 dark:border-slate-700 pt-2">
+                            <span>Minimal Pembayaran Transaksi Pertama:</span>
+                            <span id="modal_calc_min_first" class="font-mono font-extrabold text-slate-800 dark:text-emerald-300">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-1">
+                        <button type="button" id="btn-save-installment" onclick="window.saveInstallmentSettings(event)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i> Simpan Kebijakan Keringanan & Cicilan
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAB PANE 4: DATA & RIWAYAT PEMBAYARAN -->
+            <div id="tab-pane-payments" class="cand-tab-pane hidden space-y-6">
+                <!-- Top Summary Banner -->
+                <div class="p-5 bg-gradient-to-r from-slate-900 via-slate-850 to-emerald-950 text-white rounded-2xl border border-emerald-800/40 shadow-sm relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block mb-1">
+                                Status Pelunasan Administrasi Masuk
+                            </span>
+                            <div class="flex items-center gap-2.5">
+                                <h3 id="pay-status-headline" class="text-base font-black text-white">Belum Ada Pembayaran</h3>
+                                <span id="pay-status-pill" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                    Belum Bayar
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <span class="text-[10px] text-slate-400 block">Total Bersih Tagihan:</span>
+                            <span id="pay-total-net-display" class="text-lg font-black text-emerald-300 font-mono">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mt-4 space-y-1.5 relative z-10">
+                        <div class="flex justify-between text-[11px] font-bold">
+                            <span class="text-slate-300">Progres Pembayaran:</span>
+                            <span id="pay-progress-percent" class="text-emerald-300 font-mono">0%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-white/10 rounded-full overflow-hidden p-0.5">
+                            <div id="pay-progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-300 rounded-full transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 Metric Cards Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Total Tagihan Awal</span>
+                        <div class="flex items-baseline gap-1 mt-1">
+                            <span id="pay-gross-amount" class="text-sm font-bold font-mono text-slate-800 dark:text-slate-100">Rp 0</span>
+                        </div>
+                        <span id="pay-discount-sub" class="text-[10px] text-rose-500 font-medium block mt-0.5">Diskon: Rp 0</span>
+                    </div>
+                    <div class="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/50">
+                        <span class="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase block">Sudah Dibayar (Masuk)</span>
+                        <div class="flex items-baseline gap-1 mt-1">
+                            <span id="pay-paid-amount" class="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">Rp 0</span>
+                        </div>
+                        <span id="pay-success-count-sub" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block mt-0.5">0 Transaksi Berhasil</span>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Sisa Tagihan (Tanggungan)</span>
+                        <div class="flex items-baseline gap-1 mt-1">
+                            <span id="pay-remaining-amount" class="text-sm font-bold font-mono text-slate-800 dark:text-slate-100">Rp 0</span>
+                        </div>
+                        <span id="pay-remaining-status-sub" class="text-[10px] text-slate-400 dark:text-slate-400 font-medium block mt-0.5">Wajib Dilunasi</span>
+                    </div>
+                </div>
+
+                <!-- (Card Utama) TRANSAKSI PEMBAYARAN -->
+                <div class="space-y-4 bg-white dark:bg-slate-800/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+                        <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="receipt" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> TRANSAKSI PEMBAYARAN
+                        </h4>
+                        <span id="pay-installment-policy-pill" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                            Kebijakan: Non-Cicil
+                        </span>
+                    </div>
+
+                    <!-- Dynamic Category Cards Container: (card 1) FORMULIR PENDAFTARAN, (card 2) BIAYA ADMINISTRASI, (card 3) BIAYA TAMBAHAN, dst. -->
+                    <div id="pay-dynamic-categories-container" class="space-y-4 pt-1">
+                        <!-- Injected via JavaScript -->
                     </div>
                 </div>
             </div>
@@ -769,20 +1372,23 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex justify-between items-center flex-shrink-0">
+        <div class="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center flex-shrink-0">
             <div>
-                <span class="text-xs font-bold text-slate-400 uppercase block">Tanggal Masuk Formulir</span>
-                <span id="det-created" class="text-xs font-semibold text-slate-600">20 Aug 2026, 03:00 WIB</span>
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block">Tanggal Masuk Formulir</span>
+                <span id="det-created" class="text-xs font-semibold text-slate-600 dark:text-slate-300">20 Aug 2026, 03:00 WIB</span>
             </div>
-            <button onclick="closeDetailModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
-                Tutup Detail
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2 rounded-xl text-xs font-bold transition">
+                    Tutup
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    function renderModalTimeline(cand) {
+(function() {
+    window.renderModalTimeline = function(cand) {
         const status = cand.status.toLowerCase();
         const formPaid = cand.form_paid;
         
@@ -805,7 +1411,7 @@
         } else if (status === 'taaruf_completed') {
             activeStep = 4; // Persetujuan Pernyataan
         } else if (status === 'agreement_signed') {
-            activeStep = 5; // Administrasi Akhir
+            activeStep = 5; // Administrasi
         } else if (status === 'completed') {
             activeStep = 6; // Kelulusan & Selesai
         }
@@ -816,19 +1422,21 @@
             { title: 'Verifikasi', desc: 'Review Panitia' },
             { title: 'Ta\'aruf', desc: 'Observasi & Tes' },
             { title: 'Persetujuan', desc: 'Tanda Tangan Biaya' },
-            { title: 'Daftar Ulang', desc: 'Administrasi Akhir' },
+            { title: 'Administrasi', desc: 'Pelunasan / Cicilan' },
             { title: 'Lulus & Selesai', desc: 'Resmi Diterima' }
         ];
         
         let html = `
-            <div class="space-y-3 bg-slate-50/70 dark:bg-slate-900/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 mb-4">
-                    <i data-lucide="activity" class="w-4 h-4"></i>
-                    Status Progres Pendaftaran Calon Siswa
-                </h4>
-                <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 py-2">
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-extrabold text-[11px] text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                        Status Progres Pendaftaran Calon Siswa
+                    </h4>
+                </div>
+                <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-2 pt-1 pb-0.5">
                     <!-- Progress Line (Desktop) -->
-                    <div class="hidden md:block absolute left-8 right-8 top-[15px] h-1 bg-slate-200 dark:bg-slate-800 -z-10">
+                    <div class="hidden md:block absolute left-8 right-8 top-[15px] h-1 bg-slate-200 dark:bg-slate-800 -z-0">
                         <div class="h-full bg-brand-emerald dark:bg-emerald-500 transition-all duration-500" style="width: ${(activeStep / (steps.length - 1)) * 100}%"></div>
                     </div>
         `;
@@ -894,67 +1502,79 @@
         `;
         
         return html;
-    }
+    };
 
-    function openCandidateDetailModal(cand) {
-        document.getElementById('det-id-label').innerText = 'ID: ' + cand.id_label;
-        document.getElementById('det-period').innerText = cand.period;
-        document.getElementById('det-wave').innerText = cand.wave;
-        document.getElementById('det-type').innerText = cand.type;
+    window.openCandidateDetailModal = function(cand) {
+        const setText = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val !== undefined && val !== null && val !== '' ? val : '-';
+        };
+
+        setText('det-id-label', 'ID: ' + (cand.id_label || '-'));
+        setText('det-status-chip', cand.status || '-');
+        setText('modal-header-cand-name', cand.name || 'Detail Calon Siswa');
+        setText('det-period', cand.period);
+        setText('det-wave', cand.wave);
+        setText('det-type', cand.type);
         
         // Render Timeline Progress
-        document.getElementById('det-timeline-container').innerHTML = renderModalTimeline(cand);
+        const timelineContainer = document.getElementById('det-timeline-container');
+        if (timelineContainer) {
+            timelineContainer.innerHTML = renderModalTimeline(cand);
+        }
         
         // Status Badge Style
         const statusEl = document.getElementById('det-status');
-        statusEl.innerText = cand.status;
-        statusEl.className = "inline-block mt-0.5 px-2 py-0.5 rounded text-xs font-bold uppercase";
-        if (cand.status === 'VERIFIED') {
-            statusEl.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
-        } else if (cand.status === 'SUBMITTED') {
-            statusEl.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
-        } else {
-            statusEl.classList.add('bg-slate-100', 'text-slate-600', 'border', 'border-slate-300');
+        if (statusEl) {
+            statusEl.innerText = cand.status || '-';
+            statusEl.className = "inline-block mt-0.5 px-2 py-0.5 rounded text-xs font-bold uppercase";
+            if (cand.status === 'VERIFIED') {
+                statusEl.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+            } else if (cand.status === 'SUBMITTED') {
+                statusEl.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+            } else {
+                statusEl.classList.add('bg-slate-100', 'text-slate-600', 'border', 'border-slate-300');
+            }
         }
 
-        document.getElementById('det-name').innerText = cand.name || '-';
-        document.getElementById('det-nickname').innerText = cand.nickname || '-';
-        document.getElementById('det-nik').innerText = cand.nik || '-';
-        document.getElementById('det-family-card-no').innerText = cand.family_card_no || '-';
-        document.getElementById('det-gender').innerText = cand.gender || '-';
-        document.getElementById('det-birth').innerText = cand.birth_place + ', ' + cand.birth_date;
-        document.getElementById('det-religion').innerText = cand.religion || '-';
-        document.getElementById('det-previous-school').innerText = cand.previous_school || '-';
-        document.getElementById('det-program').innerText = cand.class_program || 'Reguler';
-        document.getElementById('det-extras').innerText = cand.extra_services || '-';
+        setText('det-name', cand.name);
+        setText('det-nickname', cand.nickname);
+        setText('det-nik', cand.nik);
+        setText('det-family-card-no', cand.family_card_no);
+        setText('det-gender', cand.gender);
+        setText('det-birth', (cand.birth_place || '') + (cand.birth_date ? (', ' + cand.birth_date) : ''));
+        setText('det-religion', cand.religion);
+        setText('det-previous-school', cand.previous_school);
+        setText('det-program', cand.class_program || 'Reguler');
+        setText('det-extras', cand.extra_services);
         
         // Tempat Tinggal
-        document.getElementById('det-address').innerText = cand.address || '-';
-        document.getElementById('det-house-no').innerText = cand.house_number || '-';
-        document.getElementById('det-rt-rw').innerText = (cand.rt !== '-' || cand.rw !== '-') ? (cand.rt + ' / ' + cand.rw) : '-';
-        document.getElementById('det-kelurahan').innerText = cand.kelurahan || '-';
-        document.getElementById('det-kecamatan').innerText = cand.kecamatan || '-';
-        document.getElementById('det-city').innerText = cand.city || '-';
-        document.getElementById('det-province').innerText = cand.province || '-';
+        setText('det-address', cand.address);
+        setText('det-house-no', cand.house_number);
+        setText('det-rt-rw', (cand.rt !== '-' || cand.rw !== '-') ? (cand.rt + ' / ' + cand.rw) : '-');
+        setText('det-kelurahan', cand.kelurahan);
+        setText('det-kecamatan', cand.kecamatan);
+        setText('det-city', cand.city);
+        setText('det-province', cand.province);
 
         // Orang Tua
-        document.getElementById('det-father-name').innerText = cand.father_name || '-';
-        document.getElementById('det-father-nik').innerText = cand.father_nik || '-';
-        document.getElementById('det-father-phone').innerText = cand.father_phone || '-';
-        document.getElementById('det-father-addr').innerText = cand.father_address || '-';
+        setText('det-father-name', cand.father_name);
+        setText('det-father-nik', cand.father_nik);
+        setText('det-father-phone', cand.father_phone);
+        setText('det-father-addr', cand.father_address);
 
-        document.getElementById('det-mother-name').innerText = cand.mother_name || '-';
-        document.getElementById('det-mother-nik').innerText = cand.mother_nik || '-';
-        document.getElementById('det-mother-phone').innerText = cand.mother_phone || '-';
-        document.getElementById('det-mother-addr').innerText = cand.mother_address || '-';
+        setText('det-mother-name', cand.mother_name);
+        setText('det-mother-nik', cand.mother_nik);
+        setText('det-mother-phone', cand.mother_phone);
+        setText('det-mother-addr', cand.mother_address);
 
         // Wali
-        document.getElementById('det-guardian-name').innerText = cand.guardian_name || '-';
-        document.getElementById('det-guardian-nik').innerText = cand.guardian_nik || '-';
-        document.getElementById('det-guardian-phone').innerText = cand.guardian_phone || '-';
-        document.getElementById('det-guardian-addr').innerText = cand.guardian_address || '-';
+        setText('det-guardian-name', cand.guardian_name);
+        setText('det-guardian-nik', cand.guardian_nik);
+        setText('det-guardian-phone', cand.guardian_phone);
+        setText('det-guardian-addr', cand.guardian_address);
         
-        document.getElementById('det-created').innerText = cand.created_at_label;
+        setText('det-created', cand.created_at_label);
 
         // Lampiran Helper
         function setupFileLink(boxId, linkId, url) {
@@ -978,6 +1598,209 @@
         setupFileLink('det-nisn-box', 'det-nisn-link', cand.student_card);
         setupFileLink('det-special-box', 'det-special-link', cand.special_needs);
 
+        // Setup Installment & Discount Settings in Modal
+        window.currentCandData = cand;
+        const formEl = document.getElementById('det-installment-form');
+        if (formEl && cand.save_installment_url) {
+            formEl.action = cand.save_installment_url;
+        }
+
+        // Set values
+        const discountInput = document.getElementById('modal_discount_amount');
+        if (discountInput) discountInput.value = cand.discount_amount ? cand.discount_amount : '';
+        const discountNotesInput = document.getElementById('modal_discount_notes');
+        if (discountNotesInput) discountNotesInput.value = cand.discount_notes || '';
+        const minInstallmentInput = document.getElementById('modal_min_installment_amount');
+        if (minInstallmentInput) minInstallmentInput.value = cand.min_installment_amount ? cand.min_installment_amount : '';
+
+        // Set radio mode
+        const mode = cand.installment_mode || 'none';
+        const modeRadio = document.querySelector(`input[name="installment_mode"][value="${mode}"]`);
+        if (modeRadio) modeRadio.checked = true;
+
+        // Render selective fee checklist
+        const feeListContainer = document.getElementById('modal_selective_fees_list');
+        if (feeListContainer) {
+            feeListContainer.innerHTML = '';
+            const feeItems = cand.fee_items || [];
+            const allowedIds = cand.installment_allowed_fee_ids || [];
+
+            if (feeItems.length === 0) {
+                feeListContainer.innerHTML = '<span class="text-slate-400 italic text-[11px]">Belum ada rincian komponen biaya untuk unit ini.</span>';
+            } else {
+                feeItems.forEach((item, idx) => {
+                    const feeId = item.id || item.name;
+                    const feeName = item.name;
+                    const feeAmt = Number(item.amount) || 0;
+                    
+                    // Check if selected
+                    let isChecked = false;
+                    if (allowedIds.includes(feeId) || allowedIds.includes(feeName) || allowedIds.some(x => String(x).toLowerCase() === feeName.toLowerCase())) {
+                        isChecked = true;
+                    }
+
+                    const itemHtml = `
+                        <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/60 cursor-pointer transition text-xs">
+                            <div class="flex items-center gap-2.5">
+                                <input type="checkbox" name="installment_allowed_fee_ids[]" value="${feeId}" 
+                                    ${isChecked ? 'checked' : ''} 
+                                    onchange="recalcModalInstallment()"
+                                    class="selective-fee-cb rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                                <span class="font-bold text-slate-800 dark:text-slate-100">${feeName}</span>
+                            </div>
+                            <span class="font-mono font-bold text-slate-600 dark:text-slate-300 text-[11px]">Rp ${feeAmt.toLocaleString('id-ID')}</span>
+                        </label>
+                    `;
+                    feeListContainer.insertAdjacentHTML('beforeend', itemHtml);
+                });
+            }
+        }
+
+        // Set header elements
+        document.getElementById('modal-header-cand-name').innerText = cand.name || 'Detail Calon Siswa';
+        document.getElementById('det-status-chip').innerText = cand.status || '-';
+        
+        // Update Tab 3 pill badge (Policy & Discount) - No more confusing "Lunas" label here!
+        const tabInstallmentBadge = document.getElementById('tab-installment-badge');
+        if (tabInstallmentBadge) {
+            if (cand.discount_amount > 0) {
+                tabInstallmentBadge.innerText = 'Diskon Rp ' + (cand.discount_amount/1000).toLocaleString('id-ID') + 'k';
+                tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
+                tabInstallmentBadge.classList.remove('hidden');
+            } else if (cand.installment_mode === 'all') {
+                tabInstallmentBadge.innerText = 'Cicil Global';
+                tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60';
+                tabInstallmentBadge.classList.remove('hidden');
+            } else if (cand.installment_mode === 'selective') {
+                tabInstallmentBadge.innerText = 'Cicil Selektif';
+                tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
+                tabInstallmentBadge.classList.remove('hidden');
+            } else {
+                tabInstallmentBadge.classList.add('hidden');
+            }
+        }
+
+        // Show/hide already paid alert banner on Tab 3
+        const alreadyPaidNotice = document.getElementById('modal_already_paid_notice');
+        if (alreadyPaidNotice) {
+            if (cand.total_paid > 0 && cand.remaining_balance <= 0) {
+                alreadyPaidNotice.classList.remove('hidden');
+            } else {
+                alreadyPaidNotice.classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // TAB 4: DATA & RIWAYAT PEMBAYARAN POPULATION
+        // ==========================================
+        window.updateModalPaymentTab(cand);
+
+        // ==============================================================
+        // RENDER KARTU DINAMIS PER KATEGORI DARI "TARIF & BIAYA"
+        // ==============================================================
+        const dynamicCatContainer = document.getElementById('pay-dynamic-categories-container');
+        if (dynamicCatContainer) {
+            dynamicCatContainer.innerHTML = '';
+            const feeCategories = cand.fee_categories || [];
+
+            if (feeCategories.length === 0) {
+                dynamicCatContainer.innerHTML = '<p class="text-xs text-slate-400 italic py-4 text-center">Belum ada rincian kategori tarif & biaya untuk unit ini.</p>';
+            } else {
+                feeCategories.forEach((cat, idx) => {
+                    let itemsHtml = '';
+
+                    cat.items.forEach(item => {
+                        let statusBadge = '';
+                        if (item.is_paid) {
+                            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Lunas</span>';
+                        } else if (item.status === 'pending') {
+                            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Menunggu</span>';
+                        } else {
+                            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">Belum Dibayar</span>';
+                        }
+
+                        itemsHtml += `
+                            <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2.5 shadow-2xs">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                                        ${item.name}
+                                    </span>
+                                    <div>
+                                        ${statusBadge}
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
+                                    <div>
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">No. Invoice</span>
+                                        <span class="font-mono font-bold ${item.invoice_no !== '-' ? 'text-brand-emerald dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}">${item.invoice_no}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">Metode Pembayaran</span>
+                                        <span class="font-bold text-slate-700 dark:text-slate-200">${item.payment_method}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">Nominal</span>
+                                        <span class="font-mono font-extrabold text-slate-900 dark:text-white">Rp ${item.amount.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">Waktu Pembayaran</span>
+                                        <span class="text-slate-600 dark:text-slate-300 font-medium">${item.paid_time}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    const catCard = `
+                        <div class="p-4.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 space-y-3 shadow-2xs">
+                            <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-2.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-emerald/10 dark:bg-emerald-950/70 text-brand-emerald dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                                        ${cat.category_name}
+                                    </span>
+                                </div>
+                                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                    ${cat.items.length} Komponen Biaya
+                                </span>
+                            </div>
+                            <div class="space-y-2.5">
+                                ${itemsHtml}
+                            </div>
+                        </div>
+                    `;
+
+                    dynamicCatContainer.insertAdjacentHTML('beforeend', catCard);
+                });
+
+                if (!cand.has_agreed_statement) {
+                    const noticeHtml = `
+                        <div class="p-4 rounded-2xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 mt-0.5">
+                                <i data-lucide="info" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-xs space-y-0.5">
+                                <div class="font-extrabold text-amber-900 dark:text-amber-200">Surat Pernyataan Belum Disetujui</div>
+                                <p class="text-amber-700/90 dark:text-amber-400/90 leading-relaxed text-[11px]">
+                                    Tagihan <strong>Biaya Administrasi</strong> dan <strong>Biaya Tambahan</strong> akan otomatis aktif dan diterbitkan setelah orang tua/wali calon siswa menandatangani / menyetujui Surat Pernyataan Kesanggupan Tata Tertib & Biaya Pendidikan.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    dynamicCatContainer.insertAdjacentHTML('beforeend', noticeHtml);
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }
+
+        // Trigger mode UI change & calculation
+        onModalModeChange();
+
+        // Default to first tab
+        switchCandidateTab('biodata');
+
+        // Prevent background page scrolling
+        document.body.style.overflow = 'hidden';
+
         document.getElementById('detailModal').classList.remove('hidden');
         
         if (window.lucide) {
@@ -985,24 +1808,422 @@
         }
     }
 
-    function closeDetailModal() {
-        document.getElementById('detailModal').classList.add('hidden');
-    }
+    window.switchCandidateTab = function(tabId) {
+        // Tab buttons
+        document.querySelectorAll('.cand-tab-btn').forEach(btn => {
+            btn.classList.remove('border-emerald-600', 'text-emerald-700', 'dark:text-emerald-300', 'bg-emerald-50/70', 'dark:bg-emerald-950/60', 'shadow-sm');
+            btn.classList.add('border-transparent', 'text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-200', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+        });
+        
+        // Tab panes
+        document.querySelectorAll('.cand-tab-pane').forEach(pane => {
+            pane.classList.add('hidden');
+        });
 
-    document.getElementById('detailModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeDetailModal();
+        const activeBtn = document.getElementById('tab-btn-' + tabId);
+        const activePane = document.getElementById('tab-pane-' + tabId);
+
+        if (activeBtn) {
+            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-200', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+            activeBtn.classList.add('border-emerald-600', 'text-emerald-700', 'dark:text-emerald-300', 'bg-emerald-50/70', 'dark:bg-emerald-950/60', 'shadow-sm');
         }
-    });
+        if (activePane) {
+            activePane.classList.remove('hidden');
+        }
 
-    // Escape key listener to close detail modal
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const detailModal = document.getElementById('detailModal');
-            if (detailModal && !detailModal.classList.contains('hidden')) {
-                closeDetailModal();
+        // Scroll to top of modal body on tab switch
+        const modalBody = document.getElementById('modalDetailBody');
+        if (modalBody) {
+            modalBody.scrollTop = 0;
+        }
+        
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    };
+
+    window.onModalModeChange = function() {
+        const modeRadio = document.querySelector('input[name="installment_mode"]:checked');
+        const mode = modeRadio ? modeRadio.value : 'none';
+        
+        const selectiveBox = document.getElementById('modal_selective_fees_container');
+        const minInstallmentBox = document.getElementById('modal_min_installment_box');
+        const badge = document.getElementById('det-installment-status-badge');
+
+        if (mode === 'none') {
+            if (selectiveBox) selectiveBox.classList.add('hidden');
+            if (minInstallmentBox) minInstallmentBox.classList.add('hidden');
+            if (badge) {
+                badge.innerText = 'Wajib Lunas';
+                badge.className = 'px-3 py-1 rounded-xl text-[10px] font-extrabold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-emerald-200 dark:border-slate-700 shadow-sm';
+            }
+        } else if (mode === 'all') {
+            if (selectiveBox) selectiveBox.classList.add('hidden');
+            if (minInstallmentBox) minInstallmentBox.classList.remove('hidden');
+            if (badge) {
+                badge.innerText = 'Cicil Global';
+                badge.className = 'px-3 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-sm';
+            }
+        } else if (mode === 'selective') {
+            if (selectiveBox) selectiveBox.classList.remove('hidden');
+            if (minInstallmentBox) minInstallmentBox.classList.remove('hidden');
+            if (badge) {
+                badge.innerText = 'Cicil Selektif';
+                badge.className = 'px-3 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-sm';
             }
         }
-    });
+
+        window.recalcModalInstallment();
+    };
+
+    window.recalcModalInstallment = function() {
+        const candData = window.currentCandData;
+        if (!candData) return;
+
+        const grossFee = Number(candData.gross_fee) || 0;
+        const discountInput = Number(document.getElementById('modal_discount_amount').value) || 0;
+        const netFee = Math.max(0, grossFee - discountInput);
+
+        const modeRadio = document.querySelector('input[name="installment_mode"]:checked');
+        const mode = modeRadio ? modeRadio.value : 'none';
+
+        const minInstallmentInput = Number(document.getElementById('modal_min_installment_amount').value) || 0;
+
+        let minFirstPayment = netFee;
+
+        if (mode === 'none') {
+            minFirstPayment = netFee;
+        } else if (mode === 'all') {
+            const minPart = minInstallmentInput > 0 ? minInstallmentInput : 500000;
+            minFirstPayment = Math.min(netFee, Math.max(1, minPart));
+        } else if (mode === 'selective') {
+            // Sum unchecked mandatory fees
+            const feeItems = candData.fee_items || [];
+            const checkboxes = document.querySelectorAll('.selective-fee-cb');
+            const checkedValues = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+
+            let mandatoryTotal = 0;
+            feeItems.forEach(item => {
+                const feeId = String(item.id || item.name);
+                if (!checkedValues.includes(feeId) && !checkedValues.includes(item.name)) {
+                    mandatoryTotal += Number(item.amount) || 0;
+                }
+            });
+
+            const installmentRemaining = Math.max(0, netFee - mandatoryTotal);
+            const installmentPart = Math.min(installmentRemaining, minInstallmentInput);
+            minFirstPayment = Math.min(netFee, mandatoryTotal + installmentPart);
+        }
+
+        document.getElementById('modal_calc_gross').innerText = 'Rp ' + grossFee.toLocaleString('id-ID');
+        document.getElementById('modal_calc_discount').innerText = '- Rp ' + discountInput.toLocaleString('id-ID');
+        document.getElementById('modal_calc_net').innerText = 'Rp ' + netFee.toLocaleString('id-ID');
+        document.getElementById('modal_calc_min_first').innerText = 'Rp ' + minFirstPayment.toLocaleString('id-ID');
+    };
+
+    window.closeDetailModal = function() {
+        const modal = document.getElementById('detailModal');
+        if (modal) modal.classList.add('hidden');
+        // Restore background page scrolling
+        document.body.style.overflow = '';
+    };
+
+    // Modal click listener
+    const modalEl = document.getElementById('detailModal');
+    if (modalEl && !modalEl.dataset.clickBound) {
+        modalEl.dataset.clickBound = 'true';
+        modalEl.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.closeDetailModal();
+            }
+        });
+    }
+
+    // Escape key listener to close detail modal
+    if (!window._candModalEscapeBound) {
+        window._candModalEscapeBound = true;
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const detailModal = document.getElementById('detailModal');
+                if (detailModal && !detailModal.classList.contains('hidden')) {
+                    window.closeDetailModal();
+                }
+            }
+        });
+    }
+
+    // Update Tab 4 (Data & Riwayat Pembayaran) dynamically
+    window.updateModalPaymentTab = function(cand) {
+        if (!cand) return;
+        const totalGross = Number(cand.all_gross_fee !== undefined ? cand.all_gross_fee : (cand.gross_fee || 0));
+        const discount = Number(cand.discount_amount || 0);
+        const totalNet = Number(cand.all_net_fee !== undefined ? cand.all_net_fee : (cand.net_fee !== undefined ? cand.net_fee : Math.max(0, totalGross - discount)));
+        const totalPaid = Number(cand.all_total_paid !== undefined ? cand.all_total_paid : (cand.total_paid || 0));
+        const remaining = Number(cand.all_remaining_balance !== undefined ? cand.all_remaining_balance : (cand.remaining_balance !== undefined ? cand.remaining_balance : Math.max(0, totalNet - totalPaid)));
+        const percent = totalNet > 0 ? Math.min(100, Math.round((totalPaid / totalNet) * 100)) : (totalPaid > 0 ? 100 : 0);
+        const paidItemsCount = cand.all_paid_items_count !== undefined ? cand.all_paid_items_count : ((cand.payments || []).filter(p => p.status === 'success' || p.status === 'settled').length);
+
+        // Fill Metrics
+        const netEl = document.getElementById('pay-total-net-display');
+        if (netEl) netEl.innerText = 'Rp ' + totalNet.toLocaleString('id-ID');
+        const grossEl = document.getElementById('pay-gross-amount');
+        if (grossEl) grossEl.innerText = 'Rp ' + totalGross.toLocaleString('id-ID');
+        const discEl = document.getElementById('pay-discount-sub');
+        if (discEl) discEl.innerText = discount > 0 ? ('Potongan Diskon: - Rp ' + discount.toLocaleString('id-ID')) : 'Diskon: Rp 0';
+        const paidEl = document.getElementById('pay-paid-amount');
+        if (paidEl) paidEl.innerText = 'Rp ' + totalPaid.toLocaleString('id-ID');
+        const remEl = document.getElementById('pay-remaining-amount');
+        if (remEl) remEl.innerText = 'Rp ' + remaining.toLocaleString('id-ID');
+        const countEl = document.getElementById('pay-success-count-sub');
+        if (countEl) countEl.innerText = paidItemsCount + ' Komponen Terbayar';
+
+        // Progress Bar
+        const progressBar = document.getElementById('pay-progress-bar');
+        const progressPercent = document.getElementById('pay-progress-percent');
+        if (progressPercent) progressPercent.innerText = percent + '%';
+        if (progressBar) progressBar.style.width = percent + '%';
+
+        // Status Headlines & Badges
+        const headlineEl = document.getElementById('pay-status-headline');
+        const statusPill = document.getElementById('pay-status-pill');
+        const remStatusSub = document.getElementById('pay-remaining-status-sub');
+        const tabPaymentsBadge = document.getElementById('tab-payments-badge');
+
+        if (remaining <= 0 && totalPaid > 0) {
+            if (headlineEl) headlineEl.innerText = 'Tagihan Lunas Sepenuhnya (100%)';
+            if (statusPill) {
+                statusPill.innerText = '100% LUNAS';
+                statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            }
+            if (remStatusSub) {
+                remStatusSub.innerText = 'Tidak Ada Sisa Tanggungan';
+                remStatusSub.className = 'text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5';
+            }
+            if (tabPaymentsBadge) {
+                tabPaymentsBadge.innerText = '100%';
+                tabPaymentsBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
+            }
+        } else if (totalPaid > 0) {
+            if (headlineEl) headlineEl.innerText = 'Pembayaran Bertahap (' + percent + '%)';
+            if (statusPill) {
+                statusPill.innerText = percent + '% TERBAYAR';
+                statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30';
+            }
+            if (remStatusSub) {
+                remStatusSub.innerText = 'Sisa: Rp ' + remaining.toLocaleString('id-ID');
+                remStatusSub.className = 'text-[10px] text-amber-600 dark:text-amber-400 font-bold block mt-0.5';
+            }
+            if (tabPaymentsBadge) {
+                tabPaymentsBadge.innerText = percent + '%';
+                tabPaymentsBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60';
+            }
+        } else {
+            if (headlineEl) headlineEl.innerText = 'Belum Ada Pembayaran Masuk';
+            if (statusPill) {
+                statusPill.innerText = '0% (BELUM BAYAR)';
+                statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            }
+            if (remStatusSub) {
+                remStatusSub.innerText = 'Wajib Dilunasi';
+                remStatusSub.className = 'text-[10px] text-slate-400 dark:text-slate-400 font-medium block mt-0.5';
+            }
+            if (tabPaymentsBadge) {
+                tabPaymentsBadge.innerText = '0%';
+                tabPaymentsBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700';
+            }
+        }
+
+        // Policy Pill
+        const policyPill = document.getElementById('pay-installment-policy-pill');
+        if (policyPill) {
+            if (cand.installment_mode === 'all') {
+                policyPill.innerText = 'Kebijakan: Cicil Semua Komponen';
+            } else if (cand.installment_mode === 'selective') {
+                policyPill.innerText = 'Kebijakan: Cicil Selektif';
+            } else {
+                policyPill.innerText = 'Kebijakan: Non-Cicil (Wajib Lunas Sekaligus)';
+            }
+        }
+
+        // Show/hide already paid alert banner on Tab 3
+        const alreadyPaidNotice = document.getElementById('modal_already_paid_notice');
+        if (alreadyPaidNotice) {
+            if (totalPaid > 0 && remaining <= 0) {
+                alreadyPaidNotice.classList.remove('hidden');
+            } else {
+                alreadyPaidNotice.classList.add('hidden');
+            }
+        }
+    };
+
+    // Handle AJAX Save for Installment & Discount Settings
+    window.saveInstallmentSettings = function(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const form = document.getElementById('det-installment-form');
+        if (!form) return;
+
+        const actionUrl = form.action || (window.currentCandData ? window.currentCandData.save_installment_url : '');
+        
+        if (!actionUrl) {
+            alert('Gagal menyimpan: URL aksi tidak ditemukan.');
+            return;
+        }
+
+        const formData = new FormData(form);
+        const submitBtn = document.getElementById('btn-save-installment') || form.querySelector('button[type="submit"]');
+        const originalContent = submitBtn ? submitBtn.innerHTML : '';
+        
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5"><svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...</span>';
+        }
+
+        fetch(actionUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP error ' + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                if (window.currentCandData && data.data) {
+                    const gross = Number(window.currentCandData.all_gross_fee !== undefined ? window.currentCandData.all_gross_fee : window.currentCandData.gross_fee) || Number(data.data.gross_fee) || 0;
+                    const disc = Number(data.data.discount_amount) || 0;
+                    const net = Math.max(0, gross - disc);
+                    const paid = Number(window.currentCandData.all_total_paid !== undefined ? window.currentCandData.all_total_paid : window.currentCandData.total_paid) || Number(data.data.total_paid) || 0;
+                    const rem = Math.max(0, net - paid);
+
+                    window.currentCandData.discount_amount = disc;
+                    window.currentCandData.discount_notes = data.data.discount_notes;
+                    window.currentCandData.installment_mode = data.data.installment_mode;
+                    window.currentCandData.installment_allowed_fee_ids = data.data.installment_allowed_fee_ids;
+                    window.currentCandData.min_installment_amount = data.data.min_installment_amount;
+                    window.currentCandData.gross_fee = gross;
+                    window.currentCandData.all_gross_fee = gross;
+                    window.currentCandData.net_fee = net;
+                    window.currentCandData.all_net_fee = net;
+                    window.currentCandData.total_paid = paid;
+                    window.currentCandData.all_total_paid = paid;
+                    window.currentCandData.remaining_balance = rem;
+                    window.currentCandData.all_remaining_balance = rem;
+                }
+
+                // 1. Live update Tab 3 pill badge
+                const tabInstallmentBadge = document.getElementById('tab-installment-badge');
+                if (tabInstallmentBadge && data.data) {
+                    if (data.data.discount_amount > 0) {
+                        tabInstallmentBadge.innerText = 'Diskon Rp ' + (data.data.discount_amount/1000).toLocaleString('id-ID') + 'k';
+                        tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
+                        tabInstallmentBadge.classList.remove('hidden');
+                    } else if (data.data.installment_mode === 'all') {
+                        tabInstallmentBadge.innerText = 'Cicil Global';
+                        tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60';
+                        tabInstallmentBadge.classList.remove('hidden');
+                    } else if (data.data.installment_mode === 'selective') {
+                        tabInstallmentBadge.innerText = 'Cicil Selektif';
+                        tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
+                        tabInstallmentBadge.classList.remove('hidden');
+                    } else {
+                        tabInstallmentBadge.classList.add('hidden');
+                    }
+                }
+
+                // 2. Live recalculate Tab 3 summary box & mode UI
+                window.recalcModalInstallment();
+                window.onModalModeChange();
+
+                // 3. Live update Tab 4 Data & Riwayat Pembayaran metrics
+                window.updateModalPaymentTab(window.currentCandData);
+
+                // 4. Update the background table button onclick so next click uses updated data immediately
+                if (data.data && data.data.id) {
+                    const candBtn = document.getElementById('cand-btn-' + data.data.id);
+                    if (candBtn && window.currentCandData) {
+                        const updatedDataCopy = JSON.parse(JSON.stringify(window.currentCandData));
+                        candBtn.onclick = function() {
+                            window.openCandidateDetailModal(updatedDataCopy);
+                        };
+                    }
+                }
+
+                // 5. Show in-modal alert banner
+                const modalAlert = document.getElementById('modal_installment_success_alert');
+                if (modalAlert) {
+                    modalAlert.classList.remove('hidden');
+                    // Scroll to alert inside modal
+                    const modalBody = document.getElementById('modalDetailBody');
+                    if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+
+                // 6. Show prominent top-center floating toast
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-8 left-1/2 -translate-x-1/2 z-[99999] bg-emerald-800 text-white px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-400/50 text-xs font-bold transition-all duration-300 transform -translate-y-4 opacity-0';
+                toast.innerHTML = `
+                    <div class="w-7 h-7 rounded-xl bg-emerald-500/40 flex items-center justify-center flex-shrink-0 text-emerald-200">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-200"></i>
+                    </div>
+                    <div>
+                        <div class="font-extrabold text-white text-xs">Berhasil Disimpan!</div>
+                        <div class="text-[11px] text-emerald-200 font-medium">${data.message || 'Pengaturan keringanan & cicilan berhasil diperbarui.'}</div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                if (window.lucide) lucide.createIcons();
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    toast.classList.remove('-translate-y-4', 'opacity-0');
+                    toast.classList.add('translate-y-0', 'opacity-100');
+                });
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('-translate-y-4', 'opacity-0');
+                    setTimeout(() => toast.remove(), 400);
+                }, 3500);
+
+                // 7. Temporary button success state
+                if (submitBtn) {
+                    submitBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                    submitBtn.classList.add('bg-emerald-700');
+                    submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5"><i data-lucide="check" class="w-4 h-4 text-white"></i> Tersimpan!</span>';
+                    if (window.lucide) lucide.createIcons();
+                }
+
+                // 8. Trigger partial HTMX refresh on candidate table
+                const filterForm = document.getElementById('candidateFilterForm');
+                if (filterForm && window.htmx) {
+                    htmx.trigger(filterForm, 'submit');
+                }
+            } else {
+                alert('Gagal: ' + (data.message || 'Terjadi kesalahan saat menyimpan'));
+            }
+        })
+        .catch(err => {
+            console.error('Save installment error:', err);
+            alert('Gagal menyimpan: ' + err.message);
+        })
+        .finally(() => {
+            setTimeout(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('bg-emerald-700');
+                    submitBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                    submitBtn.innerHTML = originalContent;
+                    if (window.lucide) lucide.createIcons();
+                }
+            }, 1500);
+        });
+    };
+})();
 </script>
 @endsection

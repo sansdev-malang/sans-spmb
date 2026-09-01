@@ -458,7 +458,7 @@
 
                             <!-- Rincian Biaya Table -->
                             <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2.5 text-xs mb-6">
-                                @if(isset($finalDetails['items']) && is_array($finalDetails['items']))
+                                @if(isset($finalDetails['items']) && is_array($finalDetails['items']) && count($finalDetails['items']) > 0)
                                     @foreach($finalDetails['items'] as $item)
                                         <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                                             <span>{{ $item['name'] }}</span>
@@ -467,20 +467,8 @@
                                     @endforeach
                                 @else
                                     <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                        <span>Uang Gedung</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalDetails['uang_gedung'] ?? 0, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                        <span>Uang Seragam</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalDetails['seragam'] ?? 0, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                        <span>SPP Mulai Juli</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalDetails['spp'] ?? 0, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                        <span>Uang Kegiatan</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalDetails['kegiatan'] ?? 0, 0, ',', '.') }}</span>
+                                        <span>Total Tagihan Administrasi</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalDetails['total'] ?? 0, 0, ',', '.') }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -711,7 +699,7 @@
 
                     <!-- Final Fee Breakdowns -->
                     <div class="space-y-2.5 text-[11px] text-slate-655 dark:text-slate-355">
-                        @if(isset($finalFees['items']) && is_array($finalFees['items']))
+                        @if(isset($finalFees['items']) && is_array($finalFees['items']) && count($finalFees['items']) > 0)
                             @foreach($finalFees['items'] as $item)
                                 <div class="flex justify-between items-center">
                                     <span>{{ $item['name'] }}</span>
@@ -720,30 +708,37 @@
                             @endforeach
                         @else
                             <div class="flex justify-between items-center">
-                                <span>Uang Gedung</span>
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalFees['uang_gedung'] ?? 0, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>Biaya Seragam</span>
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalFees['seragam'] ?? 0, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>SPP Mulai Juli</span>
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalFees['spp'] ?? 0, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>Uang Kegiatan</span>
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalFees['kegiatan'] ?? 0, 0, ',', '.') }}</span>
+                                <span>Total Biaya Administrasi</span>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalFees['total'] ?? 0, 0, ',', '.') }}</span>
                             </div>
                         @endif
+
+                        @if(($registration->discount_amount ?? 0) > 0)
+                            <div class="flex justify-between items-center text-rose-600 dark:text-rose-400 border-t border-slate-100 dark:border-slate-800 pt-1.5 text-[11px]">
+                                <span>Potongan Keringanan</span>
+                                <span class="font-bold">- Rp {{ number_format($registration->discount_amount, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
+                        @if(($registration->total_paid_final_fee ?? 0) > 0)
+                            <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 border-t border-slate-100 dark:border-slate-800 pt-1.5 text-[11px]">
+                                <span>Telah Dibayar</span>
+                                <span class="font-bold">Rp {{ number_format($registration->total_paid_final_fee, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
                         <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5 flex justify-between items-center font-extrabold text-slate-800 dark:text-white uppercase">
-                            <span>Total Administrasi</span>
-                            <span class="text-brand-emerald dark:text-emerald-400">Rp {{ number_format($finalFees['total'], 0, ',', '.') }}</span>
+                            <span>{{ ($registration->total_paid_final_fee ?? 0) > 0 ? 'Sisa Tagihan' : 'Total Tagihan' }}</span>
+                            <span class="text-brand-emerald dark:text-emerald-400">Rp {{ number_format($registration->remaining_balance ?: $registration->net_fee ?: $finalFees['total'], 0, ',', '.') }}</span>
                         </div>
                         <div class="pt-2">
-                            @if($registration->payment_status === 'paid')
+                            @if($registration->payment_status === 'paid' || $registration->registration_status === 'completed')
                                 <span class="w-full text-center py-1 bg-green-50 dark:bg-green-950/20 text-green-600 border border-green-200 dark:border-green-900/50 rounded-lg text-[9px] font-bold block uppercase tracking-wider">
                                     Lunas
+                                </span>
+                            @elseif($registration->payment_status === 'partially_paid' || ($registration->total_paid_final_fee ?? 0) > 0)
+                                <span class="w-full text-center py-1 bg-blue-50 dark:bg-blue-950/20 text-blue-600 border border-blue-200 dark:border-blue-900/50 rounded-lg text-[9px] font-bold block uppercase tracking-wider">
+                                    Cicilan Berjalan
                                 </span>
                             @else
                                 <span class="w-full text-center py-1 bg-amber-50 dark:bg-amber-950/20 text-amber-600 border border-amber-200 dark:border-amber-900/50 rounded-lg text-[9px] font-bold block uppercase tracking-wider">

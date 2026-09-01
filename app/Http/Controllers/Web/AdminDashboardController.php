@@ -271,4 +271,61 @@ class AdminDashboardController extends Controller
 
         return view('admin.activity-logs', compact('logs', 'actionTypes'));
     }
+
+    public function updateInstallmentSettings(Request $request, $id)
+    {
+        $registration = Registration::scopedByAdmin()->findOrFail($id);
+
+        $validated = $request->validate([
+            'discount_amount' => 'nullable|numeric|min:0',
+            'discount_notes' => 'nullable|string|max:255',
+            'installment_mode' => 'required|in:none,all,selective',
+            'installment_allowed_fee_ids' => 'nullable|array',
+            'min_installment_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        $mode = $validated['installment_mode'];
+        $allowedFeeIds = ($mode === 'selective') ? ($validated['installment_allowed_fee_ids'] ?? []) : null;
+
+        $registration->update([
+            'discount_amount' => $validated['discount_amount'] ?? 0,
+            'discount_notes' => $validated['discount_notes'] ?? null,
+            'installment_mode' => $mode,
+            'installment_allowed_fee_ids' => $allowedFeeIds,
+            'min_installment_amount' => $validated['min_installment_amount'] ?? 0,
+            'installment_approved_by' => auth()->id(),
+            'installment_approved_at' => now(),
+        ]);
+
+        $registration->refresh();
+        $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;
+        SpmbActivityLog::log(
+            'UPDATE_INSTALLMENT_SETTINGS', 
+            "Memperbarui kebijakan keringanan/cicilan untuk ananda {$candidateName} (Diskon: Rp " . number_format($registration->discount_amount, 0, ',', '.') . ", Mode: {$mode})"
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pengaturan keringanan & kebijakan cicilan calon siswa berhasil disimpan.',
+                'data' => [
+                    'id' => $registration->id,
+                    'discount_amount' => (float) $registration->discount_amount,
+                    'discount_notes' => $registration->discount_notes,
+                    'installment_mode' => $registration->installment_mode,
+                    'installment_allowed_fee_ids' => $registration->installment_allowed_fee_ids,
+                    'min_installment_amount' => (float) $registration->min_installment_amount,
+                    'gross_fee' => (float) $registration->total_gross_final_fee,
+                    'net_fee' => (float) $registration->net_final_fee,
+                    'total_paid' => (float) $registration->total_paid_final_fee,
+                    'remaining_balance' => (float) $registration->remaining_final_fee,
+                    'is_fully_paid' => (bool) ($registration->remaining_final_fee <= 0),
+                    'paid_percentage' => $registration->net_final_fee > 0 ? min(100, round(($registration->total_paid_final_fee / $registration->net_final_fee) * 100)) : 100,
+                ]
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Pengaturan keringanan & kebijakan cicilan calon siswa berhasil disimpan.');
+    }
 }
+

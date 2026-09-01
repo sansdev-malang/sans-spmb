@@ -1,102 +1,199 @@
 # Rencana Implementasi: Sistem Keringanan & Cicilan Pembayaran SPMB
-Dokumen ini disusun sebagai panduan diskusi bersama pimpinan yayasan/sekolah untuk menentukan arah implementasi teknis fitur **Keringanan Potongan Biaya & Pembayaran Dicicil** pada sistem SPMB Sekolah Anak Saleh.
+Dokumen ini disusun sebagai spesifikasi teknis dan panduan implementasi fitur **Keringanan Potongan Biaya & Kebijakan Pembayaran Dicicil (Model Hibrida Fleksibel)** pada sistem SPMB Sekolah Anak Saleh.
 
 ---
 
-## 1. Latar Belakang & Tujuan
-Pada kondisi riil di lapangan, terdapat calon wali murid yang mengajukan permohonan keringanan biaya (potongan) atau pengajuan untuk mencicil biaya administrasi akhir (DSP) kepada pihak sekolah/yayasan. 
-Jika pengajuan disetujui, sistem harus dapat:
-* Memotong total tagihan secara nominal sesuai nominal keringanan yang disetujui.
-* Mengizinkan wali murid membayar biaya tersebut secara bertahap (dicicil) melalui Portal Pendaftar menggunakan Payment Gateway (Winpay), dengan batas minimal pembayaran yang ditentukan oleh administrator.
+## 1. Latar Belakang & Kebutuhan Lapangan
+
+Pada penerimaan siswa baru, pihak sekolah/yayasan seringkali menghadapi kondisi khusus calon wali murid:
+1. **Permohonan Keringanan (Diskon/Potongan)**: Mendapatkan potongan biaya karena prestasi, anak guru/karyawan, keluarga tidak mampu, atau kebijakan pimpinan yayasan.
+2. **Kebutuhan Cicilan Biaya Masuk (DSP/Pangkal)**: Wali murid mengajukan permohonan untuk mencicil biaya masuk dalam beberapa kali pembayaran.
+3. **Karakteristik Komponen Biaya Sekolah**:
+   * **Biaya Wajib Lunas di Awal**: Biaya operasional fisik seperti *Seragam, Buku/Modul, dan Perlengkapan* harus segera dibelanjakan ke vendor/konveksi sehingga **tidak boleh dicicil**.
+   * **Biaya yang Boleh Dicicil**: Biaya investasi/pengembangan seperti *Uang Gedung (DSP) atau Infaq Pembangunan* **diizinkan dicicil** hingga batas waktu yang disepakati.
+
+Sistem harus mampu mengakomodasi kebutuhan di atas secara **fleksibel, aman, transparan bagi wali murid**, dan **tidak membebani wali murid dengan biaya admin gateway yang berulang-ulang**.
 
 ---
 
-## 2. Pilihan Pendekatan Alokasi Pembayaran
+## 2. Arsitektur Model Hibrida (Fleksibel: Global & Per Komponen)
 
-Untuk mekanisme cicilan dinamis (Opsi A), terdapat 2 variasi metode pencatatan yang dapat dipilih oleh pimpinan:
+Sistem mengadopsi pendekatan **Model Hibrida Terintegrasi**:
 
-### Rangkuman Perbandingan Pilihan
-| Kriteria | Opsi A1: Dicicil Per Nama Biaya (Gedung, Seragam, dll) | Opsi A2: Dicicil Terhadap Total Tagihan Global |
-| :--- | :--- | :--- |
-| **Kemudahan Wali Murid** | ⚠️ Cukup rumit (harus memilih item mana yang dicicil). | **Sangat Mudah** (tinggal bayar nominal, sisa tagihan langsung berkurang). |
-| **Biaya Transaksi (Admin Fee)** | ⚠️ Boros (terkena charge Winpay berkali-kali untuk item berbeda). | **Lebih Hemat** (transaksi dapat digabung dalam satu kali bayar). |
-| **Alokasi Kas Sekolah** | **Sangat Rapi** (sistem langsung memisahkan kas Gedung/Seragam). | **Perlu Aturan Tambahan** (kas dibagi otomatis di backend secara proporsional). |
-| **Kompleksitas Teknis** | Tinggi (harus melacak status pelunasan per baris biaya). | Rendah (cukup melacak sisa saldo tagihan pendaftaran). |
-
----
-
-### Opsi A1: Pembayaran Cicilan Per Item Biaya (Component-Level)
-Sistem melacak pelunasan pada setiap nama biaya secara independen.
-
-* **Cara Kerja:**
-  Wali murid masuk ke Portal, melihat daftar biaya (misal: Uang Gedung Rp 3.500.000, Seragam Rp 1.500.000). Mereka mencentang opsi "Cicil" di samping masing-masing biaya, memasukkan nominal cicilan untuk Uang Gedung (misal: Rp 1.500.000) dan nominal untuk Seragam (misal: Rp 500.000), lalu menekan bayar.
-* **Database Schema:**
-  Dibutuhkan tabel pivot pembayaran detail `payment_details` untuk merekam alokasi nominal transaksi masuk terhadap masing-masing ID komponen biaya (`spmb_fee_id`).
-
----
-
-### Opsi A2: Pembayaran Cicilan Terhadap Total Tagihan (Lump-Sum Balance) -- *Rekomendasi Tim Teknis*
-Sistem menggabungkan seluruh komponen biaya menjadi satu nilai tagihan utuh, lalu wali murid mencicil saldo tagihan global tersebut.
-
-* **Cara Kerja:**
-  Wali murid melihat total tagihan akhir mereka adalah Rp 5.000.000. Mereka memilih opsi "Bayar Sebagian (Cicil)", memasukkan angka pembayaran (misal: Rp 2.000.000), lalu membayar. Sisa tagihan otomatis berkurang menjadi Rp 3.000.000.
-* **Alokasi Otomatis (Backend Priority):**
-  Untuk kebutuhan pembukuan sekolah, sistem di backend akan otomatis membagi uang masuk Rp 2.000.000 tersebut dengan prioritas pelunasan item tertentu terlebih dahulu (misalnya: melunasi Seragam & Buku dulu sebesar Rp 1.500.000, sisanya Rp 500.000 dialokasikan ke Uang Gedung).
-* **Database Schema:**
-  Sederhana. Hanya perlu menambahkan kolom potongan (`discount_amount`) dan status cicilan di tabel `registrations` untuk divalidasi saat transaksi Winpay sukses.
-
----
-
-## 3. Konsep UI/UX (Rancangan Tampilan)
-
-### A. Sisi Admin Panel (Kelola Pendaftar)
-Pada halaman detail pendaftar di admin panel, akan ditambahkan bagian **"Keringanan & Pembayaran"**:
 ```
-+-------------------------------------------------------------+
-| PENYESUAIAN BIAYA & KERINGANAN                              |
-+-------------------------------------------------------------+
-| Potongan Biaya (Diskon): [ Rp 1.000.000                  ]  |
-| Alasan Keringanan:      [ Disetujui Yayasan (Anak Guru)  ]  |
-|                                                             |
-| [X] Izinkan Pembayaran Dicicil                              |
-| Minimal Pembayaran Sekali Cicil: [ Rp 1.000.000          ]  |
-+-------------------------------------------------------------+
-| Ringkasan Baru:                                             |
-| - Biaya Awal:    Rp 6.000.000                               |
-| - Potongan:     (Rp 1.000.000)                              |
-| - Total Tagihan: Rp 5.000.000                               |
-+-------------------------------------------------------------+
-|                                              [ Simpan Data ]|
-+-------------------------------------------------------------+
++-----------------------------------------------------------------------------------+
+|                            ADMINISTRASI / KEUANGAN                                |
+|  - Menentukan Potongan Biaya (Diskon) & Alasan                                    |
+|  - Memilih Mode Cicilan: [Tidak Dicicil] | [Cicil Global] | [Cicil Biaya Tertentu]|
+|  - Menentukan Minimal Nominal Cicilan per Transaksi (Misal: Rp 1.000.000)         |
++-----------------------------------------+-----------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+|                             PORTAL WALI MURID                                     |
+|  - Rincian Biaya: Menampilkan tanda [Wajib Lunas] dan [Boleh Dicicil]             |
+|  - Pembayaran 1 Kali Transaksi Winpay (Hemat Biaya Admin Fee)                     |
+|  - Input Nominal Cicilan (Divalidasi >= Batas Minimal Pembayaran Awal)            |
++-----------------------------------------+-----------------------------------------+
+                                          |
+                                          v
++-----------------------------------------------------------------------------------+
+|                        BACKEND WATERFALL ALLOCATION & STATUS                      |
+|  - Pembayaran sukses masuk -> Prioritas melunasi [Biaya Wajib] lebih dulu         |
+|  - Sisa dana dialokasikan mengurangi saldo [Biaya Boleh Dicicil]                  |
+|  - Status: Sisa > 0 -> 'partially_paid' | Sisa = 0 -> 'paid / completed'          |
++-----------------------------------------------------------------------------------+
 ```
+
+### Keunggulan Utama Model Ini:
+1. **Satu Transaksi Pembayaran (Single Invoice)**: Wali murid tidak perlu membuat invoice terpisah untuk seragam dan gedung. Cukup satu invoice pembayaran Winpay.
+2. **Otomatisasi Kas Keuangan**: Sistem backend secara transparan mendistribusikan uang masuk ke pos kas yang tepat (pos seragam terisi penuh duluan, lalu pos gedung berkurang bertahap).
+3. **Kontrol Penuh Admin**: Fleksibel untuk diterapkan pada kasus per kasus pendaftar sesuai persetujuan pimpinan yayasan.
+
+---
+
+## 3. Desain Tampilan (UI/UX)
+
+### A. Sisi Admin Panel (Detail Pendaftar SPMB)
+Pada tab/bagian administrasi keuangan calon siswa di admin panel:
+
+```
++---------------------------------------------------------------------------------+
+| PENYESUAIAN BIAYA & KEBIJAKAN KERINGANAN                                        |
++---------------------------------------------------------------------------------+
+| Potongan Biaya (Diskon): [ Rp 1.000.000                  ]                      |
+| Catatan / Alasan:       [ Disetujui Yayasan - Keringanan Anak Guru            ] |
+|                                                                                 |
+| Kebijakan Pembayaran:                                                           |
+| ( ) Wajib Lunas Sekaligus (Standar)                                             |
+| ( ) Boleh Dicicil Seluruh Komponen Biaya (Global)                               |
+| (o) Boleh Dicicil Pada Komponen Tertentu:                                       |
+|                                                                                 |
+|   Komponen Biaya          Nominal        Kebijakan Cicilan                      |
+|   ---------------------------------------------------------------------------   |
+|   1. Formulir & Asesmen   Rp   300.000   [ ] Wajib Lunas Awal                   |
+|   2. Seragam & Modul      Rp 1.500.000   [ ] Wajib Lunas Awal                   |
+|   3. Uang Gedung (DSP)    Rp 4.000.000   [X] Diizinkan Dicicil                  |
+|                                                                                 |
+| Batas Minimal Cicilan per Transaksi: [ Rp 1.000.000      ]                      |
++---------------------------------------------------------------------------------+
+| Ringkasan Perhitungan:                                                          |
+| - Total Biaya Awal:        Rp 5.800.000                                         |
+| - Potongan Diskon:        (Rp 1.000.000)                                        |
+| - Total Tagihan Bersih:    Rp 4.800.000                                         |
+| - Biaya Wajib Lunas Awal:  Rp 1.800.000                                         |
+| - Minimal Pembayaran Ke-1: Rp 2.800.000 (Wajib Lunas + Minimal Cicilan Gedung)  |
++---------------------------------------------------------------------------------+
+|                                                   [ Simpan Pengaturan Biaya ]   |
++---------------------------------------------------------------------------------+
+```
+
+---
 
 ### B. Sisi Portal Pendaftar (Wali Murid)
-Tampilan pada halaman pembayaran akhir wali murid setelah disetujui dicicil:
+Halaman pembayaran calon siswa di portal pendaftar yang mendapatkan persetujuan cicilan:
+
 ```
-+-------------------------------------------------------------+
-| DETAIL PEMBAYARAN BIAYA ADMINISTRASI                        |
-+-------------------------------------------------------------+
-| 💡 Selamat, Anda disetujui mendapat keringanan potongan     |
-|    sebesar Rp 1.000.000 & diizinkan mencicil pembayaran.    |
-+-------------------------------------------------------------+
-| - Total Tagihan: Rp 5.000.000                              |
-| - Telah Dibayar: Rp 2.000.000                              |
-| - Sisa Tagihan:  Rp 3.000.000                              |
-+-------------------------------------------------------------+
-| PILIH METODE BAYAR:                                         |
-| ( ) Bayar Lunas Sisa Tagihan (Rp 3.000.000)                 |
-| (o) Bayar Sebagian (Cicil)                                  |
-|     Nominal Bayar: [ Rp 1.500.000                       ]   |
-|     * Batas minimal cicilan sekali bayar: Rp 1.000.000      |
-+-------------------------------------------------------------+
-|                                           [ PROSES BAYAR  ] |
-+-------------------------------------------------------------+
++---------------------------------------------------------------------------------+
+| INFORMASI TAGIHAN & PEMBAYARAN MASUK                                            |
++---------------------------------------------------------------------------------+
+| 💡 Selamat! Anda telah disetujui mendapatkan Keringanan Biaya sebesar           |
+|    Rp 1.000.000 dan diizinkan melakukan pembayaran bertahap (cicilan).          |
++---------------------------------------------------------------------------------+
+| RINCIAN KOMPONEN BIAYA:                                                         |
+| • Formulir & Asesmen:   Rp   300.000   [🔒 Wajib Lunas Awal]                    |
+| • Seragam & Modul:      Rp 1.500.000   [🔒 Wajib Lunas Awal]                    |
+| • Uang Gedung (DSP):    Rp 3.000.000   [🔓 Diizinkan Dicicil] (Setelah Potongan)|
+| ------------------------------------------------------------------------------- |
+| Total Tagihan Bersih:   Rp 4.800.000                                            |
+| Total Telah Terbayar:   Rp         0                                            |
+| Sisa Tagihan Saat Ini:  Rp 4.800.000                                            |
++---------------------------------------------------------------------------------+
+| OPSI PEMBAYARAN:                                                                |
+| ( ) Bayar Lunas Sisa Tagihan (Rp 4.800.000)                                     |
+| (o) Bayar Sebagian (Cicilan Bertahap)                                           |
+|                                                                                 |
+|     Nominal Pembayaran Sekarang: [ Rp 2.800.000                        ]        |
+|     * Batas minimal pembayaran transaksi ini: Rp 2.800.000                      |
+|       (Rp 1.800.000 biaya wajib lunas + Rp 1.000.000 minimal cicilan gedung)    |
++---------------------------------------------------------------------------------+
+|                                                   [ LANJUT KE PEMBAYARAN ➔ ]    |
++---------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 4. Langkah Implementasi Teknis (Setelah Keputusan Diambil)
-1. **Migrasi Database:** Menambahkan field `discount_amount`, `discount_notes`, `allow_installment`, dan `min_installment_amount` pada tabel `registrations`.
-2. **Kalkulator Tagihan:** Memperbarui fungsi hitung total tagihan agar mengurangi `discount_amount` dari snapshot biaya.
-3. **Integrasi Callback Winpay:** Memodifikasi logic `PaymentController` agar jika tipe pembayaran adalah sebagian/cicilan, status registrasi diubah ke `partially_paid` (bukan langsung `completed`), kecuali sisa saldo tagihan sudah mencapai Rp 0.
-4. **Desain Halaman Portal:** Menambahkan form input nominal cicilan dinamis dengan validasi JavaScript di sisi pendaftar.
+## 4. Spesifikasi Database & Skema Data
+
+### 1. Modifikasi Tabel `registrations`
+Menambahkan kolom-kolom pendukung keringanan dan aturan cicilan:
+* `discount_amount` (`decimal(12,2) unsigned default 0`): Nilai nominal potongan biaya.
+* `discount_notes` (`varchar(255) nullable`): Keterangan/alasan keringanan potongan.
+* `installment_mode` (`enum('none', 'all', 'selective') default 'none'`): 
+  * `none`: Wajib lunas sekaligus.
+  * `all`: Semua biaya boleh dicicil.
+  * `selective`: Hanya komponen biaya tertentu yang boleh dicicil.
+* `installment_allowed_fee_ids` (`json nullable`): Array ID komponen biaya (`spmb_fee_id`) yang diizinkan dicicil jika mode = `selective`.
+* `min_installment_amount` (`decimal(12,2) unsigned default 0`): Batas minimal pembayaran cicilan per transaksi.
+* `installment_approved_by` (`foreignId nullable`): User ID admin yang menyetujui.
+* `installment_approved_at` (`timestamp nullable`): Tanggal dan waktu persetujuan.
+
+### 2. Modifikasi / Penyesuaian Tabel `payments` & Riwayat Transaksi
+Setiap kali wali murid membayar cicilan melalui Winpay:
+* Transaksi tercatat di tabel `payments` dengan `payment_type = 'installment'` atau `'re_registration'`.
+* Status transaksi sukses Winpay callback akan:
+  1. Menghitung akumulasi pembayaran `total_paid = SUM(payments.amount WHERE status = 'settled')`.
+  2. Menghitung sisa saldo `remaining_balance = total_net_fee - total_paid`.
+  3. Jika `remaining_balance > 0`, set `registrations.status = 'partially_paid'`.
+  4. Jika `remaining_balance <= 0`, set `registrations.status = 'completed'` / `'paid'`.
+
+---
+
+## 5. Logika Backend & Rumus Kalkulasi
+
+### 1. Menghitung Total Tagihan Bersih
+```php
+$grossFee = $registration->calculateTotalGrossFee(); // Total sebelum diskon
+$discount = $registration->discount_amount ?? 0;
+$netFee = max(0, $grossFee - $discount);
+```
+
+### 2. Menghitung Batas Minimal Pembayaran Transaksi (Dynamic Minimum)
+```php
+$totalPaid = $registration->payments()->where('status', 'settled')->sum('amount');
+$remaining = max(0, $netFee - $totalPaid);
+
+if ($registration->installment_mode === 'none') {
+    // Wajib lunas penuh
+    $minPayment = $remaining;
+} elseif ($registration->installment_mode === 'all') {
+    // Cicil global: minimal sesuai min_installment_amount atau sisa tagihan jika sisa < min
+    $minPayment = min($remaining, $registration->min_installment_amount ?: 500000);
+} elseif ($registration->installment_mode === 'selective') {
+    // Komponen selektif:
+    $mandatoryFeesTotal = $registration->getMandatoryFeesTotal(); // Biaya yang TIDAK boleh dicicil
+    $mandatoryRemaining = max(0, $mandatoryFeesTotal - $totalPaid);
+    
+    $installmentPart = min($remaining - $mandatoryRemaining, $registration->min_installment_amount ?: 500000);
+    $minPayment = $mandatoryRemaining + $installmentPart;
+}
+```
+
+### 3. Logika Alokasi Pembukuan Otomatis (Waterfall Allocation)
+Ketika dana pembayaran masuk Rp $X$:
+1. Alokasikan terlebih dahulu untuk melunasi item **Wajib Lunas Awal** (Formulir, Seragam, dsb).
+2. Sisa dana dialokasikan ke item **Boleh Dicicil** (Uang Gedung).
+3. Bukti kwitansi / invoice menampilkan rincian alokasi ini secara transparan.
+
+---
+
+## 6. Rencana Tahapan Implementasi (Action Plan)
+
+| Tahap | Aktivitas | Target Output |
+| :--- | :--- | :--- |
+| **Tahap 1** | **Migrasi Database** | Menambahkan kolom `discount_amount`, `discount_notes`, `installment_mode`, `installment_allowed_fee_ids`, `min_installment_amount` pada tabel `registrations`. |
+| **Tahap 2** | **Model & Helper Logic** | Menambahkan method helper di model `Registration.php` (`getNetFeeAttribute`, `getMinInstallmentRequiredAttribute`, `getInstallmentStatusLabelAttribute`). |
+| **Tahap 3** | **Admin Panel UI & Controller** | Menambahkan form input persetujuan keringanan & cicilan pada halaman detail pendaftar di Admin (`admin.candidates.show` & `CandidatesController`). |
+| **Tahap 4** | **Portal Pembayaran Wali Murid** | Memperbarui view pembayaran portal agar menampilkan rincian status per item, kalkulasi sisa saldo, dan form pilihan nominal cicilan dengan validasi real-time. |
+| **Tahap 5** | **Integrasi Payment Gateway & Webhook** | Menyesuaikan pembuatan transaksi Winpay (`WinpayService`) untuk nominal parsial dan webhook handler untuk update status `partially_paid` / `completed`. |
+| **Tahap 6** | **Kwitansi & Reporting** | Penyesuaian cetak bukti pembayaran & ekspor Excel agar menyertakan data riwayat cicilan serta sisa piutang pendaftar. |

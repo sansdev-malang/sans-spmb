@@ -104,9 +104,45 @@
 
             <!-- TUITION FEES COMPONENT BREAKDOWN -->
             <div class="space-y-4">
-                <h4 class="font-extrabold text-slate-850 dark:text-white text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-1.5">
-                    <i data-lucide="receipt" class="w-4 h-4 text-brand-emerald"></i> Rincian Biaya Pendidikan Masuk Awal
-                </h4>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h4 class="font-extrabold text-slate-850 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="receipt" class="w-4 h-4 text-brand-emerald"></i> Rincian Biaya Pendidikan Masuk Awal
+                    </h4>
+                    @if(isset($discountAmount) && ($discountAmount > 0 || ($installmentMode ?? 'none') !== 'none'))
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
+                            Disetujui Keringanan / Cicilan
+                        </span>
+                    @endif
+                </div>
+
+                @if(isset($discountAmount) && ($discountAmount > 0 || ($installmentMode ?? 'none') !== 'none'))
+                    <!-- Keringanan Notice Banner -->
+                    <div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl flex items-start gap-3">
+                        <div class="h-8 w-8 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-300">
+                                @if($discountAmount > 0 && ($installmentMode ?? 'none') !== 'none')
+                                    Pemberitahuan Persetujuan Keringanan & Kebijakan Cicilan
+                                @elseif($discountAmount > 0)
+                                    Pemberitahuan Persetujuan Keringanan Biaya (Diskon)
+                                @else
+                                    Kebijakan Cicilan Pembayaran
+                                @endif
+                            </h4>
+                            <p class="text-[11px] text-emerald-750 dark:text-emerald-400 leading-relaxed">
+                                @if($discountAmount > 0 && ($installmentMode ?? 'none') !== 'none')
+                                    Alhamdulillah! Ananda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}) dan diizinkan melakukan <strong>pembayaran bertahap (cicilan)</strong>.
+                                @elseif($discountAmount > 0)
+                                    Alhamdulillah! Ananda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}).
+                                @elseif(($installmentMode ?? 'none') !== 'none')
+                                    Alhamdulillah! Anda disetujui untuk melakukan <strong>pembayaran bertahap (cicilan)</strong> untuk biaya masuk ini.
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="bg-white dark:bg-slate-900 border border-slate-150/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-inner">
                     <table class="w-full text-left text-xs border-collapse">
@@ -159,7 +195,22 @@
                                                 @endif
                                             </td>
                                         @endif
-                                        <td class="p-4 font-medium {{ $isPaid ? 'line-through text-slate-400' : '' }}">{{ $item['name'] }}</td>
+                                        <td class="p-4 font-medium {{ $isPaid ? 'line-through text-slate-400' : '' }}">
+                                            <div class="flex items-center gap-2">
+                                                <span>{{ $item['name'] }}</span>
+                                                @if(($installmentMode ?? 'none') === 'selective')
+                                                    @if(!empty($item['is_installment_allowed']))
+                                                        <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
+                                                            🔓 Boleh Dicicil
+                                                        </span>
+                                                    @else
+                                                        <span class="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-[9px] border border-amber-200/60 dark:border-amber-900">
+                                                            🔒 Wajib Lunas Awal
+                                                        </span>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td class="p-4 text-right font-bold {{ $isPaid ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200' }}">Rp {{ number_format($item['amount'], 0, ',', '.') }}</td>
                                         <td class="p-4 text-center">
                                             @if($isPaid || $registration->registration_status === 'completed')
@@ -178,17 +229,50 @@
                                     </tr>
                                 @endforeach
                             @endif
+
+                            @php
+                                $isInstallmentActive = (($installmentMode ?? 'none') !== 'none');
+                            @endphp
+
+                            @if(isset($discountAmount) && $discountAmount > 0)
+                                <tr class="text-rose-600 dark:text-rose-400 bg-rose-50/20">
+                                    @if($registration->registration_status !== 'completed')
+                                        <td></td>
+                                    @endif
+                                    <td class="p-4 font-bold">Potongan Keringanan (Diskon)</td>
+                                    <td class="p-4 text-right font-mono font-bold">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</td>
+                                    <td class="p-4 text-center"><span class="text-[9px] bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded font-bold">Diskon</span></td>
+                                </tr>
+                            @endif
+
+                            @if($isInstallmentActive && isset($totalPaid) && $totalPaid > 0)
+                                <tr class="text-emerald-600 dark:text-emerald-400 bg-emerald-50/20">
+                                    @if($registration->registration_status !== 'completed')
+                                        <td></td>
+                                    @endif
+                                    <td class="p-4 font-bold">Telah Terbayar</td>
+                                    <td class="p-4 text-right font-mono font-bold">Rp {{ number_format($totalPaid, 0, ',', '.') }}</td>
+                                    <td class="p-4 text-center"><span class="text-[9px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">Terbayar</span></td>
+                                </tr>
+                            @endif
+
                             <tr class="bg-slate-50/50 dark:bg-slate-950/30 text-xs font-black text-slate-800 dark:text-white uppercase border-t border-slate-150 dark:border-slate-800">
                                 @if($registration->registration_status !== 'completed')
                                     <td></td>
                                 @endif
-                                <td class="p-4">Total Biaya</td>
-                                <td class="p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold" id="total-amount-display">Rp 0</td>
+                                <td class="p-4">
+                                    {{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) ? 'Sisa Tagihan' : 'Total Tagihan' }}
+                                </td>
+                                <td class="p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold" id="total-amount-display">
+                                    Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
+                                </td>
                                 <td class="p-4 text-center">
-                                    @if($registration->registration_status === 'completed')
+                                    @if($registration->registration_status === 'completed' || (isset($remainingBalance) && $remainingBalance <= 0))
                                         <span class="text-[10px] bg-green-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm">Lunas</span>
                                     @else
-                                        <span class="text-[10px] bg-amber-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm" id="total-status-badge">Belum Lunas</span>
+                                        <span class="text-[10px] bg-amber-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm" id="total-status-badge">
+                                            {{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) ? 'Cicilan Berjalan' : 'Belum Lunas' }}
+                                        </span>
                                     @endif
                                 </td>
                             </tr>
@@ -254,6 +338,8 @@
 
         if (checkboxes.length > 0 && totalDisplay && paymentBtn) {
             const baseUrl = paymentBtn.getAttribute('data-base-url');
+            const discountAmount = {{ (float) ($discountAmount ?? 0) }};
+            const remainingBalance = {{ (float) ($remainingBalance ?? 0) }};
 
             const calculateTotal = function() {
                 let total = 0;
@@ -274,8 +360,11 @@
                     }
                 });
 
-                // Update total display format Rupiah
-                totalDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
+                // Update total display format Rupiah (subtract discount properly)
+                const netPayable = checkedIndices.length === checkboxes.length 
+                    ? (remainingBalance > 0 ? remainingBalance : Math.max(0, total - discountAmount))
+                    : Math.max(0, total - discountAmount);
+                totalDisplay.textContent = 'Rp ' + netPayable.toLocaleString('id-ID');
 
                 // Update dynamic URL query param
                 paymentBtn.href = baseUrl + '?items=' + checkedIndices.join(',');
