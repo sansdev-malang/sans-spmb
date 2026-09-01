@@ -280,10 +280,19 @@ class WinpayService implements PaymentGatewayInterface
             // Normalize VA response
             if (isset($data['virtualAccountData']) || isset($data['virtualAccountNo'])) {
                 $vaData = $data['virtualAccountData'] ?? $data;
+                $vaNo = trim($vaData['virtualAccountNo'] ?? ($vaData['vaNo'] ?? ($vaData['payCode'] ?? '')));
+
+                // Strip Sandbox aggregator prefix (988332) if Winpay Sandbox prepends it to the 16-digit BNI VA
+                if (str_starts_with($vaNo, '988332988') && strlen($vaNo) > 16) {
+                    $vaNo = substr($vaNo, 6); // Removes '988332', leaving '98878884...'
+                } elseif (str_starts_with($vaNo, '332988') && strlen($vaNo) > 16) {
+                    $vaNo = substr($vaNo, 3); // Removes '332', leaving '98878884...'
+                }
+
                 $normalizedData = [
                     'trxId' => $vaData['trxId'] ?? $invoiceNo,
                     'referenceId' => $vaData['additionalInfo']['contractId'] ?? ($data['referenceId'] ?? null),
-                    'virtualAccountNo' => trim($vaData['virtualAccountNo'] ?? ($vaData['vaNo'] ?? ($vaData['payCode'] ?? ''))),
+                    'virtualAccountNo' => $vaNo,
                     'customerNo' => $custNo ?? ($vaData['customerNo'] ?? null),
                     'virtualAccountName' => $vaData['virtualAccountName'] ?? $vaName,
                     'bankName' => $vaData['additionalInfo']['channel'] ?? $method,
