@@ -1075,8 +1075,9 @@ class WebDashboardController extends Controller
         $invoiceBase = 'INV-SPMB-' . date('Ymd') . '-' . $registration->id . '-' . rand(100, 999);
 
         try {
+            $studentName = $registration->student_name ?? $registration->name ?? null;
             $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
-            $response = $gatewayService->createPayment($totalAmount, $invoiceBase, $request->payment_method);
+            $response = $gatewayService->createPayment($totalAmount, $invoiceBase, $request->payment_method, $studentName);
         } catch (\Exception $e) {
             $response = [
                 'success' => false,

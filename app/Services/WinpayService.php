@@ -111,7 +111,7 @@ class WinpayService implements PaymentGatewayInterface
     /**
      * Create SNAP Transaction (VA or QRIS)
      */
-    public function createPayment($amount, $invoiceNo, $method)
+    public function createPayment($amount, $invoiceNo, $method, $customerName = null)
     {
         if ($this->mode === 'simulator') {
             return $this->getMockPaymentResponse($amount, $invoiceNo, $method);
@@ -130,13 +130,18 @@ class WinpayService implements PaymentGatewayInterface
         $expiry->modify('+24 hours');
         $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
 
-        // Standard SNAP request body structure
+        // Sanitize name for virtualAccountName (Length 5-24, alphanumeric, spaces, dashes)
+        $rawName = trim($customerName ?: 'Calon Siswa SPMB');
+        $cleanName = preg_replace('/[^a-zA-Z0-9 _-]/', '', $rawName);
+        if (strlen($cleanName) < 5) {
+            $cleanName = str_pad($cleanName, 5, ' ');
+        }
+        $vaName = substr($cleanName, 0, 24);
+
+        // Standard SNAP request body structure for Closed Virtual Account (Do not pass partnerServiceId or virtualAccountNo)
         $body = [
-            'partnerServiceId' => ' ' . $this->merchantId, // leading space is sometimes required in SNAP
-            'customerNo' => '12345678', // customer reference
-            'virtualAccountNo' => $this->merchantId . rand(100000, 999999),
-            'virtualAccountName' => 'SPMB Candidate',
-            'virtualAccountTrxType' => 'c', // One-off
+            'virtualAccountName' => $vaName,
+            'virtualAccountTrxType' => 'c', // Closed (one-off)
             'expiredDate' => $expiredDate,
             'trxId' => $invoiceNo,
             'totalAmount' => [
@@ -144,14 +149,14 @@ class WinpayService implements PaymentGatewayInterface
                 'currency' => 'IDR'
             ],
             'additionalInfo' => [
-                'invoiceNumber' => $invoiceNo,
-                'channel' => strtoupper($method)
+                'channel' => strtoupper($method),
+                'invoiceNumber' => $invoiceNo
             ]
         ];
 
         if ($method === 'QRIS') {
             $expiry = new \DateTime('now', $timezone);
-            $expiry->modify('+1 hour');
+            $expiry->modify('+24 hours');
             $validityPeriod = $expiry->format('Y-m-d\TH:i:sP');
 
             $body = [
@@ -182,13 +187,13 @@ class WinpayService implements PaymentGatewayInterface
             $data = $response->json();
             
             // Normalize VA response
-            if ($method !== 'QRIS' && isset($data['virtualAccountData'])) {
-                $vaData = $data['virtualAccountData'];
+            if ($method !== 'QRIS' && (isset($data['virtualAccountData']) || isset($data['virtualAccountNo']))) {
+                $vaData = $data['virtualAccountData'] ?? $data;
                 $normalizedData = [
                     'trxId' => $vaData['trxId'] ?? $invoiceNo,
-                    'referenceId' => $vaData['additionalInfo']['contractId'] ?? null,
-                    'virtualAccountNo' => trim($vaData['virtualAccountNo'] ?? ''),
-                    'virtualAccountName' => $vaData['virtualAccountName'] ?? '',
+                    'referenceId' => $vaData['additionalInfo']['contractId'] ?? ($data['referenceId'] ?? null),
+                    'virtualAccountNo' => trim($vaData['virtualAccountNo'] ?? ($vaData['vaNo'] ?? ($vaData['payCode'] ?? ''))),
+                    'virtualAccountName' => $vaData['virtualAccountName'] ?? $vaName,
                     'bankName' => $vaData['additionalInfo']['channel'] ?? $method,
                     'status' => 'PENDING',
                     'message' => $data['responseMessage'] ?? 'Success'
@@ -201,11 +206,13 @@ class WinpayService implements PaymentGatewayInterface
 
             // Normalize QRIS response
             if ($method === 'QRIS') {
+                $qrUrl = $data['qrUrl'] ?? ($data['qrData'] ?? null);
+                $qrContent = $data['qrContent'] ?? null;
                 $normalizedData = [
                     'partnerReferenceNo' => $data['partnerReferenceNo'] ?? $invoiceNo,
-                    'referenceId' => $data['additionalInfo']['contractId'] ?? null,
-                    'qrUrl' => $data['qrUrl'] ?? null,
-                    'qrContent' => $data['qrContent'] ?? null,
+                    'referenceId' => $data['additionalInfo']['contractId'] ?? ($data['referenceId'] ?? null),
+                    'qrUrl' => $qrUrl,
+                    'qrContent' => $qrContent,
                     'status' => 'PENDING',
                     'message' => $data['responseMessage'] ?? 'Success'
                 ];
@@ -224,7 +231,7 @@ class WinpayService implements PaymentGatewayInterface
         Log::error('Winpay createPayment failed', ['response' => $response->body()]);
         return [
             'success' => false,
-            'message' => $response->json('message') ?? 'Payment creation failed'
+            'message' => $response->json('message') ?? ($response->json('responseMessage') ?? 'Payment creation failed')
         ];
     }
 

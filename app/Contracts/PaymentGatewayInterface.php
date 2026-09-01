@@ -10,9 +10,10 @@ interface PaymentGatewayInterface
      * @param float $amount
      * @param string $invoiceNo
      * @param string $method
+     * @param string|null $customerName
      * @return array ['success' => bool, 'message' => string, 'data' => array]
      */
-    public function createPayment($amount, $invoiceNo, $method);
+    public function createPayment($amount, $invoiceNo, $method, $customerName = null);
 
     /**
      * Validate incoming Webhook/Callback.
