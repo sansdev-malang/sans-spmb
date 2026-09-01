@@ -275,6 +275,17 @@
                                     </a>
                                 @endif
                             </div>
+                        @elseif (!empty($activePayment->payment_info['webRedirectUrl']) || !empty($activePayment->payment_info['paymentUrl']))
+                            <!-- E-Wallet Display -->
+                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center space-y-4">
+                                <span class="text-xs text-slate-400 font-semibold uppercase block">Pembayaran Dompet Digital (E-Wallet)</span>
+                                <div class="flex flex-col items-center justify-center gap-3">
+                                    <p class="text-xs text-slate-600 font-medium max-w-sm">Klik tombol di bawah ini untuk melanjutkan pembayaran melalui aplikasi atau web {{ $activePayment->payment_method }}:</p>
+                                    <a href="{{ $activePayment->payment_info['webRedirectUrl'] ?? $activePayment->payment_info['paymentUrl'] }}" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2">
+                                        <i data-lucide="external-link" class="w-4 h-4"></i> Buka Pembayaran {{ $activePayment->payment_method }}
+                                    </a>
+                                </div>
+                            </div>
                         @else
                             <!-- VA Number display -->
                             <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center">

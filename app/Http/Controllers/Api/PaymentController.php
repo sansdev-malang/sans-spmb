@@ -255,8 +255,9 @@ class PaymentController extends Controller
 
         try {
             $studentName = $registration->student_name ?? $registration->name ?? null;
+            $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
             $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
-            $response = $gatewayService->createPayment($totalAmount, $invoiceNo, $request->payment_method, $studentName);
+            $response = $gatewayService->createPayment($totalAmount, $invoiceNo, $request->payment_method, $studentName, $studentPhone);
         } catch (\Exception $e) {
             $response = [
                 'success' => false,

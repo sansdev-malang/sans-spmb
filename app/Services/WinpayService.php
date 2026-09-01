@@ -109,10 +109,13 @@ class WinpayService implements PaymentGatewayInterface
     }
 
     /**
-     * Create SNAP Transaction (VA or QRIS)
+     * Create SNAP Transaction (VA, QRIS, or E-Wallet)
      */
-    public function createPayment($amount, $invoiceNo, $method, $customerName = null)
+    public function createPayment($amount, $invoiceNo, $method, $customerName = null, $customerPhone = null)
     {
+        $isQris = strtoupper($method) === 'QRIS';
+        $isEwallet = in_array(strtoupper($method), ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC']);
+
         if ($this->mode === 'simulator') {
             return $this->getMockPaymentResponse($amount, $invoiceNo, $method);
         }
@@ -121,16 +124,19 @@ class WinpayService implements PaymentGatewayInterface
         $now = new \DateTime('now', $timezone);
         $timestamp = $now->format('Y-m-d\TH:i:sP');
 
-        $endpoint = '/v1.0/transfer-va/create-va'; // Default endpoint for VA
-        if ($method === 'QRIS') {
+        // Select correct endpoint based on channel type
+        $endpoint = '/v1.0/transfer-va/create-va';
+        if ($isQris) {
             $endpoint = '/v1.0/qr/qr-mpm-generate';
+        } elseif ($isEwallet) {
+            $endpoint = '/v1.0/debit/payment-host-to-host';
         }
 
         $expiry = new \DateTime('now', $timezone);
         $expiry->modify('+24 hours');
         $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
 
-        // Sanitize name for virtualAccountName (Length 5-24, alphanumeric, spaces, dashes)
+        // Sanitize name for virtualAccountName / customerName (Length 5-24, alphanumeric, spaces, dashes)
         $rawName = trim($customerName ?: 'Calon Siswa SPMB');
         $cleanName = preg_replace('/[^a-zA-Z0-9 _-]/', '', $rawName);
         if (strlen($cleanName) < 5) {
@@ -138,26 +144,16 @@ class WinpayService implements PaymentGatewayInterface
         }
         $vaName = substr($cleanName, 0, 24);
 
-        // Standard SNAP request body structure for Closed Virtual Account (Do not pass partnerServiceId or virtualAccountNo)
-        $body = [
-            'virtualAccountName' => $vaName,
-            'virtualAccountTrxType' => 'c', // Closed (one-off)
-            'expiredDate' => $expiredDate,
-            'trxId' => $invoiceNo,
-            'totalAmount' => [
-                'value' => number_format($amount, 2, '.', ''),
-                'currency' => 'IDR'
-            ],
-            'additionalInfo' => [
-                'channel' => strtoupper($method),
-                'invoiceNumber' => $invoiceNo
-            ]
-        ];
+        if ($isEwallet) {
+            $ewalletChannel = strtoupper($method);
+            if ($ewalletChannel === 'SHOPEEPAY') $ewalletChannel = 'SPAY';
+            if ($ewalletChannel === 'ASTRAPAY') $ewalletChannel = 'ASTRA';
+            if ($ewalletChannel === 'SPEEDCASH') $ewalletChannel = 'SC';
 
-        if ($method === 'QRIS') {
-            $expiry = new \DateTime('now', $timezone);
-            $expiry->modify('+24 hours');
-            $validityPeriod = $expiry->format('Y-m-d\TH:i:sP');
+            $phone = preg_replace('/[^0-9]/', '', $customerPhone ?: '081234567890');
+            if (strlen($phone) < 10) {
+                $phone = '081234567890';
+            }
 
             $body = [
                 'partnerReferenceNo' => $invoiceNo,
@@ -165,9 +161,51 @@ class WinpayService implements PaymentGatewayInterface
                     'value' => number_format($amount, 2, '.', ''),
                     'currency' => 'IDR'
                 ],
-                'validityPeriod' => $validityPeriod,
+                'urlParam' => [
+                    [
+                        'url' => url('/api/payments/callback'),
+                        'type' => 'PAY_NOTIFY',
+                        'isDeeplink' => 'N'
+                    ],
+                    [
+                        'url' => url('/dashboard'),
+                        'type' => 'PAY_RETURN',
+                        'isDeeplink' => 'N'
+                    ]
+                ],
+                'validUpTo' => $expiredDate,
+                'additionalInfo' => [
+                    'channel' => $ewalletChannel,
+                    'customerPhone' => $phone,
+                    'customerName' => $vaName
+                ]
+            ];
+        } elseif ($isQris) {
+            $body = [
+                'partnerReferenceNo' => $invoiceNo,
+                'amount' => [
+                    'value' => number_format($amount, 2, '.', ''),
+                    'currency' => 'IDR'
+                ],
+                'validityPeriod' => $expiredDate,
                 'additionalInfo' => [
                     'isStatic' => false
+                ]
+            ];
+        } else {
+            // Standard SNAP request body structure for Closed Virtual Account
+            $body = [
+                'virtualAccountName' => $vaName,
+                'virtualAccountTrxType' => 'c', // Closed (one-off)
+                'expiredDate' => $expiredDate,
+                'trxId' => $invoiceNo,
+                'totalAmount' => [
+                    'value' => number_format($amount, 2, '.', ''),
+                    'currency' => 'IDR'
+                ],
+                'additionalInfo' => [
+                    'channel' => strtoupper($method),
+                    'invoiceNumber' => $invoiceNo
                 ]
             ];
         }
@@ -185,16 +223,22 @@ class WinpayService implements PaymentGatewayInterface
 
         if ($response->successful()) {
             $data = $response->json();
+            \Illuminate\Support\Facades\Log::info('Winpay createPayment SUCCESS', [
+                'endpoint' => $endpoint,
+                'request' => $body,
+                'response' => $data
+            ]);
             
-            // Normalize VA response
-            if ($method !== 'QRIS' && (isset($data['virtualAccountData']) || isset($data['virtualAccountNo']))) {
-                $vaData = $data['virtualAccountData'] ?? $data;
+            // Normalize E-Wallet response
+            if ($isEwallet) {
                 $normalizedData = [
-                    'trxId' => $vaData['trxId'] ?? $invoiceNo,
-                    'referenceId' => $vaData['additionalInfo']['contractId'] ?? ($data['referenceId'] ?? null),
-                    'virtualAccountNo' => trim($vaData['virtualAccountNo'] ?? ($vaData['vaNo'] ?? ($vaData['payCode'] ?? ''))),
-                    'virtualAccountName' => $vaData['virtualAccountName'] ?? $vaName,
-                    'bankName' => $vaData['additionalInfo']['channel'] ?? $method,
+                    'partnerReferenceNo' => $data['partnerReferenceNo'] ?? $invoiceNo,
+                    'trxId' => $data['partnerReferenceNo'] ?? $invoiceNo,
+                    'referenceId' => $data['additionalInfo']['contractId'] ?? ($data['contractId'] ?? null),
+                    'webRedirectUrl' => $data['webRedirectUrl'] ?? ($data['redirectUrl'] ?? null),
+                    'appRedirectUrl' => $data['appRedirectUrl'] ?? null,
+                    'paymentUrl' => $data['webRedirectUrl'] ?? ($data['appRedirectUrl'] ?? null),
+                    'channel' => $data['additionalInfo']['channel'] ?? $method,
                     'status' => 'PENDING',
                     'message' => $data['responseMessage'] ?? 'Success'
                 ];
@@ -205,7 +249,7 @@ class WinpayService implements PaymentGatewayInterface
             }
 
             // Normalize QRIS response
-            if ($method === 'QRIS') {
+            if ($isQris) {
                 $qrUrl = $data['qrUrl'] ?? ($data['qrData'] ?? null);
                 $qrContent = $data['qrContent'] ?? null;
                 $normalizedData = [
@@ -213,6 +257,24 @@ class WinpayService implements PaymentGatewayInterface
                     'referenceId' => $data['additionalInfo']['contractId'] ?? ($data['referenceId'] ?? null),
                     'qrUrl' => $qrUrl,
                     'qrContent' => $qrContent,
+                    'status' => 'PENDING',
+                    'message' => $data['responseMessage'] ?? 'Success'
+                ];
+                return [
+                    'success' => true,
+                    'data' => $normalizedData
+                ];
+            }
+
+            // Normalize VA response
+            if (isset($data['virtualAccountData']) || isset($data['virtualAccountNo'])) {
+                $vaData = $data['virtualAccountData'] ?? $data;
+                $normalizedData = [
+                    'trxId' => $vaData['trxId'] ?? $invoiceNo,
+                    'referenceId' => $vaData['additionalInfo']['contractId'] ?? ($data['referenceId'] ?? null),
+                    'virtualAccountNo' => trim($vaData['virtualAccountNo'] ?? ($vaData['vaNo'] ?? ($vaData['payCode'] ?? ''))),
+                    'virtualAccountName' => $vaData['virtualAccountName'] ?? $vaName,
+                    'bankName' => $vaData['additionalInfo']['channel'] ?? $method,
                     'status' => 'PENDING',
                     'message' => $data['responseMessage'] ?? 'Success'
                 ];

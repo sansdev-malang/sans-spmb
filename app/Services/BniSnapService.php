@@ -110,7 +110,7 @@ class BniSnapService implements PaymentGatewayInterface
     /**
      * Create BNI SNAP transaction (VA or QRIS).
      */
-    public function createPayment($amount, $invoiceNo, $method, $customerName = null)
+    public function createPayment($amount, $invoiceNo, $method, $customerName = null, $customerPhone = null)
     {
         if ($this->mode === 'simulator') {
             return [

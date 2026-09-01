@@ -662,6 +662,34 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
                 'payment_gateway_id' => 1,
             ],
+            [
+                'code' => 'DANA',
+                'name' => 'DANA',
+                'type' => 'ewallet',
+                'is_active' => true,
+                'payment_gateway_id' => 1,
+            ],
+            [
+                'code' => 'SHOPEEPAY',
+                'name' => 'ShopeePay',
+                'type' => 'ewallet',
+                'is_active' => true,
+                'payment_gateway_id' => 1,
+            ],
+            [
+                'code' => 'INDOMARET',
+                'name' => 'Indomaret',
+                'type' => 'retail',
+                'is_active' => true,
+                'payment_gateway_id' => 1,
+            ],
+            [
+                'code' => 'ALFAMART',
+                'name' => 'Alfamart',
+                'type' => 'retail',
+                'is_active' => true,
+                'payment_gateway_id' => 1,
+            ],
             // BNI SNAP Channels (gateway id 2)
             [
                 'code' => 'BNI_QRIS',

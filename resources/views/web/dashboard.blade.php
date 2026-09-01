@@ -379,6 +379,16 @@
                                         </div>
                                         <p class="text-xs text-slate-400 font-medium">Scan QRIS menggunakan Mobile Banking atau e-Wallet pilihan Anda.</p>
                                     </div>
+                                @elseif (!empty($activePayment->payment_info['webRedirectUrl']) || !empty($activePayment->payment_info['paymentUrl']))
+                                    <div class="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center space-y-4">
+                                        <span class="text-xs text-slate-400 font-semibold uppercase block">Pembayaran Dompet Digital (E-Wallet)</span>
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <p class="text-xs text-slate-600 dark:text-slate-350 font-medium max-w-sm">Klik tombol di bawah ini untuk melanjutkan pembayaran via {{ $activePayment->payment_method }}:</p>
+                                            <a href="{{ $activePayment->payment_info['webRedirectUrl'] ?? $activePayment->payment_info['paymentUrl'] }}" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2">
+                                                <i data-lucide="external-link" class="w-4 h-4"></i> Buka Pembayaran {{ $activePayment->payment_method }}
+                                            </a>
+                                        </div>
+                                    </div>
                                 @else
                                     <div class="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 text-center">
                                         <span class="text-xs text-slate-400 font-semibold uppercase block">Nomor Virtual Account (VA)</span>
