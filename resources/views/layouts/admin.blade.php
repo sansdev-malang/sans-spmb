@@ -477,7 +477,7 @@
 
             <!-- 3. Pengaturan SPMB (Dropdown) -->
             @php
-                $isSpmbActive = Request::is('admin/spmb-settings/registration*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades*') || Request::is('admin/spmb-settings/fees*') || Request::is('admin/spmb-settings/form*') || Request::is('admin/spmb-settings/instructions*') || Request::is('admin/spmb-settings/agreements*') || Request::is('admin/spmb-settings/qrcode*');
+                $isSpmbActive = Request::is('admin/spmb-settings/registration*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades*') || Request::is('admin/spmb-settings/fees*') || Request::is('admin/spmb-settings/form*') || Request::is('admin/spmb-settings/instructions*') || Request::is('admin/spmb-settings/agreements*') || Request::is('admin/spmb-settings/qrcode*') || Request::is('admin/spmb-settings/customer-service*') || Request::is('admin/spmb-settings/brochures*');
             @endphp
             <div class="menu-category-konfigurasi mt-4 space-y-1">
                 <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #a855f7;">Konfigurasi</span>
@@ -517,6 +517,12 @@
                     </a>
                     <a href="{{ route('admin.spmb-settings.qrcode') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.qrcode') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                         <i data-lucide="qr-code" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">QR Code SPMB</span>
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.cs') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.cs') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="headphones" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Customer Service</span>
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.brochures') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.brochures') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Brosur & Dokumen</span>
                     </a>
                 </div>
             </div>

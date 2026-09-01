@@ -11,7 +11,9 @@ use App\Models\SpmbGrade;
 use App\Models\SpmbClassProgram;
 use App\Models\SpmbExtraService;
 use App\Models\Registration;
+use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class SpmbSettingsController extends Controller
@@ -480,5 +482,119 @@ class SpmbSettingsController extends Controller
         }
         $service->delete();
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil dihapus.');
+    }
+
+    public function customerService()
+    {
+        $units = SpmbUnit::all();
+        $settings = [
+            'spmb_cs_whatsapp' => Setting::get('spmb_cs_whatsapp', '081234567890'),
+            'spmb_cs_name' => Setting::get('spmb_cs_name', 'Customer Service SPMB'),
+            'spmb_cs_hours' => Setting::get('spmb_cs_hours', 'Senin - Jumat, 08:00 - 15:00 WIB'),
+            'spmb_cs_card_title' => Setting::get('spmb_cs_card_title', 'Pusat Bantuan & Konsultasi SPMB'),
+            'spmb_cs_card_desc' => Setting::get('spmb_cs_card_desc', 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.'),
+            'spmb_cs_message' => Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.'),
+        ];
+
+        return view('admin.settings-spmb-cs', compact('units', 'settings'));
+    }
+
+    public function saveCustomerService(Request $request)
+    {
+        $request->validate([
+            'spmb_cs_whatsapp' => 'required|string|max:30',
+            'spmb_cs_name' => 'nullable|string|max:100',
+            'spmb_cs_hours' => 'nullable|string|max:100',
+            'spmb_cs_card_title' => 'nullable|string|max:255',
+            'spmb_cs_card_desc' => 'nullable|string|max:500',
+            'spmb_cs_message' => 'nullable|string|max:1000',
+        ]);
+
+        Setting::set('spmb_cs_whatsapp', $request->spmb_cs_whatsapp);
+        Setting::set('spmb_cs_name', $request->spmb_cs_name ?: 'Customer Service SPMB');
+        Setting::set('spmb_cs_hours', $request->spmb_cs_hours ?: 'Senin - Jumat, 08:00 - 15:00 WIB');
+        Setting::set('spmb_cs_card_title', $request->spmb_cs_card_title ?: 'Pusat Bantuan & Konsultasi SPMB');
+        Setting::set('spmb_cs_card_desc', $request->spmb_cs_card_desc ?: 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
+        Setting::set('spmb_cs_message', $request->spmb_cs_message ?: 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.');
+
+        if ($request->has('units') && is_array($request->units)) {
+            foreach ($request->units as $unitId => $unitData) {
+                $unit = SpmbUnit::find($unitId);
+                if ($unit) {
+                    $unit->update([
+                        'whatsapp_number' => $unitData['whatsapp_number'] ?? null,
+                        'admin_contact_name' => $unitData['admin_contact_name'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('admin.spmb-settings.cs')->with('success', 'Pengaturan Customer Service & Kontak Panitia berhasil disimpan.');
+    }
+
+    public function brochures()
+    {
+        $units = SpmbUnit::all();
+        $brochures = [];
+        foreach ($units as $unit) {
+            $code = strtolower($unit->code);
+            $brochures[$unit->id] = [
+                'unit' => $unit,
+                'code' => $code,
+                'brochure_url' => Setting::get('unit_' . $code . '_brochure_url', ''),
+                'attachment_url' => Setting::get('unit_' . $code . '_attachment_url', ''),
+                'brochure_title' => Setting::get('unit_' . $code . '_brochure_title', 'Brosur ' . $unit->name),
+                'brochure_desc' => Setting::get('unit_' . $code . '_brochure_desc', 'Informasi kurikulum, program unggulan, dan alur pendaftaran.'),
+            ];
+        }
+
+        return view('admin.settings-spmb-brochures', compact('units', 'brochures'));
+    }
+
+    public function saveBrochures(Request $request)
+    {
+        $units = SpmbUnit::all();
+        
+        foreach ($units as $unit) {
+            $code = strtolower($unit->code);
+            
+            // Check delete brochure
+            if ($request->input('delete_unit_' . $code . '_brochure') == '1') {
+                Setting::set('unit_' . $code . '_brochure_url', '');
+            }
+            
+            // Check upload new brochure
+            if ($request->hasFile('unit_' . $code . '_brochure_file')) {
+                $file = $request->file('unit_' . $code . '_brochure_file');
+                $path = $file->store('documents', 'public');
+                Setting::set('unit_' . $code . '_brochure_url', Storage::url($path));
+            } elseif ($request->filled('unit_' . $code . '_brochure_url_custom')) {
+                Setting::set('unit_' . $code . '_brochure_url', $request->input('unit_' . $code . '_brochure_url_custom'));
+            }
+
+            // Check delete attachment
+            if ($request->input('delete_unit_' . $code . '_attachment') == '1') {
+                Setting::set('unit_' . $code . '_attachment_url', '');
+            }
+
+            // Check upload new attachment
+            if ($request->hasFile('unit_' . $code . '_attachment_file')) {
+                $file = $request->file('unit_' . $code . '_attachment_file');
+                $path = $file->store('documents', 'public');
+                Setting::set('unit_' . $code . '_attachment_url', Storage::url($path));
+            } elseif ($request->filled('unit_' . $code . '_attachment_url_custom')) {
+                Setting::set('unit_' . $code . '_attachment_url', $request->input('unit_' . $code . '_attachment_url_custom'));
+            }
+
+            // Save title & desc if present
+            if ($request->has('unit_' . $code . '_brochure_title')) {
+                Setting::set('unit_' . $code . '_brochure_title', $request->input('unit_' . $code . '_brochure_title'));
+            }
+            if ($request->has('unit_' . $code . '_brochure_desc')) {
+                Setting::set('unit_' . $code . '_brochure_desc', $request->input('unit_' . $code . '_brochure_desc'));
+            }
+        }
+
+        return redirect()->route('admin.spmb-settings.brochures')->with('success', 'Brosur dan dokumen unit sekolah berhasil diperbarui.');
     }
 }

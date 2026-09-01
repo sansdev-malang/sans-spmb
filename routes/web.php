@@ -668,6 +668,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/spmb-settings/agreements/{id}', [\App\Http\Controllers\Web\SpmbAgreementsController::class, 'update'])->name('admin.spmb-settings.agreements.update');
         Route::get('/admin/spmb-settings/instructions', [SettingsController::class, 'reRegistrationInstructions'])->name('admin.spmb-settings.instructions');
         Route::post('/admin/spmb-settings/instructions', [SettingsController::class, 'saveReRegistrationInstructions'])->name('admin.spmb-settings.instructions.save');
+        Route::get('/admin/spmb-settings/customer-service', [SpmbSettingsController::class, 'customerService'])->name('admin.spmb-settings.cs');
+        Route::post('/admin/spmb-settings/customer-service', [SpmbSettingsController::class, 'saveCustomerService'])->name('admin.spmb-settings.cs.save');
+        Route::get('/admin/spmb-settings/brochures', [SpmbSettingsController::class, 'brochures'])->name('admin.spmb-settings.brochures');
+        Route::post('/admin/spmb-settings/brochures', [SpmbSettingsController::class, 'saveBrochures'])->name('admin.spmb-settings.brochures.save');
         Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users');
         Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
         Route::post('/admin/users/{id}', [UserController::class, 'update'])->name('admin.users.update');

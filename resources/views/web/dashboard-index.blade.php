@@ -35,31 +35,74 @@
                     $uCode = strtolower($unit->code);
                     $firstGrade = \App\Models\SpmbGrade::where('spmb_unit_id', $unit->id)->where('is_active', true)->orderBy('id')->first();
                     $firstGradeId = $firstGrade?->id ?? '';
+                    $brochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url');
+                    $waUrl = $unit->getWhatsappUrl();
+                    $waNumber = $unit->whatsapp_number ?: \App\Models\Setting::get('spmb_whatsapp_general', '081234567890');
                 @endphp
-                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-150/80 dark:border-slate-800 shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-md transition">
-                    <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-brand-emerald dark:text-emerald-450 flex items-center justify-center font-bold text-base shadow-sm">
-                        {{ strtoupper($unit->code) }}
+                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-150/80 dark:border-slate-800 shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-lg transition-all duration-200">
+                    <div class="space-y-3 w-full flex flex-col items-center">
+                        <div class="h-12 w-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-emerald-600/20">
+                            {{ strtoupper($unit->code) }}
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="font-extrabold text-slate-850 dark:text-white text-sm">{{ $unit->name }}</h3>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2">
+                                {{ \App\Models\Setting::get('unit_' . $uCode . '_desc', 'Pilihan program pendidikan terbaik.') }}
+                            </p>
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">{{ $unit->name }}</h3>
-                        <p class="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2">
-                            {{ \App\Models\Setting::get('unit_' . $uCode . '_desc', 'Pilihan program pendidikan terbaik.') }}
-                        </p>
+
+                    <div class="w-full space-y-2 pt-2">
+                        <button onclick="startRegistrationWithUnit('{{ $unit->id }}', '{{ $firstGradeId }}')" class="w-full py-3 bg-slate-900 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition-all shadow-sm flex items-center justify-center gap-1.5">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i> Daftarkan Sekarang
+                        </button>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <a href="{{ $waUrl }}" target="_blank" class="py-2 px-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 border border-emerald-200/60 dark:border-emerald-900/40" title="Hubungi WhatsApp Admin {{ $unit->name }}">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-600"></i> Admin WA
+                            </a>
+                            @if(!empty($brochureUrl))
+                                <a href="{{ $brochureUrl }}" target="_blank" download class="py-2 px-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 border border-slate-200/80 dark:border-slate-700" title="Unduh Brosur {{ $unit->name }}">
+                                    <i data-lucide="file-down" class="w-3.5 h-3.5 text-emerald-600"></i> Unduh Brosur
+                                </a>
+                            @else
+                                <span class="py-2 px-2.5 bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border border-slate-100 dark:border-slate-800 cursor-not-allowed" title="Brosur belum tersedia">
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Brosur
+                                </span>
+                            @endif
+                        </div>
                     </div>
-                    
-                    <button onclick="startRegistrationWithUnit('{{ $unit->id }}', '{{ $firstGradeId }}')" class="w-full py-2.5 bg-custom-primary hover:opacity-90 text-white rounded-xl text-xs font-bold transition shadow-sm dark:bg-emerald-600">
-                        Daftarkan Sekarang
-                    </button>
                 </div>
             @endforeach
         </div>
 
-        <!-- Supporting information banner -->
-        <div class="bg-slate-100/50 dark:bg-slate-950/30 rounded-2xl p-4 border border-slate-150/60 dark:border-slate-850 max-w-xl mx-auto flex items-center gap-3 text-left">
-            <i data-lucide="help-circle" class="w-5 h-5 text-slate-400 dark:text-slate-600 flex-shrink-0"></i>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-                Butuh bantuan atau informasi mengenai alur seleksi & biaya masuk? Anda dapat membaca detail brosur masing-masing unit dengan mengeklik menu unit di navbar atas sebelum mendaftar.
-            </p>
+        <!-- Section: Bantuan Konsultasi & Layanan Informasi Panitia -->
+        @php
+            $csPhone = \App\Models\Setting::get('spmb_cs_whatsapp', '081234567890');
+            $cleanCsPhone = preg_replace('/[^0-9]/', '', $csPhone);
+            if (str_starts_with($cleanCsPhone, '0')) {
+                $cleanCsPhone = '62' . substr($cleanCsPhone, 1);
+            } elseif (!str_starts_with($cleanCsPhone, '62')) {
+                $cleanCsPhone = '62' . $cleanCsPhone;
+            }
+            $csMsg = \App\Models\Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.');
+            $csTitle = \App\Models\Setting::get('spmb_cs_card_title', 'Pusat Bantuan & Konsultasi SPMB');
+            $csDesc = \App\Models\Setting::get('spmb_cs_card_desc', 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
+            $csWaUrl = "https://wa.me/{$cleanCsPhone}?text=" . urlencode($csMsg);
+        @endphp
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-150/80 dark:border-slate-800 shadow-sm max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="headphones" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-slate-850 dark:text-white text-xs">{{ $csTitle }}</h4>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500">{{ $csDesc }}</p>
+                </div>
+            </div>
+            <a href="{{ $csWaUrl }}" target="_blank" class="whitespace-nowrap px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm flex-shrink-0">
+                <i data-lucide="message-square" class="w-4 h-4"></i> Konsultasi via WA
+            </a>
         </div>
     </div>
 
