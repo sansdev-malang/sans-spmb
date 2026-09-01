@@ -200,8 +200,12 @@ class WinpayService implements PaymentGatewayInterface
                 ]
             ];
         } else {
-            // Standard SNAP request body structure for Closed Virtual Account
+            // Generate unique numeric customerNo (Length: 3-14 numeric chars)
+            $custNo = substr(preg_replace('/[^0-9]/', '', $invoiceNo . rand(1000, 9999)), -8);
+
+            // Standard SNAP request body structure for Closed Virtual Account (Include customerNo for BNI/Banks)
             $body = [
+                'customerNo' => $custNo,
                 'virtualAccountName' => $vaName,
                 'virtualAccountTrxType' => 'c', // Closed (one-off)
                 'expiredDate' => $expiredDate,
@@ -280,6 +284,7 @@ class WinpayService implements PaymentGatewayInterface
                     'trxId' => $vaData['trxId'] ?? $invoiceNo,
                     'referenceId' => $vaData['additionalInfo']['contractId'] ?? ($data['referenceId'] ?? null),
                     'virtualAccountNo' => trim($vaData['virtualAccountNo'] ?? ($vaData['vaNo'] ?? ($vaData['payCode'] ?? ''))),
+                    'customerNo' => $custNo ?? ($vaData['customerNo'] ?? null),
                     'virtualAccountName' => $vaData['virtualAccountName'] ?? $vaName,
                     'bankName' => $vaData['additionalInfo']['channel'] ?? $method,
                     'status' => 'PENDING',
