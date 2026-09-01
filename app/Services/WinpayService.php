@@ -155,6 +155,13 @@ class WinpayService implements PaymentGatewayInterface
                 $phone = '081234567890';
             }
 
+            $notifyUrl = str_replace('http://', 'https://', url('/api/payments/callback'));
+            $returnUrl = str_replace('http://', 'https://', url('/dashboard'));
+            
+            $ewalletExpiry = new \DateTime('now', $timezone);
+            $ewalletExpiry->modify('+60 minutes');
+            $ewalletValidUpTo = $ewalletExpiry->format('Y-m-d\TH:i:sP');
+
             $body = [
                 'partnerReferenceNo' => $invoiceNo,
                 'amount' => [
@@ -163,17 +170,17 @@ class WinpayService implements PaymentGatewayInterface
                 ],
                 'urlParam' => [
                     [
-                        'url' => url('/api/payments/callback'),
+                        'url' => $notifyUrl,
                         'type' => 'PAY_NOTIFY',
                         'isDeeplink' => 'N'
                     ],
                     [
-                        'url' => url('/dashboard'),
+                        'url' => $returnUrl,
                         'type' => 'PAY_RETURN',
                         'isDeeplink' => 'N'
                     ]
                 ],
-                'validUpTo' => $expiredDate,
+                'validUpTo' => $ewalletValidUpTo,
                 'additionalInfo' => [
                     'channel' => $ewalletChannel,
                     'customerPhone' => $phone,
