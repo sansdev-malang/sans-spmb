@@ -99,23 +99,20 @@ return new class extends Migration
         });
 
         // Seed / Update SpmbFormStep & SpmbFormField
+        $now = now();
         $steps = [
-            ['id' => 1, 'title' => 'Pilihan Program & Layanan', 'order' => 1, 'is_active' => 1],
-            ['id' => 2, 'title' => 'Informasi Calon Siswa', 'order' => 2, 'is_active' => 1],
-            ['id' => 3, 'title' => 'Tempat Tinggal', 'order' => 3, 'is_active' => 1],
-            ['id' => 4, 'title' => 'Data Orang Tua', 'order' => 4, 'is_active' => 1],
-            ['id' => 5, 'title' => 'Data Wali (Opsional)', 'order' => 5, 'is_active' => 1],
-            ['id' => 6, 'title' => 'Data Lampiran', 'order' => 6, 'is_active' => 1],
+            ['id' => 1, 'title' => 'Pilihan Program & Layanan', 'order' => 1, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 2, 'title' => 'Informasi Calon Siswa', 'order' => 2, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 3, 'title' => 'Tempat Tinggal', 'order' => 3, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 4, 'title' => 'Data Orang Tua', 'order' => 4, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 5, 'title' => 'Data Wali (Opsional)', 'order' => 5, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
+            ['id' => 6, 'title' => 'Data Lampiran', 'order' => 6, 'is_active' => 1, 'created_at' => $now, 'updated_at' => $now],
         ];
 
-        foreach ($steps as $s) {
-            SpmbFormStep::updateOrCreate(['id' => $s['id']], $s);
-        }
-
-        // Delete previous fields to prevent duplicate order mapping
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        SpmbFormField::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        DB::table('spmb_form_fields')->truncate();
+        DB::table('spmb_form_steps')->truncate();
+        DB::table('spmb_form_steps')->insert($steps);
 
         $fields = [
             // STEP 1: Pilihan Program & Layanan
@@ -500,9 +497,12 @@ return new class extends Migration
             ],
         ];
 
-        foreach ($fields as $f) {
-            SpmbFormField::create($f);
+        foreach ($fields as &$f) {
+            $f['created_at'] = $now;
+            $f['updated_at'] = $now;
         }
+        DB::table('spmb_form_fields')->insert($fields);
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
     /**

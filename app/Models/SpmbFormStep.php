@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SpmbFormStep extends Model
 {
-    protected $fillable = ['title', 'order', 'is_active'];
+    protected $guarded = [];
 
     public function fields()
     {

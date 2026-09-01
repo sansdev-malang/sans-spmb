@@ -322,10 +322,14 @@ class WebDashboardController extends Controller
         $stepsCompleted = 0;
         $allStepsCompleted = true;
 
+        $previousCompleted = true;
         foreach ($steps as $step) {
             $isCompleted = true;
+            $hasRequiredField = false;
+
             foreach ($step->fields as $field) {
                 if ($field->is_required) {
+                    $hasRequiredField = true;
                     $val = $registration->getFieldValue($field->field_name);
                     if (empty($val)) {
                         $isCompleted = false;
@@ -333,11 +337,20 @@ class WebDashboardController extends Controller
                     }
                 }
             }
+
+            if (!$hasRequiredField) {
+                $isSaved = !empty($registration->additional_info['step_' . $step->id . '_saved']) || !empty($registration->guardian_name);
+                $isCompleted = $previousCompleted && $isSaved;
+            } else {
+                $isCompleted = $isCompleted && $previousCompleted;
+            }
+
             $step->is_completed = $isCompleted;
             if ($isCompleted) {
                 $stepsCompleted++;
             } else {
                 $allStepsCompleted = false;
+                $previousCompleted = false;
             }
         }
 
@@ -836,6 +849,7 @@ class WebDashboardController extends Controller
             $registration->extraServices()->sync(array_filter((array)$request->input('extra_services', [])));
         }
 
+        $additionalInfo['step_' . $stepId . '_saved'] = true;
         $registration->additional_info = $additionalInfo;
         $registration->save();
 
@@ -870,11 +884,37 @@ class WebDashboardController extends Controller
             }
         }
 
-        if ($allCompleted && $registration->registration_status === 'draft') {
+        if ($allCompleted && in_array($registration->registration_status, ['draft', 'failed'])) {
             $registration->update([
-                'registration_status' => 'submitted'
+                'registration_status' => 'submitted',
+                'committee_notes' => 'Formulir & berkas pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.'
             ]);
-            return redirect()->route('dashboard.detail', $id)->with('success', 'Pendaftaran Anda berhasil dikirim! Silakan selesaikan pembayaran seleksi.');
+
+            // Trigger notification to all admins
+            try {
+                $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                    'title' => 'Formulir Pendaftaran Dikirim',
+                    'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja mengirimkan formulir & berkas pendaftaran untuk diverifikasi.',
+                    'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
+                    'type' => 'info',
+                ]));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send form submission notification', ['error' => $e->getMessage()]);
+            }
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Langkah "' . $step->title . '" berhasil disimpan.',
+                'allCompleted' => $allCompleted,
+                'redirect' => $allCompleted ? route('dashboard.detail', $id) : null
+            ]);
+        }
+
+        if ($allCompleted) {
+            return redirect()->route('dashboard.detail', $id)->with('success', 'Formulir pendaftaran berhasil dikirim! Silakan menunggu verifikasi berkas dari panitia.');
         }
 
         return redirect()->back()->with('success', 'Langkah "' . $step->title . '" berhasil disimpan.');

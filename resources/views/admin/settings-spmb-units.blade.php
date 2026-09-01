@@ -42,7 +42,7 @@
                     <h3 class="font-extrabold text-base text-slate-800">Unit Sekolah</h3>
                     <p class="text-[11px] text-slate-400">Kelola unit sekolah yang tersedia untuk pendaftaran (mis. SANS PAUD, SANS SD).</p>
                 </div>
-                <button onclick="openUnitModal('', '', '1', true, '{{ route('admin.spmb-settings.units.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                <button onclick="openUnitModal('', '', '', '', '1', true, '{{ route('admin.spmb-settings.units.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Unit
                 </button>
             </div>
@@ -53,6 +53,7 @@
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Nama Unit</th>
                             <th class="py-4 px-6">Kode Unit</th>
+                            <th class="py-4 px-6">No. WhatsApp Admin</th>
                             <th class="py-4 px-6 text-center">Status</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
@@ -63,6 +64,19 @@
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $unit->name }}</td>
                                 <td class="py-4 px-6 text-slate-600">{{ $unit->code ?? '-' }}</td>
+                                <td class="py-4 px-6">
+                                    @if(!empty($unit->whatsapp_number))
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                                            <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                            <span>{{ $unit->whatsapp_number }}</span>
+                                        </div>
+                                        @if(!empty($unit->admin_contact_name))
+                                            <span class="text-[10px] text-slate-400 block mt-0.5">{{ $unit->admin_contact_name }}</span>
+                                        @endif
+                                    @else
+                                        <span class="text-xs text-slate-400 italic">Belum diatur</span>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="px-2 py-1 rounded-full text-[10px] font-bold {{ $unit->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
                                         {{ $unit->is_active ? 'Aktif' : 'Non-Aktif' }}
@@ -73,7 +87,7 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button onclick="openUnitModal('{{ $unit->name }}', '{{ $unit->code }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Unit">
+                                        <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Unit">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($unit->registrations_count > 0)
@@ -90,7 +104,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 text-center text-slate-400 text-xs">Belum ada unit yang ditambahkan.</td>
+                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada unit yang ditambahkan.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -302,6 +316,15 @@
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Kode Unit</label>
                         <input type="text" id="unitCodeInput" name="code" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: SD (Opsional)">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">No. WhatsApp Admin Unit</label>
+                        <input type="text" id="unitWhatsappInput" name="whatsapp_number" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: 081234567890">
+                        <span class="text-[10px] text-slate-400 mt-1 block">Nomor ini akan dihubungi oleh orang tua calon siswa unit ini.</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Kontak / Petugas (Opsional)</label>
+                        <input type="text" id="unitAdminContactInput" name="admin_contact_name" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: Kak Nisa - Admin PAUD">
+                    </div>
                     <div class="flex items-center gap-3">
                         <input type="checkbox" id="unitActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                         <label for="unitActiveInput" class="text-sm font-bold text-slate-700">Unit Aktif</label>
@@ -412,7 +435,7 @@
     }
 
     // Modal Unit
-    function openUnitModal(name = '', code = '', isActive = '1', isCreate = true, actionUrl = '') {
+    function openUnitModal(name = '', code = '', whatsapp = '', contactName = '', isActive = '1', isCreate = true, actionUrl = '') {
         clearModalErrors();
         
         const modal = document.getElementById('unitModal');
@@ -426,6 +449,8 @@
         form.setAttribute('action', actionUrl);
         document.getElementById('unitNameInput').value = name;
         document.getElementById('unitCodeInput').value = code;
+        document.getElementById('unitWhatsappInput').value = whatsapp;
+        document.getElementById('unitAdminContactInput').value = contactName;
         document.getElementById('unitActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
         
         if (!isCreate) {

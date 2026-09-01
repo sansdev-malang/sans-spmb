@@ -226,7 +226,7 @@
                                 $resultUnlocked = in_array($status, ['agreement_signed', 'completed']);
                             @endphp
                             <div class="flex items-center gap-6 text-[10px] font-bold tracking-wider uppercase">
-                                <a href="{{ route('dashboard') }}" class="transition pb-1 {{ (Route::is('dashboard') || Route::is('dashboard.detail')) ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                <a href="{{ route('dashboard') }}" class="transition pb-1 {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
                                     Beranda
                                 </a>
 

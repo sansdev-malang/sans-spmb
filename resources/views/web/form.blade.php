@@ -80,10 +80,16 @@
                     @endphp
                     <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-brand-emerald rounded-full z-0 transition-all duration-500 ease-out" style="width: {{ $progressPercent }}%;"></div>
 
+                    @php
+                        $canAccessStep = true;
+                    @endphp
                     @foreach($steps as $index => $s)
                         @php
-                            $isActive = (!$s->is_completed && ($index === 0 || $steps[$index - 1]->is_completed)) || ($completedCount === $totalCount && $index === $totalCount - 1);
                             $isCompleted = $s->is_completed;
+                            $isActive = (!$isCompleted && $canAccessStep);
+                            if (!$isCompleted) {
+                                $canAccessStep = false;
+                            }
                         @endphp
                         <div class="relative flex flex-col items-center z-10">
                             <!-- Step Circle Indicator -->
@@ -144,10 +150,10 @@
             @endif
 
             @php
-                $previousStepCompleted = true;
+                $canRenderStep = true;
             @endphp
             @foreach($steps as $index => $step)
-                @if($previousStepCompleted || $registration->registration_status !== 'draft')
+                @if($canRenderStep || $registration->registration_status !== 'draft')
                     @php
                         $stepFieldNames = $step->fields->pluck('field_name')->toArray();
                         $hasInvalidFields = false;
@@ -263,14 +269,95 @@
                                             @elseif($field->type === 'textarea')
                                                 <textarea name="{{ $field->field_name }}" rows="3" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs" {{ $field->is_required ? 'required' : '' }}>{{ $val }}</textarea>
                                             @elseif($field->type === 'file')
-                                                @if(!empty($val))
-                                                    <div class="mb-2 p-2 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
-                                                        <a href="{{ Storage::url($val) }}" target="_blank" class="text-brand-emerald font-bold hover:underline">📄 Lihat Berkas Saat Ini</a>
-                                                        <span class="text-[10px] text-slate-400">Unggah file baru untuk mengganti</span>
+                                                @php
+                                                    $uniqueId = 'file_' . $field->id . '_' . $field->field_name;
+                                                    $hasExisting = !empty($val);
+                                                @endphp
+                                                <div class="space-y-2" id="wrapper-{{ $uniqueId }}">
+                                                    <!-- Drag & Drop Dropzone Box -->
+                                                    <div id="dropzone-{{ $uniqueId }}" 
+                                                         class="dropzone-box group relative border-2 border-dashed border-slate-300 dark:border-slate-750 hover:border-brand-emerald dark:hover:border-emerald-500 rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer bg-slate-50/70 hover:bg-emerald-50/30 dark:bg-slate-900/40 dark:hover:bg-slate-900/80 text-center"
+                                                         data-input-id="input-{{ $uniqueId }}"
+                                                         data-unique-id="{{ $uniqueId }}">
+                                                        
+                                                        <!-- Hidden Real File Input -->
+                                                        <input type="file" 
+                                                               id="input-{{ $uniqueId }}" 
+                                                               name="{{ $field->field_name }}" 
+                                                               class="hidden file-input-element" 
+                                                               data-unique-id="{{ $uniqueId }}"
+                                                               data-has-existing="{{ $hasExisting ? '1' : '0' }}"
+                                                               data-label="{{ $fieldLabel }}"
+                                                               accept=".pdf,.jpg,.jpeg,.png"
+                                                               {{ ($field->is_required && empty($val)) ? 'required' : '' }}>
+
+                                                        <!-- Empty / Prompt State -->
+                                                        <div id="prompt-{{ $uniqueId }}" class="{{ $hasExisting ? 'hidden' : 'block' }} pointer-events-none">
+                                                            <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-brand-emerald dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
+                                                                <i data-lucide="cloud-upload" class="w-6 h-6"></i>
+                                                            </div>
+                                                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                                                <span class="text-brand-emerald dark:text-emerald-400 underline decoration-dashed underline-offset-4 font-extrabold">Klik untuk memilih</span> atau seret file ke sini
+                                                            </p>
+                                                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                                                                Format yang didukung: PDF, JPG, JPEG, PNG (Maks. 2 MB)
+                                                            </p>
+                                                        </div>
+
+                                                        <!-- Existing File State (from Database) -->
+                                                        @if($hasExisting)
+                                                            <div id="existing-{{ $uniqueId }}" class="p-3 bg-white dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-750 flex items-center justify-between gap-3 text-left shadow-sm">
+                                                                <div class="flex items-center gap-3 overflow-hidden">
+                                                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center flex-shrink-0">
+                                                                        <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                                                                    </div>
+                                                                    <div class="truncate">
+                                                                        <div class="flex items-center gap-2">
+                                                                            <span class="text-xs font-bold text-slate-800 dark:text-white">Berkas Tersimpan</span>
+                                                                            <span class="text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 px-2 py-0.5 rounded-full font-extrabold">Tersedia</span>
+                                                                        </div>
+                                                                        <span class="text-[10px] text-slate-400 font-mono block truncate mt-0.5">{{ basename($val) }}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex items-center gap-2 flex-shrink-0" onclick="event.stopPropagation()">
+                                                                    <a href="{{ Storage::url($val) }}" target="_blank" class="px-2.5 py-1.5 bg-slate-100 hover:bg-brand-emerald hover:text-white text-slate-700 dark:bg-slate-800 dark:text-slate-300 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i> Lihat
+                                                                    </a>
+                                                                    <button type="button" onclick="document.getElementById('input-{{ $uniqueId }}').click()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300 rounded-lg text-xs font-bold transition">
+                                                                        Ganti
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        <!-- New Selected File Preview Box (Dynamic) -->
+                                                        <div id="preview-{{ $uniqueId }}" class="hidden p-3 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-xl border border-brand-emerald/40 text-left shadow-sm">
+                                                            <div class="flex items-center justify-between gap-3">
+                                                                <div class="flex items-center gap-3 overflow-hidden">
+                                                                    <!-- Thumbnail image or Document icon -->
+                                                                    <div id="thumb-wrap-{{ $uniqueId }}" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-inner">
+                                                                        <img id="thumb-img-{{ $uniqueId }}" src="" class="hidden w-full h-full object-cover">
+                                                                        <i id="doc-icon-{{ $uniqueId }}" data-lucide="file-text" class="w-6 h-6 text-brand-emerald"></i>
+                                                                    </div>
+                                                                    <div class="truncate">
+                                                                        <span id="file-name-{{ $uniqueId }}" class="text-xs font-extrabold text-slate-800 dark:text-white block truncate">nama_file.pdf</span>
+                                                                        <div class="flex items-center gap-2 mt-1">
+                                                                            <span id="file-size-{{ $uniqueId }}" class="text-[10px] text-slate-500 font-mono">1.2 MB</span>
+                                                                            <span id="file-badge-{{ $uniqueId }}" class="text-[9px] bg-brand-emerald text-white px-1.5 py-0.2 rounded font-black uppercase">PDF</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" 
+                                                                        onclick="event.stopPropagation(); window.resetFileInput('{{ $uniqueId }}', {{ $hasExisting ? 'true' : 'false' }})" 
+                                                                        class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 flex items-center justify-center transition flex-shrink-0" 
+                                                                        title="Batalkan File Ini">
+                                                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
                                                     </div>
-                                                @endif
-                                                <input type="file" name="{{ $field->field_name }}" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs" {{ ($field->is_required && empty($val)) ? 'required' : '' }}>
-                                                <span class="text-[9px] text-slate-450 block mt-1">Format file yang diperbolehkan: PDF, JPG, JPEG, PNG (Maks. 2 MB)</span>
+                                                </div>
                                             @else
                                                 <input type="{{ $field->type }}" name="{{ $field->field_name }}" value="{{ $val }}" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs" {{ $field->is_required ? 'required' : '' }}>
                                             @endif
@@ -342,30 +429,298 @@
                     </div>
                 @endif
                 @php
-                    $previousStepCompleted = $step->is_completed;
+                    if (!$step->is_completed) {
+                        $canRenderStep = false;
+                    }
                 @endphp
             @endforeach
         </div>
     </div>
 </div>
+    <!-- Upload Progress Modal Overlay -->
+    <div id="uploadProgressModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 text-center space-y-5 animate-scale-in">
+            
+            <!-- Animated Graphic -->
+            <div class="relative w-20 h-20 mx-auto">
+                <div id="uploadPingAnim" class="absolute inset-0 rounded-full bg-brand-emerald/20 animate-ping"></div>
+                <div id="uploadIconCircle" class="relative w-20 h-20 rounded-full bg-gradient-to-tr from-brand-emerald to-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <i id="uploadModalIcon" data-lucide="cloud-upload" class="w-10 h-10 animate-bounce"></i>
+                </div>
+            </div>
+
+            <div>
+                <h3 id="uploadModalTitle" class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white">Mengunggah Dokumen Lampiran...</h3>
+                <p id="uploadModalSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Harap tidak menutup atau merefresh halaman saat proses upload berlangsung.</p>
+            </div>
+
+            <!-- Progress Bar Section -->
+            <div class="space-y-2 bg-slate-50 dark:bg-slate-850 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800">
+                <div class="flex justify-between items-center text-xs font-bold">
+                    <span id="uploadModalStatus" class="text-brand-emerald flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Mengunggah berkas...
+                    </span>
+                    <span id="uploadModalPercent" class="text-slate-800 dark:text-white font-mono text-sm font-black">0%</span>
+                </div>
+                <div class="h-3 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden p-0.5">
+                    <div id="uploadModalBar" class="h-full bg-gradient-to-r from-brand-emerald via-emerald-400 to-teal-400 rounded-full transition-all duration-150 ease-out shadow-sm" style="width: 0%;"></div>
+                </div>
+                <div class="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                    <span id="uploadFileNameDetail">Memproses berkas</span>
+                    <span id="uploadModalBytes">0 KB / 0 KB</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const invalidFields = @json($registration->invalid_fields ?? []);
+            // 1. Drag & Drop and File Selection Handlers
+            const dropzoneBoxes = document.querySelectorAll('.dropzone-box');
             
-            // Auto-highlight all invalid fields on load
+            dropzoneBoxes.forEach(box => {
+                const inputId = box.getAttribute('data-input-id');
+                const uniqueId = box.getAttribute('data-unique-id');
+                const input = document.getElementById(inputId);
+
+                if (!input) return;
+
+                // Click to select
+                box.addEventListener('click', (e) => {
+                    if (e.target.closest('button') || e.target.closest('a')) return;
+                    input.click();
+                });
+
+                // Drag and Drop Events
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    box.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        box.classList.add('border-brand-emerald', 'bg-emerald-50/60', 'ring-4', 'ring-emerald-500/20', 'scale-[1.01]');
+                    });
+                });
+
+                ['dragleave', 'dragend', 'drop'].forEach(eventName => {
+                    box.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        box.classList.remove('border-brand-emerald', 'bg-emerald-50/60', 'ring-4', 'ring-emerald-500/20', 'scale-[1.01]');
+                    });
+                });
+
+                box.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files && files.length > 0) {
+                        input.files = files;
+                        handleFileSelection(input, files[0], uniqueId);
+                    }
+                });
+
+                input.addEventListener('change', (e) => {
+                    if (input.files && input.files[0]) {
+                        handleFileSelection(input, input.files[0], uniqueId);
+                    }
+                });
+            });
+
+            function formatBytes(bytes, decimals = 2) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const dm = decimals < 0 ? 0 : decimals;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+            }
+
+            function handleFileSelection(input, file, uniqueId) {
+                // Size validation: max 2MB
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Ukuran file "' + file.name + '" terlalu besar (' + formatBytes(file.size) + '). Maksimal ukuran file adalah 2 MB.');
+                    input.value = '';
+                    return;
+                }
+
+                // Extension validation
+                const ext = file.name.split('.').pop().toLowerCase();
+                const allowed = ['pdf', 'jpg', 'jpeg', 'png'];
+                if (!allowed.includes(ext)) {
+                    alert('Format file tidak didukung. Harap unggah file PDF, JPG, JPEG, atau PNG.');
+                    input.value = '';
+                    return;
+                }
+
+                const promptBox = document.getElementById('prompt-' + uniqueId);
+                const existingBox = document.getElementById('existing-' + uniqueId);
+                const previewBox = document.getElementById('preview-' + uniqueId);
+
+                const fileNameEl = document.getElementById('file-name-' + uniqueId);
+                const fileSizeEl = document.getElementById('file-size-' + uniqueId);
+                const fileBadgeEl = document.getElementById('file-badge-' + uniqueId);
+                const thumbImg = document.getElementById('thumb-img-' + uniqueId);
+                const docIcon = document.getElementById('doc-icon-' + uniqueId);
+
+                if (fileNameEl) fileNameEl.innerText = file.name;
+                if (fileSizeEl) fileSizeEl.innerText = formatBytes(file.size);
+                if (fileBadgeEl) fileBadgeEl.innerText = ext.toUpperCase();
+
+                // Thumbnail preview if image
+                if (['jpg', 'jpeg', 'png'].includes(ext)) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (thumbImg) {
+                            thumbImg.src = e.target.result;
+                            thumbImg.classList.remove('hidden');
+                        }
+                        if (docIcon) docIcon.classList.add('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    if (thumbImg) thumbImg.classList.add('hidden');
+                    if (docIcon) docIcon.classList.remove('hidden');
+                }
+
+                if (promptBox) promptBox.classList.add('hidden');
+                if (existingBox) existingBox.classList.add('hidden');
+                if (previewBox) previewBox.classList.remove('hidden');
+
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            }
+
+            window.resetFileInput = function(uniqueId, hasExisting) {
+                const input = document.getElementById('input-' + uniqueId);
+                if (input) input.value = '';
+
+                const promptBox = document.getElementById('prompt-' + uniqueId);
+                const existingBox = document.getElementById('existing-' + uniqueId);
+                const previewBox = document.getElementById('preview-' + uniqueId);
+
+                if (previewBox) previewBox.classList.add('hidden');
+
+                if (hasExisting && existingBox) {
+                    existingBox.classList.remove('hidden');
+                    if (promptBox) promptBox.classList.add('hidden');
+                } else if (promptBox) {
+                    promptBox.classList.remove('hidden');
+                }
+            };
+
+            // 2. AJAX Form Submission with Real-time Upload Progress Percentage
+            const formsWithFiles = document.querySelectorAll('form[enctype="multipart/form-data"]');
+            const progressModal = document.getElementById('uploadProgressModal');
+            const progressBar = document.getElementById('uploadModalBar');
+            const progressPercent = document.getElementById('uploadModalPercent');
+            const progressBytes = document.getElementById('uploadModalBytes');
+            const progressStatus = document.getElementById('uploadModalStatus');
+            const progressTitle = document.getElementById('uploadModalTitle');
+            const uploadIcon = document.getElementById('uploadModalIcon');
+            const uploadPingAnim = document.getElementById('uploadPingAnim');
+
+            formsWithFiles.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const fileInputs = form.querySelectorAll('input[type="file"]');
+                    let hasSelectedNewFiles = false;
+                    fileInputs.forEach(fi => {
+                        if (fi.files && fi.files.length > 0) {
+                            hasSelectedNewFiles = true;
+                        }
+                    });
+
+                    // If uploading files, show upload progress modal and track percentage
+                    if (hasSelectedNewFiles) {
+                        e.preventDefault();
+
+                        const formData = new FormData(form);
+                        const xhr = new XMLHttpRequest();
+
+                        // Reset Modal State
+                        progressBar.style.width = '0%';
+                        progressPercent.innerText = '0%';
+                        progressBytes.innerText = '0 MB / 0 MB';
+                        progressStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Mengunggah berkas lampiran...';
+                        progressTitle.innerText = 'Mengunggah Dokumen Lampiran...';
+                        progressModal.classList.remove('hidden');
+                        if (uploadPingAnim) uploadPingAnim.classList.remove('hidden');
+
+                        // Real-time Upload Progress Event
+                        xhr.upload.addEventListener('progress', function(event) {
+                            if (event.lengthComputable) {
+                                const percentComplete = Math.round((event.loaded / event.total) * 100);
+                                progressBar.style.width = percentComplete + '%';
+                                progressPercent.innerText = percentComplete + '%';
+                                progressBytes.innerText = formatBytes(event.loaded) + ' / ' + formatBytes(event.total);
+
+                                if (percentComplete >= 100) {
+                                    progressStatus.innerHTML = '⚡ Menyimpan berkas ke server...';
+                                }
+                            }
+                        });
+
+                        xhr.addEventListener('load', function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                progressBar.style.width = '100%';
+                                progressPercent.innerText = '100%';
+                                progressStatus.innerHTML = '✅ Berhasil disimpan!';
+                                progressTitle.innerText = 'Upload Berkas Selesai!';
+                                if (uploadPingAnim) uploadPingAnim.classList.add('hidden');
+
+                                setTimeout(() => {
+                                    try {
+                                        const res = JSON.parse(xhr.responseText);
+                                        if (res.redirect) {
+                                            window.location.href = res.redirect;
+                                        } else {
+                                            window.location.reload();
+                                        }
+                                    } catch (err) {
+                                        window.location.reload();
+                                    }
+                                }, 600);
+                            } else {
+                                progressModal.classList.add('hidden');
+                                try {
+                                    const errRes = JSON.parse(xhr.responseText);
+                                    if (errRes.errors) {
+                                        const firstKey = Object.keys(errRes.errors)[0];
+                                        alert('Gagal menyimpan: ' + errRes.errors[firstKey][0]);
+                                    } else {
+                                        alert('Gagal mengunggah berkas. Silakan coba kembali.');
+                                    }
+                                } catch (e) {
+                                    alert('Terjadi kesalahan saat mengunggah berkas.');
+                                }
+                            }
+                        });
+
+                        xhr.addEventListener('error', function() {
+                            progressModal.classList.add('hidden');
+                            alert('Koneksi terputus saat mengunggah berkas. Periksa internet Anda dan coba lagi.');
+                        });
+
+                        xhr.open(form.method || 'POST', form.action, true);
+                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                        xhr.setRequestHeader('Accept', 'application/json');
+                        xhr.send(formData);
+                    }
+                });
+            });
+
+            // 3. Highlight Invalid Fields on Verification Return
+            const invalidFields = @json($registration->invalid_fields ?? []);
             if (invalidFields && invalidFields.length > 0) {
                 invalidFields.forEach(field => {
                     highlightFieldInput(field);
                 });
             }
 
-            // Handle specific highlight parameter from URL
             const urlParams = new URLSearchParams(window.location.search);
             const highlightField = urlParams.get('highlight');
             const targetStep = urlParams.get('step');
 
             if (targetStep) {
-                // Open the targeted step form
                 const formStep = document.getElementById('form-step-' + targetStep);
                 const readonlyStep = document.getElementById('readonly-step-' + targetStep);
                 if (formStep && readonlyStep) {
@@ -379,14 +734,11 @@
             }
 
             function highlightFieldInput(fieldName, scrollToIt = false) {
-                // Search inputs, select, textarea, file types
                 const targetInput = document.querySelector(`[name="${fieldName}"], [name="${fieldName}[]"], [name^="${fieldName}"]`);
                 if (targetInput) {
                     const formGroup = targetInput.closest('.grid > div') || targetInput.closest('div');
                     if (formGroup) {
                         formGroup.classList.add('ring-4', 'ring-red-500/20', 'border', 'border-red-400', 'p-4', 'rounded-2xl', 'bg-red-50/10', 'transition-all');
-                        
-                        // Prevent duplicate warning labels
                         if (!formGroup.querySelector('.warning-label-rej')) {
                             const warningNode = document.createElement('div');
                             warningNode.className = 'text-[10px] text-red-600 font-bold mt-1.5 flex items-center gap-1 warning-label-rej';

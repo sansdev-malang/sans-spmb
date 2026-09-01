@@ -672,6 +672,10 @@
                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->type->name ?? 'Reguler' }}</span>
                     </div>
                     <div class="flex justify-between items-center">
+                        <span>Program Kelas</span>
+                        <span class="font-bold text-brand-emerald dark:text-emerald-400">{{ $registration->classProgram->name ?? ($registration->getFieldValue('class_program') ?: '-') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
                         <span>Tanggal Registrasi</span>
                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->created_at->format('d M Y') }}</span>
                     </div>
@@ -876,23 +880,96 @@
                 </div>
             @endif
 
-            <!-- Card 3: Bantuan / WhatsApp Contact (Stitch "Butuh Bantuan?" Card) -->
+            <!-- Card 3: Bantuan / WhatsApp Contact (Dynamic per Unit) -->
+            @php
+                $currentUnit = $registration->unit;
+                $unitWaUrl = $currentUnit ? $currentUnit->getWhatsappUrl($registration->candidate_name, $registration->registration_number) : 'https://wa.me/6281234567890';
+                $unitWaNumber = $currentUnit?->whatsapp_number ?: \App\Models\Setting::get('spmb_whatsapp_general', '0812-3456-7890');
+                $unitAdminLabel = $currentUnit?->admin_contact_name ?: ('Admin ' . ($currentUnit?->name ?? 'SPMB'));
+                $otherUnits = \App\Models\SpmbUnit::where('is_active', true)->get();
+            @endphp
             <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-150/80 dark:border-slate-800 space-y-4 text-left">
-                <h4 class="font-extrabold text-slate-850 dark:text-white text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-1.5">
-                    <i data-lucide="help-circle" class="w-4 h-4 text-brand-emerald"></i> Butuh Bantuan?
-                </h4>
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h4 class="font-extrabold text-slate-850 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="help-circle" class="w-4 h-4 text-brand-emerald"></i> Butuh Bantuan?
+                    </h4>
+                    @if($otherUnits->count() > 1)
+                        <button type="button" onclick="document.getElementById('allUnitsWaModal').classList.remove('hidden')" class="text-[10px] text-brand-emerald dark:text-emerald-400 font-bold hover:underline flex items-center gap-0.5">
+                            Kontak Unit Lain <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                        </button>
+                    @endif
+                </div>
+
                 <p class="text-[10px] text-slate-500 dark:text-slate-450 leading-relaxed">
-                    Mengalami kendala saat pengisian formulir, dokumen, atau pembayaran? Tim panitia SPMB kami siap mendampingi Anda.
+                    Mengalami kendala saat pengisian formulir, dokumen, atau pembayaran untuk unit <strong class="text-slate-700 dark:text-slate-300">{{ $currentUnit->name ?? 'Sekolah Anak Saleh' }}</strong>?
                 </p>
+
+                <div class="p-3 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i>
+                        </div>
+                        <div class="truncate">
+                            <span class="text-[11px] font-bold text-slate-800 dark:text-white block truncate">{{ $unitAdminLabel }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono block">{{ $unitWaNumber }}</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
-                    <a href="https://wa.me/628123456789" target="_blank" class="w-full py-3 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100/50 dark:hover:bg-emerald-950/40 text-brand-emerald dark:text-emerald-400 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-emerald-100 dark:border-emerald-900/50">
-                        <i data-lucide="message-square" class="w-4 h-4"></i> Hubungi WhatsApp Admin
+                    <a href="{{ $unitWaUrl }}" target="_blank" class="w-full py-3 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-brand-emerald hover:text-white dark:hover:bg-brand-emerald text-brand-emerald dark:text-emerald-400 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 border border-emerald-200 dark:border-emerald-900/50 shadow-sm group">
+                        <i data-lucide="message-square" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> Hubungi WhatsApp Admin
                     </a>
                 </div>
             </div>
 
         </div>
 
+    </div>
+</div>
+
+<!-- Modal Kontak WhatsApp Seluruh Unit -->
+<div id="allUnitsWaModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 transition-all">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-brand-emerald flex items-center justify-center">
+                    <i data-lucide="phone-call" class="w-4 h-4"></i>
+                </div>
+                <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">Kontak Admin SPMB Seluruh Unit</h3>
+            </div>
+            <button type="button" onclick="document.getElementById('allUnitsWaModal').classList.add('hidden')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+            Pilih unit sekolah untuk terhubung langsung dengan Panitia SPMB via WhatsApp:
+        </p>
+
+        <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+            @foreach($otherUnits as $u)
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-850 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 rounded-2xl border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-3 transition">
+                    <div>
+                        <span class="text-xs font-extrabold text-slate-800 dark:text-white block">{{ $u->name }}</span>
+                        <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
+                            <span>{{ $u->admin_contact_name ?: 'Admin Unit' }}</span>
+                            <span>•</span>
+                            <span class="font-mono font-semibold">{{ $u->whatsapp_number ?: '-' }}</span>
+                        </div>
+                    </div>
+                    <a href="{{ $u->getWhatsappUrl($registration->candidate_name ?? null, $registration->registration_number ?? null) }}" target="_blank" class="px-3 py-2 bg-brand-emerald hover-emerald text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Chat
+                    </a>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="pt-2 text-center">
+            <button type="button" onclick="document.getElementById('allUnitsWaModal').classList.add('hidden')" class="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                Tutup
+            </button>
+        </div>
     </div>
 </div>
 

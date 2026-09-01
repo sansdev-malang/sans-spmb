@@ -262,6 +262,8 @@ class SpmbSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
+            'whatsapp_number' => 'nullable|string|max:30',
+            'admin_contact_name' => 'nullable|string|max:100',
             'is_active' => 'boolean'
         ]);
 
@@ -282,6 +284,8 @@ class SpmbSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
+            'whatsapp_number' => 'nullable|string|max:30',
+            'admin_contact_name' => 'nullable|string|max:100',
             'is_active' => 'boolean'
         ]);
 
