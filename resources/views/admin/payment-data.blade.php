@@ -13,7 +13,8 @@
         </div>
         <div class="flex gap-2">
             <button class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition">
-                📥 Ekspor CSV
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2"></i>
+                Ekspor CSV
             </button>
         </div>
     </div>
@@ -23,7 +24,7 @@
         <!-- Card 1: Count -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Transaksi Lunas</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Transaksi Lunas</span>
                 <span class="text-2xl font-black text-slate-800 block mt-1">{{ $stats['count'] }}</span>
             </div>
             <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -33,7 +34,7 @@
         <!-- Card 2: Revenue Bruto -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Total Revenue (Bruto)</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Revenue (Bruto)</span>
                 <span class="text-base font-black text-emerald-600 block mt-1">Rp {{ number_format($stats['revenue'], 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -43,7 +44,7 @@
         <!-- Card 3: Admin Fee PG -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Biaya Admin PG</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Biaya Admin PG</span>
                 <span class="text-base font-black text-amber-600 block mt-1">Rp {{ number_format($stats['admin_fee'], 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -53,7 +54,7 @@
         <!-- Card 4: Net Revenue -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">Pendapatan Bersih (Netto)</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Pendapatan Bersih (Netto)</span>
                 <span class="text-base font-black text-blue-600 block mt-1">Rp {{ number_format($stats['revenue'] - $stats['admin_fee'], 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -77,7 +78,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <!-- Column 1: Metode Pembayaran -->
                 <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="wallet" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Per Metode Pembayaran
                     </h4>
@@ -96,14 +97,14 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
                         @endforelse
                     </div>
                 </div>
 
                 <!-- Column 2: Jenis Biaya -->
                 <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="tag" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Per Jenis Biaya
                     </h4>
@@ -122,14 +123,14 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
                         @endforelse
                     </div>
                 </div>
 
                 <!-- Column 3: Nama Biaya -->
                 <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="file-text" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Per Nama Biaya
                     </h4>
@@ -148,14 +149,14 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
                         @endforelse
                     </div>
                 </div>
 
                 <!-- Column 4: Unit / Jenjang -->
                 <div class="space-y-3">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Per Unit / Jenjang
                     </h4>
@@ -174,7 +175,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-[10px] text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada transaksi.</p>
                         @endforelse
                     </div>
                 </div>
@@ -187,7 +188,7 @@
                         <i data-lucide="shield-check" class="w-4 h-4 text-brand-emerald"></i>
                         Pusat Sinkronisasi Winpay SNAP API
                     </span>
-                    <p class="text-slate-500 text-[10px] leading-relaxed font-semibold">
+                    <p class="text-slate-500 text-xs leading-relaxed font-semibold">
                         Semua data keuangan di atas tersinkron secara real-time dengan status transaksi sukses dari sistem payment gateway Winpay.
                     </p>
                 </div>
@@ -210,91 +211,83 @@
     <div id="payments-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#payments-card" hx-select="#payments-card">
         
         <!-- Search & Filter Form -->
-        <form action="{{ route('admin.payments.data') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
+        <form action="{{ route('admin.payments.data') }}" method="GET" hx-boost="false" class="bg-slate-50/60 p-4 sm:p-5 border-b border-slate-200/80">
             @if(request('unit_id'))
                 <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
             @endif
-            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    <!-- Search Input Container -->
-                    <div class="relative w-full md:w-80 flex items-center">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+
+            <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
+                    <div class="relative flex-1 min-w-0">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice, Winpay ID (215584), VA, atau nama siswa..." 
-                               class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
-                        
-                        <!-- Clear (X) Button -->
+                               class="w-full h-11 rounded-xl border border-slate-200 bg-white pl-10 pr-20 text-xs text-slate-700 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
+
                         @if(request('search'))
                             <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; this.form.submit();" 
-                                    class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition"
+                                    class="absolute inset-y-0 right-12 flex items-center pr-1 text-slate-400 transition hover:text-slate-600"
                                     title="Hapus Pencarian">
                                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
                             </button>
                         @endif
 
-                        <!-- Integrated Search Button -->
-                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-[10px] font-bold shadow-sm transition">
+                        <button type="submit" class="absolute inset-y-1.5 right-1.5 flex items-center justify-center rounded-lg bg-brand-emerald px-3 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600">
                             Cari
                         </button>
                     </div>
 
-                    <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
-                    </select>
+                    <div class="flex items-center gap-3">
+                        <select name="per_page" onchange="this.form.submit()" class="h-11 rounded-xl border border-slate-200 bg-white px-6.5 text-xs font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
+                            <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
+                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
+                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
+                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
+                        </select>
 
-                    <!-- Advanced Filter Toggle Button -->
-                    <button type="button" onclick="document.getElementById('adv-filters').classList.toggle('hidden')" 
-                            class="flex items-center gap-1.5 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-600 transition">
-                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
-                        Filter Lanjutan
-                    </button>
+                        <button type="button" onclick="document.getElementById('adv-filters').classList.toggle('hidden')" 
+                                class="inline-flex h-11 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50">
+                            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                            Filter Lanjutan
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Slide-down Advanced Filters Panel -->
-            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id')) ? '' : 'hidden' }} border-t border-slate-100 pt-4 space-y-4 transition-all duration-300">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <!-- Date Range: Start -->
+            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id')) ? '' : 'hidden' }} mt-4 border-t border-slate-200 pt-4 transition-all duration-300">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Mulai</label>
+                        <label class="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Tanggal Mulai</label>
                         <input type="date" name="start_date" value="{{ request('start_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
+                               class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                     </div>
-                    <!-- Date Range: End -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Selesai</label>
+                        <label class="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Tanggal Selesai</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
+                               class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                     </div>
-                    <!-- Filter: Metode Pembayaran -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Metode</label>
-                        <select name="method" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <label class="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Metode</label>
+                        <select name="method" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                             <option value="">Semua Metode</option>
                             @foreach(\App\Models\SpmbPaymentChannel::where('is_active', true)->get() as $channel)
                                 <option value="{{ $channel->code }}" {{ request('method') === $channel->code ? 'selected' : '' }}>{{ $channel->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <!-- Filter: Jenis Biaya -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Jenis Biaya</label>
-                        <select name="category_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <label class="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Jenis Biaya</label>
+                        <select name="category_id" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                             <option value="">Semua Jenis</option>
                             @foreach(\App\Models\SpmbFeeCategory::all() as $cat)
                                 <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <!-- Filter: Nama Biaya -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Nama Biaya</label>
-                        <select name="fee_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <label class="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Nama Biaya</label>
+                        <select name="fee_id" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                             <option value="">Semua Nama Biaya</option>
                             @foreach(\App\Models\SpmbFee::all() as $fee)
                                 <option value="{{ $fee->id }}" {{ request('fee_id') == $fee->id ? 'selected' : '' }}>{{ $fee->name }}</option>
@@ -302,12 +295,12 @@
                         </select>
                     </div>
                 </div>
-                <!-- Action Buttons in Advanced Filter -->
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="resetAdvancedFilters(this.form)" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-4 py-2 rounded-xl transition">
+
+                <div class="mt-4 flex justify-end gap-2 border-t border-slate-200 pt-3">
+                    <button type="button" onclick="resetAdvancedFilters(this.form)" class="rounded-xl px-4 py-2 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
                         Reset Filter
                     </button>
-                    <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+                    <button type="submit" class="rounded-xl bg-brand-emerald px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600">
                         Terapkan Filter
                     </button>
                 </div>
@@ -326,61 +319,60 @@
         </script>
 
         @if(auth()->user()->isSuperAdmin())
-            <!-- Unit Tabs -->
-            <div class="px-6 pt-4 bg-slate-50/50 border-b border-slate-100 flex flex-wrap gap-2 text-[10px] font-bold">
-                <!-- Semua Unit Tab -->
-                <a href="{{ route(Route::currentRouteName(), request()->except(['page', 'unit_id'])) }}" 
-                   class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ !request()->filled('unit_id') ? 'border-brand-emerald text-brand-emerald bg-white shadow-sm' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
-                    Semua Unit
-                </a>
-                
-                <!-- Dynamic Unit Tabs -->
-                @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
-                    <a href="{{ route(Route::currentRouteName(), array_merge(request()->except(['page']), ['unit_id' => $unit->id])) }}" 
-                       class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ request('unit_id') == $unit->id ? 'border-brand-emerald text-brand-emerald bg-white shadow-sm' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
-                        {{ strtoupper($unit->name) }}
+            <div class="border-b border-slate-200 bg-white px-4 pb-2 pt-3 sm:px-5">
+                <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-2xl border border-slate-200 bg-slate-100/80 p-1.5">
+                    <a href="{{ route(Route::currentRouteName(), request()->except(['page', 'unit_id'])) }}" 
+                       class="inline-flex shrink-0 items-center justify-center min-w-[150px] rounded-xl px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.08em] transition-all duration-200 {{ !request()->filled('unit_id') ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm' : 'bg-transparent text-slate-500 hover:bg-white hover:text-slate-700' }}">
+                        Semua Unit
                     </a>
-                @endforeach
+
+                    @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
+                        <a href="{{ route(Route::currentRouteName(), array_merge(request()->except(['page']), ['unit_id' => $unit->id])) }}" 
+                           class="inline-flex shrink-0 items-center justify-center min-w-[150px] rounded-xl px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.08em] transition-all duration-200 {{ request('unit_id') == $unit->id ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm' : 'bg-transparent text-slate-500 hover:bg-white hover:text-slate-700' }}">
+                            {{ strtoupper($unit->name) }}
+                        </a>
+                    @endforeach
+                </div>
             </div>
         @endif
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="min-w-full border-separate border-spacing-0 text-left">
                 <thead>
-                    <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
-                        <th class="py-4 px-6 text-center w-12">No.</th>
-                        <th class="py-4 px-6">No. Invoice</th>
-                        <th class="py-4 px-6">Calon Siswa</th>
-                        <th class="py-4 px-6">Keterangan Biaya</th>
-                        <th class="py-4 px-6">Metode</th>
-                        <th class="py-4 px-6">Nominal</th>
-                        <th class="py-4 px-6">Ref Gateway (Winpay)</th>
-                        <th class="py-4 px-6">Waktu Transaksi</th>
-                        <th class="py-4 px-6 text-center">Status</th>
-                        <th class="py-4 px-6 text-center w-28">Aksi</th>
+                    <tr class="bg-slate-50 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-500">
+                        <th class="border-b border-slate-200 px-5 py-3 text-center">No.</th>
+                        <th class="border-b border-slate-200 px-5 py-3">No. Invoice</th>
+                        <th class="border-b border-slate-200 px-5 py-3">Calon Siswa</th>
+                        <th class="border-b border-slate-200 px-5 py-3">Keterangan Biaya</th>
+                        <th class="border-b border-slate-200 px-5 py-3">Metode</th>
+                        <th class="border-b border-slate-200 px-5 py-3">Nominal</th>
+                        <th class="border-b border-slate-200 px-5 py-3">Ref Gateway</th>
+                        <th class="border-b border-slate-200 px-5 py-3">Waktu Transaksi</th>
+                        <th class="border-b border-slate-200 px-5 py-3 text-center">Status</th>
+                        <th class="border-b border-slate-200 px-5 py-3 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-sm divide-y divide-slate-100">
+                <tbody class="text-sm text-slate-600">
                     @forelse($payments as $pay)
-                        <tr class="hover:bg-slate-50/55 transition group">
-                            <td class="py-4 px-6 text-center text-slate-400 font-bold text-xs">
+                        <tr class="group transition-colors duration-200 hover:bg-emerald-50/30">
+                            <td class="border-b border-slate-200 px-5 py-4 text-center text-xs font-bold text-slate-400">
                                 {{ ($payments->currentPage() - 1) * $payments->perPage() + $loop->iteration }}
                             </td>
-                            <td class="py-4 px-6">
-                                <div class="flex items-center gap-2">
-                                    <div class="p-1.5 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-white group-hover:text-brand-emerald border border-transparent group-hover:border-slate-100 transition duration-200">
+                            <td class="border-b border-slate-200 px-5 py-4">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-400 transition group-hover:border-emerald-100 group-hover:bg-white group-hover:text-brand-emerald">
                                         <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                                     </div>
                                     <div>
                                         <div class="font-mono text-xs font-bold text-slate-700 select-all tracking-tight">{{ $pay->invoice_number }}</div>
-                                        <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Merchant Ref di Winpay</div>
+                                        <div class="mt-0.5 text-[11px] text-slate-400">Merchant Ref di Winpay</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="py-4 px-6">
+                            <td class="border-b border-slate-200 px-5 py-4">
                                 <div class="font-semibold text-slate-800">{{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}</div>
                                 @if($pay->registration)
-                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5">
+                                    <div class="mt-0.5 text-[11px] text-slate-400">
                                         {{ $pay->registration->admission_level ?: ($pay->registration->grade->name ?? '') }}
                                         @if(($pay->registration->admission_level || isset($pay->registration->grade)) && isset($pay->registration->unit))
                                             •
@@ -388,49 +380,49 @@
                                         {{ $pay->registration->unit->name ?? '' }}
                                     </div>
                                 @else
-                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5 italic">Draft Pendaftaran</div>
+                                    <div class="mt-0.5 text-[11px] text-slate-400 italic">Draft Pendaftaran</div>
                                 @endif
                             </td>
-                            <td class="py-4 px-6">
+                            <td class="border-b border-slate-200 px-5 py-4">
                                 @php
                                     $fee = \App\Models\SpmbFee::where('name', 'like', '%' . ($pay->registration->admission_level ?? 'TK A') . '%')->first()
                                         ?? \App\Models\SpmbFee::where('is_active', true)->first()
                                         ?? (object)['name' => 'Pendaftaran TK A'];
                                 @endphp
-                                <div class="font-semibold text-slate-700 text-xs">{{ $fee->name }}</div>
-                                <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $fee->category->name ?? 'Formulir Pendaftaran' }}</div>
+                                <div class="text-xs font-semibold text-slate-700">{{ $fee->name }}</div>
+                                <div class="mt-0.5 text-[11px] text-slate-400">{{ $fee->category->name ?? 'Formulir Pendaftaran' }}</div>
                             </td>
-                            <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+                            <td class="border-b border-slate-200 px-5 py-4">
+                                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-brand-emerald"></span>
                                     <span>{{ $pay->payment_method }}</span>
                                 </div>
                                 @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
-                                    <div class="mt-1 flex items-center gap-1">
-                                        <span class="font-mono text-[10px] text-slate-500 font-bold select-all bg-slate-50 border border-slate-200/50 px-1.5 py-0.5 rounded">
+                                    <div class="mt-2 flex items-center gap-1.5">
+                                        <span class="select-all rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] font-bold text-slate-500">
                                             {{ $pay->payment_info['virtualAccountNo'] }}
                                         </span>
-                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Nomor VA">
+                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 transition hover:text-slate-600" title="Salin Nomor VA">
                                             <i data-lucide="copy" class="w-2.5 h-2.5"></i>
                                         </button>
                                     </div>
                                 @endif
                             </td>
-                            <td class="py-4 px-6 font-bold text-slate-850 text-xs">
+                            <td class="border-b border-slate-200 px-5 py-4 text-xs font-bold text-slate-850">
                                 Rp {{ number_format($pay->amount, 0, ',', '.') }}
                             </td>
-                            <td class="py-4 px-6">
+                            <td class="border-b border-slate-200 px-5 py-4">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="font-mono text-xs text-slate-500 font-semibold select-all" title="{{ $pay->reference_id ?? '-' }}">
+                                    <span class="select-all font-mono text-[11px] font-semibold text-slate-500" title="{{ $pay->reference_id ?? '-' }}">
                                         {{ $pay->reference_id ? (substr($pay->reference_id, 0, 8) . '...' . substr($pay->reference_id, -4)) : '-' }}
                                     </span>
                                     @if($pay->reference_id)
-                                        <button onclick="navigator.clipboard.writeText('{{ $pay->reference_id }}'); toastr.success('Ref ID disalin ke clipboard')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Full Ref ID">
+                                        <button onclick="navigator.clipboard.writeText('{{ $pay->reference_id }}'); toastr.success('Ref ID disalin ke clipboard')" class="text-slate-350 transition hover:text-slate-600" title="Salin Full Ref ID">
                                             <i data-lucide="copy" class="w-3 h-3"></i>
                                         </button>
                                     @endif
                                 </div>
-                                <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Gateway Reference</div>
+                                <div class="mt-1 text-[11px] text-slate-400">Gateway Reference</div>
                                 @php
                                     $gatewayId = null;
                                     if (is_array($pay->payment_info)) {
@@ -440,56 +432,56 @@
                                     }
                                 @endphp
                                 @if($gatewayId)
-                                    <div class="mt-1.5 flex">
-                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-mono font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 select-all">
+                                    <div class="mt-2 flex">
+                                        <span class="inline-flex items-center gap-1 rounded border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-extrabold text-emerald-700 select-all">
                                             <i data-lucide="check-circle" class="w-2.5 h-2.5 text-emerald-500"></i>
                                             Winpay ID: {{ $gatewayId }}
                                         </span>
                                     </div>
                                 @else
-                                    <div class="mt-1.5 text-[9px] text-slate-400 italic flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                                    <div class="mt-2 flex items-center gap-1.5 text-[11px] text-slate-400 italic">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
                                         Menunggu callback...
                                     </div>
                                 @endif
                             </td>
-                            <td class="py-4 px-6">
-                                <div class="flex items-center gap-1 text-slate-700 text-xs font-semibold">
+                            <td class="border-b border-slate-200 px-5 py-4">
+                                <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">
                                     <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                                     <span>{{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }}</span>
-                                    <span class="text-[8px] bg-slate-100 text-slate-500 px-1 rounded font-bold">WIB</span>
+                                    <span class="rounded bg-slate-100 px-1 py-0.5 text-[8px] font-bold text-slate-500">WIB</span>
                                 </div>
-                                <div class="flex items-center gap-1 font-mono text-[9px] text-slate-400 mt-1 pl-4.5">
+                                <div class="mt-1 flex items-center gap-1 font-mono text-[10px] text-slate-400 pl-4.5">
                                     <span>{{ $pay->created_at->format('Y-m-d H:i:s') }}</span>
-                                    <span class="text-[7px] border border-slate-200 px-0.5 rounded font-bold uppercase">UTC (Winpay)</span>
+                                    <span class="rounded border border-slate-200 px-0.5 text-[7px] font-bold uppercase">UTC</span>
                                 </div>
                             </td>
-                            <td class="py-4 px-6 text-center">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
-                                    @if($pay->status === 'success') bg-green-50 text-green-700 border border-green-200
-                                    @elseif($pay->status === 'pending') bg-yellow-50 text-yellow-700 border border-yellow-200
-                                    @else bg-red-50 text-red-700 border border-red-200 @endif">
-                                    <span class="w-1.5 h-1.5 rounded-full 
+                            <td class="border-b border-slate-200 px-5 py-4 text-center">
+                                <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em]
+                                    @if($pay->status === 'success') bg-green-50 text-green-700 border-green-200
+                                    @elseif($pay->status === 'pending') bg-yellow-50 text-yellow-700 border-yellow-200
+                                    @else bg-red-50 text-red-700 border-red-200 @endif">
+                                    <span class="h-1.5 w-1.5 rounded-full 
                                         @if($pay->status === 'success') bg-green-500
                                         @elseif($pay->status === 'pending') bg-yellow-500
                                         @else bg-red-500 @endif"></span>
                                     {{ $pay->status }}
                                 </span>
                             </td>
-                            <td class="py-4 px-6 text-center">
+                            <td class="border-b border-slate-200 px-5 py-4 text-center">
                                 @if($pay->status === 'success')
-                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200" title="Unduh Bukti Pembayaran Resmi">
+                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-brand-emerald transition hover:bg-emerald-100" title="Unduh Bukti Pembayaran Resmi">
                                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                         <span>Bukti Bayar</span>
                                     </a>
                                 @else
-                                    <span class="text-slate-400 text-xs font-medium">-</span>
+                                    <span class="text-xs text-slate-400">-</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="py-12 px-6 text-center text-slate-400">
+                            <td colspan="10" class="px-6 py-12 text-center text-sm text-slate-400">
                                 Belum ada riwayat transaksi pembayaran.
                             </td>
                         </tr>

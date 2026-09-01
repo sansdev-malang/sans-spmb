@@ -12,12 +12,6 @@
             <h1 class="text-xl font-extrabold text-slate-800">Verifikasi Data Calon Siswa</h1>
             <p class="text-xs text-slate-500 mt-1">Kelola review berkas, status pembayaran, dan validasi data calon siswa dari satu tempat.</p>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ route('admin.dashboard') }}" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-1.5">
-                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                Dashboard Utama
-            </a>
-        </div>
     </div>
 
 
