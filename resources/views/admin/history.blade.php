@@ -301,19 +301,52 @@
                                         'id_label' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
                                         'name' => $cand->candidate_name,
                                         'nickname' => $cand->nickname ?? '-',
-                                        'nik' => $cand->nik,
+                                        'nik' => $cand->nik ?? '-',
+                                        'family_card_no' => $cand->getFieldValue('family_card_no') ?? '-',
                                         'gender' => $cand->gender === 'male' ? 'Laki-laki' : 'Perempuan',
-                                        'birth_place' => $cand->birth_place,
+                                        'birth_place' => $cand->birth_place ?? '-',
                                         'birth_date' => $cand->birth_date ? $cand->birth_date->format('d F Y') : '-',
-                                        'religion' => $cand->religion,
+                                        'religion' => $cand->religion ?? '-',
                                         'previous_school' => $cand->previous_school ?? 'Tidak ada',
-                                        'admission_level' => $cand->admission_level,
+                                        'admission_level' => $cand->admission_level ?? '-',
                                         'class_program' => $cand->classProgram->name ?? 'Reguler',
+                                        
+                                        // Tempat Tinggal
+                                        'address' => $cand->getFieldValue('address') ?? '-',
+                                        'house_number' => $cand->getFieldValue('house_number') ?? '-',
+                                        'rt' => $cand->getFieldValue('rt') ?? '-',
+                                        'rw' => $cand->getFieldValue('rw') ?? '-',
+                                        'kelurahan' => $cand->getFieldValue('kelurahan') ?? '-',
+                                        'kecamatan' => $cand->getFieldValue('kecamatan') ?? '-',
+                                        'city' => $cand->getFieldValue('city') ?? '-',
+                                        'province' => $cand->getFieldValue('province') ?? '-',
+
+                                        // Data Orang Tua
                                         'father_name' => $cand->father_name ?? '-',
+                                        'father_nik' => $cand->getFieldValue('father_nik') ?? '-',
+                                        'father_address' => $cand->getFieldValue('father_address') ?? '-',
+                                        'father_phone' => $cand->getFieldValue('father_phone') ?? $cand->parent_phone ?? '-',
                                         'mother_name' => $cand->mother_name ?? '-',
+                                        'mother_nik' => $cand->getFieldValue('mother_nik') ?? '-',
+                                        'mother_address' => $cand->getFieldValue('mother_address') ?? '-',
+                                        'mother_phone' => $cand->getFieldValue('mother_phone') ?? '-',
                                         'parent_phone' => $cand->parent_phone ?? '-',
+
+                                        // Data Wali
+                                        'guardian_name' => $cand->getFieldValue('guardian_name') ?? '-',
+                                        'guardian_nik' => $cand->getFieldValue('guardian_nik') ?? '-',
+                                        'guardian_address' => $cand->getFieldValue('guardian_address') ?? '-',
+                                        'guardian_phone' => $cand->getFieldValue('guardian_phone') ?? '-',
+
+                                        // Lampiran
+                                        'student_photo' => $cand->getFieldValue('student_photo_path') ? asset('storage/' . $cand->getFieldValue('student_photo_path')) : null,
                                         'birth_certificate' => $cand->birth_certificate_path ? asset('storage/' . $cand->birth_certificate_path) : null,
                                         'family_card' => $cand->family_card_path ? asset('storage/' . $cand->family_card_path) : null,
+                                        'diploma_certificate' => $cand->getFieldValue('diploma_certificate_path') ? asset('storage/' . $cand->getFieldValue('diploma_certificate_path')) : null,
+                                        'student_card' => $cand->getFieldValue('student_card_path') ? asset('storage/' . $cand->getFieldValue('student_card_path')) : null,
+                                        'special_needs' => $cand->getFieldValue('special_needs_assessment_path') ? asset('storage/' . $cand->getFieldValue('special_needs_assessment_path')) : null,
+                                        'payment_receipt' => $cand->getFieldValue('payment_receipt_path') ? asset('storage/' . $cand->getFieldValue('payment_receipt_path')) : null,
+
                                         'created_at_label' => $cand->created_at->format('d M Y, H:i') . ' WIB',
                                         'status' => strtoupper($cand->registration_status),
                                         'payment_status' => strtoupper($cand->payment_status),
@@ -404,102 +437,196 @@
             <!-- Segment 1: Personal Information -->
             <div class="space-y-3">
                 <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="info" class="w-4 h-4"></i> Biodata Calon Siswa
+                    <i data-lucide="info" class="w-4 h-4"></i> Informasi Calon Siswa
                 </h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Lengkap</span>
-                        <span id="det-name" class="font-semibold text-slate-800">Ahmad Raihan</span>
+                        <span id="det-name" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Panggilan</span>
-                        <span id="det-nickname" class="font-semibold text-slate-800">Raihan</span>
+                        <span id="det-nickname" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">NIK (Nomor Induk Kependudukan)</span>
-                        <span id="det-nik" class="font-mono text-slate-800">3578091234560002</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">NIK Siswa</span>
+                        <span id="det-nik" class="font-mono text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nomor Kartu Keluarga (KK)</span>
+                        <span id="det-family-card-no" class="font-mono text-slate-800 font-bold text-brand-emerald">-</span>
                     </div>
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Jenis Kelamin</span>
-                        <span id="det-gender" class="font-semibold text-slate-800">Laki-laki</span>
+                        <span id="det-gender" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
-                        <span id="det-birth" class="font-semibold text-slate-800">Malang, 12 Oktober 2018</span>
+                        <span id="det-birth" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Agama</span>
-                        <span id="det-religion" class="font-semibold text-slate-800">Islam</span>
+                        <span id="det-religion" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Asal Sekolah (TK/PAUD)</span>
-                        <span id="det-previous-school" class="font-semibold text-slate-800">TK Anak Saleh</span>
-                    </div>
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Tingkat Pendaftaran</span>
-                        <span id="det-level" class="font-bold text-slate-800">SD Kelas 1</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Asal Sekolah</span>
+                        <span id="det-previous-school" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Program Kelas</span>
-                        <span id="det-program" class="font-bold text-brand-emerald">Reguler</span>
+                        <span id="det-program" class="font-bold text-brand-emerald">-</span>
                     </div>
-                    <div class="md:col-span-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <div class="md:col-span-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                         <span class="text-[9px] font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
                         <span id="det-extras" class="font-bold text-slate-800">-</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Segment 2: Parent Information -->
+            <!-- Segment 2: Tempat Tinggal -->
             <div class="space-y-3 pt-2">
                 <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="users" class="w-4 h-4"></i> Data Orang Tua / Wali
+                    <i data-lucide="map-pin" class="w-4 h-4"></i> Tempat Tinggal
                 </h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ayah Kandung</span>
-                        <span id="det-father" class="font-semibold text-slate-800">Budi Santoso</span>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Alamat</span>
+                        <span id="det-address" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ibu Kandung</span>
-                        <span id="det-mother" class="font-semibold text-slate-800">Siti Aminah</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Nomor Rumah</span>
+                        <span id="det-house-no" class="font-semibold text-slate-800">-</span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">No. HP Wali (WhatsApp)</span>
-                        <span id="det-phone" class="font-mono text-slate-800">081234567890</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">RT / RW</span>
+                        <span id="det-rt-rw" class="font-semibold text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Kelurahan / Desa</span>
+                        <span id="det-kelurahan" class="font-semibold text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Kecamatan</span>
+                        <span id="det-kecamatan" class="font-semibold text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Kabupaten / Kota</span>
+                        <span id="det-city" class="font-semibold text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Provinsi</span>
+                        <span id="det-province" class="font-semibold text-slate-800">-</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Segment 3: Uploaded Documents -->
+            <!-- Segment 3: Data Orang Tua -->
             <div class="space-y-3 pt-2">
                 <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Dokumen Persyaratan
+                    <i data-lucide="users" class="w-4 h-4"></i> Data Orang Tua
                 </h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Ayah -->
+                    <div class="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
+                        <span class="text-xs font-extrabold text-brand-emerald uppercase block">Data Ayah Kandung</span>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div><span class="text-slate-400 font-bold block">Nama:</span> <span id="det-father-name" class="font-semibold text-slate-800">-</span></div>
+                            <div><span class="text-slate-400 font-bold block">NIK:</span> <span id="det-father-nik" class="font-mono text-slate-800">-</span></div>
+                            <div><span class="text-slate-400 font-bold block">No. HP:</span> <span id="det-father-phone" class="font-mono text-slate-800">-</span></div>
+                            <div><span class="text-slate-400 font-bold block">Alamat:</span> <span id="det-father-addr" class="text-slate-800">-</span></div>
+                        </div>
+                    </div>
+                    <!-- Ibu -->
+                    <div class="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
+                        <span class="text-xs font-extrabold text-brand-emerald uppercase block">Data Ibu Kandung</span>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div><span class="text-slate-400 font-bold block">Nama:</span> <span id="det-mother-name" class="font-semibold text-slate-800">-</span></div>
+                            <div><span class="text-slate-400 font-bold block">NIK:</span> <span id="det-mother-nik" class="font-mono text-slate-800">-</span></div>
+                            <div><span class="text-slate-400 font-bold block">No. HP:</span> <span id="det-mother-phone" class="font-mono text-slate-800">-</span></div>
+                            <div><span class="text-slate-400 font-bold block">Alamat:</span> <span id="det-mother-addr" class="text-slate-800">-</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segment 4: Data Wali -->
+            <div class="space-y-3 pt-2">
+                <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                    <i data-lucide="user-check" class="w-4 h-4"></i> Data Wali (Jika Bukan Orang Tua Kandung)
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                    <div>
+                        <span class="font-bold text-slate-400 uppercase block">Nama Wali</span>
+                        <span id="det-guardian-name" class="font-semibold text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-slate-400 uppercase block">NIK Wali</span>
+                        <span id="det-guardian-nik" class="font-mono text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-slate-400 uppercase block">No. HP Wali</span>
+                        <span id="det-guardian-phone" class="font-mono text-slate-800">-</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-slate-400 uppercase block">Alamat Wali</span>
+                        <span id="det-guardian-addr" class="text-slate-800">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segment 5: Uploaded Documents -->
+            <div class="space-y-3 pt-2">
+                <h4 class="font-extrabold text-sm text-brand-emerald border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Data Lampiran Dokumen
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <!-- Foto -->
+                    <div id="det-photo-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="image" class="w-5 h-5 text-brand-emerald"></i>
+                            <div><span class="text-xs font-bold text-slate-700 block">Pas Foto Murid</span><span class="text-[9px] text-slate-400">Formal</span></div>
+                        </div>
+                        <a id="det-photo-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                    </div>
+                    <!-- Akta -->
                     <div id="det-cert-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
-                            <div>
-                                <span class="text-[10px] font-bold text-slate-700 block">Akta Kelahiran</span>
-                                <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
-                            </div>
+                            <i data-lucide="file-digit" class="w-5 h-5 text-brand-emerald"></i>
+                            <div><span class="text-xs font-bold text-slate-700 block">Akta Kelahiran</span><span class="text-[9px] text-slate-400">Scan Asli</span></div>
                         </div>
-                        <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition">
-                            Buka File
-                        </a>
+                        <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
                     </div>
+                    <!-- KK -->
                     <div id="det-card-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
-                            <div>
-                                <span class="text-[10px] font-bold text-slate-700 block">Kartu Keluarga</span>
-                                <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
-                            </div>
+                            <i data-lucide="file-digit" class="w-5 h-5 text-brand-emerald"></i>
+                            <div><span class="text-xs font-bold text-slate-700 block">Kartu Keluarga</span><span class="text-[9px] text-slate-400">Scan Asli</span></div>
                         </div>
-                        <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition">
-                            Buka File
-                        </a>
+                        <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                    </div>
+                    <!-- Ijazah -->
+                    <div id="det-diploma-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="award" class="w-5 h-5 text-brand-emerald"></i>
+                            <div><span class="text-xs font-bold text-slate-700 block">Ijazah Terakhir</span><span class="text-[9px] text-slate-400">Dokumen</span></div>
+                        </div>
+                        <a id="det-diploma-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                    </div>
+                    <!-- NISN -->
+                    <div id="det-nisn-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-brand-emerald"></i>
+                            <div><span class="text-xs font-bold text-slate-700 block">NISN / Kartu Pelajar</span><span class="text-[9px] text-slate-400">Opsional</span></div>
+                        </div>
+                        <a id="det-nisn-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
+                    </div>
+                    <!-- Assesmen Khusus -->
+                    <div id="det-special-box" class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="file-heart" class="w-5 h-5 text-brand-emerald"></i>
+                            <div><span class="text-xs font-bold text-slate-700 block">Assesmen Kebutuhan Khusus</span><span class="text-[9px] text-slate-400">Jika Ada</span></div>
+                        </div>
+                        <a id="det-special-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-xs font-bold transition">Buka</a>
                     </div>
                 </div>
             </div>
@@ -655,46 +782,66 @@
             statusEl.classList.add('bg-slate-100', 'text-slate-600', 'border', 'border-slate-300');
         }
 
-        document.getElementById('det-name').innerText = cand.name;
-        document.getElementById('det-nickname').innerText = cand.nickname;
-        document.getElementById('det-nik').innerText = cand.nik ? cand.nik : '-';
-        document.getElementById('det-gender').innerText = cand.gender;
+        document.getElementById('det-name').innerText = cand.name || '-';
+        document.getElementById('det-nickname').innerText = cand.nickname || '-';
+        document.getElementById('det-nik').innerText = cand.nik || '-';
+        document.getElementById('det-family-card-no').innerText = cand.family_card_no || '-';
+        document.getElementById('det-gender').innerText = cand.gender || '-';
         document.getElementById('det-birth').innerText = cand.birth_place + ', ' + cand.birth_date;
-        document.getElementById('det-religion').innerText = cand.religion;
-        document.getElementById('det-previous-school').innerText = cand.previous_school;
-        document.getElementById('det-level').innerText = cand.admission_level;
+        document.getElementById('det-religion').innerText = cand.religion || '-';
+        document.getElementById('det-previous-school').innerText = cand.previous_school || '-';
         document.getElementById('det-program').innerText = cand.class_program || 'Reguler';
-        document.getElementById('det-extras').innerText = cand.extra_services;
+        document.getElementById('det-extras').innerText = cand.extra_services || '-';
         
-        document.getElementById('det-father').innerText = cand.father_name;
-        document.getElementById('det-mother').innerText = cand.mother_name;
-        document.getElementById('det-phone').innerText = cand.parent_phone;
+        // Tempat Tinggal
+        document.getElementById('det-address').innerText = cand.address || '-';
+        document.getElementById('det-house-no').innerText = cand.house_number || '-';
+        document.getElementById('det-rt-rw').innerText = (cand.rt !== '-' || cand.rw !== '-') ? (cand.rt + ' / ' + cand.rw) : '-';
+        document.getElementById('det-kelurahan').innerText = cand.kelurahan || '-';
+        document.getElementById('det-kecamatan').innerText = cand.kecamatan || '-';
+        document.getElementById('det-city').innerText = cand.city || '-';
+        document.getElementById('det-province').innerText = cand.province || '-';
+
+        // Orang Tua
+        document.getElementById('det-father-name').innerText = cand.father_name || '-';
+        document.getElementById('det-father-nik').innerText = cand.father_nik || '-';
+        document.getElementById('det-father-phone').innerText = cand.father_phone || '-';
+        document.getElementById('det-father-addr').innerText = cand.father_address || '-';
+
+        document.getElementById('det-mother-name').innerText = cand.mother_name || '-';
+        document.getElementById('det-mother-nik').innerText = cand.mother_nik || '-';
+        document.getElementById('det-mother-phone').innerText = cand.mother_phone || '-';
+        document.getElementById('det-mother-addr').innerText = cand.mother_address || '-';
+
+        // Wali
+        document.getElementById('det-guardian-name').innerText = cand.guardian_name || '-';
+        document.getElementById('det-guardian-nik').innerText = cand.guardian_nik || '-';
+        document.getElementById('det-guardian-phone').innerText = cand.guardian_phone || '-';
+        document.getElementById('det-guardian-addr').innerText = cand.guardian_address || '-';
         
         document.getElementById('det-created').innerText = cand.created_at_label;
 
-        // Akta File Box Link
-        const certBox = document.getElementById('det-cert-box');
-        const certLink = document.getElementById('det-cert-link');
-        if (cand.birth_certificate) {
-            certBox.classList.remove('opacity-50');
-            certLink.href = cand.birth_certificate;
-            certLink.style.display = 'inline-block';
-        } else {
-            certBox.classList.add('opacity-50');
-            certLink.style.display = 'none';
+        // Lampiran Helper
+        function setupFileLink(boxId, linkId, url) {
+            const box = document.getElementById(boxId);
+            const link = document.getElementById(linkId);
+            if (!box || !link) return;
+            if (url) {
+                box.classList.remove('opacity-50');
+                link.href = url;
+                link.style.display = 'inline-block';
+            } else {
+                box.classList.add('opacity-50');
+                link.style.display = 'none';
+            }
         }
 
-        // KK File Box Link
-        const cardBox = document.getElementById('det-card-box');
-        const cardLink = document.getElementById('det-card-link');
-        if (cand.family_card) {
-            cardBox.classList.remove('opacity-50');
-            cardLink.href = cand.family_card;
-            cardLink.style.display = 'inline-block';
-        } else {
-            cardBox.classList.add('opacity-50');
-            cardLink.style.display = 'none';
-        }
+        setupFileLink('det-photo-box', 'det-photo-link', cand.student_photo);
+        setupFileLink('det-cert-box', 'det-cert-link', cand.birth_certificate);
+        setupFileLink('det-card-box', 'det-card-link', cand.family_card);
+        setupFileLink('det-diploma-box', 'det-diploma-link', cand.diploma_certificate);
+        setupFileLink('det-nisn-box', 'det-nisn-link', cand.student_card);
+        setupFileLink('det-special-box', 'det-special-link', cand.special_needs);
 
         document.getElementById('detailModal').classList.remove('hidden');
         

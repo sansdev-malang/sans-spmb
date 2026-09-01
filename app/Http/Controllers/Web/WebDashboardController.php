@@ -786,9 +786,14 @@ class WebDashboardController extends Controller
 
         // 2. Save fields dynamically
         $physicalColumns = [
-            'candidate_name', 'nickname', 'nik', 'gender', 'birth_place', 
-            'birth_date', 'religion', 'previous_school', 'admission_level', 'father_name', 
-            'mother_name', 'parent_phone', 'birth_certificate_path', 'family_card_path',
+            'candidate_name', 'nickname', 'nik', 'family_card_no', 'gender', 'birth_place', 
+            'birth_date', 'religion', 'previous_school', 'admission_level',
+            'address', 'house_number', 'rt', 'rw', 'kelurahan', 'kecamatan', 'city', 'province',
+            'father_name', 'father_nik', 'father_address', 'father_phone',
+            'mother_name', 'mother_nik', 'mother_address', 'mother_phone',
+            'guardian_name', 'guardian_nik', 'guardian_address', 'guardian_phone', 'parent_phone',
+            'student_photo_path', 'birth_certificate_path', 'family_card_path', 'diploma_certificate_path',
+            'student_card_path', 'special_needs_assessment_path', 'payment_receipt_path',
             'spmb_wave_id', 'spmb_type_id', 'spmb_period_id', 'spmb_class_program_id'
         ];
 

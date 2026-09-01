@@ -130,6 +130,7 @@
                                 'name' => $reg->candidate_name ?? 'Draft / Belum Isi',
                                 'nickname' => $reg->nickname ?? '-',
                                 'nik' => $reg->nik ?? '-',
+                                'family_card_no' => $reg->getFieldValue('family_card_no') ?? '-',
                                 'gender' => in_array($reg->gender, ['Laki-laki', 'male']) ? 'Laki-laki' : (in_array($reg->gender, ['Perempuan', 'female']) ? 'Perempuan' : ($reg->gender ?? '-')),
                                 'birth_place' => $reg->birth_place ?? '-',
                                 'birth_date' => $reg->birth_date ? $reg->birth_date->format('d F Y') : '-',
@@ -137,11 +138,43 @@
                                 'previous_school' => $reg->previous_school ?? 'Tidak ada',
                                 'admission_level' => $reg->admission_level ?? '-',
                                 'class_program' => $reg->classProgram->name ?? 'Reguler',
+                                
+                                // Tempat Tinggal
+                                'address' => $reg->getFieldValue('address') ?? '-',
+                                'house_number' => $reg->getFieldValue('house_number') ?? '-',
+                                'rt' => $reg->getFieldValue('rt') ?? '-',
+                                'rw' => $reg->getFieldValue('rw') ?? '-',
+                                'kelurahan' => $reg->getFieldValue('kelurahan') ?? '-',
+                                'kecamatan' => $reg->getFieldValue('kecamatan') ?? '-',
+                                'city' => $reg->getFieldValue('city') ?? '-',
+                                'province' => $reg->getFieldValue('province') ?? '-',
+
+                                // Data Orang Tua
                                 'father_name' => $reg->father_name ?? '-',
+                                'father_nik' => $reg->getFieldValue('father_nik') ?? '-',
+                                'father_address' => $reg->getFieldValue('father_address') ?? '-',
+                                'father_phone' => $reg->getFieldValue('father_phone') ?? $reg->parent_phone ?? '-',
                                 'mother_name' => $reg->mother_name ?? '-',
+                                'mother_nik' => $reg->getFieldValue('mother_nik') ?? '-',
+                                'mother_address' => $reg->getFieldValue('mother_address') ?? '-',
+                                'mother_phone' => $reg->getFieldValue('mother_phone') ?? '-',
                                 'parent_phone' => $reg->parent_phone ?? '-',
+
+                                // Data Wali
+                                'guardian_name' => $reg->getFieldValue('guardian_name') ?? '-',
+                                'guardian_nik' => $reg->getFieldValue('guardian_nik') ?? '-',
+                                'guardian_address' => $reg->getFieldValue('guardian_address') ?? '-',
+                                'guardian_phone' => $reg->getFieldValue('guardian_phone') ?? '-',
+
+                                // Lampiran
+                                'student_photo' => $reg->getFieldValue('student_photo_path') ? asset('storage/' . $reg->getFieldValue('student_photo_path')) : null,
                                 'birth_certificate' => $reg->birth_certificate_path ? asset('storage/' . $reg->birth_certificate_path) : null,
                                 'family_card' => $reg->family_card_path ? asset('storage/' . $reg->family_card_path) : null,
+                                'diploma_certificate' => $reg->getFieldValue('diploma_certificate_path') ? asset('storage/' . $reg->getFieldValue('diploma_certificate_path')) : null,
+                                'student_card' => $reg->getFieldValue('student_card_path') ? asset('storage/' . $reg->getFieldValue('student_card_path')) : null,
+                                'special_needs' => $reg->getFieldValue('special_needs_assessment_path') ? asset('storage/' . $reg->getFieldValue('special_needs_assessment_path')) : null,
+                                'payment_receipt' => $reg->getFieldValue('payment_receipt_path') ? asset('storage/' . $reg->getFieldValue('payment_receipt_path')) : null,
+
                                 'created_at_label' => $reg->created_at->format('d M Y, H:i') . ' WIB',
                                 'status' => strtoupper($reg->registration_status),
                                 'payment_status' => strtoupper($reg->payment_status),
