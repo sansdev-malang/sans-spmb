@@ -66,61 +66,152 @@
     <!-- LIST OF CURRENT ACTIVE REGISTRATIONS (SHOWN UNDERNEATH IF NOT EMPTY) -->
     @if(!$registrations->isEmpty())
         <div class="pt-8 border-t border-slate-200/60 dark:border-slate-800 space-y-6">
-            <div class="text-left max-w-4xl mx-auto">
-                <h2 class="text-xl font-extrabold text-slate-850 dark:text-white">Pendaftaran Ananda Anda</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola tahapan pendaftaran atau selesaikan administrasi siswa di bawah ini.</p>
+            <div class="text-center max-w-xl mx-auto space-y-1">
+                <h2 class="text-2xl font-extrabold text-slate-850 dark:text-white tracking-tight">Pendaftaran Ananda Anda</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Kelola tahapan pendaftaran atau selesaikan administrasi siswa di bawah ini.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            <div class="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto pt-2">
                 @foreach($registrations as $reg)
-                    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition relative group overflow-hidden text-left">
-                        <!-- Status Badge -->
-                        <div class="absolute top-4 right-4">
-                            @if($reg->registration_status === 'completed')
-                                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Lunas & Resmi</span>
-                            @elseif($reg->registration_status === 'agreement_signed')
-                                <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Menunggu Pelunasan</span>
-                            @elseif($reg->registration_status === 'taaruf_completed')
-                                <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Ta'aruf Selesai</span>
-                            @elseif($reg->registration_status === 'verified')
-                                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Terverifikasi</span>
-                            @elseif($reg->registration_status === 'submitted')
-                                <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Menunggu Verifikasi</span>
-                            @else
-                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Draft Formulir</span>
-                            @endif
-                        </div>
+                    @php
+                        $isPaid = $reg->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
+                        $status = $reg->registration_status;
+                        $regNum = $reg->registration_number ?: ('REG-' . str_pad($reg->id, 4, '0', STR_PAD_LEFT));
+                    @endphp
+                    <div class="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-150/80 dark:border-slate-800 hover:shadow-lg transition-all duration-300 relative group flex flex-col justify-between text-left">
                         
-                        <div class="flex items-center gap-4 mb-5">
-                            <div class="h-12 w-12 bg-emerald-50 text-brand-emerald rounded-2xl flex items-center justify-center text-xl font-black dark:bg-emerald-950/30">
-                                {{ substr($reg->candidate_name ?? 'A', 0, 1) }}
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-slate-800 dark:text-white truncate pr-16">{{ $reg->candidate_name ?? 'Anak (Draft)' }}</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">{{ $reg->unit->name ?? '-' }}@if(!empty($reg->grade->name)) • {{ $reg->grade->name }}@endif</p>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-2 mb-6">
-                            <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
-                                <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Status Bayar</span>
-                                @if($reg->payment_status === 'paid')
-                                    <span class="text-xs font-bold text-green-600">LUNAS</span>
-                                @elseif($reg->payment_status === 'pending')
-                                    <span class="text-xs font-bold text-amber-600">PENDING</span>
+                        <div>
+                            <!-- Header Bar: ID & Status Badge -->
+                            <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+                                <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-slate-200/60 dark:border-slate-700">
+                                    <i data-lucide="tag" class="w-3 h-3 text-emerald-600"></i> {{ $reg->id_label }}
+                                </span>
+                                
+                                @if($status === 'completed')
+                                    <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Resmi Terdaftar
+                                    </span>
+                                @elseif($status === 'agreement_signed')
+                                    <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pelunasan Administrasi
+                                    </span>
+                                @elseif($status === 'taaruf_completed')
+                                    <span class="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Ta'aruf Selesai
+                                    </span>
+                                @elseif($status === 'verified')
+                                    <span class="inline-flex items-center gap-1 bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span> Berkas Terverifikasi
+                                    </span>
+                                @elseif($status === 'submitted')
+                                    <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> Verifikasi Berkas
+                                    </span>
+                                @elseif($status === 'failed')
+                                    <span class="inline-flex items-center gap-1 bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Perlu Perbaikan
+                                    </span>
                                 @else
-                                    <span class="text-xs font-bold text-slate-500">BELUM LUNAS</span>
+                                    @if($isPaid)
+                                        <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-200 dark:border-amber-900/40">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draf Formulir
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-rose-200 dark:border-rose-900/40">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Belum Bayar
+                                        </span>
+                                    @endif
                                 @endif
                             </div>
-                            <div class="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
-                                <span class="block text-[10px] text-slate-400 font-bold uppercase mb-1">Dibuat Pada</span>
-                                <span class="text-xs font-bold text-slate-600 dark:text-slate-350">{{ $reg->created_at->format('d M Y') }}</span>
+                            
+                            <!-- Centered Candidate Profile Header -->
+                            <div class="flex flex-col items-center text-center mb-5">
+                                <div class="h-16 w-16 bg-emerald-600 text-white dark:bg-emerald-500 dark:text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-emerald-600/20 mb-2.5 ring-4 ring-emerald-50 dark:ring-emerald-950/40 flex-shrink-0">
+                                    {{ strtoupper(substr(trim($reg->candidate_name ?? 'A'), 0, 1)) }}
+                                </div>
+                                <h3 class="font-extrabold text-slate-850 dark:text-white text-base truncate max-w-full leading-tight">
+                                    {{ $reg->candidate_name ?? 'Anak (Draft)' }}
+                                </h3>
+                                <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-1">
+                                    {{ $reg->unit->name ?? '-' }}
+                                </p>
+                            </div>
+                            
+                            <!-- Detailed Information Chips / Table Grid -->
+                            <div class="bg-slate-50 dark:bg-slate-950 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 text-[11px] space-y-2 mb-4">
+                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i> Jenjang / Tingkat</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->grade->name ?? ($reg->admission_level ?: '-') }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i> Tahun Pelajaran</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->period->year ?? '2026-2027' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="compass" class="w-3.5 h-3.5 text-slate-400"></i> Jalur & Gelombang</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->type->name ?? 'Reguler' }} • {{ $reg->wave->name ?? 'Gel. 1' }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                                    <span class="flex items-center gap-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i> Program Kelas</span>
+                                    <span class="font-bold text-brand-emerald dark:text-emerald-400">{{ $reg->classProgram->name ?? ($reg->getFieldValue('class_program') ?: 'Reguler') }}</span>
+                                </div>
+                                @if($reg->extraServices && $reg->extraServices->count() > 0)
+                                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-400 border-t border-slate-200/60 dark:border-slate-800 pt-1.5 mt-1.5">
+                                        <span class="flex items-center gap-1.5"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i> Layanan Non-Formal</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{{ $reg->extraServices->pluck('name')->implode(', ') }}</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Stage Next Action Banner / Hint -->
+                            <div class="mb-4">
+                                @if(!$isPaid)
+                                    <div class="p-2.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/40 text-[10px] text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
+                                        <i data-lucide="credit-card" class="w-4 h-4 flex-shrink-0"></i>
+                                        <span>Biaya pendaftaran formulir belum diselesaikan.</span>
+                                    </div>
+                                @elseif($status === 'draft')
+                                    <div class="p-2.5 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/40 text-[10px] text-amber-700 dark:text-amber-400 font-bold flex items-center gap-2">
+                                        <i data-lucide="edit-3" class="w-4 h-4 flex-shrink-0"></i>
+                                        <span>Formulir & berkas belum dikirim ke panitia.</span>
+                                    </div>
+                                @elseif($status === 'submitted')
+                                    <div class="p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/40 text-[10px] text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">
+                                        <i data-lucide="clock" class="w-4 h-4 flex-shrink-0"></i>
+                                        <span>Berkas sedang dalam antrean verifikasi panitia.</span>
+                                    </div>
+                                @elseif($status === 'verified')
+                                    <div class="p-2.5 bg-teal-50 dark:bg-teal-950/30 rounded-xl border border-teal-200 dark:border-teal-900/40 text-[10px] text-teal-700 dark:text-teal-400 font-bold flex items-center gap-2">
+                                        <i data-lucide="calendar-check" class="w-4 h-4 flex-shrink-0"></i>
+                                        <span>Berkas lolos verifikasi! Bersiap untuk Ta'aruf.</span>
+                                    </div>
+                                @elseif($status === 'taaruf_completed')
+                                    <div class="p-2.5 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl border border-indigo-200 dark:border-indigo-900/40 text-[10px] text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-2">
+                                        <i data-lucide="file-check" class="w-4 h-4 flex-shrink-0"></i>
+                                        <span>Ta'aruf selesai. Silakan isi surat pernyataan.</span>
+                                    </div>
+                                @elseif($status === 'agreement_signed')
+                                    <div class="p-2.5 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/40 text-[10px] text-amber-700 dark:text-amber-400 font-bold flex items-center gap-2">
+                                        <i data-lucide="wallet" class="w-4 h-4 flex-shrink-0"></i>
+                                        <span>Dinyatakan Diterima! Lakukan daftar ulang.</span>
+                                    </div>
+                                @elseif($status === 'completed')
+                                    <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-[10px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
+                                        <i data-lucide="check-circle" class="w-4 h-4 flex-shrink-0"></i>
+                                        <span>Penerimaan ananda telah resmi selesai & lunas.</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         
-                        <a href="{{ route('dashboard.detail', $reg->id) }}" class="block w-full py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold text-center rounded-xl transition dark:bg-emerald-600 dark:hover:bg-emerald-500">
-                            Kelola Pendaftaran
-                        </a>
+                        <!-- Main Action Button -->
+                        <div class="pt-2">
+                            <a href="{{ route('dashboard.detail', $reg->id) }}" class="w-full py-3.5 px-4 bg-slate-900 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 text-white text-xs font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md">
+                                <span>Buka Portal Pendaftaran</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                            </a>
+                        </div>
+
                     </div>
                 @endforeach
             </div>

@@ -663,6 +663,10 @@
                     </div>
                 </div>
                 <div class="text-[10px] space-y-2.5 text-slate-600 dark:text-slate-400">
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <span class="font-semibold">ID Pendaftaran</span>
+                        <span class="font-mono font-extrabold text-slate-850 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{{ $registration->id_label }}</span>
+                    </div>
                     <div class="flex justify-between items-center">
                         <span>Tahun Pelajaran</span>
                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->period->name ?? '2026/2027' }}</span>

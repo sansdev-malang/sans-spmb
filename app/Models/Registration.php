@@ -119,4 +119,13 @@ class Registration extends Model
     {
         return $this->belongsToMany(SpmbExtraService::class, 'registration_extra_service', 'registration_id', 'spmb_extra_service_id');
     }
+
+    /**
+     * Get official ID Pendaftaran label matching admin formatting (e.g. SANS-2027-0012)
+     */
+    public function getIdLabelAttribute()
+    {
+        $year = substr($this->period->year ?? date('Y'), 0, 4);
+        return 'SANS-' . $year . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
+    }
 }

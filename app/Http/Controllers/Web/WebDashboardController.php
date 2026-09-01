@@ -250,7 +250,7 @@ class WebDashboardController extends Controller
         }
 
         // 3. Only query registrations that are successfully paid or submitted/verified
-        $registrations = Registration::with(['unit', 'grade'])
+        $registrations = Registration::with(['unit', 'grade', 'period', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->where('user_id', auth()->id())
             ->where(function($q) {
                 $q->whereHas('payments', function($pq) {
