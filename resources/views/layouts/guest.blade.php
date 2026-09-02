@@ -49,21 +49,83 @@
             .guest-panel-orb {
                 position: absolute;
                 border-radius: 9999px;
-                filter: blur(48px);
+                filter: blur(52px);
                 pointer-events: none;
-                opacity: 0.6;
+            }
+            @keyframes orbFloat1 {
+                0% {
+                    transform: translate3d(0, 0, 0) scale(1);
+                }
+                50% {
+                    transform: translate3d(24px, -18px, 0) scale(1.06);
+                }
+                100% {
+                    transform: translate3d(-16px, 12px, 0) scale(0.98);
+                }
+            }
+            @keyframes orbFloat2 {
+                0% {
+                    transform: translate3d(0, 0, 0) scale(1);
+                }
+                50% {
+                    transform: translate3d(-20px, 16px, 0) scale(1.08);
+                }
+                100% {
+                    transform: translate3d(18px, -14px, 0) scale(0.96);
+                }
+            }
+            @keyframes shimmerWave {
+                0% {
+                    transform: translate3d(-28%, 0, 0) rotate(10deg);
+                    opacity: 0.25;
+                }
+                50% {
+                    opacity: 0.65;
+                }
+                100% {
+                    transform: translate3d(28%, 0, 0) rotate(10deg);
+                    opacity: 0.25;
+                }
+            }
+            @keyframes particlesFloat {
+                0%, 100% {
+                    transform: translate3d(0, 0, 0);
+                }
+                50% {
+                    transform: translate3d(0, -10px, 0);
+                }
+            }
+
+            .guest-panel-orb-1 {
+                animation: orbFloat1 14s ease-in-out infinite alternate;
+                will-change: transform;
+            }
+            .guest-panel-orb-2 {
+                animation: orbFloat2 16s ease-in-out infinite alternate;
+                will-change: transform;
+            }
+            .guest-panel-shimmer {
+                position: absolute;
+                inset: -30%;
+                background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
+                mix-blend-mode: screen;
+                pointer-events: none;
+                animation: shimmerWave 10s ease-in-out infinite alternate;
+                will-change: transform, opacity;
             }
             .guest-panel-particles {
                 position: absolute;
                 inset: 0;
                 background-image:
-                    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0 2px, transparent 3px),
-                    radial-gradient(circle at 80% 30%, rgba(255,255,255,0.10) 0 1.5px, transparent 3px),
-                    radial-gradient(circle at 35% 75%, rgba(255,255,255,0.10) 0 1.5px, transparent 3px),
-                    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.14) 0 2px, transparent 3px);
+                    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0 2px, transparent 3px),
+                    radial-gradient(circle at 80% 30%, rgba(255,255,255,0.12) 0 1.5px, transparent 3px),
+                    radial-gradient(circle at 35% 75%, rgba(255,255,255,0.12) 0 1.5px, transparent 3px),
+                    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.16) 0 2px, transparent 3px);
                 background-size: 240px 240px;
-                opacity: 0.45;
+                opacity: 0.55;
                 pointer-events: none;
+                animation: particlesFloat 8s ease-in-out infinite alternate;
+                will-change: transform;
             }
             /* Custom Brand Colors for Tailwind */
             .bg-brand-emerald { background-color: {{ $primaryColor }}; }
@@ -171,14 +233,19 @@
             <div class="hidden md:flex md:w-1/2 bg-custom-primary relative overflow-hidden flex-col justify-center p-8 lg:p-10 text-white">
                 <!-- Clean background gradients -->
                 <div class="absolute inset-0 bg-gradient-to-br from-custom-primary via-[#0f4f3a] to-[#081c15]"></div>
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.15),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(255,199,0,0.14),transparent_35%)]"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(255,199,0,0.16),transparent_35%)]"></div>
+                <div class="absolute inset-0 bg-black/5"></div>
 
-                <!-- Background decorative elements (static and lightweight) -->
-                <div class="guest-panel-orb top-[-10%] left-[-10%] w-[50%] aspect-square bg-white/10"></div>
-                <div class="guest-panel-orb bottom-[-12%] right-[-8%] w-[55%] aspect-square bg-brand-yellow/15"></div>
+                <!-- Background decorative elements (GPU-Accelerated) -->
+                <div class="guest-panel-orb guest-panel-orb-1 top-[-12%] left-[-12%] w-[54%] aspect-square bg-white/15"></div>
+                <div class="guest-panel-orb guest-panel-orb-2 bottom-[-16%] right-[-10%] w-[64%] aspect-square bg-brand-yellow/18"></div>
+                <div class="guest-panel-shimmer"></div>
                 <div class="guest-panel-particles"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20"></div>
 
-                <div class="relative z-10 h-full w-full rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl p-10 lg:p-12 flex flex-col justify-between overflow-hidden">
+                <div class="relative z-10 h-full w-full rounded-[2rem] border border-white/15 bg-white/8 backdrop-blur-xl shadow-2xl p-10 lg:p-12 flex flex-col justify-between overflow-hidden">
+                    <div class="absolute inset-0 bg-white/[0.03]"></div>
+
                     <!-- Top Brand Header -->
                     <div class="relative z-10 flex items-center gap-3">
                         @if(!empty($schoolLogo))
@@ -198,7 +265,7 @@
 
                     <!-- Center Content: Title & Features -->
                     <div class="relative z-10 my-auto max-w-md space-y-6">
-                        <span class="guest-panel-badge inline-flex items-center gap-1 bg-white/15 text-brand-yellow font-extrabold text-xs uppercase tracking-widest px-3.5 py-1 rounded-full border border-white/10">
+                        <span class="guest-panel-badge inline-flex items-center gap-1 bg-white/12 backdrop-blur-md text-brand-yellow font-extrabold text-xs uppercase tracking-widest px-3.5 py-1 rounded-full border border-white/10">
                             ✨ SPMB Online
                         </span>
                         <h1 class="guest-panel-title text-3xl lg:text-4xl font-black leading-tight">
@@ -208,21 +275,21 @@
                             Selamat datang di portal pendaftaran {{ $schoolName }}. Daftarkan putra-putri terbaik Anda untuk bergabung bersama kami.
                         </p>
 
-                        <div class="space-y-3 pt-3 text-sm font-semibold text-white/95">
-                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-sm">
-                                <div class="h-6 w-6 rounded-lg bg-white/15 flex items-center justify-center text-brand-yellow flex-shrink-0">
+                        <div class="space-y-3.5 pt-3 text-sm font-semibold text-white/95">
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-md">
+                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow flex-shrink-0">
                                     <i data-lucide="check" class="w-4 h-4"></i>
                                 </div>
                                 <span class="text-xs font-semibold">Proses pendaftaran cepat, online, dan transparan</span>
                             </div>
-                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-sm">
-                                <div class="h-6 w-6 rounded-lg bg-white/15 flex items-center justify-center text-brand-yellow flex-shrink-0">
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-md">
+                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow flex-shrink-0">
                                     <i data-lucide="check" class="w-4 h-4"></i>
                                 </div>
                                 <span class="text-xs font-semibold">Pengumuman hasil observasi & administrasi terintegrasi</span>
                             </div>
-                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-sm">
-                                <div class="h-6 w-6 rounded-lg bg-white/15 flex items-center justify-center text-brand-yellow flex-shrink-0">
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-md">
+                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow flex-shrink-0">
                                     <i data-lucide="check" class="w-4 h-4"></i>
                                 </div>
                                 <span class="text-xs font-semibold">Layanan bantuan cepat via Whatsapp Panitia</span>
@@ -296,7 +363,8 @@
             
         </div>
         
-        <!-- Lucide Icons CDN -->
+        <!-- Anime.js + Lucide Icons CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
         <script src="https://unpkg.com/lucide@latest"></script>
         <script>
             // Initialize Lucide Icons
@@ -325,6 +393,44 @@
             
             document.addEventListener("DOMContentLoaded", function() {
                 updateThemeIcon();
+
+                // One-time smooth entrance animation on load (0% ongoing CPU load)
+                if (window.anime) {
+                    anime.timeline({
+                        easing: 'easeOutQuad',
+                    })
+                    .add({
+                        targets: '.guest-panel-badge',
+                        opacity: [0, 1],
+                        translateY: [16, 0],
+                        duration: 600,
+                    })
+                    .add({
+                        targets: '.guest-panel-title',
+                        opacity: [0, 1],
+                        translateY: [20, 0],
+                        duration: 650,
+                    }, '-=350')
+                    .add({
+                        targets: '.guest-panel-text',
+                        opacity: [0, 1],
+                        translateY: [16, 0],
+                        duration: 600,
+                    }, '-=300')
+                    .add({
+                        targets: '.guest-panel-item',
+                        opacity: [0, 1],
+                        translateX: [-12, 0],
+                        duration: 500,
+                        delay: anime.stagger(120),
+                    }, '-=200')
+                    .add({
+                        targets: '.guest-panel-footer',
+                        opacity: [0, 1],
+                        translateY: [14, 0],
+                        duration: 550,
+                    }, '-=200');
+                }
             });
         </script>
     </body>
