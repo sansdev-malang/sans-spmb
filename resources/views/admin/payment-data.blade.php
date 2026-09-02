@@ -212,6 +212,13 @@
                         @php
                             $feeDetails = $cand->getFinalFeeDetails();
                             $items = $feeDetails['items'] ?? [];
+                            foreach ($items as &$it) {
+                                $it['paid_amount'] = $cand->getItemPaidAmount($it['name']);
+                                $it['discount_amount'] = $cand->getItemDiscountAmount($it['name'], $it['id'] ?? null);
+                                $it['net_amount'] = max(0, $it['amount'] - $it['discount_amount']);
+                                $it['is_fully_paid'] = ($it['paid_amount'] >= $it['net_amount'] && $it['paid_amount'] > 0);
+                            }
+                            $feeDetails['items'] = $items;
                             $gross = $cand->gross_fee;
                             $discount = $cand->total_discount;
                             $net = $cand->net_fee;
@@ -456,6 +463,17 @@
             </button>
         </div>
 
+        <!-- In-Modal Fully Paid Alert / Lock Banner -->
+        <div id="modal_already_paid_banner" class="hidden p-4 bg-emerald-50 dark:bg-emerald-950/80 border-b border-emerald-300 dark:border-emerald-700 flex items-center gap-3 text-xs font-semibold text-emerald-900 dark:text-emerald-200 shadow-inner">
+            <div class="h-9 w-9 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600"></i>
+            </div>
+            <div>
+                <span class="font-extrabold block text-xs text-emerald-900 dark:text-emerald-100">Tagihan Calon Siswa Telah Lunas Sepenuhnya</span>
+                <span class="text-[11px] text-emerald-700 dark:text-emerald-300 font-normal">Seluruh komponen biaya telah dibayar (Rp 0 sisa tagihan). Kebijakan biaya terkunci dan tidak dapat diubah lagi.</span>
+            </div>
+        </div>
+
         <!-- Form Body -->
         <form id="policy-form" onsubmit="submitPolicyForm(event)" class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
             @csrf
@@ -682,10 +700,16 @@
         currentCandidate = cand;
         currentFeeDetails = feeDetails;
 
+        const isFullyPaid = (cand.remaining_balance <= 0 && cand.total_paid_final_fee > 0);
+
         document.getElementById('modal-cand-name').textContent = cand.candidate_name || 'Calon Siswa';
         document.getElementById('modal-cand-id').textContent = cand.id_label || ('SANS-2027-' + String(cand.id).padStart(4, '0'));
         document.getElementById('modal-cand-unit').textContent = (cand.unit?.name || 'Unit') + (cand.admission_level ? ' (' + cand.admission_level + ')' : '');
         document.getElementById('modal_registration_id').value = cand.id;
+
+        // Fully Paid Notice & Button Lock
+        document.getElementById('modal_already_paid_banner').classList.toggle('hidden', !isFullyPaid);
+        document.getElementById('btn_save_policy').classList.toggle('hidden', isFullyPaid);
 
         // 1. Setup Diskon Mode
         const discMode = cand.discount_mode || (cand.discount_amount > 0 ? 'global' : 'none');
@@ -699,6 +723,13 @@
         document.getElementById('modal_discount_amount').value = cand.discount_amount || 0;
         document.getElementById('modal_discount_notes').value = cand.discount_notes || '';
 
+        // If candidate is fully paid, disable all discount controls
+        document.getElementById('disc_mode_none').disabled = isFullyPaid;
+        document.getElementById('disc_mode_global').disabled = isFullyPaid;
+        document.getElementById('disc_mode_selective').disabled = isFullyPaid;
+        document.getElementById('modal_discount_amount').disabled = isFullyPaid;
+        document.getElementById('modal_discount_notes').disabled = isFullyPaid;
+
         // 2. Setup Cicilan Mode
         const instMode = cand.installment_mode || 'none';
         if (instMode === 'all') {
@@ -710,9 +741,14 @@
         }
         document.getElementById('modal_min_installment_amount').value = cand.min_installment_amount || 1000000;
 
+        document.getElementById('inst_mode_none').disabled = isFullyPaid;
+        document.getElementById('inst_mode_all').disabled = isFullyPaid;
+        document.getElementById('inst_mode_selective').disabled = isFullyPaid;
+        document.getElementById('modal_min_installment_amount').disabled = isFullyPaid;
+
         // 3. Render Selective Discount Table & Selective Installment Checklist
-        renderSelectiveDiscountItems(feeDetails.items || [], cand.item_discounts || {});
-        renderSelectiveInstallmentItems(feeDetails.items || [], cand.installment_allowed_fee_ids || []);
+        renderSelectiveDiscountItems(feeDetails.items || [], cand.item_discounts || {}, isFullyPaid);
+        renderSelectiveInstallmentItems(feeDetails.items || [], cand.installment_allowed_fee_ids || [], isFullyPaid);
 
         // 4. Update visibility
         onDiscountModeChange();
@@ -745,7 +781,7 @@
         document.getElementById('modal_min_installment_container').classList.toggle('hidden', (!isSelective && !isAll));
     }
 
-    function renderSelectiveDiscountItems(items, currentDiscounts) {
+    function renderSelectiveDiscountItems(items, currentDiscounts, isFullyPaid) {
         const container = document.getElementById('modal_selective_discount_list');
         container.innerHTML = '';
 
@@ -756,30 +792,42 @@
 
         items.forEach((item, idx) => {
             const rawDiscount = currentDiscounts[item.name] || currentDiscounts[item.id] || 0;
+            const itemPaid = item.paid_amount || 0;
+            const isItemPaidLunas = item.is_fully_paid || isFullyPaid || (itemPaid >= item.amount && itemPaid > 0);
+            const maxAllowedDiscount = Math.max(0, item.amount - itemPaid);
+
             const row = document.createElement('div');
-            row.className = 'flex items-center justify-between gap-3 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700';
+            row.className = 'flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 ' + (isItemPaidLunas ? 'bg-slate-100/70 dark:bg-slate-800/40 opacity-75' : 'bg-white dark:bg-slate-900');
             row.innerHTML = `
                 <div class="min-w-0 flex-1">
-                    <span class="font-bold text-xs text-slate-800 dark:text-slate-100 block truncate">${item.name}</span>
-                    <span class="text-[10px] text-slate-400 block font-mono">Tarif: Rp ${Number(item.amount).toLocaleString('id-ID')}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${item.name}</span>
+                        ${isItemPaidLunas ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">✓ LUNAS</span>' : ''}
+                    </div>
+                    <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5 font-mono">
+                        <span>Tarif: Rp ${Number(item.amount).toLocaleString('id-ID')}</span>
+                        ${itemPaid > 0 ? `<span>• Terbayar: <strong class="text-emerald-600 font-bold">Rp ${Number(itemPaid).toLocaleString('id-ID')}</strong></span>` : ''}
+                        ${(!isItemPaidLunas && itemPaid > 0) ? `<span class="text-amber-500 font-bold">(Maks Diskon: Rp ${Number(maxAllowedDiscount).toLocaleString('id-ID')})</span>` : ''}
+                    </div>
                 </div>
                 <div class="flex items-center gap-1.5 flex-shrink-0">
                     <span class="text-[11px] font-bold text-rose-500 font-mono">- Rp</span>
                     <input type="number" 
                            name="item_discounts[${item.name}]" 
-                           value="${rawDiscount}" 
+                           value="${isItemPaidLunas ? 0 : rawDiscount}" 
                            min="0" 
-                           max="${item.amount}" 
+                           max="${maxAllowedDiscount}" 
                            step="50000"
+                           ${isItemPaidLunas ? 'disabled readonly' : ''}
                            oninput="recalcLiveSimulation()"
-                           class="w-28 px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-bold font-mono text-slate-800 dark:text-white text-right focus:ring-2 focus:ring-emerald-500">
+                           class="w-28 px-2 py-1 ${isItemPaidLunas ? 'bg-slate-200/60 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white'} border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-bold font-mono text-right focus:ring-2 focus:ring-emerald-500">
                 </div>
             `;
             container.appendChild(row);
         });
     }
 
-    function renderSelectiveInstallmentItems(items, allowedIds) {
+    function renderSelectiveInstallmentItems(items, allowedIds, isFullyPaid) {
         const container = document.getElementById('modal_selective_fees_list');
         container.innerHTML = '';
 
@@ -789,13 +837,17 @@
         }
 
         items.forEach((item, idx) => {
+            const itemPaid = item.paid_amount || 0;
+            const isItemPaidLunas = item.is_fully_paid || isFullyPaid || (itemPaid >= item.amount && itemPaid > 0);
             const isChecked = allowedIds.includes(item.id) || allowedIds.includes(item.name) || allowedIds.includes(String(item.id));
+
             const row = document.createElement('label');
-            row.className = 'flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 transition';
+            row.className = 'flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 ' + (isItemPaidLunas ? 'opacity-60 cursor-not-allowed bg-slate-100/60 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900 cursor-pointer hover:border-emerald-500 transition');
             row.innerHTML = `
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <input type="checkbox" name="installment_allowed_fee_ids[]" value="${item.id || item.name}" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
+                    <input type="checkbox" name="installment_allowed_fee_ids[]" value="${item.id || item.name}" ${isChecked ? 'checked' : ''} ${isItemPaidLunas ? 'disabled' : ''} class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
                     <span class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${item.name}</span>
+                    ${isItemPaidLunas ? '<span class="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400">(Sudah Lunas)</span>' : ''}
                 </div>
                 <span class="text-[11px] font-bold text-slate-500 font-mono flex-shrink-0">Rp ${Number(item.amount).toLocaleString('id-ID')}</span>
             `;

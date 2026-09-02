@@ -276,6 +276,17 @@ class AdminDashboardController extends Controller
     {
         $registration = Registration::scopedByAdmin()->findOrFail($id);
 
+        // Guard: Fully paid candidates cannot be modified
+        if ($registration->remaining_balance <= 0 && $registration->total_paid_final_fee > 0) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tagihan calon siswa ini telah lunas sepenuhnya. Pengaturan keringanan & cicilan sudah terkunci dan tidak dapat diubah lagi.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Tagihan calon siswa ini telah lunas sepenuhnya dan terkunci.');
+        }
+
         $validated = $request->validate([
             'discount_mode' => 'nullable|in:none,global,selective',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -289,13 +300,28 @@ class AdminDashboardController extends Controller
         $discountMode = $validated['discount_mode'] ?? 'global';
         $discountAmount = ($discountMode === 'global') ? (float) ($validated['discount_amount'] ?? 0) : 0;
         
+        $feeDetails = $registration->getFinalFeeDetails();
+        $feeItems = $feeDetails['items'] ?? [];
+
         $itemDiscounts = null;
         if ($discountMode === 'selective' && !empty($validated['item_discounts']) && is_array($validated['item_discounts'])) {
             $itemDiscounts = [];
             foreach ($validated['item_discounts'] as $key => $val) {
                 $num = floatval($val);
                 if ($num > 0) {
-                    $itemDiscounts[$key] = $num;
+                    // Check item paid amount
+                    $itemPaid = $registration->getItemPaidAmount($key);
+                    $matchingItem = collect($feeItems)->first(fn($it) => strcasecmp(trim($it['name']), trim($key)) === 0);
+                    $itemGross = (float) ($matchingItem['amount'] ?? 0);
+                    $maxAllowedDiscount = max(0, $itemGross - $itemPaid);
+
+                    if ($num > $maxAllowedDiscount) {
+                        $num = $maxAllowedDiscount; // Cap discount to unpaid portion
+                    }
+
+                    if ($num > 0) {
+                        $itemDiscounts[$key] = $num;
+                    }
                 }
             }
         }
