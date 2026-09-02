@@ -1011,10 +1011,22 @@
         } else {
             successPayments.forEach(p => {
                 const isRegFee = (p.payment_type === 'registration_fee');
-                const typeName = isRegFee ? 'Formulir Pendaftaran' : 'Biaya Masuk Siswa';
-                const typeBadgeClass = isRegFee 
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800' 
-                    : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+
+                // Dynamic Category Badges from master SpmbFeeCategory
+                const catList = (p.category_names && p.category_names.length > 0) 
+                    ? p.category_names 
+                    : [isRegFee ? 'Formulir Pendaftaran' : 'Biaya Administrasi'];
+
+                const categoryBadgesHtml = catList.map(catName => {
+                    let badgeStyle = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+                    const lower = catName.toLowerCase();
+                    if (lower.includes('formulir') || lower.includes('pendaftaran') || lower.includes('registrasi')) {
+                        badgeStyle = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+                    } else if (lower.includes('tambahan') || lower.includes('non-formal') || lower.includes('tpa') || lower.includes('tpq')) {
+                        badgeStyle = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+                    }
+                    return `<span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${badgeStyle}">${catName}</span>`;
+                }).join(' ');
 
                 // Parsing selected items
                 let items = [];
@@ -1066,14 +1078,12 @@
                 const row = document.createElement('div');
                 row.className = 'p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3 shadow-xs';
                 row.innerHTML = `
-                    <!-- Header: Invoice, Type, Status -->
+                    <!-- Header: Invoice, Categories, Status -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-mono font-black text-xs text-slate-900 dark:text-white select-all">${p.invoice_number}</span>
-                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${typeBadgeClass}">
-                                    ${typeName}
-                                </span>
+                                ${categoryBadgesHtml}
                             </div>
                             <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
                                 <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i> ${formattedDate} WIB

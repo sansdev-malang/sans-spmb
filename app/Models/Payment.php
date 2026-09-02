@@ -27,6 +27,68 @@ class Payment extends Model
         return $this->belongsTo(Registration::class);
     }
 
+    protected $appends = [
+        'category_names',
+        'channel_display_name',
+    ];
+
+    /**
+     * Get dynamic category names from master SpmbFeeCategory for this payment
+     */
+    public function getCategoryNamesAttribute()
+    {
+        $info = is_array($this->payment_info) ? $this->payment_info : (json_decode($this->payment_info, true) ?: []);
+        $categoryNames = [];
+
+        if ($this->payment_type === 'registration_fee') {
+            $fee = $this->registration ? $this->registration->getRegistrationFee() : null;
+            if ($fee && $fee->category) {
+                $categoryNames[] = $fee->category->name;
+            } else {
+                $cat = SpmbFeeCategory::where(function($q) {
+                    $q->where('name', 'like', '%Formulir%')
+                      ->orWhere('name', 'like', '%Pendaftaran%')
+                      ->orWhere('name', 'like', '%Registrasi%');
+                })->first();
+                $categoryNames[] = $cat ? $cat->name : 'Formulir Pendaftaran';
+            }
+        } else {
+            $selectedItems = $info['selected_items'] ?? [];
+            if (!empty($selectedItems) && is_array($selectedItems)) {
+                foreach ($selectedItems as $it) {
+                    $itName = $it['name'] ?? '';
+                    if (!$itName) continue;
+
+                    // 1. Look up in SpmbFee
+                    $fee = SpmbFee::where('name', $itName)
+                        ->when($this->registration, function($q) {
+                            $q->where('spmb_unit_id', $this->registration->spmb_unit_id);
+                        })->first();
+                    if (!$fee) {
+                        $fee = SpmbFee::where('name', $itName)->first();
+                    }
+                    if ($fee && $fee->category) {
+                        $categoryNames[] = $fee->category->name;
+                    } else {
+                        // 2. Check if category matches extra service name directly
+                        $cat = SpmbFeeCategory::where('name', 'like', "%{$itName}%")->first();
+                        if ($cat) {
+                            $categoryNames[] = $cat->name;
+                        }
+                    }
+                }
+            }
+        }
+
+        $categoryNames = array_values(array_unique(array_filter($categoryNames)));
+        if (empty($categoryNames)) {
+            $defaultCat = SpmbFeeCategory::where('name', '!=', 'Formulir Pendaftaran')->first();
+            $categoryNames = [$defaultCat ? $defaultCat->name : 'Biaya Administrasi'];
+        }
+
+        return $categoryNames;
+    }
+
     /**
      * Get user-friendly payment channel name (e.g. 'VA MANDIRI', 'QRIS', 'SHOPEEPAY')
      */
