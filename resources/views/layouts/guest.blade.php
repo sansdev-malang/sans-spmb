@@ -26,7 +26,6 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-        <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -46,32 +45,24 @@
         <style>
             body {
                 font-family: 'Plus Jakarta Sans', sans-serif;
-                transition: background-color 0.3s, color 0.3s;
             }
             .guest-panel-orb {
                 position: absolute;
                 border-radius: 9999px;
-                filter: blur(56px);
+                filter: blur(48px);
                 pointer-events: none;
-            }
-            .guest-panel-shimmer {
-                position: absolute;
-                inset: -30%;
-                background:
-                    linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.16) 50%, transparent 65%);
-                mix-blend-mode: screen;
-                pointer-events: none;
+                opacity: 0.6;
             }
             .guest-panel-particles {
                 position: absolute;
                 inset: 0;
                 background-image:
-                    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0 2px, transparent 3px),
-                    radial-gradient(circle at 80% 30%, rgba(255,255,255,0.12) 0 1.5px, transparent 3px),
-                    radial-gradient(circle at 35% 75%, rgba(255,255,255,0.12) 0 1.5px, transparent 3px),
-                    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.16) 0 2px, transparent 3px);
+                    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0 2px, transparent 3px),
+                    radial-gradient(circle at 80% 30%, rgba(255,255,255,0.10) 0 1.5px, transparent 3px),
+                    radial-gradient(circle at 35% 75%, rgba(255,255,255,0.10) 0 1.5px, transparent 3px),
+                    radial-gradient(circle at 75% 70%, rgba(255,255,255,0.14) 0 2px, transparent 3px);
                 background-size: 240px 240px;
-                opacity: 0.55;
+                opacity: 0.45;
                 pointer-events: none;
             }
             /* Custom Brand Colors for Tailwind */
@@ -157,19 +148,18 @@
 
             .auth-shell {
                 background:
-                    radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 28%),
-                    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.10), transparent 26%),
+                    radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 30%),
+                    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.06), transparent 30%),
                     #f8fafc;
             }
             html.dark .auth-shell {
                 background:
-                    radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 24%),
-                    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.08), transparent 24%),
+                    radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 28%),
+                    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.06), transparent 28%),
                     #020817;
             }
             .auth-panel-card {
-                backdrop-filter: blur(12px);
-                box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
+                box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
             }
         </style>
     </head>
@@ -179,28 +169,23 @@
             
             <!-- Left Panel: Branding & Info (Hidden on mobile) -->
             <div class="hidden md:flex md:w-1/2 bg-custom-primary relative overflow-hidden flex-col justify-center p-8 lg:p-10 text-white">
-                <!-- Glass background -->
+                <!-- Clean background gradients -->
                 <div class="absolute inset-0 bg-gradient-to-br from-custom-primary via-[#0f4f3a] to-[#081c15]"></div>
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,199,0,0.16),transparent_30%)]"></div>
-                <div class="absolute inset-0 bg-black/5"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.15),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(255,199,0,0.14),transparent_35%)]"></div>
 
-                <!-- Background decorative elements -->
-                <div class="guest-panel-orb top-[-12%] left-[-12%] w-[54%] aspect-square bg-white/15"></div>
-                <div class="guest-panel-orb bottom-[-16%] right-[-10%] w-[64%] aspect-square bg-brand-yellow/18" style="animation-delay:-6s;"></div>
-                <div class="guest-panel-shimmer"></div>
+                <!-- Background decorative elements (static and lightweight) -->
+                <div class="guest-panel-orb top-[-10%] left-[-10%] w-[50%] aspect-square bg-white/10"></div>
+                <div class="guest-panel-orb bottom-[-12%] right-[-8%] w-[55%] aspect-square bg-brand-yellow/15"></div>
                 <div class="guest-panel-particles"></div>
-                <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20"></div>
 
-                <div class="relative z-10 h-full w-full rounded-[2rem] border border-white/15 bg-white/8 backdrop-blur-2xl shadow-2xl p-10 lg:p-12 flex flex-col justify-between overflow-hidden">
-                    <div class="absolute inset-0 bg-white/[0.03]"></div>
-
+                <div class="relative z-10 h-full w-full rounded-[2rem] border border-white/15 bg-white/10 shadow-2xl p-10 lg:p-12 flex flex-col justify-between overflow-hidden">
                     <!-- Top Brand Header -->
                     <div class="relative z-10 flex items-center gap-3">
                         @if(!empty($schoolLogo))
                             <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
                         @else
                             <div class="h-10 w-10 bg-white/15 rounded-xl flex items-center justify-center font-bold text-brand-yellow text-base shadow-sm border border-white/10">
-                                <span class="text-lg font-bold" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700;">S</span>
+                                <span class="text-lg font-black font-sans">S</span>
                             </div>
                         @endif
                         <div class="flex flex-col text-left">
@@ -213,40 +198,40 @@
 
                     <!-- Center Content: Title & Features -->
                     <div class="relative z-10 my-auto max-w-md space-y-6">
-                        <span class="guest-panel-badge inline-flex items-center gap-1 bg-white/12 backdrop-blur-md text-brand-yellow font-extrabold text-xs uppercase tracking-widest px-3 py-1 rounded-full border border-white/10">
+                        <span class="guest-panel-badge inline-flex items-center gap-1 bg-white/15 text-brand-yellow font-extrabold text-xs uppercase tracking-widest px-3.5 py-1 rounded-full border border-white/10">
                             ✨ SPMB Online
                         </span>
                         <h1 class="guest-panel-title text-3xl lg:text-4xl font-black leading-tight">
                             Penerimaan Siswa Baru Berbasis Karakter Islami
                         </h1>
-                        <p class="guest-panel-text text-sm text-white/82 leading-relaxed font-medium">
+                        <p class="guest-panel-text text-sm text-white/85 leading-relaxed font-medium">
                             Selamat datang di portal pendaftaran {{ $schoolName }}. Daftarkan putra-putri terbaik Anda untuk bergabung bersama kami.
                         </p>
 
-                        <div class="space-y-3.5 pt-4 text-sm font-semibold text-white/95">
-                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-lg">
-                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                        <div class="space-y-3 pt-3 text-sm font-semibold text-white/95">
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-sm">
+                                <div class="h-6 w-6 rounded-lg bg-white/15 flex items-center justify-center text-brand-yellow flex-shrink-0">
                                     <i data-lucide="check" class="w-4 h-4"></i>
                                 </div>
-                                <span>Proses pendaftaran cepat, online, dan transparan</span>
+                                <span class="text-xs font-semibold">Proses pendaftaran cepat, online, dan transparan</span>
                             </div>
-                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-lg">
-                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-sm">
+                                <div class="h-6 w-6 rounded-lg bg-white/15 flex items-center justify-center text-brand-yellow flex-shrink-0">
                                     <i data-lucide="check" class="w-4 h-4"></i>
                                 </div>
-                                <span>Pengumuman hasil observasi & administrasi terintegrasi</span>
+                                <span class="text-xs font-semibold">Pengumuman hasil observasi & administrasi terintegrasi</span>
                             </div>
-                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-4 py-3 shadow-lg">
-                                <div class="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-brand-yellow">
+                            <div class="guest-panel-item flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 shadow-sm">
+                                <div class="h-6 w-6 rounded-lg bg-white/15 flex items-center justify-center text-brand-yellow flex-shrink-0">
                                     <i data-lucide="check" class="w-4 h-4"></i>
                                 </div>
-                                <span>Layanan bantuan cepat via Whatsapp Panitia</span>
+                                <span class="text-xs font-semibold">Layanan bantuan cepat via Whatsapp Panitia</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer: Back to main page -->
-                    <div class="guest-panel-footer relative z-10 flex justify-between items-center text-xs text-white/65 font-semibold border-t border-white/10 pt-6">
+                    <div class="guest-panel-footer relative z-10 flex justify-between items-center text-xs text-white/70 font-semibold border-t border-white/10 pt-6">
                         <span>© {{ date('Y') }} {{ $schoolName }}</span>
                         <a href="/" class="flex items-center gap-1.5 hover:text-brand-yellow transition text-white/90">
                             <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Portal Utama
@@ -259,7 +244,7 @@
             <div class="w-full md:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-slate-50 dark:bg-slate-950">
                 <!-- Theme toggle button (Top Right) -->
                 <div class="absolute top-6 right-6 flex items-center gap-3">
-                    <button onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-455 dark:hover:text-emerald-400 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 transition shadow-md hover:shadow-lg" title="Toggle Tema">
+                    <button onclick="toggleDarkMode()" class="p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 transition shadow-sm" title="Toggle Tema">
                         <i id="theme-toggle-icon" data-lucide="moon" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -270,7 +255,7 @@
                         <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-10 object-contain">
                     @else
                         <div class="h-12 w-12 bg-custom-primary rounded-2xl flex items-center justify-center font-bold text-brand-yellow text-xl shadow-md">
-                            <span class="text-lg font-bold" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700;">S</span>
+                            <span class="text-lg font-black font-sans">S</span>
                         </div>
                     @endif
                     <div class="text-center">
@@ -282,21 +267,21 @@
                 </div>
 
                 <!-- Card Form wrapper -->
-                <div class="auth-panel-card w-full max-w-md bg-white/90 dark:bg-slate-900/90 border border-slate-100/80 dark:border-slate-800/80 rounded-[2rem] p-8 shadow-xl">
+                <div class="auth-panel-card w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-[2rem] p-8 shadow-xl">
                     <!-- Dynamic header text based on page -->
                     <div class="text-center space-y-2 mb-6">
                         @if(Request::is('login'))
                             <h2 class="text-xl font-black text-slate-800 dark:text-white">Masuk Akun</h2>
-                            <p class="text-xs text-slate-450 dark:text-slate-400 font-semibold">Silakan masuk menggunakan akun pendaftaran Anda</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Silakan masuk menggunakan akun pendaftaran Anda</p>
                         @elseif(Request::is('register'))
                             <h2 class="text-xl font-black text-slate-800 dark:text-white">Daftar Akun Baru</h2>
-                            <p class="text-xs text-slate-455 dark:text-slate-400 font-semibold">Mulai langkah awal pendaftaran sekolah anak Anda</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Mulai langkah awal pendaftaran sekolah anak Anda</p>
                         @elseif(Request::is('forgot-password'))
                             <h2 class="text-xl font-black text-slate-800 dark:text-white">Lupa Password</h2>
-                            <p class="text-xs text-slate-455 dark:text-slate-400 font-semibold">Kami akan mengirimkan link reset password via email</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Kami akan mengirimkan link reset password via email</p>
                         @else
                             <h2 class="text-xl font-black text-slate-800 dark:text-white">Autentikasi</h2>
-                            <p class="text-xs text-slate-455 dark:text-slate-400 font-semibold">{{ config('app.name') }}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">{{ config('app.name') }}</p>
                         @endif
                     </div>
 
@@ -304,15 +289,14 @@
                 </div>
 
                 <!-- Mobile Back Button -->
-                <a href="/" class="md:hidden mt-6 text-xs text-slate-455 hover:text-custom-primary font-bold transition flex items-center gap-1">
+                <a href="/" class="md:hidden mt-6 text-xs text-slate-500 hover:text-custom-primary font-bold transition flex items-center gap-1">
                     <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Kembali ke Portal Utama
                 </a>
             </div>
             
         </div>
         
-        <!-- Anime.js + Lucide Icons CDN -->
-        <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+        <!-- Lucide Icons CDN -->
         <script src="https://unpkg.com/lucide@latest"></script>
         <script>
             // Initialize Lucide Icons
@@ -341,97 +325,6 @@
             
             document.addEventListener("DOMContentLoaded", function() {
                 updateThemeIcon();
-
-                if (window.anime) {
-                    const orbs = document.querySelectorAll('.guest-panel-orb');
-                    const shimmer = document.querySelector('.guest-panel-shimmer');
-                    const particles = document.querySelector('.guest-panel-particles');
-                    const panelTitle = document.querySelector('.guest-panel-title');
-                    const panelBadge = document.querySelector('.guest-panel-badge');
-                    const panelText = document.querySelector('.guest-panel-text');
-                    const panelItems = document.querySelectorAll('.guest-panel-item');
-                    const panelFooter = document.querySelector('.guest-panel-footer');
-
-                    anime({
-                        targets: orbs,
-                        translateX: [
-                            { value: 0 },
-                            { value: 20 },
-                            { value: -16 },
-                            { value: 0 },
-                        ],
-                        translateY: [
-                            { value: 0 },
-                            { value: -18 },
-                            { value: 12 },
-                            { value: 0 },
-                        ],
-                        scale: [
-                            { value: 1 },
-                            { value: 1.06 },
-                            { value: 0.98 },
-                            { value: 1 },
-                        ],
-                        duration: 15000,
-                        easing: 'easeInOutSine',
-                        loop: true,
-                        delay: anime.stagger(800),
-                    });
-
-                    anime({
-                        targets: shimmer,
-                        translateX: ['-28%', '28%'],
-                        opacity: [0.25, 0.65, 0.25],
-                        rotate: ['10deg', '10deg'],
-                        duration: 9000,
-                        easing: 'easeInOutSine',
-                        loop: true,
-                        direction: 'alternate',
-                    });
-
-                    anime({
-                        targets: particles,
-                        translateY: [0, -10, 0],
-                        duration: 8000,
-                        easing: 'easeInOutSine',
-                        loop: true,
-                    });
-
-                    anime.timeline({
-                        easing: 'easeOutQuad',
-                    })
-                    .add({
-                        targets: panelBadge,
-                        opacity: [0, 1],
-                        translateY: [18, 0],
-                        duration: 700,
-                    })
-                    .add({
-                        targets: panelTitle,
-                        opacity: [0, 1],
-                        translateY: [24, 0],
-                        duration: 750,
-                    }, '-=420')
-                    .add({
-                        targets: panelText,
-                        opacity: [0, 1],
-                        translateY: [18, 0],
-                        duration: 650,
-                    }, '-=380')
-                    .add({
-                        targets: panelItems,
-                        opacity: [0, 1],
-                        translateX: [-14, 0],
-                        duration: 600,
-                        delay: anime.stagger(140),
-                    }, '-=260')
-                    .add({
-                        targets: panelFooter,
-                        opacity: [0, 1],
-                        translateY: [16, 0],
-                        duration: 650,
-                    }, '-=260');
-                }
             });
         </script>
     </body>
