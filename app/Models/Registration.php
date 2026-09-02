@@ -141,10 +141,14 @@ class Registration extends Model
 
     /**
      * Get complete list of final fee items for this candidate
+     * Dynamically resolved from master Tarif & Biaya (SpmbFee)
      */
-    public function getFinalFeeDetails()
+    public function getFinalFeeDetails($forceLive = false)
     {
-        if (!empty($this->final_fee_snapshot) && isset($this->final_fee_snapshot['items']) && is_array($this->final_fee_snapshot['items']) && !empty($this->final_fee_snapshot['items'])) {
+        $hasPaid = ($this->total_paid_final_fee > 0);
+
+        // If candidate already paid and not forcing live, preserve payment snapshot
+        if (!$forceLive && $hasPaid && !empty($this->final_fee_snapshot) && isset($this->final_fee_snapshot['items']) && is_array($this->final_fee_snapshot['items']) && !empty($this->final_fee_snapshot['items'])) {
             return $this->final_fee_snapshot;
         }
 
@@ -152,18 +156,21 @@ class Registration extends Model
         $gradeName = $this->grade->name ?? '';
         $extraServices = $this->extraServices ?? collect();
 
+        // 1. Identify Registration Form Fee Category IDs to exclude
         $regCatIds = SpmbFeeCategory::where(function($q) {
             $q->where('name', 'like', '%Formulir%')
               ->orWhere('name', 'like', '%Pendaftaran%')
               ->orWhere('name', 'like', '%Registrasi%');
         })->pluck('id')->toArray();
 
+        // 2. Identify Extra Services / Biaya Tambahan Category IDs
         $extraCatIds = SpmbFeeCategory::where(function($q) {
             $q->where('name', 'like', '%Tambahan%')
               ->orWhere('name', 'like', '%Extra%')
               ->orWhere('name', 'like', '%Layanan%');
         })->pluck('id')->toArray();
 
+        // 3. Fetch active fees for this candidate's unit
         $unitFeesQuery = SpmbFee::with('category')
             ->where('spmb_unit_id', $unitId)
             ->where('is_active', true);
@@ -179,6 +186,7 @@ class Registration extends Model
             $isExtraCat = in_array($fee->spmb_fee_category_id, $extraCatIds);
 
             if ($isExtraCat) {
+                // Biaya Tambahan: only include if candidate opted for this extra service
                 if ($extraServices->isNotEmpty()) {
                     $feeNameClean = strtolower(trim($fee->name));
                     $matches = $extraServices->contains(function($es) use ($feeNameClean) {
@@ -194,20 +202,29 @@ class Registration extends Model
                     }
                 }
             } else {
+                // Regular admission fee: check if fee is explicitly targeted to another grade
                 $feeNameUpper = strtoupper($fee->name);
                 $gradeNameUpper = strtoupper($gradeName);
-                $gradeKeywords = ['TK A', 'TK B', 'KB', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 7'];
-                $hasKeyword = false;
-                foreach ($gradeKeywords as $kw) {
+
+                $allGradeKeywords = ['TK A', 'TK B', 'KB', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 2', 'KELAS 3', 'KELAS 4', 'KELAS 5', 'KELAS 6', 'KELAS 7', 'KELAS 8', 'KELAS 9'];
+                $hasOtherGradeKeyword = false;
+
+                foreach ($allGradeKeywords as $kw) {
                     if (str_contains($feeNameUpper, $kw)) {
-                        $hasKeyword = true;
-                        if (!empty($gradeNameUpper) && str_contains($feeNameUpper, $gradeNameUpper)) {
-                            $selectedFees->push($fee);
+                        if (!empty($gradeNameUpper) && (
+                            str_contains($gradeNameUpper, $kw) ||
+                            ($kw === 'PLAY GROUP' && str_contains($gradeNameUpper, 'KB')) ||
+                            ($kw === 'KB' && str_contains($gradeNameUpper, 'PLAY GROUP'))
+                        )) {
+                            $hasOtherGradeKeyword = false;
                             break;
+                        } else {
+                            $hasOtherGradeKeyword = true;
                         }
                     }
                 }
-                if (!$hasKeyword) {
+
+                if (!$hasOtherGradeKeyword) {
                     $selectedFees->push($fee);
                 }
             }
@@ -216,12 +233,19 @@ class Registration extends Model
         $items = [];
         $total = 0;
         foreach ($selectedFees as $f) {
+            $gateways = is_array($f->payment_gateway) ? $f->payment_gateway : [$f->payment_gateway];
+            if (empty($gateways) || $gateways === ['']) {
+                $gateways = ['winpay'];
+            }
+
             $items[] = [
                 'id' => $f->id,
                 'name' => $f->name,
                 'category_id' => $f->spmb_fee_category_id,
                 'category_name' => $f->category->name ?? 'Biaya Administrasi',
                 'amount' => (float) $f->amount,
+                'gateways' => $gateways,
+                'is_installment_allowed' => $this->isFeeInstallmentAllowed($f->name, $f->id),
             ];
             $total += (float) $f->amount;
         }

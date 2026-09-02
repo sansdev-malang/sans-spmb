@@ -102,6 +102,8 @@ class SpmbFeesController extends Controller
             $category->units()->sync($request->spmb_units);
         }
 
+        self::syncUnpaidRegistrationsFeeSnapshot();
+
         return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])->with('success', 'Jenis biaya berhasil diperbarui.');
     }
 
@@ -114,6 +116,7 @@ class SpmbFeesController extends Controller
         }
 
         $category->delete();
+        self::syncUnpaidRegistrationsFeeSnapshot();
         return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])->with('success', 'Jenis biaya berhasil dihapus.');
     }
 
@@ -174,6 +177,8 @@ class SpmbFeesController extends Controller
             ]);
         }
 
+        self::syncUnpaidRegistrationsFeeSnapshot($units);
+
         return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $request->spmb_fee_category_id])->with('success', 'Biaya pendaftaran berhasil ditambahkan.');
     }
 
@@ -231,6 +236,8 @@ class SpmbFeesController extends Controller
             'spmb_unit_id' => $unitId,
         ]);
 
+        self::syncUnpaidRegistrationsFeeSnapshot([$unitId]);
+
         return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $request->spmb_fee_category_id])->with('success', 'Biaya pendaftaran berhasil diperbarui.');
     }
 
@@ -239,12 +246,32 @@ class SpmbFeesController extends Controller
         $fee = SpmbFee::findOrFail($id);
 
         $catId = $fee->spmb_fee_category_id;
+        $unitId = $fee->spmb_unit_id;
         if (self::isFeeUsed($fee)) {
             return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $catId])->with('error', 'Tidak dapat menghapus biaya ini karena sudah terpakai pada transaksi pembayaran.');
         }
 
         $fee->delete();
+        self::syncUnpaidRegistrationsFeeSnapshot([$unitId]);
+
         return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $catId])->with('success', 'Biaya pendaftaran berhasil dihapus.');
+    }
+
+    public static function syncUnpaidRegistrationsFeeSnapshot($unitIds = [])
+    {
+        $query = \App\Models\Registration::query();
+        if (!empty($unitIds)) {
+            $query->whereIn('spmb_unit_id', (array) $unitIds);
+        }
+
+        $registrations = $query->get()->filter(function ($r) {
+            return $r->total_paid_final_fee <= 0;
+        });
+
+        foreach ($registrations as $r) {
+            $freshFees = $r->getFinalFeeDetails(true);
+            $r->update(['final_fee_snapshot' => $freshFees]);
+        }
     }
 
     public static function isFeeUsed($fee)
