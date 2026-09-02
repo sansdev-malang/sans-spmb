@@ -174,6 +174,7 @@ class SpmbFeesController extends Controller
                 'payment_gateway' => $request->payment_gateway,
                 'spmb_fee_category_id' => $request->spmb_fee_category_id,
                 'spmb_unit_id' => $unitId,
+                'is_active' => true,
             ]);
         }
 
