@@ -207,6 +207,7 @@
                             </div>
 
                             <!-- Stage Next Action Banner / Hint -->
+                            <!-- Stage Next Action Banner / Hint -->
                             <div class="mb-4">
                                 @if(!$isPaid)
                                     <div class="p-2.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/40 text-[10px] text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
@@ -234,9 +235,9 @@
                                         <span>Ta'aruf selesai. Silakan isi surat pernyataan.</span>
                                     </div>
                                 @elseif($status === 'agreement_signed')
-                                    <div class="p-2.5 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/40 text-[10px] text-amber-700 dark:text-amber-400 font-bold flex items-center gap-2">
-                                        <i data-lucide="wallet" class="w-4 h-4 flex-shrink-0"></i>
-                                        <span>Dinyatakan Diterima! Lakukan daftar ulang.</span>
+                                    <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-[10px] text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-2">
+                                        <i data-lucide="award" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                        <span>Alhamdulillah Dinyatakan Diterima! Selesaikan administrasi biaya masuk.</span>
                                     </div>
                                 @elseif($status === 'completed')
                                     <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-[10px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
@@ -247,10 +248,38 @@
                             </div>
                         </div>
                         
+                        @php
+                            $stageTargetUrl = route('dashboard.detail', $reg->id);
+                            $stageButtonLabel = 'Lihat Detail Pendaftaran';
+
+                            if (!$isPaid) {
+                                $stageTargetUrl = route('dashboard.payment', $reg->id);
+                                $stageButtonLabel = 'Bayar Biaya Pendaftaran';
+                            } elseif ($status === 'draft') {
+                                $stageTargetUrl = route('dashboard.form', $reg->id);
+                                $stageButtonLabel = 'Lengkapi Formulir Pendaftaran';
+                            } elseif ($status === 'submitted') {
+                                $stageTargetUrl = route('dashboard.verification', $reg->id);
+                                $stageButtonLabel = 'Lihat Status Verifikasi Berkas';
+                            } elseif ($status === 'verified') {
+                                $stageTargetUrl = route('dashboard.observation', $reg->id);
+                                $stageButtonLabel = 'Informasi & Jadwal Ta\'aruf';
+                            } elseif ($status === 'taaruf_completed') {
+                                $stageTargetUrl = route('dashboard.observation', $reg->id);
+                                $stageButtonLabel = 'Isi Surat Pernyataan';
+                            } elseif ($status === 'agreement_signed') {
+                                $stageTargetUrl = route('dashboard.result', $reg->id);
+                                $stageButtonLabel = 'Lihat Hasil & Pelunasan Administrasi';
+                            } elseif ($status === 'completed') {
+                                $stageTargetUrl = route('dashboard.result', $reg->id);
+                                $stageButtonLabel = 'Lihat Hasil Seleksi & Bukti Kelulusan';
+                            }
+                        @endphp
+
                         <!-- Main Action Button -->
                         <div class="pt-2">
-                            <a href="{{ route('dashboard.detail', $reg->id) }}" class="w-full py-3.5 px-4 bg-slate-900 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 text-white text-xs font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md">
-                                <span>Buka Portal Pendaftaran</span>
+                            <a href="{{ $stageTargetUrl }}" class="w-full py-3.5 px-4 bg-slate-900 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 text-white text-xs font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md">
+                                <span>{{ $stageButtonLabel }}</span>
                                 <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                             </a>
                         </div>

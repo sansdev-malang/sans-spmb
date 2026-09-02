@@ -440,113 +440,21 @@
                             </div>
                         </div>
                     @else
-                        <!-- Case 6.2: Final Fee Payment Form Selection -->
-                        @php
-                            $finalDetails = $registration->final_fee_snapshot ?? app(\App\Http\Controllers\Web\WebDashboardController::class)->getFinalFeeDetails($registration);
-                        @endphp
-                        <form action="{{ route('dashboard.charge', $registration->id) }}" method="POST" class="space-y-4 text-left max-w-xl mx-auto">
-                            @csrf
-                            <div class="text-center py-2 mb-4">
-                                <div class="h-16 w-16 bg-amber-50 dark:bg-amber-950/20 text-amber-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner mb-3">
-                                    <i data-lucide="receipt" class="w-8 h-8"></i>
-                                </div>
-                                <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Pembayaran Administrasi Akhir</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                                    Komitmen biaya disetujui. Selesaikan pelunasan administrasi sebesar <strong class="text-brand-emerald dark:text-emerald-400">Rp {{ number_format($finalDetails['total'], 0, ',', '.') }}</strong> untuk menyelesaikan penerimaan siswa baru.
-                                </p>
+                        <!-- Case 6.2: Final Fee Payment & Result CTA -->
+                        <div class="text-center py-6 space-y-4 max-w-md mx-auto">
+                            <div class="h-16 w-16 bg-emerald-50 dark:bg-emerald-950/20 text-brand-emerald dark:text-emerald-400 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+                                <i data-lucide="award" class="w-8 h-8"></i>
                             </div>
-
-                            <!-- Rincian Biaya Table -->
-                            <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-2.5 text-xs mb-6">
-                                @if(isset($finalDetails['items']) && is_array($finalDetails['items']) && count($finalDetails['items']) > 0)
-                                    @foreach($finalDetails['items'] as $item)
-                                        <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                            <span>{{ $item['name'] }}</span>
-                                            <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($item['amount'], 0, ',', '.') }}</span>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                        <span>Total Tagihan Administrasi</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($finalDetails['total'] ?? 0, 0, ',', '.') }}</span>
-                                    </div>
-                                @endif
+                            <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan Lulus & Diterima!</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Selamat! Ananda telah menyelesaikan tahapan seleksi. Silakan buka halaman Administrasi untuk melihat pengumuman resmi, rincian biaya, keringanan/diskon, opsi cicilan, serta menyelesaikan pembayaran.
+                            </p>
+                            <div class="pt-4">
+                                <a href="{{ route('dashboard.result', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-6 py-3.5 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-2">
+                                    <i data-lucide="receipt" class="w-4 h-4"></i> Buka Hasil Seleksi & Administrasi
+                                </a>
                             </div>
-                            
-                            <label class="block text-xs font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wider mb-2">Pilih Metode Pembayaran</label>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                @if($feeGateway === 'bni' || $feeGateway === 'BNI SNAP')
-                                    <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
-                                        <input type="radio" name="payment_method" value="BNI" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" checked>
-                                        
-                                        <!-- Logo Placeholder -->
-                                        <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
-                                            <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                BNI
-                                            </div>
-                                        </div>
-
-                                        <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">BNI VA</span>
-                                        <span class="text-[9px] text-slate-450 uppercase font-semibold">VIRTUAL ACCOUNT</span>
-                                    </label>
-                                    <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
-                                        <input type="radio" name="payment_method" value="QRIS" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald">
-                                        
-                                        <!-- Logo Placeholder -->
-                                        <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
-                                            <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                QRIS
-                                            </div>
-                                        </div>
-
-                                        <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">QRIS</span>
-                                        <span class="text-[9px] text-slate-450 uppercase font-semibold">QR CODE SCAN</span>
-                                    </label>
-                                @else
-                                    @foreach($channels as $channel)
-                                        <label class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-emerald hover:bg-emerald-50/10 transition relative">
-                                            <input type="radio" name="payment_method" value="{{ $channel->code }}" class="absolute top-3 right-3 text-brand-emerald focus:ring-brand-emerald" {{ $loop->first ? 'checked' : '' }}>
-                                            
-                                            <!-- Logo Container -->
-                                            <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0 mb-1">
-                                                @if($channel->getLogoUrl())
-                                                    <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" class="max-h-full max-w-full object-contain">
-                                                @else
-                                                    <div class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-black text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                        {{ substr($channel->code, 0, 3) }}
-                                                    </div>
-                                                @endif
-                                            </div>
-
-                                            <span class="text-sm font-bold text-slate-800 dark:text-white text-center leading-tight">{{ $channel->name }}</span>
-                                            <span class="text-[9px] text-slate-450 uppercase font-semibold">{{ $channel->type }}</span>
-                                        </label>
-                                    @endforeach
-                                @endif
-                            </div>
-                            <!-- Payment Summary breakdown -->
-                            <div id="paymentSummaryCardForm2" class="bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs mt-4">
-                                <h4 class="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-[10px] pb-1 border-b border-slate-200/50 dark:border-slate-800">Rincian Pembayaran</h4>
-                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                    <span>Tagihan Pokok</span>
-                                    <span class="font-bold text-slate-800 dark:text-white">Rp {{ number_format($finalDetails['total'] ?? 0, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                    <span>Biaya Transaksi / Admin</span>
-                                    <span id="displayAdminFeeForm2" class="font-bold text-slate-800 dark:text-white">Rp 0</span>
-                                </div>
-                                <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase">
-                                    <span>Total Pembayaran</span>
-                                    <span id="displayGrandTotalForm2" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($finalDetails['total'] ?? 0, 0, ',', '.') }}</span>
-                                </div>
-                            </div>
-
-                            <div class="pt-6 flex justify-center">
-                                <button type="submit" class="bg-brand-emerald hover-emerald text-white px-8 py-3 rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5">
-                                    <i data-lucide="credit-card" class="w-4 h-4 text-brand-yellow"></i> Bayar Administrasi Akhir
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     @endif
 
                 @elseif($registration->registration_status === 'completed')
