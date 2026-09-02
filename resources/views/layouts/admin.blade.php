@@ -386,7 +386,7 @@
     <!-- YouTube-style dynamic top progress loading bar -->
     <div id="top-loading-bar"></div>
 
-    <div id="admin-layout-wrapper" class="flex w-full min-h-screen">
+    <div id="admin-layout-wrapper" class="flex w-full min-h-screen min-w-0 max-w-full overflow-x-hidden">
         <!-- Sidebar Left Layout -->
     <aside id="sidebar-left" class="w-64 bg-admin-dark text-slate-300 flex flex-col fixed inset-y-0 left-0 z-50 border-r border-slate-800 transition-all duration-300 transform -translate-x-full lg:translate-x-0">
         
@@ -632,10 +632,10 @@
     <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/60 z-40 hidden transition-opacity duration-300 opacity-0 lg:hidden" onclick="closeSidebar()"></div>
 
     <!-- Right Content Area -->
-    <div id="main-content-wrapper" class="flex-grow pl-0 lg:pl-64 flex flex-col min-h-screen transition-all duration-300">
+    <div id="main-content-wrapper" class="flex-grow flex-1 pl-0 lg:pl-64 flex flex-col min-h-screen transition-all duration-300 min-w-0 max-w-full w-full">
         
         <!-- Header Panel -->
-        <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30 shadow-sm transition">
+        <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30 shadow-sm transition w-full">
             <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Hamburger menu button visible only on mobile/tablet -->
                 <button type="button" onclick="openSidebar()" class="lg:hidden p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition" title="Buka Menu Mobile">
@@ -696,13 +696,13 @@
         </header>
 
         <!-- Main Body -->
-        <main class="flex-grow p-4 lg:p-8">
+        <main class="flex-grow flex-1 p-4 lg:p-8 min-w-0 w-full">
             @yield('content')
         </main>
         
-        <!-- Footer -->
-        <footer class="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-4 text-center text-[10px] text-slate-400 dark:text-slate-500 transition">
-            &copy; {{ date('Y') }} Sekolah Anak Saleh Admin Panel. Integrasi Winpay SNAP API (Simulator).
+        <!-- Footer (Sticky at Bottom) -->
+        <footer class="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 py-4 text-center text-[10px] text-slate-400 dark:text-slate-500 transition mt-auto w-full">
+            &copy; {{ date('Y') }} {{ $schoolName }}. All rights reserved.
         </footer>
 
     </div>
