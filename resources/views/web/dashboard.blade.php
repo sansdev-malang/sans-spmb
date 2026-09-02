@@ -728,7 +728,7 @@
                         @endif
 
                         <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5 flex justify-between items-center font-extrabold text-slate-800 dark:text-white uppercase">
-                            <span>{{ ($registration->total_paid_final_fee ?? 0) > 0 ? 'Sisa Tagihan' : 'Total Tagihan' }}</span>
+                            <span>{{ ($registration->total_paid_final_fee ?? 0) > 0 ? 'Sisa Tanggungan' : 'Total Tanggungan' }}</span>
                             <span class="text-brand-emerald dark:text-emerald-400">Rp {{ number_format($registration->remaining_balance ?: $registration->net_fee ?: $finalFees['total'], 0, ',', '.') }}</span>
                         </div>
                         <div class="pt-2">

@@ -652,8 +652,8 @@
             const href = link.getAttribute('href');
             const target = link.getAttribute('target');
             
-            // Skip empty/javascript/anchor/external-tab links
-            if (!href || href.startsWith('javascript:') || target === '_blank') {
+            // Skip empty/javascript/anchor/external-tab/download links
+            if (!href || href.startsWith('javascript:') || target === '_blank' || link.hasAttribute('download') || href.includes('/receipt') || href.includes('/download')) {
                 return;
             }
 

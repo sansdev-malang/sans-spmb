@@ -113,104 +113,6 @@
                     </div>
                 @endif
 
-                @if(isset($feeDetails) && $feeDetails)
-                    <!-- Rincian Komponen Biaya Akhir -->
-                    <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs">
-                        <h4 class="font-extrabold text-slate-850 dark:text-white uppercase tracking-wider text-[10px] border-b border-slate-200/50 dark:border-slate-800 pb-2 flex items-center justify-between">
-                            <span class="flex items-center gap-1.5"><i data-lucide="list-checks" class="w-3.5 h-3.5 text-brand-emerald"></i> Rincian Komponen Biaya</span>
-                            @if(($installmentMode ?? 'none') === 'selective')
-                                <span class="text-[9px] font-bold text-slate-400 capitalize">Mode: Cicilan Komponen Tertentu</span>
-                            @elseif(($installmentMode ?? 'none') === 'all')
-                                <span class="text-[9px] font-bold text-slate-400 capitalize">Mode: Cicil Global</span>
-                            @endif
-                        </h4>
-                        @if(isset($feeDetails['items']) && is_array($feeDetails['items']) && count($feeDetails['items']) > 0)
-                            @foreach($feeDetails['items'] as $item)
-                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400 py-0.5">
-                                    <div class="flex items-center gap-2">
-                                        <span>{{ $item['name'] }}</span>
-                                        @if(($installmentMode ?? 'none') === 'selective')
-                                            @if(!empty($item['is_installment_allowed']))
-                                                <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
-                                                    🔓 Boleh Dicicil
-                                                </span>
-                                            @else
-                                                <span class="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-[9px] border border-amber-200/60 dark:border-amber-900">
-                                                    🔒 Wajib Lunas Awal
-                                                </span>
-                                            @endif
-                                        @elseif(($installmentMode ?? 'none') === 'all')
-                                            <span class="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] border border-emerald-200/60 dark:border-emerald-900">
-                                                ✓ Bisa Dicicil
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($item['amount'], 0, ',', '.') }}</span>
-                                </div>
-                            @endforeach
-                        @else
-                            <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                <span>Total Tagihan Administrasi</span>
-                                <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($feeDetails['total'] ?? $grossFee ?? 0, 0, ',', '.') }}</span>
-                            </div>
-                        @endif
-
-                        @php
-                            $isInstallmentActive = (($installmentMode ?? 'none') !== 'none');
-                        @endphp
-
-                        @if(isset($discountAmount) && $discountAmount > 0)
-                            <div class="flex justify-between items-center text-rose-600 dark:text-rose-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5">
-                                <span>Potongan Keringanan (Diskon)</span>
-                                <span class="font-bold">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
-                            </div>
-                        @endif
-
-                        @if($isInstallmentActive && isset($totalPaid) && $totalPaid > 0)
-                            <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5">
-                                <span>Telah Dibayar Sebelumnya</span>
-                                <span class="font-bold">Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="flex justify-between items-center text-slate-800 dark:text-white font-extrabold">
-                                <span>Sisa Tagihan</span>
-                                <span class="font-mono text-emerald-600 dark:text-emerald-400">Rp {{ number_format($remainingBalance, 0, ',', '.') }}</span>
-                            </div>
-                        @endif
-
-                        <!-- Dynamic Admin Fee row -->
-                        @if($registration->payment_status === 'unpaid' || $registration->payment_status === 'partially_paid')
-                            <div id="adminFeeRow" class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5">
-                                <span>Biaya Transaksi</span>
-                                <span id="displayAdminFee" class="font-bold text-slate-800 dark:text-slate-200">Rp 0</span>
-                            </div>
-                        @elseif($registration->payment_status === 'pending' && $activePayment)
-                            <div class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5">
-                                <span>Biaya Transaksi</span>
-                                <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($activePayment->admin_fee, 0, ',', '.') }}</span>
-                            </div>
-                        @elseif($registration->payment_status === 'paid' && isset($successPayment))
-                            <div class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5">
-                                <span>Biaya Transaksi</span>
-                                <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($successPayment->admin_fee, 0, ',', '.') }}</span>
-                            </div>
-                        @endif
-
-                        <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase">
-                            <span>Total Pembayaran Transaksi Ini</span>
-                            @if($registration->payment_status === 'pending' && $activePayment)
-                                <span class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($activePayment->amount, 0, ',', '.') }}</span>
-                            @elseif($registration->payment_status === 'paid' && isset($successPayment))
-                                <span class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($successPayment->amount, 0, ',', '.') }}</span>
-                            @else
-                                <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
-                            @endif
-                        </div>
-
-                        @if($registration->payment_status === 'unpaid' || $registration->payment_status === 'partially_paid')
-                            <p class="text-[10px] text-slate-400 italic leading-relaxed mt-1 select-none">Note: Biaya transaksi dibebankan kepada wali murid sesuai instruksi yayasan.</p>
-                        @endif
-                    </div>
-                @endif
 
                 <!-- 1. Success Message if already paid -->
                 @if ($registration->payment_status === 'paid')
@@ -246,47 +148,118 @@
                         @csrf
                         <input type="hidden" name="items" value="{{ request()->query('items') }}">
 
-                        <!-- Opsi Cicilan (Jika Diizinkan) -->
-                        @if(isset($installmentMode) && $installmentMode !== 'none' && isset($remainingBalance) && $remainingBalance > 0)
-                            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 shadow-sm">
-                                <label class="block text-xs font-extrabold text-slate-800 dark:text-white uppercase tracking-wider">
-                                    Pilihan Pembayaran Administrasi
-                                </label>
-                                
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                    <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 transition">
-                                        <input type="radio" name="payment_type_choice" value="full" checked onchange="toggleInstallmentChoice()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                        <div>
-                                            <span class="font-extrabold text-slate-850 dark:text-white block text-xs">Bayar Lunas Sisa Tagihan</span>
-                                            <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">Rp {{ number_format($remainingBalance, 0, ',', '.') }}</span>
-                                        </div>
-                                    </label>
-                                    
-                                    <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 transition">
-                                        <input type="radio" name="payment_type_choice" value="partial" onchange="toggleInstallmentChoice()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                        <div>
-                                            <span class="font-extrabold text-slate-850 dark:text-white block text-xs">Bayar Sebagian (Cicil)</span>
-                                            <span class="text-[11px] text-slate-400 font-mono">Batas Minimal: Rp {{ number_format($minPaymentRequired ?? 500000, 0, ',', '.') }}</span>
-                                        </div>
-                                    </label>
+                        @if(isset($feeDetails) && $feeDetails)
+                            <!-- Rincian Komponen Biaya Akhir (Read-Only Review) -->
+                            <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 space-y-4 text-xs">
+                                <div class="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800 pb-3">
+                                    <h4 class="font-extrabold text-slate-850 dark:text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                        <i data-lucide="list-checks" class="w-4 h-4 text-brand-emerald"></i> Rincian Komponen Biaya Transaksi
+                                    </h4>
+                                    @if(($installmentMode ?? 'none') === 'selective')
+                                        <span class="text-[9px] font-bold text-slate-400">Mode: Cicilan Komponen Tertentu</span>
+                                    @elseif(($installmentMode ?? 'none') === 'all')
+                                        <span class="text-[9px] font-bold text-slate-400">Mode: Cicilan Global</span>
+                                    @endif
                                 </div>
 
-                                <!-- Dynamic Partial Amount Input -->
-                                <div id="partialAmountBox" class="hidden p-4 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200 dark:border-emerald-900 space-y-2">
-                                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                                        Masukkan Nominal Yang Ingin Anda Bayar Saat Ini
-                                    </label>
-                                    <div class="relative max-w-sm">
-                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400 font-mono">Rp</span>
-                                        <input type="number" name="custom_amount" id="inputCustomAmount"
-                                            min="{{ $minPaymentRequired ?? 500000 }}" max="{{ $remainingBalance }}" step="50000"
-                                            value="{{ $minPaymentRequired ?? 500000 }}"
-                                            oninput="updateCustomAmountGrandTotal()"
-                                            class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono text-slate-850 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <div class="space-y-2.5">
+                                    @if(isset($feeDetails['items']) && is_array($feeDetails['items']) && count($feeDetails['items']) > 0)
+                                        @foreach($feeDetails['items'] as $item)
+                                            @php
+                                                $itemGross = (float) ($item['amount'] ?? 0);
+                                                $itemRemaining = (float) ($item['remaining_amount'] ?? $itemGross);
+                                                $itemPayAmount = (float) ($item['amount_to_pay'] ?? $itemRemaining);
+                                                $isPartial = ($itemPayAmount < $itemRemaining);
+                                                $remainingAfter = max(0, $itemRemaining - $itemPayAmount);
+                                            @endphp
+                                            <input type="hidden" name="item_amounts[{{ $item['name'] }}]" value="{{ $itemPayAmount }}">
+                                            
+                                            <div class="border border-slate-200/80 dark:border-slate-800 rounded-xl p-3.5 bg-white dark:bg-slate-950 space-y-1 shadow-sm transition">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-extrabold text-xs text-slate-850 dark:text-white">{{ $item['name'] }}</span>
+                                                        @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
+                                                            <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
+                                                                🔓 Boleh Dicicil
+                                                            </span>
+                                                        @elseif(($installmentMode ?? 'none') === 'all')
+                                                            <span class="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] border border-emerald-200/60 dark:border-emerald-900">
+                                                                ✓ Bisa Dicicil
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <span class="font-extrabold text-xs text-slate-850 dark:text-slate-200 font-mono">
+                                                        Rp {{ number_format($itemPayAmount, 0, ',', '.') }}
+                                                    </span>
+                                                </div>
+
+                                                <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                                    @if($isPartial)
+                                                        <span class="text-blue-600 dark:text-blue-400 font-medium">
+                                                            Cicilan Tahap Ini (Sisa setelah bayar: Rp {{ number_format($remainingAfter, 0, ',', '.') }})
+                                                        </span>
+                                                    @else
+                                                        <span class="text-emerald-600 dark:text-emerald-400 font-medium">
+                                                            Pelunasan Komponen
+                                                        </span>
+                                                    @endif
+                                                    <span>Total Komponen: Rp {{ number_format($itemGross, 0, ',', '.') }}</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
+
+                                @php
+                                    $isInstallmentActive = (($installmentMode ?? 'none') !== 'none');
+                                @endphp
+
+                                @if(isset($discountAmount) && $discountAmount > 0)
+                                    <div class="flex justify-between items-center text-rose-600 dark:text-rose-400 border-t border-slate-200/40 dark:border-slate-800 pt-2">
+                                        <span>Potongan Keringanan (Diskon)</span>
+                                        <span class="font-bold">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
                                     </div>
-                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
-                                        * Batas minimal pembayaran transaksi ini: <strong>Rp {{ number_format($minPaymentRequired ?? 500000, 0, ',', '.') }}</strong> (wajib melunasi komponen wajib awal & batas minimal cicilan).
-                                    </p>
+                                @endif
+
+                                @if($isInstallmentActive && isset($totalPaid) && $totalPaid > 0)
+                                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5">
+                                        <span>Telah Dibayar Sebelumnya</span>
+                                        <span class="font-bold">Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-slate-800 dark:text-white font-extrabold">
+                                        <span>Sisa Tanggungan</span>
+                                        <span class="font-mono text-emerald-600 dark:text-emerald-400">Rp {{ number_format($remainingBalance, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
+
+                                <!-- Dynamic Admin Fee row -->
+                                <div id="adminFeeRow" class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-2">
+                                    <span>Biaya Transaksi (Admin)</span>
+                                    <span id="displayAdminFee" class="font-bold text-slate-800 dark:text-slate-200">Rp 0</span>
+                                </div>
+
+                                <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase">
+                                    <span>Total Pembayaran Transaksi Ini</span>
+                                    <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
+                                </div>
+
+                                <p class="text-[10px] text-slate-400 italic leading-relaxed mt-1 select-none">Note: Biaya transaksi dibebankan kepada wali murid sesuai instruksi yayasan.</p>
+                            </div>
+                        @else
+                            <!-- Formulir Pendaftaran (Draft) -->
+                            <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs">
+                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                                    <span>Biaya Formulir Pendaftaran</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
+                                </div>
+                                <input type="hidden" class="item-amount-input" value="{{ $feeAmount }}" data-max="{{ $feeAmount }}" data-min="{{ $feeAmount }}">
+                                <div class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-2">
+                                    <span>Biaya Transaksi (Admin)</span>
+                                    <span id="displayAdminFee" class="font-bold text-slate-800 dark:text-slate-200">Rp 0</span>
+                                </div>
+                                <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase">
+                                    <span>Total Pembayaran</span>
+                                    <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
                                 </div>
                             </div>
                         @endif
@@ -311,7 +284,7 @@
 
                                         <!-- Text Details -->
                                         <div class="min-w-0 flex-1">
-                                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 block truncate leading-tight">{{ $channel->name }}</span>
+                                            <span class="text-xs font-extrabold text-slate-850 dark:text-slate-200 block truncate leading-tight">{{ $channel->name }}</span>
                                             <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5">
                                                 @if($channel->type === 'va')
                                                     Virtual Account
@@ -494,40 +467,12 @@
 </div>
 
 <script>
-    let currentBaseAmount = {{ $feeAmount }};
-    const defaultFullAmount = {{ $remainingBalance ?? $feeAmount }};
-    const minInstallmentAmount = {{ $minPaymentRequired ?? 500000 }};
-
-    function toggleInstallmentChoice() {
-        const choiceRadio = document.querySelector('input[name="payment_type_choice"]:checked');
-        const choice = choiceRadio ? choiceRadio.value : 'full';
-        const box = document.getElementById('partialAmountBox');
-        const input = document.getElementById('inputCustomAmount');
-
-        if (choice === 'partial') {
-            if (box) box.classList.remove('hidden');
-            const customVal = input ? Number(input.value) : minInstallmentAmount;
-            currentBaseAmount = customVal > 0 ? customVal : minInstallmentAmount;
-        } else {
-            if (box) box.classList.add('hidden');
-            currentBaseAmount = defaultFullAmount;
-        }
-        updateSummary();
-    }
-
-    function updateCustomAmountGrandTotal() {
-        const input = document.getElementById('inputCustomAmount');
-        if (!input) return;
-        let val = Number(input.value) || 0;
-        currentBaseAmount = val;
-        updateSummary();
-    }
+    const feeBniVa = {{ \App\Models\Setting::get('fee_bni_va', 1500) }};
+    const feeBniQris = {{ \App\Models\Setting::get('fee_bni_qris', 0.7) }} / 100;
+    const feeWinpayVa = {{ \App\Models\Setting::get('fee_winpay_va', 4500) }};
+    const currentBaseAmount = {{ (float) $feeAmount }};
 
     function updateSummary() {
-        const feeBniVa = {{ \App\Models\Setting::get('fee_bni_va', 1500) }};
-        const feeBniQris = {{ \App\Models\Setting::get('fee_bni_qris', 0.7) }} / 100;
-        const feeWinpayVa = {{ \App\Models\Setting::get('fee_winpay_va', 4500) }};
-
         const adminFeeEl = document.getElementById('displayAdminFee');
         const grandTotalEl = document.getElementById('displayGrandTotal');
         const invoiceAmountEl = document.getElementById('displayInvoiceAmount');

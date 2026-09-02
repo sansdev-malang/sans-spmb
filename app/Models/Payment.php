@@ -26,4 +26,39 @@ class Payment extends Model
     {
         return $this->belongsTo(Registration::class);
     }
+
+    /**
+     * Get user-friendly payment channel name (e.g. 'VA MANDIRI', 'QRIS', 'SHOPEEPAY')
+     */
+    public function getChannelDisplayNameAttribute()
+    {
+        $info = is_array($this->payment_info) ? $this->payment_info : [];
+
+        // 1. Check direct bank name in payment_info (Virtual Accounts)
+        if (!empty($info['bankName'])) {
+            $b = strtoupper($info['bankName']);
+            if (in_array($b, ['MANDIRI', 'BRI', 'BNI', 'BCA', 'BSI', 'PERMATA', 'CIMB'])) {
+                return 'VA ' . $b;
+            }
+            return $b;
+        }
+
+        // 2. Check channel in additionalInfo
+        if (!empty($info['additionalInfo']['channel'])) {
+            return strtoupper($info['additionalInfo']['channel']);
+        }
+
+        // 3. Check QRIS
+        if (!empty($info['qrisUrl']) || !empty($info['qrContent']) || (strtolower($this->payment_gateway_code ?? '') === 'qris')) {
+            return 'QRIS';
+        }
+
+        // 4. Check e-wallet
+        if (!empty($info['ewalletChannel'])) {
+            return strtoupper($info['ewalletChannel']);
+        }
+
+        // 5. Fallback to gateway code (e.g. WINPAY, BNI)
+        return strtoupper($this->payment_gateway_code ?? 'Winpay');
+    }
 }

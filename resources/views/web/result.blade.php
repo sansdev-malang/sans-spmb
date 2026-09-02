@@ -183,45 +183,122 @@
                                             }
                                         }
                                     @endphp
-                                    <tr class="text-slate-650 dark:text-slate-350 {{ $isPaid ? 'bg-slate-50/40 dark:bg-slate-950/10' : '' }}">
+                                    @php
+                                        $itemGross = (float) ($item['amount'] ?? 0);
+                                        $itemPaid = $registration->getItemPaidAmount($item['name']);
+                                        $itemRemaining = max(0, $itemGross - $itemPaid);
+                                        $isItemLunas = ($isPaid || $itemRemaining <= 0);
+                                        $canCicil = (!$isItemLunas) && (!empty($item['is_installment_allowed']) || ($installmentMode ?? 'none') === 'all');
+                                        $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
+                                    @endphp
+                                    <tr class="text-slate-650 dark:text-slate-350 {{ $isItemLunas ? 'bg-slate-50/40 dark:bg-slate-950/10' : '' }}">
                                         @if($registration->registration_status !== 'completed')
-                                            <td class="p-4 text-center">
-                                                @if($isPaid)
+                                            <td class="p-4 text-center align-top pt-4.5">
+                                                @if($isItemLunas)
                                                     <span class="inline-flex items-center justify-center text-green-600 dark:text-green-400">
                                                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                                                     </span>
                                                 @else
-                                                    <input type="checkbox" class="fee-checkbox rounded text-brand-emerald focus:ring-brand-emerald cursor-pointer" data-amount="{{ $item['amount'] }}" data-index="{{ $loop->index }}" data-gateways="{{ json_encode($item['gateways'] ?? ['winpay']) }}" checked>
+                                                    <input type="checkbox" 
+                                                        class="fee-checkbox rounded text-brand-emerald focus:ring-brand-emerald cursor-pointer w-4 h-4" 
+                                                        id="checkbox-item-{{ $loop->index }}"
+                                                        data-index="{{ $loop->index }}" 
+                                                        data-gateways="{{ json_encode($item['gateways'] ?? ['winpay']) }}" 
+                                                        data-amount="{{ $itemRemaining }}"
+                                                        data-is-cicil="{{ $canCicil ? '1' : '0' }}"
+                                                        data-max="{{ $itemRemaining }}"
+                                                        data-min="{{ $minItemInstallment }}"
+                                                        data-name="{{ $item['name'] }}"
+                                                        checked 
+                                                        onchange="onFeeCheckboxChange({{ $loop->index }})">
                                                 @endif
                                             </td>
                                         @endif
-                                        <td class="p-4 font-medium {{ $isPaid ? 'line-through text-slate-400' : '' }}">
-                                            <div class="flex items-center gap-2">
-                                                <span>{{ $item['name'] }}</span>
-                                                @if(($installmentMode ?? 'none') === 'selective')
-                                                    @if(!empty($item['is_installment_allowed']))
+                                        <td class="p-4 font-medium {{ $isItemLunas ? 'text-slate-400' : '' }}">
+                                            <div class="flex flex-col gap-0.5">
+                                                <div class="flex items-center gap-2 {{ $isItemLunas ? 'line-through' : '' }}">
+                                                    <span class="font-extrabold text-xs text-slate-850 dark:text-white">{{ $item['name'] }}</span>
+                                                    @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
                                                         <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
                                                             🔓 Boleh Dicicil
                                                         </span>
-                                                    @else
-                                                        <span class="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-[9px] border border-amber-200/60 dark:border-amber-900">
-                                                            🔒 Wajib Lunas Awal
+                                                    @elseif(($installmentMode ?? 'none') === 'all')
+                                                        <span class="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] border border-emerald-200/60 dark:border-emerald-900">
+                                                            ✓ Bisa Dicicil
                                                         </span>
                                                     @endif
+                                                </div>
+
+                                                @if($isItemLunas && $itemPayment)
+                                                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
+                                                        <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas via {{ $itemPayment->channel_display_name }} ({{ $itemPayment->created_at ? $itemPayment->created_at->format('d M Y') : '' }})
+                                                    </div>
+                                                @elseif(!$isItemLunas && $itemPaid > 0)
+                                                    <div class="text-[10px] text-slate-400 font-medium">
+                                                        Total: Rp {{ number_format($itemGross, 0, ',', '.') }} • Telah Dicicil: <span class="text-emerald-600 font-bold">Rp {{ number_format($itemPaid, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
+
+                                                {{-- Accordion Input Cicilan pada Item yang Boleh Dicicil --}}
+                                                @if(!$isItemLunas && $canCicil)
+                                                    <div class="mt-2" id="cicil-control-wrapper-{{ $loop->index }}">
+                                                        <button type="button" onclick="toggleResultItemAccordion({{ $loop->index }})" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand-emerald hover:underline select-none">
+                                                            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                                                            <span id="btn-accordion-text-{{ $loop->index }}">Cicil Sebagian (Atur Nominal)</span>
+                                                            <i data-lucide="chevron-down" id="chevron-{{ $loop->index }}" class="w-3 h-3 transition-transform duration-200"></i>
+                                                        </button>
+
+                                                        <div id="accordion-input-box-{{ $loop->index }}" class="hidden mt-2 p-3 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-xl border border-emerald-200/60 dark:border-emerald-900/40 space-y-2 max-w-md">
+                                                            <div class="flex items-center justify-between">
+                                                                <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Nominal Bayar Tahap Ini</span>
+                                                                <span class="text-[9px] text-slate-500 font-mono">Batas Min: <strong class="text-emerald-700 dark:text-emerald-400 font-mono">Rp {{ number_format($minItemInstallment, 0, ',', '.') }}</strong></span>
+                                                            </div>
+                                                            <div class="flex items-center gap-2">
+                                                                <div class="relative flex-1">
+                                                                    <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-[11px] font-bold text-slate-400 font-mono">Rp</span>
+                                                                    <input type="text"
+                                                                        inputmode="numeric" 
+                                                                        id="input-amount-{{ $loop->index }}"
+                                                                        class="result-item-amount-input w-full pl-8 pr-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold font-mono text-slate-850 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                                                                        placeholder="Contoh: {{ number_format($minItemInstallment, 0, ',', '.') }}"
+                                                                        value=""
+                                                                        data-applied-amount="{{ $itemRemaining }}"
+                                                                        data-index="{{ $loop->index }}"
+                                                                        data-max="{{ $itemRemaining }}"
+                                                                        data-min="{{ $minItemInstallment }}"
+                                                                        oninput="formatRupiahInput(this)"
+                                                                        onkeydown="if(event.key === 'Enter'){ event.preventDefault(); applyResultItemInstallment({{ $loop->index }}); }">
+                                                                </div>
+                                                                <button type="button" onclick="applyResultItemInstallment({{ $loop->index }})" class="px-4 py-1.5 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold transition shadow-sm select-none">
+                                                                    OK
+                                                                </button>
+                                                                <button type="button" onclick="resetResultItemFull({{ $loop->index }})" class="px-2.5 py-1.5 bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition shadow-sm select-none whitespace-nowrap" title="Batalkan cicilan dan bayar penuh">
+                                                                    Bayar Penuh
+                                                                </button>
+                                                            </div>
+                                                            <p id="error-msg-{{ $loop->index }}" class="hidden text-[10px] text-red-600 font-semibold leading-tight"></p>
+                                                        </div>
+                                                    </div>
                                                 @endif
                                             </div>
                                         </td>
-                                        <td class="p-4 text-right font-bold {{ $isPaid ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200' }}">Rp {{ number_format($item['amount'], 0, ',', '.') }}</td>
-                                        <td class="p-4 text-center">
-                                            @if($isPaid || $registration->registration_status === 'completed')
+                                        <td class="p-4 text-right font-bold {{ $isItemLunas ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200' }} align-top pt-4.5">
+                                            <span id="display-item-amount-{{ $loop->index }}" class="font-mono">
+                                                Rp {{ number_format($isItemLunas ? $itemGross : $itemRemaining, 0, ',', '.') }}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 text-center align-top pt-4.5">
+                                            @if($isItemLunas || $registration->registration_status === 'completed')
                                                 <div class="flex items-center justify-center gap-1.5">
                                                     <span class="text-[9px] bg-green-50 dark:bg-green-950/20 text-green-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Lunas</span>
                                                     @if($itemPayment)
-                                                        <a href="{{ route('dashboard.payment.receipt', $itemPayment->id) }}" class="download-link-animate inline-flex items-center gap-0.5 text-[9px] font-bold text-brand-emerald hover:underline" title="Unduh Kwitansi">
+                                                        <a href="{{ route('dashboard.payment.receipt', $itemPayment->id) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-0.5 text-[9px] font-bold text-brand-emerald hover:underline" title="Unduh Kwitansi">
                                                             <i data-lucide="download" class="w-3 h-3 text-brand-emerald"></i> Unduh
                                                         </a>
                                                     @endif
                                                 </div>
+                                            @elseif($itemPaid > 0)
+                                                <span class="text-[9px] bg-blue-50 dark:bg-blue-950/20 text-blue-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Dicicil</span>
                                             @else
                                                 <span class="text-[9px] bg-amber-50 dark:bg-amber-955/20 text-amber-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Tanggungan</span>
                                             @endif
@@ -245,37 +322,49 @@
                                 </tr>
                             @endif
 
-                            @if($isInstallmentActive && isset($totalPaid) && $totalPaid > 0)
+                            {{-- Baris 'Telah Terbayar' hanya muncul jika skema cicilan adalah Cicilan Global (all) --}}
+                            @if(($installmentMode ?? 'none') === 'all' && isset($totalPaid) && $totalPaid > 0)
                                 <tr class="text-emerald-600 dark:text-emerald-400 bg-emerald-50/20">
                                     @if($registration->registration_status !== 'completed')
                                         <td></td>
                                     @endif
-                                    <td class="p-4 font-bold">Telah Terbayar</td>
+                                    <td class="p-4 font-bold">Telah Terbayar (Cicilan Global)</td>
                                     <td class="p-4 text-right font-mono font-bold">Rp {{ number_format($totalPaid, 0, ',', '.') }}</td>
                                     <td class="p-4 text-center"><span class="text-[9px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">Terbayar</span></td>
                                 </tr>
                             @endif
 
-                            <tr class="bg-slate-50/50 dark:bg-slate-950/30 text-xs font-black text-slate-800 dark:text-white uppercase border-t border-slate-150 dark:border-slate-800">
+                            {{-- Baris Sisa Tanggungan Keseluruhan --}}
+                            <tr class="bg-slate-50/50 dark:bg-slate-950/30 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase border-t border-slate-200 dark:border-slate-800">
                                 @if($registration->registration_status !== 'completed')
                                     <td></td>
                                 @endif
-                                <td class="p-4">
-                                    {{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) ? 'Sisa Tagihan' : 'Total Tagihan' }}
+                                <td class="p-4 font-extrabold">
+                                    {{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) || (isset($discountAmount) && $discountAmount > 0) ? 'Sisa Tanggungan Keseluruhan' : 'Total Tanggungan' }}
                                 </td>
-                                <td class="p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold" id="total-amount-display">
+                                <td class="p-4 text-right font-mono font-bold text-slate-850 dark:text-white">
                                     Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
                                 </td>
                                 <td class="p-4 text-center">
                                     @if($registration->registration_status === 'completed' || (isset($remainingBalance) && $remainingBalance <= 0))
                                         <span class="text-[10px] bg-green-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm">Lunas</span>
-                                    @else
-                                        <span class="text-[10px] bg-amber-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm" id="total-status-badge">
-                                            {{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) ? 'Cicilan Berjalan' : 'Belum Lunas' }}
-                                        </span>
                                     @endif
                                 </td>
                             </tr>
+
+                            {{-- Baris Total Pembayaran Transaksi Ini (Hanya muncul jika belum lunas) --}}
+                            @if($registration->registration_status !== 'completed' && (isset($remainingBalance) && $remainingBalance > 0))
+                                <tr class="bg-emerald-50/50 dark:bg-emerald-950/20 text-xs font-black text-slate-850 dark:text-white uppercase border-t border-emerald-100 dark:border-emerald-900/40">
+                                    <td></td>
+                                    <td class="p-4 text-brand-emerald dark:text-emerald-400">
+                                        Total Pembayaran Transaksi Ini
+                                    </td>
+                                    <td class="p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono" id="total-amount-display">
+                                        Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="p-4 text-center"></td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -293,7 +382,7 @@
                 <div class="instructions-body text-slate-650 dark:text-slate-350">
                     @if($registration->registration_status !== 'completed')
                         {!! $registration->unit?->re_registration_instructions_unpaid 
-                            ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut ke Pembayaran Online</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>') !!}
+                            ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut Bayar</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>') !!}
                     @else
                         {!! $registration->unit?->re_registration_instructions_completed 
                             ?: \App\Models\Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>') !!}
@@ -320,7 +409,9 @@
                 @else
                     <!-- Unpaid buttons -->
                     <a href="{{ route('dashboard.payment', $registration->id) }}" id="payment-btn" data-base-url="{{ route('dashboard.payment', $registration->id) }}" class="w-full sm:w-auto bg-brand-emerald hover-emerald text-white px-8 py-3.5 rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
-                        <i data-lucide="credit-card" class="w-4.5 h-4.5 text-brand-yellow animate-pulse"></i> Lanjut ke Pembayaran Online
+                        <span class="btn-label-text flex items-center gap-2">
+                            <i data-lucide="credit-card" class="w-4.5 h-4.5 text-brand-yellow animate-pulse"></i> Lanjut Bayar
+                        </span>
                     </a>
                 @endif
             </div>
@@ -330,90 +421,265 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    function formatRupiahInput(el) {
+        let raw = el.value.replace(/\D/g, '');
+        if (raw === '') {
+            el.value = '';
+            return;
+        }
+        let num = parseInt(raw, 10);
+        el.value = num.toLocaleString('id-ID');
+    }
+
+    function toggleResultItemAccordion(idx) {
+        const box = document.getElementById('accordion-input-box-' + idx);
+        const chevron = document.getElementById('chevron-' + idx);
+        const btnText = document.getElementById('btn-accordion-text-' + idx);
+        const input = document.getElementById('input-amount-' + idx);
+        const errorEl = document.getElementById('error-msg-' + idx);
+        if (!box) return;
+
+        if (box.classList.contains('hidden')) {
+            box.classList.remove('hidden');
+            if (chevron) chevron.classList.add('rotate-180');
+            if (btnText) btnText.textContent = 'Tutup Pengaturan';
+            if (errorEl) errorEl.classList.add('hidden');
+            if (input) {
+                input.classList.remove('border-red-500', 'focus:ring-red-500');
+                const appliedAmt = Number(input.getAttribute('data-applied-amount')) || 0;
+                const maxVal = Number(input.getAttribute('data-max')) || 0;
+                // If user has applied a specific partial amount, show it formatted. If default full, keep empty with placeholder
+                if (appliedAmt < maxVal && appliedAmt > 0) {
+                    input.value = appliedAmt.toLocaleString('id-ID');
+                } else {
+                    input.value = '';
+                }
+                input.focus();
+            }
+        } else {
+            box.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+            if (input) {
+                const appliedAmt = Number(input.getAttribute('data-applied-amount')) || 0;
+                const maxVal = Number(input.getAttribute('data-max')) || 0;
+                if (btnText) {
+                    btnText.textContent = (appliedAmt < maxVal && appliedAmt > 0) 
+                        ? 'Dicicil: Rp ' + appliedAmt.toLocaleString('id-ID') + ' (Ubah)' 
+                        : 'Cicil Sebagian (Atur Nominal)';
+                }
+            }
+        }
+    }
+
+    function resetResultItemFull(idx) {
+        const input = document.getElementById('input-amount-' + idx);
+        const display = document.getElementById('display-item-amount-' + idx);
+        const errorEl = document.getElementById('error-msg-' + idx);
+        const box = document.getElementById('accordion-input-box-' + idx);
+        const chevron = document.getElementById('chevron-' + idx);
+        const btnText = document.getElementById('btn-accordion-text-' + idx);
+        const cb = document.getElementById('checkbox-item-' + idx);
+
+        if (!input) return;
+
+        const maxVal = Number(input.getAttribute('data-max')) || 0;
+
+        // Reset applied amount to full remaining balance
+        input.setAttribute('data-applied-amount', maxVal);
+        input.value = '';
+
+        if (errorEl) errorEl.classList.add('hidden');
+        input.classList.remove('border-red-500', 'focus:ring-red-500');
+
+        // Update display on table row to full amount
+        if (display) {
+            display.textContent = 'Rp ' + maxVal.toLocaleString('id-ID');
+        }
+
+        // Reset label and close accordion
+        if (box) box.classList.add('hidden');
+        if (chevron) chevron.classList.remove('rotate-180');
+        if (btnText) {
+            btnText.textContent = 'Cicil Sebagian (Atur Nominal)';
+        }
+
+        // Ensure checkbox remains checked
+        if (cb && !cb.checked) {
+            cb.checked = true;
+        }
+
+        // Recalculate grand total
+        calculateTotal();
+    }
+
+    function applyResultItemInstallment(idx) {
+        const input = document.getElementById('input-amount-' + idx);
+        const display = document.getElementById('display-item-amount-' + idx);
+        const cb = document.getElementById('checkbox-item-' + idx);
+        const errorEl = document.getElementById('error-msg-' + idx);
+        const box = document.getElementById('accordion-input-box-' + idx);
+        const chevron = document.getElementById('chevron-' + idx);
+        const btnText = document.getElementById('btn-accordion-text-' + idx);
+
+        if (!input) return;
+
+        let raw = input.value.replace(/\D/g, '');
+        let val = parseInt(raw, 10) || 0;
+        const minVal = Number(input.getAttribute('data-min')) || 0;
+        const maxVal = Number(input.getAttribute('data-max')) || 0;
+
+        if (val === 0 || isNaN(val)) {
+            if (errorEl) {
+                errorEl.textContent = 'Silakan ketik nominal cicilan terlebih dahulu.';
+                errorEl.classList.remove('hidden');
+            }
+            input.classList.add('border-red-500', 'focus:ring-red-500');
+            input.focus();
+            return; // Do NOT close accordion
+        }
+
+        if (val < minVal) {
+            if (errorEl) {
+                errorEl.textContent = 'Nominal minimal cicilan adalah Rp ' + minVal.toLocaleString('id-ID');
+                errorEl.classList.remove('hidden');
+            }
+            input.classList.add('border-red-500', 'focus:ring-red-500');
+            input.focus();
+            return; // Do NOT close accordion
+        }
+
+        if (val > maxVal) {
+            if (errorEl) {
+                errorEl.textContent = 'Nominal melebihi sisa tanggungan (Maksimal Rp ' + maxVal.toLocaleString('id-ID') + ')';
+                errorEl.classList.remove('hidden');
+            }
+            input.classList.add('border-red-500', 'focus:ring-red-500');
+            input.focus();
+            return; // Do NOT close accordion
+        }
+
+        // Valid
+        if (errorEl) errorEl.classList.add('hidden');
+        input.classList.remove('border-red-500', 'focus:ring-red-500');
+
+        // Save applied amount & format
+        input.setAttribute('data-applied-amount', val);
+        input.value = val.toLocaleString('id-ID');
+
+        // Update display on table row
+        if (display) {
+            display.textContent = 'Rp ' + val.toLocaleString('id-ID');
+        }
+
+        // Ensure checkbox is checked
+        if (cb && !cb.checked) {
+            cb.checked = true;
+        }
+
+        // Update button label and close accordion
+        if (box) box.classList.add('hidden');
+        if (chevron) chevron.classList.remove('rotate-180');
+        if (btnText) {
+            btnText.textContent = (val < maxVal) 
+                ? 'Dicicil: Rp ' + val.toLocaleString('id-ID') + ' (Ubah)' 
+                : 'Cicil Sebagian (Atur Nominal)';
+        }
+
+        // Calculate new total
+        calculateTotal();
+    }
+
+    function onFeeCheckboxChange(idx) {
+        const cb = document.getElementById('checkbox-item-' + idx);
+        const box = document.getElementById('accordion-input-box-' + idx);
+        const chevron = document.getElementById('chevron-' + idx);
+        const btnText = document.getElementById('btn-accordion-text-' + idx);
+        const input = document.getElementById('input-amount-' + idx);
+
+        if (cb && !cb.checked) {
+            if (box) box.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+            if (btnText) btnText.textContent = 'Cicil Sebagian (Atur Nominal)';
+        }
+
+        calculateTotal();
+    }
+
+    function calculateTotal() {
         const checkboxes = document.querySelectorAll('.fee-checkbox');
         const totalDisplay = document.getElementById('total-amount-display');
         const paymentBtn = document.getElementById('payment-btn');
         const totalBadge = document.getElementById('total-status-badge');
+        if (!paymentBtn) return;
 
-        if (checkboxes.length > 0 && totalDisplay && paymentBtn) {
-            const baseUrl = paymentBtn.getAttribute('data-base-url');
-            const discountAmount = {{ (float) ($discountAmount ?? 0) }};
-            const remainingBalance = {{ (float) ($remainingBalance ?? 0) }};
+        const baseUrl = paymentBtn.getAttribute('data-base-url');
+        let total = 0;
+        const queryPairs = [];
+        let commonGateways = null;
+        let checkedCount = 0;
 
-            const calculateTotal = function() {
-                let total = 0;
-                const checkedIndices = [];
-                let commonGateways = null;
-
-                checkboxes.forEach(cb => {
-                    if (cb.checked) {
-                        checkedIndices.push(cb.getAttribute('data-index'));
-                        total += parseInt(cb.getAttribute('data-amount'), 10);
-
-                        const itemGateways = JSON.parse(cb.getAttribute('data-gateways') || '[]');
-                        if (commonGateways === null) {
-                            commonGateways = [...itemGateways];
-                        } else {
-                            commonGateways = commonGateways.filter(gw => itemGateways.includes(gw));
-                        }
-                    }
-                });
-
-                // Update total display format Rupiah (subtract discount properly)
-                const netPayable = checkedIndices.length === checkboxes.length 
-                    ? (remainingBalance > 0 ? remainingBalance : Math.max(0, total - discountAmount))
-                    : Math.max(0, total - discountAmount);
-                totalDisplay.textContent = 'Rp ' + netPayable.toLocaleString('id-ID');
-
-                // Update dynamic URL query param
-                paymentBtn.href = baseUrl + '?items=' + checkedIndices.join(',');
-
-                const warningBox = document.getElementById('gateway-conflict-warning');
-                const hasConflict = checkedIndices.length > 0 && commonGateways && commonGateways.length === 0;
-
-                if (hasConflict) {
-                    if (warningBox) {
-                        warningBox.classList.remove('hidden');
-                        if (typeof lucide !== 'undefined') {
-                            lucide.createIcons();
-                        }
-                    }
-                    paymentBtn.classList.add('opacity-50', 'pointer-events-none');
-                    if (totalBadge) {
-                        totalBadge.className = "text-[10px] bg-red-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm select-none animate-pulse";
-                        totalBadge.textContent = "Konflik Metode";
-                    }
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                checkedCount++;
+                const idx = cb.getAttribute('data-index');
+                const input = document.getElementById('input-amount-' + idx);
+                let itemAmount = 0;
+                if (input) {
+                    itemAmount = Number(input.getAttribute('data-applied-amount')) || Number(cb.getAttribute('data-amount')) || 0;
                 } else {
-                    if (warningBox) {
-                        warningBox.classList.add('hidden');
-                    }
-
-                    // Update state & badge
-                    if (checkedIndices.length === 0) {
-                        paymentBtn.classList.add('opacity-50', 'pointer-events-none');
-                        if (totalBadge) {
-                            totalBadge.className = "text-[10px] bg-slate-400 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm select-none";
-                            totalBadge.textContent = "Kosong";
-                        }
-                    } else {
-                        paymentBtn.classList.remove('opacity-50', 'pointer-events-none');
-                        if (totalBadge) {
-                            totalBadge.className = "text-[10px] bg-amber-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm select-none";
-                            totalBadge.textContent = "Belum Lunas";
-                        }
-                    }
+                    itemAmount = Number(cb.getAttribute('data-amount')) || 0;
                 }
-            };
 
-            // Bind change listener to each checkbox
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', calculateTotal);
-            });
+                total += itemAmount;
+                queryPairs.push(idx + ':' + itemAmount);
 
-            // Initial calculation on render
-            calculateTotal();
+                const itemGateways = JSON.parse(cb.getAttribute('data-gateways') || '[]');
+                if (commonGateways === null) {
+                    commonGateways = [...itemGateways];
+                } else {
+                    commonGateways = commonGateways.filter(gw => itemGateways.includes(gw));
+                }
+            }
+        });
+
+        // Update total display in footer
+        if (totalDisplay) {
+            totalDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
         }
+
+        // Update dynamic URL and button text
+        paymentBtn.href = baseUrl + '?items=' + queryPairs.join(',');
+        const btnLabel = paymentBtn.querySelector('.btn-label-text');
+        if (btnLabel) {
+            btnLabel.innerHTML = '<i data-lucide="credit-card" class="w-4.5 h-4.5 text-brand-yellow animate-pulse"></i> Lanjut Bayar (Rp ' + total.toLocaleString('id-ID') + ')';
+        }
+
+        const warningBox = document.getElementById('gateway-conflict-warning');
+        const hasConflict = checkedCount > 0 && commonGateways && commonGateways.length === 0;
+
+        if (hasConflict) {
+            if (warningBox) warningBox.classList.remove('hidden');
+            paymentBtn.classList.add('opacity-50', 'pointer-events-none');
+        } else {
+            if (warningBox) warningBox.classList.add('hidden');
+            if (checkedCount === 0) {
+                paymentBtn.classList.add('opacity-50', 'pointer-events-none');
+                if (btnLabel) {
+                    btnLabel.innerHTML = '<i data-lucide="credit-card" class="w-4.5 h-4.5 text-brand-yellow"></i> Pilih Komponen Biaya';
+                }
+            } else {
+                paymentBtn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial calculation on render
+        calculateTotal();
 
         // Handle loading animations for download buttons (placed outside check block so it runs unconditionally)
         document.querySelectorAll('.download-link-animate').forEach(link => {

@@ -280,4 +280,48 @@ class Registration extends Model
 
         return $remaining;
     }
+
+    /**
+     * Get total amount paid specifically for a given fee item name
+     */
+    public function getItemPaidAmount($itemName)
+    {
+        $successfulPayments = $this->payments()
+            ->whereIn('status', ['success', 'settled'])
+            ->where('payment_type', 'final_fee')
+            ->get();
+
+        $totalPaid = 0;
+        foreach ($successfulPayments as $p) {
+            $info = is_array($p->payment_info) ? $p->payment_info : [];
+            $selectedItems = $info['selected_items'] ?? [];
+            if (!is_array($selectedItems)) continue;
+
+            $itemCount = count($selectedItems);
+            if ($itemCount === 0) continue;
+
+            foreach ($selectedItems as $si) {
+                if (strcasecmp(trim($si['name'] ?? ''), trim($itemName)) === 0) {
+                    if ($itemCount === 1) {
+                        // Single item payment: all principal belongs to this item
+                        $principal = (float) ($p->base_amount ?? ($p->amount - ($p->admin_fee ?? 0)));
+                        $totalPaid += $principal;
+                    } else {
+                        // Multi-item payment
+                        $itemAmount = (float) ($si['amount'] ?? 0);
+                        $totalSelected = array_sum(array_column($selectedItems, 'amount'));
+                        if ($totalSelected > 0) {
+                            $principal = (float) ($p->base_amount ?? ($p->amount - ($p->admin_fee ?? 0)));
+                            $totalPaid += ($principal * ($itemAmount / $totalSelected));
+                        } else {
+                            $totalPaid += $itemAmount;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        return $totalPaid;
+    }
 }

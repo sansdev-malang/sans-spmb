@@ -604,27 +604,53 @@ class WebDashboardController extends Controller
                 $feeAmount = $latestSuccessPayment->amount;
             } else {
                 $allSnapshotItems = $feeDetails['items'];
-                $selectedIndices = request()->query('items');
+                $selectedItemsQuery = request()->query('items');
+                $itemAmountMap = [];
 
-                if ($selectedIndices !== null && $selectedIndices !== '') {
-                    $indices = explode(',', $selectedIndices);
+                if (is_array($selectedItemsQuery)) {
+                    $itemAmountMap = $selectedItemsQuery;
+                    $indices = array_keys($selectedItemsQuery);
+                } elseif (is_string($selectedItemsQuery) && trim($selectedItemsQuery) !== '') {
+                    $pairs = explode(',', $selectedItemsQuery);
+                    $indices = [];
+                    foreach ($pairs as $pair) {
+                        $pair = trim($pair);
+                        if (str_contains($pair, ':')) {
+                            [$k, $v] = explode(':', $pair, 2);
+                            $k = trim($k);
+                            $itemAmountMap[$k] = (float) trim($v);
+                            $indices[] = $k;
+                        } else {
+                            $itemAmountMap[$pair] = null;
+                            $indices[] = $pair;
+                        }
+                    }
+                } else {
+                    $indices = null;
+                }
+
+                if ($indices !== null) {
                     $filteredItems = [];
                     foreach ($indices as $idx) {
-                        $idx = trim($idx);
+                        $candItem = null;
+                        $customAmt = $itemAmountMap[$idx] ?? null;
+
                         if (isset($allSnapshotItems[$idx])) {
                             $candItem = $allSnapshotItems[$idx];
-                            if (!in_array($candItem['name'], $paidItemNames)) {
-                                $filteredItems[] = $candItem;
-                            }
                         } elseif (isset($unpaidItems[$idx])) {
-                            $filteredItems[] = $unpaidItems[$idx];
+                            $candItem = $unpaidItems[$idx];
                         } else {
                             foreach ($unpaidItems as $uItem) {
-                                if ((isset($uItem['id']) && (string)$uItem['id'] === $idx) || strcasecmp(trim($uItem['name']), $idx) === 0) {
-                                    $filteredItems[] = $uItem;
+                                if ((isset($uItem['id']) && (string)$uItem['id'] === (string)$idx) || strcasecmp(trim($uItem['name']), (string)$idx) === 0) {
+                                    $candItem = $uItem;
                                     break;
                                 }
                             }
+                        }
+
+                        if ($candItem && !in_array($candItem['name'], $paidItemNames)) {
+                            $candItem['custom_amount_requested'] = $customAmt;
+                            $filteredItems[] = $candItem;
                         }
                     }
                     $feeDetails['items'] = !empty($filteredItems) ? $filteredItems : $unpaidItems;
@@ -632,28 +658,83 @@ class WebDashboardController extends Controller
                     $feeDetails['items'] = $unpaidItems;
                 }
 
-                $feeDetails['total'] = (float) array_sum(array_column($feeDetails['items'], 'amount'));
-                $selectedTotal = (float) $feeDetails['total'];
+                $selectedTotal = (float) array_sum(array_column($feeDetails['items'], 'amount'));
+                $feeDetails['total'] = $selectedTotal;
                 $discountAmount = (float) ($registration->discount_amount ?? 0);
-                $netSelectedTotal = max(0, $selectedTotal - $discountAmount);
 
-                $grossFee = $registration->getGrossFee() ?: $selectedTotal;
-                $discountNotes = $registration->discount_notes;
-                $netFee = $registration->net_fee;
-                $totalPaid = (float) ($registration->total_paid_final_fee ?? 0);
-                $remainingBalance = (float) ($registration->remaining_balance ?? $netFee);
-                $installmentMode = $registration->installment_mode ?? 'none';
-                $minPaymentRequired = $registration->getMinimumPaymentRequired();
+                $isGlobalInstallment = ($registration->installment_mode === 'all');
+                $isSelectiveInstallment = ($registration->installment_mode === 'selective');
 
-                // Annotate items with installment allowed flag
+                // Annotate items with installment allowed flag and item-level paid tracking
+                $selectedItemsPaid = 0;
+                $hasInstallmentItemInSelection = false;
+                $mandatorySelectedRemaining = 0;
+                $installmentSelectedRemaining = 0;
+                $totalTransactionPrincipal = 0;
+
                 foreach ($feeDetails['items'] as &$item) {
                     $item['is_installment_allowed'] = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
+                    
+                    $itemGross = (float) ($item['amount'] ?? 0);
+                    $itemPaid = $isGlobalInstallment ? 0 : $registration->getItemPaidAmount($item['name']);
+                    $itemRemaining = max(0, $itemGross - $itemPaid);
+                    $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
+
+                    $item['paid_amount'] = $itemPaid;
+                    $item['remaining_amount'] = $itemRemaining;
+                    $item['min_installment'] = $minItemInstallment;
+
+                    if (($isGlobalInstallment || $item['is_installment_allowed']) && isset($item['custom_amount_requested']) && $item['custom_amount_requested'] !== null) {
+                        $userCustomAmt = (float) $item['custom_amount_requested'];
+                        $itemPayAmount = min($itemRemaining, max($minItemInstallment, $userCustomAmt));
+                    } else {
+                        $itemPayAmount = $itemRemaining;
+                    }
+
+                    $item['amount_to_pay'] = $itemPayAmount;
+                    $totalTransactionPrincipal += $itemPayAmount;
+                    $selectedItemsPaid += $itemPaid;
+
+                    if ($isGlobalInstallment || $item['is_installment_allowed']) {
+                        $hasInstallmentItemInSelection = true;
+                        $installmentSelectedRemaining += $itemRemaining;
+                    } else {
+                        $mandatorySelectedRemaining += $itemRemaining;
+                    }
                 }
                 unset($item);
 
+                if ($isGlobalInstallment) {
+                    $grossFee = $registration->getGrossFee() ?: $selectedTotal;
+                    $netFee = $registration->net_fee;
+                    $totalPaid = (float) ($registration->total_paid_final_fee ?? 0);
+                    $remainingBalance = (float) ($registration->remaining_balance ?? $netFee);
+                    $canInstallment = ($remainingBalance > 0);
+                    $minInstallment = (float) ($registration->min_installment_amount ?: 500000);
+                    $minPaymentRequired = min($remainingBalance, max(1, $minInstallment));
+                } else {
+                    $grossFee = $selectedTotal;
+                    $netFee = max(0, $selectedTotal - $discountAmount);
+                    $totalPaid = $selectedItemsPaid;
+                    $remainingBalance = max(0, $netFee - $totalPaid);
+
+                    if ($isSelectiveInstallment && $hasInstallmentItemInSelection) {
+                        $canInstallment = true;
+                        $minInstallment = (float) ($registration->min_installment_amount ?: 500000);
+                        $minPart = min($installmentSelectedRemaining, $minInstallment);
+                        $minPaymentRequired = min($remainingBalance, max(1, $mandatorySelectedRemaining + $minPart));
+                    } else {
+                        $canInstallment = false;
+                        $minPaymentRequired = $remainingBalance;
+                    }
+                }
+
+                $installmentMode = $canInstallment ? ($registration->installment_mode ?? 'selective') : 'none';
+                $discountNotes = $registration->discount_notes;
+
                 $feeAmount = ($activePayment && $activePayment->status === 'pending') 
                     ? (float) $activePayment->amount 
-                    : (float) min($remainingBalance ?: $netSelectedTotal, $netSelectedTotal);
+                    : (float) $totalTransactionPrincipal;
             }
             
             // Calculate the intersection of gateways for the selected items
@@ -1119,26 +1200,53 @@ class WebDashboardController extends Controller
             }
             $allSnapshotItems = $feeDetails['items'];
             // Apply manual checked items filter if passed in query string or POST input
-            $selectedIndices = $request->input('items') ?? request()->query('items');
-            if ($selectedIndices !== null && $selectedIndices !== '') {
-                $indices = explode(',', $selectedIndices);
+            $selectedItemsQuery = $request->input('items') ?? request()->query('items');
+            $itemAmountMap = [];
+
+            if (is_array($selectedItemsQuery)) {
+                $itemAmountMap = $selectedItemsQuery;
+                $indices = array_keys($selectedItemsQuery);
+            } elseif (is_string($selectedItemsQuery) && trim($selectedItemsQuery) !== '') {
+                $pairs = explode(',', $selectedItemsQuery);
+                $indices = [];
+                foreach ($pairs as $pair) {
+                    $pair = trim($pair);
+                    if (str_contains($pair, ':')) {
+                        [$k, $v] = explode(':', $pair, 2);
+                        $k = trim($k);
+                        $itemAmountMap[$k] = (float) trim($v);
+                        $indices[] = $k;
+                    } else {
+                        $itemAmountMap[$pair] = null;
+                        $indices[] = $pair;
+                    }
+                }
+            } else {
+                $indices = null;
+            }
+
+            if ($indices !== null) {
                 $filteredItems = [];
                 foreach ($indices as $idx) {
-                    $idx = trim($idx);
+                    $candItem = null;
+                    $customAmt = $itemAmountMap[$idx] ?? null;
+
                     if (isset($allSnapshotItems[$idx])) {
                         $candItem = $allSnapshotItems[$idx];
-                        if (!in_array($candItem['name'], $paidItemNames)) {
-                            $filteredItems[] = $candItem;
-                        }
                     } elseif (isset($unpaidItems[$idx])) {
-                        $filteredItems[] = $unpaidItems[$idx];
+                        $candItem = $unpaidItems[$idx];
                     } else {
                         foreach ($unpaidItems as $uItem) {
-                            if ((isset($uItem['id']) && (string)$uItem['id'] === $idx) || strcasecmp(trim($uItem['name']), $idx) === 0) {
-                                $filteredItems[] = $uItem;
+                            if ((isset($uItem['id']) && (string)$uItem['id'] === (string)$idx) || strcasecmp(trim($uItem['name']), (string)$idx) === 0) {
+                                $candItem = $uItem;
                                 break;
                             }
                         }
+                    }
+
+                    if ($candItem && !in_array($candItem['name'], $paidItemNames)) {
+                        $candItem['custom_amount_requested'] = $customAmt;
+                        $filteredItems[] = $candItem;
                     }
                 }
                 $feeDetails['items'] = !empty($filteredItems) ? $filteredItems : $unpaidItems;
@@ -1146,32 +1254,64 @@ class WebDashboardController extends Controller
                 $feeDetails['items'] = $unpaidItems;
             }
 
-            // Calculate final total based on unpaid/filtered items
-            $selectedTotal = (float) array_sum(array_map(function($item) {
-                return $item['amount'];
-            }, $feeDetails['items']));
+            $selectedTotal = (float) array_sum(array_column($feeDetails['items'], 'amount'));
             $feeDetails['total'] = $selectedTotal;
-
             $discountAmount = (float) ($registration->discount_amount ?? 0);
-            $netSelectedTotal = max(0, $selectedTotal - $discountAmount);
-            $remaining = (float) ($registration->remaining_balance ?: $netSelectedTotal);
 
-            // Handle Installment Choice (Full vs Partial)
-            if ($registration->installment_mode !== 'none' && $request->input('payment_type_choice') === 'partial') {
-                $rawCustom = str_replace(['.', ',', ' '], '', $request->input('custom_amount', 0));
-                $customAmount = (float) $rawCustom;
-                $minRequired = $registration->getMinimumPaymentRequired();
+            $isGlobalInstallment = ($registration->installment_mode === 'all');
+            $isSelectiveInstallment = ($registration->installment_mode === 'selective');
+            $inputItemAmounts = $request->input('item_amounts', []);
 
-                if ($customAmount < $minRequired) {
-                    return redirect()->back()->with('error', 'Nominal pembayaran cicilan tidak boleh kurang dari batas minimal Rp ' . number_format($minRequired, 0, ',', '.'));
+            $totalCalculatedPrincipal = 0;
+            $processedSelectedItems = [];
+
+            foreach ($feeDetails['items'] as $item) {
+                $isInstallmentAllowed = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
+                $itemGross = (float) ($item['amount'] ?? 0);
+                $itemPaid = $isGlobalInstallment ? 0 : $registration->getItemPaidAmount($item['name']);
+                $itemRemaining = max(0, $itemGross - $itemPaid);
+
+                if ($itemRemaining <= 0) continue;
+
+                $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
+
+                if ($isGlobalInstallment || $isInstallmentAllowed) {
+                    if (isset($inputItemAmounts[$item['name']])) {
+                        $rawCustom = str_replace(['.', ',', ' '], '', $inputItemAmounts[$item['name']]);
+                        $itemAmountToPay = floatval($rawCustom);
+                    } elseif (isset($item['custom_amount_requested']) && $item['custom_amount_requested'] !== null) {
+                        $itemAmountToPay = floatval($item['custom_amount_requested']);
+                    } else {
+                        $itemAmountToPay = $itemRemaining;
+                    }
+
+                    if ($itemAmountToPay < $minItemInstallment) {
+                        return redirect()->back()->with('error', "Nominal cicilan untuk {$item['name']} tidak boleh kurang dari batas minimal Rp " . number_format($minItemInstallment, 0, ',', '.'));
+                    }
+                    if ($itemAmountToPay > $itemRemaining) {
+                        return redirect()->back()->with('error', "Nominal cicilan untuk {$item['name']} tidak boleh melebihi sisa tagihan (Rp " . number_format($itemRemaining, 0, ',', '.') . ").");
+                    }
+                } else {
+                    // Mandatory item: must pay full remaining
+                    $itemAmountToPay = $itemRemaining;
                 }
-                if ($customAmount > $remaining) {
-                    return redirect()->back()->with('error', 'Nominal pembayaran cicilan tidak boleh melebihi sisa tagihan Anda (Rp ' . number_format($remaining, 0, ',', '.') . ').');
-                }
-                $amount = $customAmount;
-            } else {
-                $amount = min($remaining, $netSelectedTotal);
+
+                $totalCalculatedPrincipal += $itemAmountToPay;
+                $processedSelectedItems[] = [
+                    'id' => $item['id'] ?? null,
+                    'name' => $item['name'],
+                    'amount' => $itemAmountToPay,
+                    'full_amount' => $itemGross,
+                    'gateways' => $item['gateways'] ?? ['winpay'],
+                ];
             }
+
+            if (empty($processedSelectedItems) || $totalCalculatedPrincipal <= 0) {
+                return redirect()->back()->with('error', 'Tidak ada komponen biaya aktif yang dipilih untuk dibayar.');
+            }
+
+            $feeDetails['items'] = $processedSelectedItems;
+            $amount = $totalCalculatedPrincipal;
             
             // Calculate the intersection of gateways for the selected items
             $commonGateways = null;
