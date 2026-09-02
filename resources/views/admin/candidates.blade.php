@@ -593,21 +593,18 @@
                                         'form_paid' => $formPaid,
                                         'stage_text' => $currentStageText,
 
-                                        // Keringanan & Cicilan
+                                        // Data Keuangan & Pembayaran
                                         'id' => $cand->id,
-                                        'discount_amount' => (float) ($cand->discount_amount ?? 0),
+                                        'discount_amount' => (float) ($cand->total_discount ?? 0),
                                         'discount_notes' => $cand->discount_notes ?? '',
+                                        'discount_mode' => $cand->discount_mode ?? 'none',
                                         'installment_mode' => $cand->installment_mode ?? 'none',
-                                        'installment_allowed_fee_ids' => $cand->installment_allowed_fee_ids ?? [],
-                                        'min_installment_amount' => (float) ($cand->min_installment_amount ?? 0),
                                         'gross_fee' => (float) $calcGross,
                                         'net_fee' => (float) $calcNet,
                                         'total_paid' => (float) ($cand->total_paid_final_fee ?? 0),
-                                        'remaining_balance' => (float) max(0, $calcNet - ($cand->total_paid_final_fee ?? 0)),
-                                        'fee_items' => $tab3FeeItems,
-                                        'save_installment_url' => route('admin.candidates.installment-settings', $cand->id),
+                                        'remaining_balance' => (float) ($cand->remaining_balance ?? 0),
+                                        'payments_data_url' => route('admin.payments.data', ['search' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT)]),
                                         'unit_name' => $cand->unit->name ?? 'Anak Saleh',
-                                        'registration_fee_nominal' => (float) ($cand->unit->registration_fee ?? (app(\App\Http\Controllers\Web\WebDashboardController::class)->getRegistrationFee($cand)->amount ?? 350000)),
 
                                         // Riwayat Transaksi Payments
                                         'payments' => $cand->payments->map(function($p) use ($cand) {
@@ -849,7 +846,7 @@
         <!-- Pinned Candidate Progress Timeline (Above Tabs) -->
         <div id="det-timeline-container" class="bg-slate-50/80 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex-shrink-0"></div>
 
-        <!-- Sticky Tab Navigation Bar (4 Tabs) -->
+        <!-- Sticky Tab Navigation Bar (3 Tabs) -->
         <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-2.5 flex items-center gap-2 flex-shrink-0 overflow-x-auto select-none">
             <button type="button" id="tab-btn-biodata" onclick="switchCandidateTab('biodata')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-emerald-600 text-emerald-700 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/60 shadow-sm whitespace-nowrap">
                 <i data-lucide="user-check" class="w-4 h-4"></i> Biodata & Orang Tua
@@ -857,12 +854,8 @@
             <button type="button" id="tab-btn-documents" onclick="switchCandidateTab('documents')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
                 <i data-lucide="folder" class="w-4 h-4"></i> Berkas Lampiran
             </button>
-            <button type="button" id="tab-btn-installment" onclick="switchCandidateTab('installment')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
-                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i> Kebijakan Cicilan & Diskon
-                <span id="tab-installment-badge" class="hidden px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"></span>
-            </button>
             <button type="button" id="tab-btn-payments" onclick="switchCandidateTab('payments')" class="cand-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap">
-                <i data-lucide="credit-card" class="w-4 h-4"></i> Data Pembayaran
+                <i data-lucide="credit-card" class="w-4 h-4"></i> Status & Riwayat Pembayaran
                 <span id="tab-payments-badge" class="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Belum Bayar</span>
             </button>
         </div>
@@ -1129,163 +1122,24 @@
                 </div>
             </div>
 
-            <!-- TAB PANE 3: KERINGANAN & KEBIJAKAN CICILAN -->
-            <div id="tab-pane-installment" class="cand-tab-pane hidden space-y-5">
-                <!-- Already Paid Notice (Shown only if candidate is already fully paid) -->
-                <div id="modal_already_paid_notice" class="hidden p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 rounded-2xl text-xs flex items-center gap-3 shadow-sm font-semibold">
-                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
-                    <div>
-                        <span class="font-extrabold block text-[13px] text-emerald-900 dark:text-emerald-100">Tagihan Calon Siswa Telah Lunas</span>
-                        <span class="text-[11px] text-emerald-700 dark:text-emerald-300 font-normal">Seluruh kewajiban biaya masuk telah diselesaikan (Rp 0 sisa tagihan). Pengaturan cicilan sudah tidak berlaku lagi.</span>
-                    </div>
-                </div>
-
-                <div class="p-4.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-extrabold text-xs text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5">
-                            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Persetujuan Keringanan Biaya & Kebijakan Cicilan
-                        </h4>
-                        <p class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Tentukan potongan diskon khusus serta izin pembayaran bertahap (cicilan) untuk calon siswa ini.</p>
-                    </div>
-                    <span id="det-installment-status-badge" class="px-3 py-1 rounded-xl text-[10px] font-extrabold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-emerald-200 dark:border-slate-700 shadow-sm">
-                        Standar (Lunas)
-                    </span>
-                </div>
-
-                <!-- In-Modal Success Alert Banner -->
-                <div id="modal_installment_success_alert" class="hidden p-4 bg-emerald-600 dark:bg-emerald-700 text-white rounded-2xl text-xs font-bold flex items-center justify-between shadow-md transition-all duration-300">
-                    <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="check" class="w-4 h-4 text-white"></i>
-                        </div>
-                        <div>
-                            <span class="block text-white font-black text-xs">Perubahan Berhasil Disimpan!</span>
-                            <span class="block text-emerald-100 font-normal text-[11px] mt-0.5">Kebijakan diskon & cicilan untuk calon siswa ini telah berhasil diperbarui di sistem.</span>
-                        </div>
-                    </div>
-                    <button type="button" onclick="document.getElementById('modal_installment_success_alert').classList.add('hidden')" class="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-
-                <form id="det-installment-form" method="POST" action="" hx-boost="false" onsubmit="window.saveInstallmentSettings(event); return false;" class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-5">
-                    @csrf
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Potongan Diskon -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                                Potongan Biaya (Diskon / Keringanan)
-                            </label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400 dark:text-slate-500 font-mono">Rp</span>
-                                <input type="number" name="discount_amount" id="modal_discount_amount" min="0" step="50000"
-                                    oninput="recalcModalInstallment()"
-                                    class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                    placeholder="0">
-                            </div>
-                        </div>
-
-                        <!-- Catatan Alasan -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                                Alasan / Catatan Persetujuan
-                            </label>
-                            <input type="text" name="discount_notes" id="modal_discount_notes"
-                                class="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                placeholder="Misal: Disetujui Yayasan (Anak Guru/Prestasi)">
-                        </div>
-                    </div>
-
-                    <!-- Mode Cicilan -->
-                    <div class="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                            Kebijakan Pembayaran Masuk
-                        </label>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                            <label class="flex items-center gap-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition">
-                                <input type="radio" name="installment_mode" value="none" id="mode_none" onchange="onModalModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                <div>
-                                    <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Wajib Lunas Sekaligus</span>
-                                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Tidak ada fasilitas cicilan</span>
-                                </div>
-                            </label>
-                            <label class="flex items-center gap-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition">
-                                <input type="radio" name="installment_mode" value="all" id="mode_all" onchange="onModalModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                <div>
-                                    <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Cicil Semua (Global)</span>
-                                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Seluruh tagihan boleh dicicil</span>
-                                </div>
-                            </label>
-                            <label class="flex items-center gap-2.5 p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 dark:hover:border-emerald-500 transition">
-                                <input type="radio" name="installment_mode" value="selective" id="mode_selective" onchange="onModalModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                <div>
-                                    <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Cicil Komponen Tertentu</span>
-                                    <span class="text-[10px] text-slate-400 dark:text-slate-400">Pilih komponen tertentu</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Selective Fees Checklist Container -->
-                    <div id="modal_selective_fees_container" class="hidden space-y-3 p-5 bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
-                        <span class="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-300 block mb-1">
-                            Pilih Komponen Biaya Yang Boleh Dicicil:
-                        </span>
-                        <div id="modal_selective_fees_list" class="space-y-2">
-                            <!-- Injected via JavaScript -->
-                        </div>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 italic pt-1">
-                            * Komponen yang tidak dicentang otomatis berstatus <strong>Wajib Lunas Awal</strong> (harus dilunasi pada pembayaran pertama).
-                        </p>
-                    </div>
-
-                    <!-- Batas Minimal Sekali Cicil -->
-                    <div id="modal_min_installment_box" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                                Batas Minimal Cicilan per Transaksi
-                            </label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400 dark:text-slate-500 font-mono">Rp</span>
-                                <input type="number" name="min_installment_amount" id="modal_min_installment_amount" min="0" step="50000"
-                                    oninput="recalcModalInstallment()"
-                                    class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                    placeholder="500000">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Live Calculation Summary Box -->
-                    <div class="p-5 bg-emerald-50/80 dark:bg-slate-900/90 rounded-2xl border border-emerald-200 dark:border-slate-700 space-y-2.5 text-xs shadow-sm">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                            <span>Total Biaya Awal (Kotor):</span>
-                            <span id="modal_calc_gross" class="font-mono font-bold text-slate-800 dark:text-slate-100">Rp 0</span>
-                        </div>
-                        <div class="flex items-center justify-between text-rose-600 dark:text-rose-400">
-                            <span>Potongan Diskon:</span>
-                            <span id="modal_calc_discount" class="font-mono font-bold">- Rp 0</span>
-                        </div>
-                        <div class="flex items-center justify-between font-extrabold text-slate-900 dark:text-white border-t border-emerald-200 dark:border-slate-700 pt-2">
-                            <span>Total Tagihan Bersih (Net):</span>
-                            <span id="modal_calc_net" class="font-mono text-emerald-700 dark:text-emerald-400 font-black">Rp 0</span>
-                        </div>
-                        <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-dashed border-emerald-200 dark:border-slate-700 pt-2">
-                            <span>Minimal Pembayaran Transaksi Pertama:</span>
-                            <span id="modal_calc_min_first" class="font-mono font-extrabold text-slate-800 dark:text-emerald-300">Rp 0</span>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end pt-1">
-                        <button type="button" id="btn-save-installment" onclick="window.saveInstallmentSettings(event)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-                            <i data-lucide="check" class="w-3.5 h-3.5"></i> Simpan Kebijakan Keringanan & Cicilan
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- TAB PANE 4: DATA & RIWAYAT PEMBAYARAN -->
+            <!-- TAB PANE 3: DATA & RIWAYAT PEMBAYARAN -->
             <div id="tab-pane-payments" class="cand-tab-pane hidden space-y-6">
+                <!-- Banner: Kelola Kebijakan Biaya di Data Pembayaran -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
+                    <div class="flex items-center gap-3">
+                        <div class="h-9 w-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-extrabold text-emerald-950 dark:text-emerald-200 block">Pengaturan Keringanan (Diskon) & Kebijakan Cicilan</span>
+                            <span class="text-[11px] text-emerald-700 dark:text-emerald-400">Pemberian potongan biaya dan persetujuan cicilan dapat dikonfigurasi melalui menu Data Pembayaran.</span>
+                        </div>
+                    </div>
+                    <a id="det-pay-manage-link" href="{{ route('admin.payments.data') }}" class="px-4 py-2 bg-brand-emerald hover-emerald text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                        <span>Buka Data Pembayaran</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
                 <!-- Top Summary Banner -->
                 <div class="p-5 bg-gradient-to-r from-slate-900 via-slate-850 to-emerald-950 text-white rounded-2xl border border-emerald-800/40 shadow-sm relative overflow-hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
@@ -1590,100 +1444,18 @@
         setupFileLink('det-nisn-box', 'det-nisn-link', cand.student_card);
         setupFileLink('det-special-box', 'det-special-link', cand.special_needs);
 
-        // Setup Installment & Discount Settings in Modal
-        window.currentCandData = cand;
-        const formEl = document.getElementById('det-installment-form');
-        if (formEl && cand.save_installment_url) {
-            formEl.action = cand.save_installment_url;
-        }
-
-        // Set values
-        const discountInput = document.getElementById('modal_discount_amount');
-        if (discountInput) discountInput.value = cand.discount_amount ? cand.discount_amount : '';
-        const discountNotesInput = document.getElementById('modal_discount_notes');
-        if (discountNotesInput) discountNotesInput.value = cand.discount_notes || '';
-        const minInstallmentInput = document.getElementById('modal_min_installment_amount');
-        if (minInstallmentInput) minInstallmentInput.value = cand.min_installment_amount ? cand.min_installment_amount : '';
-
-        // Set radio mode
-        const mode = cand.installment_mode || 'none';
-        const modeRadio = document.querySelector(`input[name="installment_mode"][value="${mode}"]`);
-        if (modeRadio) modeRadio.checked = true;
-
-        // Render selective fee checklist
-        const feeListContainer = document.getElementById('modal_selective_fees_list');
-        if (feeListContainer) {
-            feeListContainer.innerHTML = '';
-            const feeItems = cand.fee_items || [];
-            const allowedIds = cand.installment_allowed_fee_ids || [];
-
-            if (feeItems.length === 0) {
-                feeListContainer.innerHTML = '<span class="text-slate-400 italic text-[11px]">Belum ada rincian komponen biaya untuk unit ini.</span>';
-            } else {
-                feeItems.forEach((item, idx) => {
-                    const feeId = item.id || item.name;
-                    const feeName = item.name;
-                    const feeAmt = Number(item.amount) || 0;
-                    
-                    // Check if selected
-                    let isChecked = false;
-                    if (allowedIds.includes(feeId) || allowedIds.includes(feeName) || allowedIds.some(x => String(x).toLowerCase() === feeName.toLowerCase())) {
-                        isChecked = true;
-                    }
-
-                    const itemHtml = `
-                        <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/60 cursor-pointer transition text-xs">
-                            <div class="flex items-center gap-2.5">
-                                <input type="checkbox" name="installment_allowed_fee_ids[]" value="${feeId}" 
-                                    ${isChecked ? 'checked' : ''} 
-                                    onchange="recalcModalInstallment()"
-                                    class="selective-fee-cb rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                <span class="font-bold text-slate-800 dark:text-slate-100">${feeName}</span>
-                            </div>
-                            <span class="font-mono font-bold text-slate-600 dark:text-slate-300 text-[11px]">Rp ${feeAmt.toLocaleString('id-ID')}</span>
-                        </label>
-                    `;
-                    feeListContainer.insertAdjacentHTML('beforeend', itemHtml);
-                });
-            }
+        // Setup direct manage link to Data Pembayaran
+        const manageLink = document.getElementById('det-pay-manage-link');
+        if (manageLink) {
+            manageLink.href = cand.payments_data_url || '{{ route('admin.payments.data') }}';
         }
 
         // Set header elements
         document.getElementById('modal-header-cand-name').innerText = cand.name || 'Detail Calon Siswa';
         document.getElementById('det-status-chip').innerText = cand.status || '-';
-        
-        // Update Tab 3 pill badge (Policy & Discount) - No more confusing "Lunas" label here!
-        const tabInstallmentBadge = document.getElementById('tab-installment-badge');
-        if (tabInstallmentBadge) {
-            if (cand.discount_amount > 0) {
-                tabInstallmentBadge.innerText = 'Diskon Rp ' + (cand.discount_amount/1000).toLocaleString('id-ID') + 'k';
-                tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
-                tabInstallmentBadge.classList.remove('hidden');
-            } else if (cand.installment_mode === 'all') {
-                tabInstallmentBadge.innerText = 'Cicil Global';
-                tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60';
-                tabInstallmentBadge.classList.remove('hidden');
-            } else if (cand.installment_mode === 'selective') {
-                tabInstallmentBadge.innerText = 'Cicil Selektif';
-                tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
-                tabInstallmentBadge.classList.remove('hidden');
-            } else {
-                tabInstallmentBadge.classList.add('hidden');
-            }
-        }
-
-        // Show/hide already paid alert banner on Tab 3
-        const alreadyPaidNotice = document.getElementById('modal_already_paid_notice');
-        if (alreadyPaidNotice) {
-            if (cand.total_paid > 0 && cand.remaining_balance <= 0) {
-                alreadyPaidNotice.classList.remove('hidden');
-            } else {
-                alreadyPaidNotice.classList.add('hidden');
-            }
-        }
 
         // ==========================================
-        // TAB 4: DATA & RIWAYAT PEMBAYARAN POPULATION
+        // TAB 3: DATA & RIWAYAT PEMBAYARAN POPULATION
         // ==========================================
         window.updateModalPaymentTab(cand);
 
@@ -1779,13 +1551,9 @@
                         </div>
                     `;
                     dynamicCatContainer.insertAdjacentHTML('beforeend', noticeHtml);
-                    if (window.lucide) lucide.createIcons();
                 }
             }
         }
-
-        // Trigger mode UI change & calculation
-        onModalModeChange();
 
         // Default to first tab
         switchCandidateTab('biodata');
@@ -1832,85 +1600,6 @@
         if (window.lucide) {
             lucide.createIcons();
         }
-    };
-
-    window.onModalModeChange = function() {
-        const modeRadio = document.querySelector('input[name="installment_mode"]:checked');
-        const mode = modeRadio ? modeRadio.value : 'none';
-        
-        const selectiveBox = document.getElementById('modal_selective_fees_container');
-        const minInstallmentBox = document.getElementById('modal_min_installment_box');
-        const badge = document.getElementById('det-installment-status-badge');
-
-        if (mode === 'none') {
-            if (selectiveBox) selectiveBox.classList.add('hidden');
-            if (minInstallmentBox) minInstallmentBox.classList.add('hidden');
-            if (badge) {
-                badge.innerText = 'Wajib Lunas';
-                badge.className = 'px-3 py-1 rounded-xl text-[10px] font-extrabold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-emerald-200 dark:border-slate-700 shadow-sm';
-            }
-        } else if (mode === 'all') {
-            if (selectiveBox) selectiveBox.classList.add('hidden');
-            if (minInstallmentBox) minInstallmentBox.classList.remove('hidden');
-            if (badge) {
-                badge.innerText = 'Cicil Global';
-                badge.className = 'px-3 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-sm';
-            }
-        } else if (mode === 'selective') {
-            if (selectiveBox) selectiveBox.classList.remove('hidden');
-            if (minInstallmentBox) minInstallmentBox.classList.remove('hidden');
-            if (badge) {
-                badge.innerText = 'Cicil Selektif';
-                badge.className = 'px-3 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-sm';
-            }
-        }
-
-        window.recalcModalInstallment();
-    };
-
-    window.recalcModalInstallment = function() {
-        const candData = window.currentCandData;
-        if (!candData) return;
-
-        const grossFee = Number(candData.gross_fee) || 0;
-        const discountInput = Number(document.getElementById('modal_discount_amount').value) || 0;
-        const netFee = Math.max(0, grossFee - discountInput);
-
-        const modeRadio = document.querySelector('input[name="installment_mode"]:checked');
-        const mode = modeRadio ? modeRadio.value : 'none';
-
-        const minInstallmentInput = Number(document.getElementById('modal_min_installment_amount').value) || 0;
-
-        let minFirstPayment = netFee;
-
-        if (mode === 'none') {
-            minFirstPayment = netFee;
-        } else if (mode === 'all') {
-            const minPart = minInstallmentInput > 0 ? minInstallmentInput : 500000;
-            minFirstPayment = Math.min(netFee, Math.max(1, minPart));
-        } else if (mode === 'selective') {
-            // Sum unchecked mandatory fees
-            const feeItems = candData.fee_items || [];
-            const checkboxes = document.querySelectorAll('.selective-fee-cb');
-            const checkedValues = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-
-            let mandatoryTotal = 0;
-            feeItems.forEach(item => {
-                const feeId = String(item.id || item.name);
-                if (!checkedValues.includes(feeId) && !checkedValues.includes(item.name)) {
-                    mandatoryTotal += Number(item.amount) || 0;
-                }
-            });
-
-            const installmentRemaining = Math.max(0, netFee - mandatoryTotal);
-            const installmentPart = Math.min(installmentRemaining, minInstallmentInput);
-            minFirstPayment = Math.min(netFee, mandatoryTotal + installmentPart);
-        }
-
-        document.getElementById('modal_calc_gross').innerText = 'Rp ' + grossFee.toLocaleString('id-ID');
-        document.getElementById('modal_calc_discount').innerText = '- Rp ' + discountInput.toLocaleString('id-ID');
-        document.getElementById('modal_calc_net').innerText = 'Rp ' + netFee.toLocaleString('id-ID');
-        document.getElementById('modal_calc_min_first').innerText = 'Rp ' + minFirstPayment.toLocaleString('id-ID');
     };
 
     window.closeDetailModal = function() {
@@ -2037,184 +1726,6 @@
             }
         }
 
-        // Show/hide already paid alert banner on Tab 3
-        const alreadyPaidNotice = document.getElementById('modal_already_paid_notice');
-        if (alreadyPaidNotice) {
-            if (totalPaid > 0 && remaining <= 0) {
-                alreadyPaidNotice.classList.remove('hidden');
-            } else {
-                alreadyPaidNotice.classList.add('hidden');
-            }
-        }
-    };
-
-    // Handle AJAX Save for Installment & Discount Settings
-    window.saveInstallmentSettings = function(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        const form = document.getElementById('det-installment-form');
-        if (!form) return;
-
-        const actionUrl = form.action || (window.currentCandData ? window.currentCandData.save_installment_url : '');
-        
-        if (!actionUrl) {
-            alert('Gagal menyimpan: URL aksi tidak ditemukan.');
-            return;
-        }
-
-        const formData = new FormData(form);
-        const submitBtn = document.getElementById('btn-save-installment') || form.querySelector('button[type="submit"]');
-        const originalContent = submitBtn ? submitBtn.innerHTML : '';
-        
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5"><svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...</span>';
-        }
-
-        fetch(actionUrl, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('HTTP error ' + res.status);
-            return res.json();
-        })
-        .then(data => {
-            if (data.success) {
-                if (window.currentCandData && data.data) {
-                    const gross = Number(window.currentCandData.all_gross_fee !== undefined ? window.currentCandData.all_gross_fee : window.currentCandData.gross_fee) || Number(data.data.gross_fee) || 0;
-                    const disc = Number(data.data.discount_amount) || 0;
-                    const net = Math.max(0, gross - disc);
-                    const paid = Number(window.currentCandData.all_total_paid !== undefined ? window.currentCandData.all_total_paid : window.currentCandData.total_paid) || Number(data.data.total_paid) || 0;
-                    const rem = Math.max(0, net - paid);
-
-                    window.currentCandData.discount_amount = disc;
-                    window.currentCandData.discount_notes = data.data.discount_notes;
-                    window.currentCandData.installment_mode = data.data.installment_mode;
-                    window.currentCandData.installment_allowed_fee_ids = data.data.installment_allowed_fee_ids;
-                    window.currentCandData.min_installment_amount = data.data.min_installment_amount;
-                    window.currentCandData.gross_fee = gross;
-                    window.currentCandData.all_gross_fee = gross;
-                    window.currentCandData.net_fee = net;
-                    window.currentCandData.all_net_fee = net;
-                    window.currentCandData.total_paid = paid;
-                    window.currentCandData.all_total_paid = paid;
-                    window.currentCandData.remaining_balance = rem;
-                    window.currentCandData.all_remaining_balance = rem;
-                }
-
-                // 1. Live update Tab 3 pill badge
-                const tabInstallmentBadge = document.getElementById('tab-installment-badge');
-                if (tabInstallmentBadge && data.data) {
-                    if (data.data.discount_amount > 0) {
-                        tabInstallmentBadge.innerText = 'Diskon Rp ' + (data.data.discount_amount/1000).toLocaleString('id-ID') + 'k';
-                        tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
-                        tabInstallmentBadge.classList.remove('hidden');
-                    } else if (data.data.installment_mode === 'all') {
-                        tabInstallmentBadge.innerText = 'Cicil Global';
-                        tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60';
-                        tabInstallmentBadge.classList.remove('hidden');
-                    } else if (data.data.installment_mode === 'selective') {
-                        tabInstallmentBadge.innerText = 'Cicil Selektif';
-                        tabInstallmentBadge.className = 'px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
-                        tabInstallmentBadge.classList.remove('hidden');
-                    } else {
-                        tabInstallmentBadge.classList.add('hidden');
-                    }
-                }
-
-                // 2. Live recalculate Tab 3 summary box & mode UI
-                window.recalcModalInstallment();
-                window.onModalModeChange();
-
-                // 3. Live update Tab 4 Data & Riwayat Pembayaran metrics
-                window.updateModalPaymentTab(window.currentCandData);
-
-                // 4. Update the background table button onclick so next click uses updated data immediately
-                if (data.data && data.data.id) {
-                    const candBtn = document.getElementById('cand-btn-' + data.data.id);
-                    if (candBtn && window.currentCandData) {
-                        const updatedDataCopy = JSON.parse(JSON.stringify(window.currentCandData));
-                        candBtn.onclick = function() {
-                            window.openCandidateDetailModal(updatedDataCopy);
-                        };
-                    }
-                }
-
-                // 5. Show in-modal alert banner
-                const modalAlert = document.getElementById('modal_installment_success_alert');
-                if (modalAlert) {
-                    modalAlert.classList.remove('hidden');
-                    // Scroll to alert inside modal
-                    const modalBody = document.getElementById('modalDetailBody');
-                    if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-
-                // 6. Show prominent top-center floating toast
-                const toast = document.createElement('div');
-                toast.className = 'fixed top-8 left-1/2 -translate-x-1/2 z-[99999] bg-emerald-800 text-white px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-400/50 text-xs font-bold transition-all duration-300 transform -translate-y-4 opacity-0';
-                toast.innerHTML = `
-                    <div class="w-7 h-7 rounded-xl bg-emerald-500/40 flex items-center justify-center flex-shrink-0 text-emerald-200">
-                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-200"></i>
-                    </div>
-                    <div>
-                        <div class="font-extrabold text-white text-xs">Berhasil Disimpan!</div>
-                        <div class="text-[11px] text-emerald-200 font-medium">${data.message || 'Pengaturan keringanan & cicilan berhasil diperbarui.'}</div>
-                    </div>
-                `;
-                document.body.appendChild(toast);
-                if (window.lucide) lucide.createIcons();
-
-                // Trigger animation
-                requestAnimationFrame(() => {
-                    toast.classList.remove('-translate-y-4', 'opacity-0');
-                    toast.classList.add('translate-y-0', 'opacity-100');
-                });
-
-                setTimeout(() => {
-                    toast.classList.remove('translate-y-0', 'opacity-100');
-                    toast.classList.add('-translate-y-4', 'opacity-0');
-                    setTimeout(() => toast.remove(), 400);
-                }, 3500);
-
-                // 7. Temporary button success state
-                if (submitBtn) {
-                    submitBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
-                    submitBtn.classList.add('bg-emerald-700');
-                    submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5"><i data-lucide="check" class="w-4 h-4 text-white"></i> Tersimpan!</span>';
-                    if (window.lucide) lucide.createIcons();
-                }
-
-                // 8. Trigger partial HTMX refresh on candidate table
-                const filterForm = document.getElementById('candidateFilterForm');
-                if (filterForm && window.htmx) {
-                    htmx.trigger(filterForm, 'submit');
-                }
-            } else {
-                alert('Gagal: ' + (data.message || 'Terjadi kesalahan saat menyimpan'));
-            }
-        })
-        .catch(err => {
-            console.error('Save installment error:', err);
-            alert('Gagal menyimpan: ' + err.message);
-        })
-        .finally(() => {
-            setTimeout(() => {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('bg-emerald-700');
-                    submitBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
-                    submitBtn.innerHTML = originalContent;
-                    if (window.lucide) lucide.createIcons();
-                }
-            }, 1500);
-        });
     };
 })();
 </script>

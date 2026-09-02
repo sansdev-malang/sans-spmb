@@ -355,7 +355,12 @@ Route::middleware('auth')->group(function () {
             $totalNet = $allCands->sum(fn($c) => $c->net_fee);
             $totalPaid = $allCands->sum(fn($c) => $c->total_paid_final_fee);
             $totalRemaining = $allCands->sum(fn($c) => $c->remaining_balance);
+            
             $totalLunas = $allCands->filter(fn($c) => $c->remaining_balance <= 0 && $c->net_fee > 0 && $c->total_paid_final_fee > 0)->count();
+            $totalSebagian = $allCands->filter(fn($c) => $c->total_paid_final_fee > 0 && $c->remaining_balance > 0)->count();
+            $totalBelumBayar = $allCands->filter(fn($c) => $c->total_paid_final_fee <= 0)->count();
+            $totalDiskon = $allCands->filter(fn($c) => $c->total_discount > 0)->count();
+            $totalCicilan = $allCands->filter(fn($c) => in_array($c->installment_mode, ['all', 'selective']))->count();
 
             $stats = [
                 'candidate_count' => $totalCandidates,
@@ -365,6 +370,10 @@ Route::middleware('auth')->group(function () {
                 'paid_sum' => $totalPaid,
                 'remaining_sum' => $totalRemaining,
                 'lunas_count' => $totalLunas,
+                'sebagian_count' => $totalSebagian,
+                'belum_bayar_count' => $totalBelumBayar,
+                'diskon_count' => $totalDiskon,
+                'cicilan_count' => $totalCicilan,
             ];
 
             // Search by Candidate Name, ID, Phone, Parent Name
@@ -386,6 +395,26 @@ Route::middleware('auth')->group(function () {
             // Filter by Unit/Jenjang
             if ($request->filled('unit_id')) {
                 $query->where('spmb_unit_id', $request->unit_id);
+            }
+
+            // Quick Status Tabs Filter
+            if ($request->filled('status')) {
+                $st = $request->status;
+                if ($st === 'lunas') {
+                    $candIds = $allCands->filter(fn($c) => $c->remaining_balance <= 0 && $c->net_fee > 0 && $c->total_paid_final_fee > 0)->pluck('id');
+                    $query->whereIn('id', $candIds);
+                } elseif ($st === 'sebagian') {
+                    $candIds = $allCands->filter(fn($c) => $c->total_paid_final_fee > 0 && $c->remaining_balance > 0)->pluck('id');
+                    $query->whereIn('id', $candIds);
+                } elseif ($st === 'belum_bayar') {
+                    $candIds = $allCands->filter(fn($c) => $c->total_paid_final_fee <= 0)->pluck('id');
+                    $query->whereIn('id', $candIds);
+                } elseif ($st === 'diskon') {
+                    $candIds = $allCands->filter(fn($c) => $c->total_discount > 0)->pluck('id');
+                    $query->whereIn('id', $candIds);
+                } elseif ($st === 'cicilan') {
+                    $query->whereIn('installment_mode', ['all', 'selective']);
+                }
             }
 
             // Filter by Kebijakan Diskon

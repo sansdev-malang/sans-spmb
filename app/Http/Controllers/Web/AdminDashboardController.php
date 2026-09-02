@@ -297,7 +297,10 @@ class AdminDashboardController extends Controller
             'min_installment_amount' => 'nullable|numeric|min:0',
         ]);
 
-        $discountMode = $validated['discount_mode'] ?? 'global';
+        $discountMode = $validated['discount_mode'] ?? 'none';
+        if ($discountMode === 'global' && empty($validated['discount_amount'])) {
+            $discountMode = 'none';
+        }
         $discountAmount = ($discountMode === 'global') ? (float) ($validated['discount_amount'] ?? 0) : 0;
         
         $feeDetails = $registration->getFinalFeeDetails();

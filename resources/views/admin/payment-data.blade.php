@@ -92,104 +92,187 @@
     </div>
 
     <!-- Candidate Billing Table Card -->
-    <div id="payments-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden">
+    <div id="payments-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#payments-card" hx-select="#payments-card">
         
         <!-- Search & Filter Form -->
-        <form action="{{ route('admin.payments.data') }}" method="GET" class="bg-slate-50/60 dark:bg-slate-800/40 p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-700/80">
+        <form id="paymentFilterForm" action="{{ route('admin.payments.data') }}" method="GET" class="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 space-y-4">
             @if(request('unit_id'))
                 <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
             @endif
+            @if(request('status') && request('status') !== 'all')
+                <input type="hidden" name="status" value="{{ request('status') }}">
+            @endif
 
-            <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div class="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
-                    <div class="relative flex-1 min-w-0">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
+            @php
+                $currentStatus = request('status', 'all');
+                if (empty($currentStatus)) $currentStatus = 'all';
+
+                $statusPills = [
+                    'all' => [
+                        'label' => 'Semua',
+                        'count' => $stats['candidate_count'] ?? 0,
+                        'active_class' => 'bg-brand-emerald text-white border-brand-emerald shadow-sm ring-2 ring-emerald-600/20',
+                        'inactive_class' => 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:border-slate-300',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                    ],
+                    'lunas' => [
+                        'label' => 'Lunas',
+                        'count' => $stats['lunas_count'] ?? 0,
+                        'active_class' => 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-600/20',
+                        'inactive_class' => 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 hover:border-emerald-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
+                    ],
+                    'sebagian' => [
+                        'label' => 'Terbayar',
+                        'count' => $stats['sebagian_count'] ?? 0,
+                        'active_class' => 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-600/20',
+                        'inactive_class' => 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 hover:border-blue-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400'
+                    ],
+                    'belum_bayar' => [
+                        'label' => 'Belum Bayar',
+                        'count' => $stats['belum_bayar_count'] ?? 0,
+                        'active_class' => 'bg-amber-600 text-white border-amber-600 shadow-sm ring-2 ring-amber-600/20',
+                        'inactive_class' => 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 hover:border-amber-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'
+                    ],
+                    'diskon' => [
+                        'label' => 'Diskon',
+                        'count' => $stats['diskon_count'] ?? 0,
+                        'active_class' => 'bg-rose-600 text-white border-rose-600 shadow-sm ring-2 ring-rose-600/20',
+                        'inactive_class' => 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700 hover:border-rose-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400'
+                    ],
+                    'cicilan' => [
+                        'label' => 'Cicilan',
+                        'count' => $stats['cicilan_count'] ?? 0,
+                        'active_class' => 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-600/20',
+                        'inactive_class' => 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-700 hover:border-indigo-200',
+                        'badge_active' => 'bg-white/20 text-white',
+                        'badge_inactive' => 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400'
+                    ],
+                ];
+            @endphp
+
+            <div class="flex flex-col 2xl:flex-row gap-3.5 items-start 2xl:items-center justify-between">
+                <!-- Left: Search & Filter Controls -->
+                <div class="flex flex-wrap items-center gap-2.5 w-full 2xl:w-auto">
+                    <!-- Search Input Container -->
+                    <div class="relative w-full sm:w-72 flex items-center">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama calon siswa, ID (SANS-2027-0092), No. WA orang tua..." 
-                               class="w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-10 pr-20 text-xs text-slate-700 dark:text-slate-200 placeholder:text-slate-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
-
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, ID, WA orang tua..." 
+                               class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                        
+                        <!-- Clear (X) Button -->
                         @if(request('search'))
                             <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; this.form.submit();" 
-                                    class="absolute inset-y-0 right-12 flex items-center pr-1 text-slate-400 transition hover:text-slate-600"
+                                    class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition"
                                     title="Hapus Pencarian">
                                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
                             </button>
                         @endif
 
-                        <button type="submit" class="absolute inset-y-1.5 right-1.5 flex items-center justify-center rounded-lg bg-brand-emerald px-3.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600">
+                        <!-- Integrated Search Button -->
+                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition">
                             Cari
                         </button>
                     </div>
-
-                    <div class="flex items-center gap-3">
-                        <select name="per_page" onchange="this.form.submit()" class="h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 text-xs font-bold text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
-                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
-                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
-                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
+                    
+                    @if(auth()->check() && auth()->user()->isSuperAdmin())
+                        <!-- Filter Level / Unit -->
+                        <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Jenjang</option>
+                            @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
+                                <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
+                            @endforeach
                         </select>
+                    @endif
 
-                        <button type="button" onclick="document.getElementById('adv-filters').classList.toggle('hidden')" 
-                                class="inline-flex h-11 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 text-xs font-bold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800">
-                            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
-                            Filter Kebijakan
-                        </button>
-                    </div>
-                </div>
-            </div>
+                    <!-- Per Page Select -->
+                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
+                        <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
+                        <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
+                        <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
+                    </select>
 
-            <div id="adv-filters" class="{{ (request('discount_mode') || request('installment_mode')) ? '' : 'hidden' }} mt-4 border-t border-slate-200 dark:border-slate-700 pt-4 transition-all duration-300">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Mode Diskon</label>
-                        <select name="discount_mode" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">Semua Mode Diskon</option>
-                            <option value="none" {{ request('discount_mode') === 'none' ? 'selected' : '' }}>Tanpa Diskon (Standar)</option>
-                            <option value="global" {{ request('discount_mode') === 'global' ? 'selected' : '' }}>Diskon Global (Total Tagihan)</option>
-                            <option value="selective" {{ request('discount_mode') === 'selective' ? 'selected' : '' }}>Diskon Selektif (Per Komponen)</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">Kebijakan Cicilan</label>
-                        <select name="installment_mode" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">Semua Kebijakan Cicilan</option>
-                            <option value="none" {{ request('installment_mode') === 'none' ? 'selected' : '' }}>Wajib Lunas Sekaligus</option>
-                            <option value="all" {{ request('installment_mode') === 'all' ? 'selected' : '' }}>Cicil Semua (Global)</option>
-                            <option value="selective" {{ request('installment_mode') === 'selective' ? 'selected' : '' }}>Cicil Komponen Tertentu (Selektif)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mt-4 flex justify-end gap-2 border-t border-slate-200 dark:border-slate-700 pt-3">
-                    <button type="button" onclick="this.form.querySelector('select[name=discount_mode]').value = ''; this.form.querySelector('select[name=installment_mode]').value = ''; this.form.submit();" class="rounded-xl px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                        Reset Filter
-                    </button>
-                    <button type="submit" class="rounded-xl bg-brand-emerald px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-600">
-                        Terapkan Filter
+                    <!-- Advanced Filter Toggle Button -->
+                    <button type="button" onclick="document.getElementById('adv-filters').classList.toggle('hidden')" 
+                            class="flex items-center gap-1.5 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 font-bold text-slate-600 dark:text-slate-300 transition">
+                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                        Filter Lanjutan
                     </button>
                 </div>
-            </div>
-        </form>
 
-        <!-- Unit Tabs for SuperAdmin -->
-        @if(auth()->check() && auth()->user()->isSuperAdmin())
-            <div class="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 pb-2 pt-3 sm:px-5">
-                <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-800 p-1.5">
-                    <a href="{{ route('admin.payments.data', request()->except(['page', 'unit_id'])) }}" 
-                       class="inline-flex shrink-0 items-center justify-center min-w-[140px] rounded-xl px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.08em] transition-all duration-200 {{ !request()->filled('unit_id') ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm' : 'bg-transparent text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200' }}">
-                        Semua Unit
-                    </a>
-
-                    @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
-                        <a href="{{ route('admin.payments.data', array_merge(request()->except(['page']), ['unit_id' => $unit->id])) }}" 
-                           class="inline-flex shrink-0 items-center justify-center min-w-[140px] rounded-xl px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.08em] transition-all duration-200 {{ request('unit_id') == $unit->id ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm' : 'bg-transparent text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200' }}">
-                            {{ strtoupper($unit->name) }}
+                <!-- Right: Status Filter Pills -->
+                <div class="flex items-center gap-1.5 overflow-x-auto w-full 2xl:w-auto pb-1 2xl:pb-0 select-none">
+                    @foreach($statusPills as $sKey => $sData)
+                        @php 
+                            $isActive = ($currentStatus === $sKey); 
+                            $pillUrl = ($sKey === 'all') 
+                                ? route('admin.payments.data', request()->except(['status', 'page']))
+                                : route('admin.payments.data', array_merge(request()->except(['page']), ['status' => $sKey]));
+                        @endphp
+                        <a href="{{ $pillUrl }}" 
+                           class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap cursor-pointer {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
+                            <span>{{ $sData['label'] }}</span>
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
+                                {{ $sData['count'] }}
+                            </span>
                         </a>
                     @endforeach
                 </div>
             </div>
-        @endif
+
+            <!-- Advanced Filters Collapsible Section -->
+            <div id="adv-filters" class="{{ request()->hasAny(['discount_mode', 'installment_mode']) ? '' : 'hidden' }} pt-4 border-t border-slate-200/80 dark:border-slate-700/80">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Filter Mode Diskon -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Mode Keringanan (Diskon)
+                        </label>
+                        <select name="discount_mode" onchange="this.form.submit()" class="w-full py-2 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Mode Diskon</option>
+                            <option value="none" {{ request('discount_mode') === 'none' ? 'selected' : '' }}>Tanpa Diskon</option>
+                            <option value="global" {{ request('discount_mode') === 'global' ? 'selected' : '' }}>Diskon Global</option>
+                            <option value="selective" {{ request('discount_mode') === 'selective' ? 'selected' : '' }}>Diskon Selektif</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Kebijakan Cicilan -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Kebijakan Pembayaran Masuk
+                        </label>
+                        <select name="installment_mode" onchange="this.form.submit()" class="w-full py-2 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Kebijakan Cicilan</option>
+                            <option value="none" {{ request('installment_mode') === 'none' ? 'selected' : '' }}>Wajib Lunas</option>
+                            <option value="all" {{ request('installment_mode') === 'all' ? 'selected' : '' }}>Cicil Semua (Global)</option>
+                            <option value="selective" {{ request('installment_mode') === 'selective' ? 'selected' : '' }}>Cicil Komponen Selektif</option>
+                        </select>
+                    </div>
+
+                    <!-- Reset Filters Button -->
+                    <div class="flex items-end">
+                        @if(request()->hasAny(['search', 'discount_mode', 'installment_mode', 'status', 'unit_id']))
+                            <a href="{{ route('admin.payments.data') }}" 
+                               class="inline-flex py-2 px-3.5 items-center gap-1.5 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/60 text-xs font-bold text-rose-600 dark:text-rose-300 transition hover:bg-rose-100 shadow-2xs">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                <span>Reset Semua Filter</span>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </form>
 
         <!-- Candidate Billing Table -->
         <div class="overflow-x-auto">
@@ -371,7 +454,7 @@
                                     </span>
                                 @elseif($paid > 0)
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700 shadow-2xs">
-                                        <i data-lucide="clock-3" class="w-3 h-3"></i> DICICIL ({{ $percent }}%)
+                                        <i data-lucide="clock-3" class="w-3 h-3"></i> TERBAYAR ({{ $percent }}%)
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shadow-2xs">
@@ -475,7 +558,7 @@
         </div>
 
         <!-- Form Body -->
-        <form id="policy-form" onsubmit="submitPolicyForm(event)" class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <form id="policy-form" method="POST" action="javascript:void(0);" onsubmit="submitPolicyForm(event); return false;" class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
             @csrf
             <input type="hidden" id="modal_registration_id" name="registration_id" value="">
 
@@ -651,7 +734,7 @@
                 <button type="button" onclick="closePolicyModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     Batal
                 </button>
-                <button type="submit" id="btn_save_policy" class="px-6 py-2.5 rounded-xl bg-brand-emerald text-white text-xs font-black shadow-md hover:bg-emerald-600 transition flex items-center gap-2">
+                <button type="button" onclick="submitPolicyForm(event)" id="btn_save_policy" class="px-6 py-2.5 rounded-xl bg-brand-emerald text-white text-xs font-black shadow-md hover:bg-emerald-600 transition flex items-center gap-2">
                     <i data-lucide="save" class="w-4 h-4"></i>
                     <span>Simpan Kebijakan Biaya</span>
                 </button>
@@ -704,6 +787,19 @@
     let currentCandidate = null;
     let currentFeeDetails = null;
 
+    // Auto-clean any contaminated URL query string from previous accidental GET submissions
+    if (window.location.search.includes('registration_id=')) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete('registration_id');
+        urlParams.delete('discount_notes');
+        urlParams.delete('min_installment_amount');
+        urlParams.delete('_token');
+        urlParams.delete('discount_mode');
+        urlParams.delete('installment_mode');
+        const newSearch = urlParams.toString() ? ('?' + urlParams.toString()) : window.location.pathname;
+        window.history.replaceState({}, document.title, newSearch);
+    }
+
     // Global listener to close modals with Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
@@ -729,7 +825,16 @@
         document.getElementById('btn_save_policy').classList.toggle('hidden', isFullyPaid);
 
         // 1. Setup Diskon Mode
-        const discMode = cand.discount_mode || (cand.discount_amount > 0 ? 'global' : 'none');
+        let discMode = cand.discount_mode || 'none';
+        const hasGlobalDisc = (Number(cand.discount_amount || 0) > 0);
+        const hasSelectiveDisc = (cand.item_discounts && Object.values(cand.item_discounts).some(v => Number(v) > 0));
+
+        if (discMode === 'selective' && !hasSelectiveDisc) {
+            discMode = 'none';
+        } else if (discMode === 'global' && !hasGlobalDisc) {
+            discMode = 'none';
+        }
+
         if (discMode === 'selective') {
             document.getElementById('disc_mode_selective').checked = true;
         } else if (discMode === 'global') {
@@ -947,10 +1052,15 @@
     }
 
     async function submitPolicyForm(event) {
-        event.preventDefault();
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
         const form = document.getElementById('policy-form');
         const regId = document.getElementById('modal_registration_id').value;
         const saveBtn = document.getElementById('btn_save_policy');
+
+        if (!regId) return;
 
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...';
@@ -970,21 +1080,208 @@
 
             const data = await res.json();
             if (data.success) {
-                document.getElementById('modal_policy_success_alert').classList.remove('hidden');
-                setTimeout(() => {
-                    location.reload();
-                }, 800);
+                closePolicyModal();
+                
+                // Update table row in real-time without reloading
+                if (data.data) {
+                    updateCandidateRowInDom(data.data);
+                }
+
+                // Single clean toast notification
+                if (typeof showToast === 'function') {
+                    showToast(data.message || 'Pengaturan keringanan & kebijakan cicilan berhasil disimpan.', 'success');
+                }
             } else {
-                alert('Gagal menyimpan pengaturan: ' + (data.message || 'Terjadi kesalahan.'));
+                if (typeof showToast === 'function') {
+                    showToast(data.message || 'Gagal menyimpan pengaturan.', 'error');
+                } else {
+                    alert('Gagal menyimpan pengaturan: ' + (data.message || 'Terjadi kesalahan.'));
+                }
             }
         } catch (err) {
             console.error(err);
-            alert('Terjadi kesalahan jaringan.');
+            if (typeof showToast === 'function') {
+                showToast('Terjadi kesalahan jaringan.', 'error');
+            } else {
+                alert('Terjadi kesalahan jaringan.');
+            }
         } finally {
             saveBtn.disabled = false;
             saveBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Simpan Kebijakan Biaya';
             if (window.lucide) lucide.createIcons();
         }
+    }
+
+    function updateCandidateRowInDom(resData) {
+        const regId = resData.id;
+        const row = document.getElementById(`cand-row-${regId}`);
+        if (!row) return;
+
+        // 1. Update currentCandidate in memory
+        if (currentCandidate && currentCandidate.id === regId) {
+            currentCandidate.discount_mode = resData.discount_mode;
+            currentCandidate.discount_amount = resData.discount_amount;
+            currentCandidate.item_discounts = resData.item_discounts;
+            currentCandidate.total_discount = resData.total_discount;
+            currentCandidate.discount_notes = resData.discount_notes;
+            currentCandidate.installment_mode = resData.installment_mode;
+            currentCandidate.installment_allowed_fee_ids = resData.installment_allowed_fee_ids;
+            currentCandidate.min_installment_amount = resData.min_installment_amount;
+            currentCandidate.gross_fee = resData.gross_fee;
+            currentCandidate.net_fee = resData.net_fee;
+            currentCandidate.total_paid_final_fee = resData.total_paid;
+            currentCandidate.remaining_balance = resData.remaining_balance;
+        }
+
+        // 2. Rincian Komponen Biaya (Column 3, index 2)
+        if (currentFeeDetails && currentFeeDetails.items) {
+            const feeItemsTd = row.children[2];
+            if (feeItemsTd) {
+                const itemsHtml = currentFeeDetails.items.map(it => {
+                    let itDiscount = 0;
+                    if (resData.discount_mode === 'selective' && resData.item_discounts) {
+                        itDiscount = Number(resData.item_discounts[it.name] || resData.item_discounts[it.id] || 0);
+                    }
+                    const itNet = Math.max(0, Number(it.amount || 0) - itDiscount);
+                    return `
+                        <div class="flex items-center justify-between gap-2 text-[11px] font-medium bg-slate-50 dark:bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-100 dark:border-slate-700">
+                            <span class="truncate font-semibold text-slate-700 dark:text-slate-300" title="${it.name}">
+                                ${it.name}
+                            </span>
+                            <span class="font-mono text-slate-600 dark:text-slate-300 flex-shrink-0 font-bold">
+                                Rp ${Number(itNet).toLocaleString('id-ID')}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+
+                feeItemsTd.innerHTML = `<div class="space-y-1">${itemsHtml}</div>`;
+            }
+        }
+
+        // 3. Diskon / Keringanan (Column 4, index 3)
+        const discTd = row.children[3];
+        if (discTd) {
+            if (resData.total_discount > 0) {
+                discTd.innerHTML = `
+                    <div>
+                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60">
+                            <i data-lucide="tag" class="w-3 h-3"></i>
+                            - Rp ${Number(resData.total_discount).toLocaleString('id-ID')}
+                        </div>
+                        <span class="block text-[10px] text-slate-400 font-semibold mt-1">
+                            ${resData.discount_mode === 'selective' ? 'Diskon Selektif' : 'Diskon Global'}
+                        </span>
+                        ${resData.discount_notes ? `
+                            <span class="block text-[10px] text-slate-500 italic mt-0.5 truncate max-w-[140px]" title="${resData.discount_notes}">
+                                "${resData.discount_notes}"
+                            </span>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                discTd.innerHTML = `
+                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400">
+                        <i data-lucide="minus" class="w-3 h-3"></i> Rp 0
+                    </span>
+                `;
+            }
+        }
+
+        // 4. Kebijakan Cicilan (Column 5, index 4)
+        const instTd = row.children[4];
+        if (instTd) {
+            if (resData.installment_mode === 'all') {
+                instTd.innerHTML = `
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                        <i data-lucide="layers" class="w-3 h-3"></i> Cicil Semua
+                    </span>
+                    <span class="block text-[10px] text-slate-400 font-semibold mt-1">
+                        Min: Rp ${Number(resData.min_installment_amount || 500000).toLocaleString('id-ID')}
+                    </span>
+                `;
+            } else if (resData.installment_mode === 'selective') {
+                const count = (resData.installment_allowed_fee_ids || []).length;
+                instTd.innerHTML = `
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
+                        <i data-lucide="check-square" class="w-3 h-3"></i> Cicil Selektif (${count})
+                    </span>
+                    <span class="block text-[10px] text-slate-400 font-semibold mt-1">
+                        Min: Rp ${Number(resData.min_installment_amount || 0).toLocaleString('id-ID')}
+                    </span>
+                `;
+            } else {
+                instTd.innerHTML = `
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                        <i data-lucide="shield" class="w-3 h-3"></i> Wajib Lunas
+                    </span>
+                `;
+            }
+        }
+
+        // 5. Tagihan & Realisasi (Column 6, index 5)
+        const billTd = row.children[5];
+        if (billTd) {
+            billTd.innerHTML = `
+                <div>
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <span class="text-slate-400">Total:</span>
+                        <span class="font-mono text-slate-800 dark:text-slate-200">Rp ${Number(resData.net_fee).toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] font-bold mt-0.5">
+                        <span class="text-emerald-600">Terbayar:</span>
+                        <span class="font-mono text-emerald-600 dark:text-emerald-400">Rp ${Number(resData.total_paid).toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1.5">
+                        <div class="bg-brand-emerald h-full rounded-full transition-all duration-300" style="width: ${resData.paid_percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 6. Sisa Tagihan (Column 7, index 6)
+        const remTd = row.children[6];
+        if (remTd) {
+            if (resData.remaining_balance <= 0 && resData.net_fee > 0) {
+                remTd.innerHTML = `
+                    <span class="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400">Rp 0</span>
+                    <span class="block text-[10px] text-emerald-500 font-bold mt-0.5">Lunas</span>
+                `;
+            } else {
+                remTd.innerHTML = `
+                    <span class="font-mono text-xs font-black text-amber-600 dark:text-amber-400">
+                        Rp ${Number(resData.remaining_balance).toLocaleString('id-ID')}
+                    </span>
+                    <span class="block text-[10px] text-slate-400 font-semibold mt-0.5">Tersisa</span>
+                `;
+            }
+        }
+
+        // 7. Status (Column 8, index 7)
+        const stTd = row.children[7];
+        if (stTd) {
+            if (resData.remaining_balance <= 0 && resData.net_fee > 0 && resData.total_paid > 0) {
+                stTd.innerHTML = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-2xs">
+                        <i data-lucide="check-circle" class="w-3 h-3"></i> LUNAS
+                    </span>
+                `;
+            } else if (resData.total_paid > 0) {
+                stTd.innerHTML = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700 shadow-2xs">
+                        <i data-lucide="clock-3" class="w-3 h-3"></i> TERBAYAR (${resData.paid_percentage}%)
+                    </span>
+                `;
+            } else {
+                stTd.innerHTML = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shadow-2xs">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i> BELUM BAYAR
+                    </span>
+                `;
+            }
+        }
+
+        if (window.lucide) lucide.createIcons();
     }
 
     function openTransactionsModal(cand, payments) {
