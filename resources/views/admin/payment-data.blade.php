@@ -211,13 +211,13 @@
                     @forelse($registrations as $cand)
                         @php
                             $feeDetails = $cand->getFinalFeeDetails();
-                            $items = $feeDetails['items'] ?? [];
-                            foreach ($items as &$it) {
+                            $items = array_map(function($it) use ($cand) {
                                 $it['paid_amount'] = $cand->getItemPaidAmount($it['name']);
                                 $it['discount_amount'] = $cand->getItemDiscountAmount($it['name'], $it['id'] ?? null);
                                 $it['net_amount'] = max(0, $it['amount'] - $it['discount_amount']);
                                 $it['is_fully_paid'] = ($it['paid_amount'] >= $it['net_amount'] && $it['paid_amount'] > 0);
-                            }
+                                return $it;
+                            }, $feeDetails['items'] ?? []);
                             $feeDetails['items'] = $items;
                             $gross = $cand->gross_fee;
                             $discount = $cand->total_discount;
