@@ -526,19 +526,11 @@
                             </td>
                             <td class="py-4 px-6 text-center">
                                 @php
-                                    $finalFeeCalc = app(\App\Http\Controllers\Web\WebDashboardController::class)->getFinalFeeDetails($cand);
-                                    $tab3FeeItems = $cand->final_fee_snapshot['items'] ?? $finalFeeCalc['items'] ?? [];
-                                    if ($cand->extraServices && $cand->extraServices->isNotEmpty() && !empty($finalFeeCalc['items'])) {
-                                        $existingNames = array_map('strtoupper', array_column($tab3FeeItems, 'name'));
-                                        foreach ($finalFeeCalc['items'] as $calcItem) {
-                                            if (!in_array(strtoupper($calcItem['name']), $existingNames)) {
-                                                $tab3FeeItems[] = $calcItem;
-                                            }
-                                        }
-                                    }
-                                    $calcGross = array_sum(array_column($tab3FeeItems, 'amount'));
-                                    $calcDisc = (float) ($cand->discount_amount ?? 0);
-                                    $calcNet = max(0, $calcGross - $calcDisc);
+                                    $finalFeeCalc = $cand->getFinalFeeDetails();
+                                    $tab3FeeItems = $finalFeeCalc['items'] ?? [];
+                                    $calcGross = $cand->gross_fee;
+                                    $calcDisc = $cand->total_discount;
+                                    $calcNet = $cand->net_fee;
 
                                     // Prepare JSON data to pass to Javascript modal
                                     $candJson = [

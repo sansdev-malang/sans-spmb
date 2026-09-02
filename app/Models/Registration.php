@@ -141,17 +141,10 @@ class Registration extends Model
 
     /**
      * Get complete list of final fee items for this candidate
-     * Dynamically resolved from master Tarif & Biaya (SpmbFee)
+     * Dynamically resolved from master Tarif & Biaya (SpmbFee) and merged with paid historical items
      */
     public function getFinalFeeDetails($forceLive = false)
     {
-        $hasPaid = ($this->total_paid_final_fee > 0);
-
-        // If candidate already paid and not forcing live, preserve payment snapshot
-        if (!$forceLive && $hasPaid && !empty($this->final_fee_snapshot) && isset($this->final_fee_snapshot['items']) && is_array($this->final_fee_snapshot['items']) && !empty($this->final_fee_snapshot['items'])) {
-            return $this->final_fee_snapshot;
-        }
-
         $unitId = $this->spmb_unit_id;
         $gradeName = $this->grade->name ?? '';
         $extraServices = $this->extraServices ?? collect();
@@ -170,7 +163,7 @@ class Registration extends Model
               ->orWhere('name', 'like', '%Layanan%');
         })->pluck('id')->toArray();
 
-        // 3. Fetch active fees for this candidate's unit
+        // 3. Fetch active fees for this candidate's unit from master
         $unitFeesQuery = SpmbFee::with('category')
             ->where('spmb_unit_id', $unitId)
             ->where('is_active', true);
@@ -180,7 +173,7 @@ class Registration extends Model
         }
 
         $allUnitFees = $unitFeesQuery->get();
-        $selectedFees = collect();
+        $selectedMasterFees = collect();
 
         foreach ($allUnitFees as $fee) {
             $isExtraCat = in_array($fee->spmb_fee_category_id, $extraCatIds);
@@ -198,7 +191,7 @@ class Registration extends Model
                             || (!empty($feeNameClean) && str_contains($esName, $feeNameClean));
                     });
                     if ($matches) {
-                        $selectedFees->push($fee);
+                        $selectedMasterFees->push($fee);
                     }
                 }
             } else {
@@ -225,33 +218,69 @@ class Registration extends Model
                 }
 
                 if (!$hasOtherGradeKeyword) {
-                    $selectedFees->push($fee);
+                    $selectedMasterFees->push($fee);
                 }
             }
         }
 
-        $items = [];
-        $total = 0;
-        foreach ($selectedFees as $f) {
+        // 4. Merge master fees with any existing snapshot items
+        $snapshotItems = $this->final_fee_snapshot['items'] ?? [];
+        $mergedItems = [];
+        $processedNames = [];
+
+        // First, process active master fees
+        foreach ($selectedMasterFees as $f) {
+            $nameLower = strtolower(trim($f->name));
+            $processedNames[] = $nameLower;
+
+            $snapItem = collect($snapshotItems)->first(fn($si) => strtolower(trim($si['name'] ?? '')) === $nameLower);
+            $paidAmount = $this->getItemPaidAmount($f->name);
+            $amount = (float) $f->amount;
+
+            // If candidate already paid for this item in history, preserve the snapshot/paid nominal
+            if ($paidAmount > 0 && $snapItem && isset($snapItem['amount'])) {
+                $amount = max($paidAmount, (float) $snapItem['amount']);
+            }
+
             $gateways = is_array($f->payment_gateway) ? $f->payment_gateway : [$f->payment_gateway];
             if (empty($gateways) || $gateways === ['']) {
                 $gateways = ['winpay'];
             }
 
-            $items[] = [
+            $mergedItems[] = [
                 'id' => $f->id,
                 'name' => $f->name,
                 'category_id' => $f->spmb_fee_category_id,
                 'category_name' => $f->category->name ?? 'Biaya Administrasi',
-                'amount' => (float) $f->amount,
+                'amount' => $amount,
                 'gateways' => $gateways,
                 'is_installment_allowed' => $this->isFeeInstallmentAllowed($f->name, $f->id),
             ];
-            $total += (float) $f->amount;
         }
 
+        // Second, if snapshot has legacy items that were already paid, preserve them
+        foreach ($snapshotItems as $si) {
+            $nameLower = strtolower(trim($si['name'] ?? ''));
+            if (!in_array($nameLower, $processedNames)) {
+                $paidAmount = $this->getItemPaidAmount($si['name']);
+                if ($paidAmount > 0) {
+                    $mergedItems[] = [
+                        'id' => $si['id'] ?? null,
+                        'name' => $si['name'],
+                        'category_id' => null,
+                        'category_name' => 'Biaya Administrasi',
+                        'amount' => (float) ($si['amount'] ?? $paidAmount),
+                        'gateways' => $si['gateways'] ?? ['winpay'],
+                        'is_installment_allowed' => false,
+                    ];
+                }
+            }
+        }
+
+        $total = array_sum(array_column($mergedItems, 'amount'));
+
         return [
-            'items' => $items,
+            'items' => $mergedItems,
             'total' => $total,
         ];
     }
