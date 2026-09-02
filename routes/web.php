@@ -337,209 +337,65 @@ Route::middleware('auth')->group(function () {
                     ?? \App\Models\SpmbPeriod::value('id');
             });
             
-            $query = \App\Models\Payment::scopedByAdmin()
-                ->with('registration')
-                ->where('status', 'success')
-                ->whereHas('registration', function($q) use ($selectedPeriodId) {
-                    $q->where('spmb_period_id', $selectedPeriodId);
-                });
+            // Base query for candidate billing
+            $query = \App\Models\Registration::scopedByAdmin()
+                ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
+                ->where('spmb_period_id', $selectedPeriodId);
 
-            // Calculate Stats for Payment Data
-            $baseStatsQuery = \App\Models\Payment::scopedByAdmin()
-                ->where('status', 'success')
-                ->whereHas('registration', function($q) use ($selectedPeriodId) {
-                    $q->where('spmb_period_id', $selectedPeriodId);
-                });
-
-            // Filter stats by unit if selected
+            // Filter stats query
+            $baseStatsQuery = (clone $query);
             if ($request->filled('unit_id')) {
-                $baseStatsQuery->whereHas('registration', function($q) use ($request) {
-                    $q->where('spmb_unit_id', $request->unit_id);
-                });
+                $baseStatsQuery->where('spmb_unit_id', $request->unit_id);
             }
 
-            $totalCount = (clone $baseStatsQuery)->count();
-            $totalRevenue = (clone $baseStatsQuery)->sum('amount');
-            $adminFeeSum = (clone $baseStatsQuery)->sum('admin_fee');
+            $allCands = (clone $baseStatsQuery)->get();
+            $totalCandidates = $allCands->count();
+            $totalGross = $allCands->sum(fn($c) => $c->getGrossFee());
+            $totalDiscount = $allCands->sum(fn($c) => $c->total_discount);
+            $totalNet = $allCands->sum(fn($c) => $c->net_fee);
+            $totalPaid = $allCands->sum(fn($c) => $c->total_paid_final_fee);
+            $totalRemaining = $allCands->sum(fn($c) => $c->remaining_balance);
+            $totalLunas = $allCands->filter(fn($c) => $c->remaining_balance <= 0 && $c->net_fee > 0 && $c->total_paid_final_fee > 0)->count();
 
             $stats = [
-                'count' => $totalCount,
-                'revenue' => $totalRevenue,
-                'admin_fee' => $adminFeeSum,
+                'candidate_count' => $totalCandidates,
+                'gross_revenue' => $totalGross,
+                'discount_sum' => $totalDiscount,
+                'net_revenue' => $totalNet,
+                'paid_sum' => $totalPaid,
+                'remaining_sum' => $totalRemaining,
+                'lunas_count' => $totalLunas,
             ];
 
-            // Calculate Payment Method Channel Stats
-            $channelStats = (clone $baseStatsQuery)
-                ->selectRaw('payment_method, count(*) as count, sum(amount) as sum')
-                ->groupBy('payment_method')
-                ->get()
-                ->map(function($item) {
-                    $channelName = \App\Models\SpmbPaymentChannel::where('code', $item->payment_method)->value('name') ?? strtoupper($item->payment_method);
-                    return [
-                        'name' => $channelName,
-                        'count' => $item->count,
-                        'sum' => $item->sum
-                    ];
-                });
-
-            // Get all successful payments to extract individual itemized fees dynamically
-            $allPayments = (clone $baseStatsQuery)->with(['registration.unit'])->get();
-            $individualItems = [];
-
-            foreach ($allPayments as $p) {
-                if ($p->payment_type === 'registration_fee') {
-                    $individualItems[] = [
-                        'fee_name' => 'Formulir Pendaftaran',
-                        'category_name' => 'Formulir Pendaftaran',
-                        'amount' => $p->amount - $p->admin_fee,
-                        'unit_name' => $p->registration->unit->name ?? 'TANPA UNIT',
-                    ];
-                } elseif ($p->payment_type === 'final_fee') {
-                    $selectedItems = $p->payment_info['selected_items'] ?? [];
-                    foreach ($selectedItems as $item) {
-                        $feeName = $item['name'] ?? 'Unknown Fee';
-                        $itemAmount = $item['amount'] ?? 0;
-                        
-                        $feeRow = \App\Models\SpmbFee::where('name', $feeName)
-                            ->where('spmb_unit_id', $p->registration->spmb_unit_id ?? null)
-                            ->with('category')
-                            ->first();
-                        
-                        $categoryName = $feeRow->category->name ?? 'Biaya Administrasi';
-                        $unitName = $p->registration->unit->name ?? 'TANPA UNIT';
-
-                        $individualItems[] = [
-                            'fee_name' => $feeName,
-                            'category_name' => $categoryName,
-                            'amount' => $itemAmount,
-                            'unit_name' => $unitName,
-                        ];
-                    }
-                }
-            }
-
-            // Group by category name dynamically (Jenis Biaya)
-            $categoryStats = collect($individualItems)->groupBy('category_name')
-                ->map(function($group, $key) {
-                    return [
-                        'name' => $key,
-                        'count' => $group->count(),
-                        'sum' => $group->sum('amount')
-                    ];
-                })->values();
-
-            // Group by fee name dynamically (Nama Biaya)
-            $feeNameStats = collect($individualItems)->groupBy('fee_name')
-                ->map(function($group, $key) {
-                    return [
-                        'name' => $key,
-                        'count' => $group->count(),
-                        'sum' => $group->sum('amount')
-                    ];
-                })->values();
-
-            // Group by unit name dynamically (Unit / Jenjang)
-            $unitStats = collect($individualItems)->groupBy('unit_name')
-                ->map(function($group, $key) {
-                    return [
-                        'name' => strtoupper($key),
-                        'count' => $group->count(),
-                        'sum' => $group->sum('amount')
-                    ];
-                })->values();
-
-            // Search by Invoice, Reference ID, Candidate Name, or Gateway Info
+            // Search by Candidate Name, ID, Phone, Parent Name
             if ($request->filled('search')) {
-                $search = $request->search;
+                $search = trim($request->search);
                 $query->where(function($q) use ($search) {
-                    $q->where('invoice_number', 'like', "%{$search}%")
-                      ->orWhere('reference_id', 'like', "%{$search}%")
-                      ->orWhere('payment_info->virtualAccountNo', 'like', "%{$search}%")
-                      ->orWhere('payment_info->trxId', 'like', "%{$search}%")
-                      ->orWhereHas('registration', function($sq) use ($search) {
-                          $sq->where('candidate_name', 'like', "%{$search}%");
+                    $q->where('candidate_name', 'like', "%{$search}%")
+                      ->orWhere('id', 'like', "%" . ltrim(preg_replace('/[^0-9]/', '', $search), '0') . "%")
+                      ->orWhere('parent_phone', 'like', "%{$search}%")
+                      ->orWhere('father_name', 'like', "%{$search}%")
+                      ->orWhere('mother_name', 'like', "%{$search}%")
+                      ->orWhereHas('payments', function($sq) use ($search) {
+                          $sq->where('invoice_number', 'like', "%{$search}%")
+                            ->orWhere('reference_id', 'like', "%{$search}%");
                       });
                 });
             }
 
             // Filter by Unit/Jenjang
             if ($request->filled('unit_id')) {
-                $query->whereHas('registration', function($q) use ($request) {
-                    $q->where('spmb_unit_id', $request->unit_id);
-                });
+                $query->where('spmb_unit_id', $request->unit_id);
             }
 
-            // Filter by Transaction Time / Date Range
-            if ($request->filled('start_date')) {
-                $query->whereDate('created_at', '>=', $request->start_date);
-            }
-            if ($request->filled('end_date')) {
-                $query->whereDate('created_at', '<=', $request->end_date);
+            // Filter by Kebijakan Diskon
+            if ($request->filled('discount_mode')) {
+                $query->where('discount_mode', $request->discount_mode);
             }
 
-            // Filter by Payment Method
-            if ($request->filled('method')) {
-                $query->where('payment_method', $request->method);
-            }
-
-            // Filter by Jenis Biaya (SpmbFeeCategory)
-            if ($request->filled('category_id')) {
-                $category = \App\Models\SpmbFeeCategory::find($request->category_id);
-                if ($category) {
-                    $isFormulir = str_contains(strtolower($category->name), 'formulir') || str_contains(strtolower($category->name), 'pendaftaran');
-                    $feeNames = \App\Models\SpmbFee::where('spmb_fee_category_id', $category->id)->pluck('name');
-                    
-                    $query->where(function($q) use ($isFormulir, $feeNames) {
-                        if ($isFormulir) {
-                            $q->where('payment_type', 'registration_fee');
-                        }
-                        
-                        if ($feeNames->isNotEmpty()) {
-                            $q->orWhereHas('registration', function($sq) use ($feeNames) {
-                                $sq->where(function($ssq) use ($feeNames) {
-                                    foreach ($feeNames as $name) {
-                                        if (str_contains($name, 'TK A')) {
-                                            $ssq->orWhere('admission_level', 'TK A');
-                                        } elseif (str_contains($name, 'TK B')) {
-                                            $ssq->orWhere('admission_level', 'TK B');
-                                        } elseif (str_contains($name, 'SD')) {
-                                            $ssq->orWhere('admission_level', 'SD');
-                                        } elseif (str_contains($name, 'SMP')) {
-                                            $ssq->orWhere('admission_level', 'SMP');
-                                        } elseif (str_contains($name, 'SMA')) {
-                                            $ssq->orWhere('admission_level', 'SMA');
-                                        } else {
-                                            $ssq->orWhere('admission_level', 'like', "%{$name}%");
-                                        }
-                                    }
-                                });
-                            });
-                        }
-                    });
-                }
-            }
-
-            // Filter by SpmbFee (Nama Biaya)
-            if ($request->filled('fee_id')) {
-                $targetFee = \App\Models\SpmbFee::find($request->fee_id);
-                if ($targetFee) {
-                    $feeName = $targetFee->name;
-                    $query->whereHas('registration', function($q) use ($feeName) {
-                        if (str_contains($feeName, 'TK A')) {
-                            $q->where('admission_level', 'TK A');
-                        } elseif (str_contains($feeName, 'TK B')) {
-                            $q->where('admission_level', 'TK B');
-                        } elseif (str_contains($feeName, 'SD')) {
-                            $q->where('admission_level', 'SD');
-                        } elseif (str_contains($feeName, 'SMP')) {
-                            $q->where('admission_level', 'SMP');
-                        } elseif (str_contains($feeName, 'SMA')) {
-                            $q->where('admission_level', 'SMA');
-                        } else {
-                            $q->where('admission_level', 'like', "%{$feeName}%");
-                        }
-                    });
-                }
+            // Filter by Kebijakan Cicilan
+            if ($request->filled('installment_mode')) {
+                $query->where('installment_mode', $request->installment_mode);
             }
 
             // Per page limit
@@ -548,9 +404,9 @@ Route::middleware('auth')->group(function () {
                 $perPage = 10;
             }
 
-            $payments = $query->latest()->paginate($perPage)->withQueryString();
+            $registrations = $query->latest()->paginate($perPage)->withQueryString();
 
-            return view('admin.payment-data', compact('payments', 'stats', 'channelStats', 'categoryStats', 'feeNameStats', 'unitStats'));
+            return view('admin.payment-data', compact('registrations', 'stats'));
         })->name('admin.payments.data');
 
         Route::get('/admin/payments', function (Illuminate\Http\Request $request) {

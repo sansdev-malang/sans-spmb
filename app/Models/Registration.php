@@ -15,6 +15,7 @@ class Registration extends Model
         'invalid_fields' => 'array',
         'signed_at' => 'datetime',
         'installment_allowed_fee_ids' => 'array',
+        'item_discounts' => 'array',
         'installment_approved_at' => 'datetime',
         'discount_amount' => 'float',
         'min_installment_amount' => 'float',
@@ -139,20 +140,174 @@ class Registration extends Model
     }
 
     /**
+     * Get complete list of final fee items for this candidate
+     */
+    public function getFinalFeeDetails()
+    {
+        if (!empty($this->final_fee_snapshot) && isset($this->final_fee_snapshot['items']) && is_array($this->final_fee_snapshot['items']) && !empty($this->final_fee_snapshot['items'])) {
+            return $this->final_fee_snapshot;
+        }
+
+        $unitId = $this->spmb_unit_id;
+        $gradeName = $this->grade->name ?? '';
+        $extraServices = $this->extraServices ?? collect();
+
+        $regCatIds = SpmbFeeCategory::where(function($q) {
+            $q->where('name', 'like', '%Formulir%')
+              ->orWhere('name', 'like', '%Pendaftaran%')
+              ->orWhere('name', 'like', '%Registrasi%');
+        })->pluck('id')->toArray();
+
+        $extraCatIds = SpmbFeeCategory::where(function($q) {
+            $q->where('name', 'like', '%Tambahan%')
+              ->orWhere('name', 'like', '%Extra%')
+              ->orWhere('name', 'like', '%Layanan%');
+        })->pluck('id')->toArray();
+
+        $unitFeesQuery = SpmbFee::with('category')
+            ->where('spmb_unit_id', $unitId)
+            ->where('is_active', true);
+
+        if (!empty($regCatIds)) {
+            $unitFeesQuery->whereNotIn('spmb_fee_category_id', $regCatIds);
+        }
+
+        $allUnitFees = $unitFeesQuery->get();
+        $selectedFees = collect();
+
+        foreach ($allUnitFees as $fee) {
+            $isExtraCat = in_array($fee->spmb_fee_category_id, $extraCatIds);
+
+            if ($isExtraCat) {
+                if ($extraServices->isNotEmpty()) {
+                    $feeNameClean = strtolower(trim($fee->name));
+                    $matches = $extraServices->contains(function($es) use ($feeNameClean) {
+                        $esName = strtolower(trim($es->name ?? ''));
+                        $esCode = strtolower(trim($es->code ?? ''));
+                        return ($feeNameClean === $esName)
+                            || ($feeNameClean === $esCode)
+                            || (!empty($esCode) && str_contains($feeNameClean, $esCode))
+                            || (!empty($feeNameClean) && str_contains($esName, $feeNameClean));
+                    });
+                    if ($matches) {
+                        $selectedFees->push($fee);
+                    }
+                }
+            } else {
+                $feeNameUpper = strtoupper($fee->name);
+                $gradeNameUpper = strtoupper($gradeName);
+                $gradeKeywords = ['TK A', 'TK B', 'KB', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 7'];
+                $hasKeyword = false;
+                foreach ($gradeKeywords as $kw) {
+                    if (str_contains($feeNameUpper, $kw)) {
+                        $hasKeyword = true;
+                        if (!empty($gradeNameUpper) && str_contains($feeNameUpper, $gradeNameUpper)) {
+                            $selectedFees->push($fee);
+                            break;
+                        }
+                    }
+                }
+                if (!$hasKeyword) {
+                    $selectedFees->push($fee);
+                }
+            }
+        }
+
+        $items = [];
+        $total = 0;
+        foreach ($selectedFees as $f) {
+            $items[] = [
+                'id' => $f->id,
+                'name' => $f->name,
+                'category_id' => $f->spmb_fee_category_id,
+                'category_name' => $f->category->name ?? 'Biaya Administrasi',
+                'amount' => (float) $f->amount,
+            ];
+            $total += (float) $f->amount;
+        }
+
+        return [
+            'items' => $items,
+            'total' => $total,
+        ];
+    }
+
+    /**
      * Calculate total gross fee before discount
      */
     public function getGrossFee()
     {
-        if (!empty($this->final_fee_snapshot) && isset($this->final_fee_snapshot['total'])) {
-            return (float) $this->final_fee_snapshot['total'];
+        $details = $this->getFinalFeeDetails();
+        return (float) ($details['total'] ?? 0);
+    }
+
+    public function getGrossFeeAttribute()
+    {
+        return $this->getGrossFee();
+    }
+
+    /**
+     * Get specific item discount amount for a fee component
+     */
+    public function getItemDiscountAmount($feeName, $feeId = null)
+    {
+        $mode = $this->discount_mode ?? 'global';
+        if ($mode !== 'selective') {
+            return 0;
         }
 
-        // Fallback: calculate from snapshot items if total not set
-        if (!empty($this->final_fee_snapshot['items']) && is_array($this->final_fee_snapshot['items'])) {
-            return (float) array_sum(array_column($this->final_fee_snapshot['items'], 'amount'));
+        $discounts = $this->item_discounts ?? [];
+        if (!is_array($discounts)) {
+            return 0;
+        }
+
+        // 1. Exact name match
+        if (isset($discounts[$feeName])) {
+            return (float) $discounts[$feeName];
+        }
+
+        // 2. ID match if provided
+        if ($feeId !== null && isset($discounts[$feeId])) {
+            return (float) $discounts[$feeId];
+        }
+
+        // 3. Case-insensitive name match
+        foreach ($discounts as $key => $amount) {
+            if (is_string($key) && strcasecmp(trim($key), trim($feeName)) === 0) {
+                return (float) $amount;
+            }
         }
 
         return 0;
+    }
+
+    /**
+     * Get specific net item amount after selective discount
+     */
+    public function getItemNetAmount($feeName, $grossAmount, $feeId = null)
+    {
+        $discount = $this->getItemDiscountAmount($feeName, $feeId);
+        return max(0, (float) $grossAmount - $discount);
+    }
+
+    /**
+     * Calculate total discount amount (Global or sum of Selective discounts)
+     */
+    public function getTotalDiscountAttribute()
+    {
+        $mode = $this->discount_mode ?? 'global';
+        if ($mode === 'none') {
+            return 0;
+        }
+        if ($mode === 'selective') {
+            $discounts = $this->item_discounts ?? [];
+            if (is_array($discounts)) {
+                return (float) array_sum($discounts);
+            }
+            return 0;
+        }
+
+        return (float) ($this->discount_amount ?? 0);
     }
 
     /**
@@ -161,8 +316,23 @@ class Registration extends Model
     public function getNetFeeAttribute()
     {
         $gross = $this->getGrossFee();
-        $discount = (float) ($this->discount_amount ?? 0);
+        $discount = $this->total_discount;
         return max(0, $gross - $discount);
+    }
+
+    public function getTotalGrossFinalFeeAttribute()
+    {
+        return $this->getGrossFee();
+    }
+
+    public function getNetFinalFeeAttribute()
+    {
+        return $this->net_fee;
+    }
+
+    public function getRemainingFinalFeeAttribute()
+    {
+        return $this->remaining_balance;
     }
 
     /**
@@ -238,9 +408,10 @@ class Registration extends Model
             $name = $item['name'] ?? '';
             $amount = (float) ($item['amount'] ?? 0);
             $feeId = $item['id'] ?? null;
+            $netAmount = $this->getItemNetAmount($name, $amount, $feeId);
 
             if (!$this->isFeeInstallmentAllowed($name, $feeId)) {
-                $mandatoryTotal += $amount;
+                $mandatoryTotal += $netAmount;
             }
         }
 

@@ -167,7 +167,9 @@
                                         @foreach($feeDetails['items'] as $item)
                                             @php
                                                 $itemGross = (float) ($item['amount'] ?? 0);
-                                                $itemRemaining = (float) ($item['remaining_amount'] ?? $itemGross);
+                                                $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                                                $itemNet = max(0, $itemGross - $itemDiscount);
+                                                $itemRemaining = (float) ($item['remaining_amount'] ?? $itemNet);
                                                 $itemPayAmount = (float) ($item['amount_to_pay'] ?? $itemRemaining);
                                                 $isPartial = ($itemPayAmount < $itemRemaining);
                                                 $remainingAfter = max(0, $itemRemaining - $itemPayAmount);
@@ -178,6 +180,11 @@
                                                 <div class="flex items-center justify-between gap-2">
                                                     <div class="flex items-center gap-2">
                                                         <span class="font-extrabold text-xs text-slate-850 dark:text-white">{{ $item['name'] }}</span>
+                                                        @if($itemDiscount > 0)
+                                                            <span class="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-[9px] border border-rose-200/60 dark:border-rose-900">
+                                                                🏷️ Diskon Rp {{ number_format($itemDiscount, 0, ',', '.') }}
+                                                            </span>
+                                                        @endif
                                                         @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
                                                             <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
                                                                 🔓 Boleh Dicicil
@@ -203,7 +210,7 @@
                                                             Pelunasan Komponen
                                                         </span>
                                                     @endif
-                                                    <span>Total Komponen: Rp {{ number_format($itemGross, 0, ',', '.') }}</span>
+                                                    <span>Total Komponen: Rp {{ number_format($itemNet, 0, ',', '.') }}</span>
                                                 </div>
                                             </div>
                                         @endforeach

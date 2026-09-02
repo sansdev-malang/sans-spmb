@@ -277,20 +277,38 @@ class AdminDashboardController extends Controller
         $registration = Registration::scopedByAdmin()->findOrFail($id);
 
         $validated = $request->validate([
+            'discount_mode' => 'nullable|in:none,global,selective',
             'discount_amount' => 'nullable|numeric|min:0',
+            'item_discounts' => 'nullable|array',
             'discount_notes' => 'nullable|string|max:255',
             'installment_mode' => 'required|in:none,all,selective',
             'installment_allowed_fee_ids' => 'nullable|array',
             'min_installment_amount' => 'nullable|numeric|min:0',
         ]);
 
-        $mode = $validated['installment_mode'];
-        $allowedFeeIds = ($mode === 'selective') ? ($validated['installment_allowed_fee_ids'] ?? []) : null;
+        $discountMode = $validated['discount_mode'] ?? 'global';
+        $discountAmount = ($discountMode === 'global') ? (float) ($validated['discount_amount'] ?? 0) : 0;
+        
+        $itemDiscounts = null;
+        if ($discountMode === 'selective' && !empty($validated['item_discounts']) && is_array($validated['item_discounts'])) {
+            $itemDiscounts = [];
+            foreach ($validated['item_discounts'] as $key => $val) {
+                $num = floatval($val);
+                if ($num > 0) {
+                    $itemDiscounts[$key] = $num;
+                }
+            }
+        }
+
+        $installmentMode = $validated['installment_mode'];
+        $allowedFeeIds = ($installmentMode === 'selective') ? ($validated['installment_allowed_fee_ids'] ?? []) : null;
 
         $registration->update([
-            'discount_amount' => $validated['discount_amount'] ?? 0,
+            'discount_mode' => $discountMode,
+            'discount_amount' => $discountAmount,
+            'item_discounts' => $itemDiscounts,
             'discount_notes' => $validated['discount_notes'] ?? null,
-            'installment_mode' => $mode,
+            'installment_mode' => $installmentMode,
             'installment_allowed_fee_ids' => $allowedFeeIds,
             'min_installment_amount' => $validated['min_installment_amount'] ?? 0,
             'installment_approved_by' => auth()->id(),
@@ -299,9 +317,10 @@ class AdminDashboardController extends Controller
 
         $registration->refresh();
         $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;
+        $totalDiscountFormatted = number_format($registration->total_discount, 0, ',', '.');
         SpmbActivityLog::log(
             'UPDATE_INSTALLMENT_SETTINGS', 
-            "Memperbarui kebijakan keringanan/cicilan untuk ananda {$candidateName} (Diskon: Rp " . number_format($registration->discount_amount, 0, ',', '.') . ", Mode: {$mode})"
+            "Memperbarui kebijakan keringanan/cicilan untuk ananda {$candidateName} (Diskon: Rp {$totalDiscountFormatted} [{$discountMode}], Mode Cicilan: {$installmentMode})"
         );
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -310,7 +329,10 @@ class AdminDashboardController extends Controller
                 'message' => 'Pengaturan keringanan & kebijakan cicilan calon siswa berhasil disimpan.',
                 'data' => [
                     'id' => $registration->id,
+                    'discount_mode' => $registration->discount_mode,
                     'discount_amount' => (float) $registration->discount_amount,
+                    'item_discounts' => $registration->item_discounts,
+                    'total_discount' => (float) $registration->total_discount,
                     'discount_notes' => $registration->discount_notes,
                     'installment_mode' => $registration->installment_mode,
                     'installment_allowed_fee_ids' => $registration->installment_allowed_fee_ids,

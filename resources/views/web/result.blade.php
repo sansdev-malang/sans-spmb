@@ -185,8 +185,10 @@
                                     @endphp
                                     @php
                                         $itemGross = (float) ($item['amount'] ?? 0);
+                                        $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                                        $itemNet = max(0, $itemGross - $itemDiscount);
                                         $itemPaid = $registration->getItemPaidAmount($item['name']);
-                                        $itemRemaining = max(0, $itemGross - $itemPaid);
+                                        $itemRemaining = max(0, $itemNet - $itemPaid);
                                         $isItemLunas = ($isPaid || $itemRemaining <= 0);
                                         $canCicil = (!$isItemLunas) && (!empty($item['is_installment_allowed']) || ($installmentMode ?? 'none') === 'all');
                                         $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
@@ -218,6 +220,11 @@
                                             <div class="flex flex-col gap-0.5">
                                                 <div class="flex items-center gap-2 {{ $isItemLunas ? 'line-through' : '' }}">
                                                     <span class="font-extrabold text-xs text-slate-850 dark:text-white">{{ $item['name'] }}</span>
+                                                    @if($itemDiscount > 0)
+                                                        <span class="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-[9px] border border-rose-200/60 dark:border-rose-900">
+                                                            🏷️ Diskon Rp {{ number_format($itemDiscount, 0, ',', '.') }}
+                                                        </span>
+                                                    @endif
                                                     @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
                                                         <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
                                                             🔓 Boleh Dicicil
@@ -229,13 +236,19 @@
                                                     @endif
                                                 </div>
 
+                                                @if($itemDiscount > 0)
+                                                    <div class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1 mt-0.5">
+                                                        <i data-lucide="tag" class="w-3 h-3"></i> Diskon Khusus: - Rp {{ number_format($itemDiscount, 0, ',', '.') }} (Tarif Asli: Rp {{ number_format($itemGross, 0, ',', '.') }})
+                                                    </div>
+                                                @endif
+
                                                 @if($isItemLunas && $itemPayment)
                                                     <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
                                                         <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas via {{ $itemPayment->channel_display_name }} ({{ $itemPayment->created_at ? $itemPayment->created_at->format('d M Y') : '' }})
                                                     </div>
                                                 @elseif(!$isItemLunas && $itemPaid > 0)
                                                     <div class="text-[10px] text-slate-400 font-medium">
-                                                        Total: Rp {{ number_format($itemGross, 0, ',', '.') }} • Telah Dicicil: <span class="text-emerald-600 font-bold">Rp {{ number_format($itemPaid, 0, ',', '.') }}</span>
+                                                        Total: Rp {{ number_format($itemNet, 0, ',', '.') }} • Telah Dicicil: <span class="text-emerald-600 font-bold">Rp {{ number_format($itemPaid, 0, ',', '.') }}</span>
                                                     </div>
                                                 @endif
 
@@ -284,7 +297,7 @@
                                         </td>
                                         <td class="p-4 text-right font-bold {{ $isItemLunas ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200' }} align-top pt-4.5">
                                             <span id="display-item-amount-{{ $loop->index }}" class="font-mono">
-                                                Rp {{ number_format($isItemLunas ? $itemGross : $itemRemaining, 0, ',', '.') }}
+                                                Rp {{ number_format($isItemLunas ? $itemNet : $itemRemaining, 0, ',', '.') }}
                                             </span>
                                         </td>
                                         <td class="p-4 text-center align-top pt-4.5">
