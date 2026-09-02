@@ -429,7 +429,7 @@
 <!-- ========================================================================= -->
 <!-- MODAL 1: PENGATURAN KERINGANAN (DISKON) & KEBIJAKAN CICILAN CALON SISWA  -->
 <!-- ========================================================================= -->
-<div id="policy-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+<div id="policy-modal" onclick="if(event.target === this) closePolicyModal()" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Modal Header -->
@@ -504,7 +504,7 @@
                         <input type="radio" name="discount_mode" value="global" id="disc_mode_global" onchange="onDiscountModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
                         <div>
                             <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Diskon Global</span>
-                            <span class="text-[10px] text-slate-400">Potong total akhir</span>
+                            <span class="text-[10px] text-slate-400">Potongan total tagihan</span>
                         </div>
                     </label>
                     <label class="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 transition">
@@ -516,38 +516,49 @@
                     </label>
                 </div>
 
-                <!-- Input Diskon Global Container -->
-                <div id="modal_global_discount_container" class="hidden space-y-1.5 pt-2">
+                <!-- Input Nominal Diskon Global -->
+                <div id="modal_global_discount_container" class="hidden pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1.5">
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        Nominal Potongan Total (Diskon Global)
+                        Nominal Potongan Total (Global)
                     </label>
                     <div class="relative max-w-sm">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400 font-mono">Rp</span>
-                        <input type="number" name="discount_amount" id="modal_discount_amount" min="0" step="50000"
-                               oninput="recalcLiveSimulation()"
+                        <input type="number" name="discount_amount" id="modal_discount_amount" min="0" step="10000"
                                class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold font-mono text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                               placeholder="0">
+                               placeholder="0" oninput="recalcLiveSimulation()">
                     </div>
                 </div>
 
-                <!-- Input Diskon Selektif Container (Table Per Komponen) -->
-                <div id="modal_selective_discount_container" class="hidden space-y-2 pt-2">
-                    <span class="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300">
-                        Rincian Potongan Per Komponen Biaya:
-                    </span>
-                    <div id="modal_selective_discount_list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                        <!-- Injected via JavaScript -->
+                <!-- Tabel Input Diskon Selektif Per Item -->
+                <div id="modal_selective_discount_container" class="hidden pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Atur Nominal Potongan per Komponen Biaya:
+                    </label>
+                    <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100/70 dark:bg-slate-800/70 text-slate-500 text-[10px] font-extrabold uppercase">
+                                <tr>
+                                    <th class="py-2.5 px-3">Komponen Biaya</th>
+                                    <th class="py-2.5 px-3 text-right">Tarif Pokok</th>
+                                    <th class="py-2.5 px-3 text-right">Potongan (Rp)</th>
+                                    <th class="py-2.5 px-3 text-right">Biaya Netto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="selective_discount_table_body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <!-- Injected via JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- Catatan / Alasan Diskon -->
-                <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Alasan / Catatan Persetujuan Diskon
+                <!-- Catatan / Alasan Keringanan -->
+                <div class="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Keterangan / Alasan Keringanan (Opsional)
                     </label>
                     <input type="text" name="discount_notes" id="modal_discount_notes"
-                           class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                           placeholder="Misal: Disetujui Yayasan (Anak Guru / Beasiswa Tahfidz)">
+                           class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
+                           placeholder="Contoh: Diskon saudara kandung / Prestasi Tahfidz / Keringanan Yayasan">
                 </div>
             </div>
 
@@ -555,30 +566,30 @@
             <div class="space-y-3.5 p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
                 <div>
                     <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
-                        <i data-lucide="layers" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
-                        2. Kebijakan Pembayaran Masuk (Cicilan)
+                        <i data-lucide="layers" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                        2. Kebijakan Cicilan Pembayaran
                     </h4>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Tentukan izin fasilitas angsuran/cicilan untuk calon siswa ini.</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Atur apakah siswa diperbolehkan mencicil dan komponen mana saja yang dapat dicicil.</p>
                 </div>
 
                 <!-- Radio Mode Cicilan -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                    <label class="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 transition">
-                        <input type="radio" name="installment_mode" value="none" id="inst_mode_none" onchange="onInstallmentModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                    <label class="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-500 transition">
+                        <input type="radio" name="installment_mode" value="none" id="inst_mode_none" onchange="onInstallmentModeChange()" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4">
                         <div>
-                            <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Wajib Lunas Sekaligus</span>
-                            <span class="text-[10px] text-slate-400">Tanpa fasilitas cicilan</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Harus Lunas</span>
+                            <span class="text-[10px] text-slate-400">Tidak boleh mencicil</span>
                         </div>
                     </label>
-                    <label class="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 transition">
-                        <input type="radio" name="installment_mode" value="all" id="inst_mode_all" onchange="onInstallmentModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                    <label class="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-500 transition">
+                        <input type="radio" name="installment_mode" value="all" id="inst_mode_all" onchange="onInstallmentModeChange()" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4">
                         <div>
-                            <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Cicil Semua (Global)</span>
-                            <span class="text-[10px] text-slate-400">Semua tagihan boleh dicicil</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Cicil Bebas (Global)</span>
+                            <span class="text-[10px] text-slate-400">Semua biaya bisa dicicil</span>
                         </div>
                     </label>
-                    <label class="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-emerald-500 transition">
-                        <input type="radio" name="installment_mode" value="selective" id="inst_mode_selective" onchange="onInstallmentModeChange()" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                    <label class="flex items-center gap-2.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-500 transition">
+                        <input type="radio" name="installment_mode" value="selective" id="inst_mode_selective" onchange="onInstallmentModeChange()" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4">
                         <div>
                             <span class="font-bold text-slate-800 dark:text-slate-100 block text-xs">Cicil Selektif</span>
                             <span class="text-[10px] text-slate-400">Pilih komponen tertentu</span>
@@ -586,17 +597,14 @@
                     </label>
                 </div>
 
-                <!-- Selective Fees Checklist Container -->
-                <div id="modal_selective_fees_container" class="hidden space-y-2 pt-2">
-                    <span class="block text-[11px] font-extrabold text-slate-700 dark:text-slate-300">
-                        Pilih Komponen Biaya Yang Boleh Dicicil:
-                    </span>
-                    <div id="modal_selective_fees_list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                <!-- Checklist Komponen yang Boleh Dicicil -->
+                <div id="modal_selective_installment_container" class="hidden pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Pilih Komponen Biaya yang Diperbolehkan Dicicil:
+                    </label>
+                    <div id="selective_installment_items_list" class="space-y-1.5 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
                         <!-- Injected via JavaScript -->
                     </div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 italic pt-1">
-                        * Komponen yang tidak dicentang otomatis berstatus <strong>Wajib Lunas Awal</strong> pada pembayaran pertama.
-                    </p>
                 </div>
 
                 <!-- Batas Minimal Cicilan -->
@@ -655,7 +663,7 @@
 <!-- ========================================================================= -->
 <!-- MODAL 2: RIWAYAT TRANSAKSI & BUKTI KWITANSI PEMBAYARAN SISWA             -->
 <!-- ========================================================================= -->
-<div id="transactions-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+<div id="transactions-modal" onclick="if(event.target === this) closeTransactionsModal()" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <!-- Header -->
         <div class="bg-slate-900 p-6 text-white flex items-center justify-between">
@@ -668,7 +676,7 @@
                     <span id="tx-modal-id" class="text-xs text-slate-400 font-mono">SANS-2027-0092</span>
                 </div>
             </div>
-            <button type="button" onclick="closeTransactionsModal()" class="h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+            <button type="button" onclick="closeTransactionsModal()" class="h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
@@ -682,7 +690,7 @@
 
         <!-- Footer -->
         <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex justify-end">
-            <button type="button" onclick="closeTransactionsModal()" class="px-5 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200">
+            <button type="button" onclick="closeTransactionsModal()" class="px-5 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
                 Tutup
             </button>
         </div>
@@ -696,7 +704,16 @@
     let currentCandidate = null;
     let currentFeeDetails = null;
 
+    // Global listener to close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePolicyModal();
+            closeTransactionsModal();
+        }
+    });
+
     function openPolicyModal(cand, feeDetails) {
+        document.body.classList.add('overflow-hidden');
         currentCandidate = cand;
         currentFeeDetails = feeDetails;
 
@@ -762,6 +779,7 @@
 
     function closePolicyModal() {
         document.getElementById('policy-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     function onDiscountModeChange() {
@@ -777,96 +795,145 @@
         const isSelective = document.getElementById('inst_mode_selective').checked;
         const isAll = document.getElementById('inst_mode_all').checked;
 
-        document.getElementById('modal_selective_fees_container').classList.toggle('hidden', !isSelective);
+        document.getElementById('modal_selective_installment_container').classList.toggle('hidden', !isSelective);
         document.getElementById('modal_min_installment_container').classList.toggle('hidden', (!isSelective && !isAll));
     }
 
-    function renderSelectiveDiscountItems(items, currentDiscounts, isFullyPaid) {
-        const container = document.getElementById('modal_selective_discount_list');
-        container.innerHTML = '';
+    function renderSelectiveDiscountItems(items, itemDiscounts, isFullyPaid) {
+        const tbody = document.getElementById('selective_discount_table_body');
+        tbody.innerHTML = '';
 
-        if (!items.length) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic">Tidak ada komponen biaya.</p>';
+        if (!items || !items.length) {
+            tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400">Tidak ada komponen biaya.</td></tr>`;
             return;
         }
 
-        items.forEach((item, idx) => {
-            const rawDiscount = currentDiscounts[item.name] || currentDiscounts[item.id] || 0;
-            const itemPaid = item.paid_amount || 0;
-            const isItemPaidLunas = item.is_fully_paid || isFullyPaid || (itemPaid >= item.amount && itemPaid > 0);
-            const maxAllowedDiscount = Math.max(0, item.amount - itemPaid);
+        items.forEach((it, idx) => {
+            const discVal = Number(itemDiscounts[it.name] || (it.id ? itemDiscounts[it.id] : 0) || 0);
+            const paid = Number(it.paid_amount || 0);
+            const isItemPaid = it.is_fully_paid || (paid >= it.amount && it.amount > 0);
+            const netAmount = Math.max(0, it.amount - discVal);
+            const maxDiscount = Math.max(0, it.amount - paid);
 
-            const row = document.createElement('div');
-            row.className = 'flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 ' + (isItemPaidLunas ? 'bg-slate-100/70 dark:bg-slate-800/40 opacity-75' : 'bg-white dark:bg-slate-900');
-            row.innerHTML = `
-                <div class="min-w-0 flex-1">
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition';
+            tr.innerHTML = `
+                <td class="py-2.5 px-3 font-extrabold text-slate-800 dark:text-slate-100">
                     <div class="flex items-center gap-2">
-                        <span class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${item.name}</span>
-                        ${isItemPaidLunas ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">✓ LUNAS</span>' : ''}
+                        <span>${it.name}</span>
+                        ${isItemPaid ? `
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                ✓ Lunas
+                            </span>
+                        ` : (paid > 0 ? `
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200">
+                                Terbayar Rp ${paid.toLocaleString('id-ID')}
+                            </span>
+                        ` : '')}
                     </div>
-                    <div class="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5 font-mono">
-                        <span>Tarif: Rp ${Number(item.amount).toLocaleString('id-ID')}</span>
-                        ${itemPaid > 0 ? `<span>• Terbayar: <strong class="text-emerald-600 font-bold">Rp ${Number(itemPaid).toLocaleString('id-ID')}</strong></span>` : ''}
-                        ${(!isItemPaidLunas && itemPaid > 0) ? `<span class="text-amber-500 font-bold">(Maks Diskon: Rp ${Number(maxAllowedDiscount).toLocaleString('id-ID')})</span>` : ''}
+                </td>
+                <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-600 dark:text-slate-300">
+                    Rp ${Number(it.amount).toLocaleString('id-ID')}
+                </td>
+                <td class="py-2.5 px-3 text-right">
+                    <div class="relative inline-block w-32">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-2 text-[10px] font-bold text-slate-400 font-mono">Rp</span>
+                        <input type="number" 
+                               name="item_discounts[${it.name}]" 
+                               value="${isItemPaid ? 0 : discVal}"
+                               min="0" 
+                               max="${maxDiscount}"
+                               step="10000"
+                               ${(isFullyPaid || isItemPaid) ? 'disabled' : ''}
+                               data-gross="${it.amount}"
+                               data-paid="${paid}"
+                               class="selective-disc-input w-full pl-7 pr-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold font-mono text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 text-right ${(isFullyPaid || isItemPaid) ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}"
+                               placeholder="0"
+                               oninput="onSelectiveDiscountInput(this)">
                     </div>
-                </div>
-                <div class="flex items-center gap-1.5 flex-shrink-0">
-                    <span class="text-[11px] font-bold text-rose-500 font-mono">- Rp</span>
-                    <input type="number" 
-                           name="item_discounts[${item.name}]" 
-                           value="${isItemPaidLunas ? 0 : rawDiscount}" 
-                           min="0" 
-                           max="${maxAllowedDiscount}" 
-                           step="50000"
-                           ${isItemPaidLunas ? 'disabled readonly' : ''}
-                           oninput="recalcLiveSimulation()"
-                           class="w-28 px-2 py-1 ${isItemPaidLunas ? 'bg-slate-200/60 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white'} border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-bold font-mono text-right focus:ring-2 focus:ring-emerald-500">
-                </div>
+                </td>
+                <td class="py-2.5 px-3 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 item-net-display">
+                    Rp ${Number(netAmount).toLocaleString('id-ID')}
+                </td>
             `;
-            container.appendChild(row);
+            tbody.appendChild(tr);
         });
     }
 
     function renderSelectiveInstallmentItems(items, allowedIds, isFullyPaid) {
-        const container = document.getElementById('modal_selective_fees_list');
+        const container = document.getElementById('selective_installment_items_list');
         container.innerHTML = '';
 
-        if (!items.length) {
-            container.innerHTML = '<p class="text-xs text-slate-400 italic">Tidak ada komponen biaya.</p>';
+        if (!items || !items.length) {
+            container.innerHTML = `<p class="text-slate-400 text-xs">Tidak ada komponen biaya.</p>`;
             return;
         }
 
-        items.forEach((item, idx) => {
-            const itemPaid = item.paid_amount || 0;
-            const isItemPaidLunas = item.is_fully_paid || isFullyPaid || (itemPaid >= item.amount && itemPaid > 0);
-            const isChecked = allowedIds.includes(item.id) || allowedIds.includes(item.name) || allowedIds.includes(String(item.id));
+        items.forEach((it, idx) => {
+            const isChecked = Array.isArray(allowedIds) && (allowedIds.includes(it.id) || allowedIds.includes(String(it.id)) || allowedIds.includes(it.name));
+            const paid = Number(it.paid_amount || 0);
+            const isItemPaid = it.is_fully_paid || (paid >= it.amount && it.amount > 0);
 
-            const row = document.createElement('label');
-            row.className = 'flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 ' + (isItemPaidLunas ? 'opacity-60 cursor-not-allowed bg-slate-100/60 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900 cursor-pointer hover:border-emerald-500 transition');
-            row.innerHTML = `
-                <div class="flex items-center gap-2.5 min-w-0">
-                    <input type="checkbox" name="installment_allowed_fee_ids[]" value="${item.id || item.name}" ${isChecked ? 'checked' : ''} ${isItemPaidLunas ? 'disabled' : ''} class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500">
-                    <span class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">${item.name}</span>
-                    ${isItemPaidLunas ? '<span class="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400">(Sudah Lunas)</span>' : ''}
+            const div = document.createElement('label');
+            div.className = `flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer ${(isFullyPaid || isItemPaid) ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-800' : ''}`;
+            div.innerHTML = `
+                <div class="flex items-center gap-2.5">
+                    <input type="checkbox" 
+                           name="installment_fee_ids[]" 
+                           value="${it.id || it.name}" 
+                           ${isChecked ? 'checked' : ''}
+                           ${(isFullyPaid || isItemPaid) ? 'disabled' : ''}
+                           class="text-indigo-600 focus:ring-indigo-500 rounded w-4 h-4">
+                    <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${it.name}</span>
+                    ${isItemPaid ? `
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            ✓ Lunas
+                        </span>
+                    ` : ''}
                 </div>
-                <span class="text-[11px] font-bold text-slate-500 font-mono flex-shrink-0">Rp ${Number(item.amount).toLocaleString('id-ID')}</span>
+                <span class="text-xs font-mono font-bold text-slate-500">
+                    Rp ${Number(it.amount).toLocaleString('id-ID')}
+                </span>
             `;
-            container.appendChild(row);
+            container.appendChild(div);
         });
     }
 
+    function onSelectiveDiscountInput(input) {
+        const gross = Number(input.dataset.gross || 0);
+        const paid = Number(input.dataset.paid || 0);
+        const maxDisc = Math.max(0, gross - paid);
+        let val = Number(input.value || 0);
+
+        if (val < 0) val = 0;
+        if (val > maxDisc) val = maxDisc;
+        input.value = val;
+
+        const net = Math.max(0, gross - val);
+        const tr = input.closest('tr');
+        if (tr) {
+            const netDisplay = tr.querySelector('.item-net-display');
+            if (netDisplay) netDisplay.textContent = 'Rp ' + Number(net).toLocaleString('id-ID');
+        }
+
+        recalcLiveSimulation();
+    }
+
     function recalcLiveSimulation() {
-        if (!currentFeeDetails) return;
-        const gross = currentFeeDetails.total || 0;
+        if (!currentCandidate || !currentFeeDetails) return;
+
+        const items = currentFeeDetails.items || [];
+        const gross = items.reduce((acc, it) => acc + Number(it.amount || 0), 0);
         let totalDisc = 0;
 
-        if (document.getElementById('disc_mode_selective').checked) {
-            const inputs = document.querySelectorAll('input[name^="item_discounts"]');
-            inputs.forEach(inp => {
-                totalDisc += Number(inp.value) || 0;
+        const discMode = document.querySelector('input[name="discount_mode"]:checked')?.value || 'none';
+
+        if (discMode === 'global') {
+            totalDisc = Number(document.getElementById('modal_discount_amount').value || 0);
+        } else if (discMode === 'selective') {
+            document.querySelectorAll('.selective-disc-input').forEach(inp => {
+                totalDisc += Number(inp.value || 0);
             });
-        } else if (document.getElementById('disc_mode_global').checked) {
-            totalDisc = Number(document.getElementById('modal_discount_amount').value) || 0;
         }
 
         const net = Math.max(0, gross - totalDisc);
@@ -921,6 +988,7 @@
     }
 
     function openTransactionsModal(cand, payments) {
+        document.body.classList.add('overflow-hidden');
         document.getElementById('tx-modal-name').textContent = cand.candidate_name || 'Calon Siswa';
         document.getElementById('tx-modal-id').textContent = cand.id_label || ('SANS-2027-' + String(cand.id).padStart(4, '0'));
 
@@ -929,38 +997,169 @@
 
         if (!payments || !payments.length) {
             listContainer.innerHTML = `
-                <div class="p-8 text-center text-slate-400">
-                    <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
-                    <p class="text-xs font-semibold">Belum ada riwayat transaksi untuk siswa ini.</p>
+                <div class="p-10 text-center text-slate-400 dark:text-slate-500">
+                    <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                        <i data-lucide="receipt" class="w-7 h-7"></i>
+                    </div>
+                    <p class="text-sm font-bold text-slate-600 dark:text-slate-300">Belum Ada Riwayat Transaksi</p>
+                    <p class="text-xs text-slate-400 mt-1">Calon siswa ini belum memiliki riwayat tagihan atau transaksi pembayaran.</p>
                 </div>
             `;
         } else {
             payments.forEach(p => {
                 const isSuccess = (p.status === 'success' || p.status === 'settled');
-                const badgeClass = isSuccess ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300';
-                const row = document.createElement('div');
-                row.className = 'p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5';
-                row.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="font-mono font-bold text-xs text-slate-800 dark:text-white">${p.invoice_number}</span>
-                            <span class="block text-[10px] text-slate-400">${new Date(p.created_at).toLocaleString('id-ID')}</span>
-                        </div>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${badgeClass}">
-                            ${p.status}
+                const isPending = (p.status === 'pending');
+                const isExpired = (p.status === 'expired');
+
+                let statusBadgeClass = 'bg-slate-100 text-slate-700 border-slate-300';
+                let statusIcon = 'alert-circle';
+                let statusLabel = p.status ? p.status.toUpperCase() : 'UNKNOWN';
+
+                if (isSuccess) {
+                    statusBadgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700';
+                    statusIcon = 'check-circle-2';
+                    statusLabel = 'LUNAS / BERHASIL';
+                } else if (isPending) {
+                    statusBadgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-300 dark:border-amber-700';
+                    statusIcon = 'clock';
+                    statusLabel = 'MENUNGGU PEMBAYARAN';
+                } else if (isExpired) {
+                    statusBadgeClass = 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-300 dark:border-rose-700';
+                    statusIcon = 'x-circle';
+                    statusLabel = 'KADALUWARSA';
+                }
+
+                const isRegFee = (p.payment_type === 'registration_fee');
+                const typeName = isRegFee ? 'Formulir Pendaftaran' : 'Biaya Masuk Siswa';
+                const typeBadgeClass = isRegFee 
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800' 
+                    : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+
+                // Parsing selected items
+                let items = [];
+                let info = p.payment_info;
+                if (typeof info === 'string') {
+                    try { info = JSON.parse(info); } catch(e) { info = {}; }
+                }
+                info = info || {};
+
+                if (isRegFee) {
+                    items.push({
+                        name: 'Biaya Formulir Pendaftaran Awal',
+                        amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
+                    });
+                } else {
+                    if (Array.isArray(info.selected_items) && info.selected_items.length > 0) {
+                        items = info.selected_items.map(it => ({
+                            name: it.name || 'Komponen Biaya',
+                            amount: Number(it.amount || 0)
+                        }));
+                    } else {
+                        items.push({
+                            name: 'Pelunasan / Cicilan Biaya Masuk',
+                            amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
+                        });
+                    }
+                }
+
+                const baseAmount = Number(p.base_amount || (p.amount - (p.admin_fee || 0)));
+                const adminFee = Number(p.admin_fee || (p.amount - baseAmount));
+                const totalAmount = Number(p.amount);
+
+                const vaNo = info.virtualAccountNo || info.virtualAccount || info.va_number || null;
+                const formattedDate = new Date(p.created_at).toLocaleString('id-ID', {
+                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                const itemsHtml = items.map(it => `
+                    <div class="flex items-center justify-between py-1.5 text-xs">
+                        <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald flex-shrink-0"></span>
+                            <span>${it.name}</span>
+                        </span>
+                        <span class="font-mono font-extrabold text-slate-800 dark:text-slate-100">
+                            Rp ${it.amount.toLocaleString('id-ID')}
                         </span>
                     </div>
-                    <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-200 dark:border-slate-700">
-                        <span class="font-semibold text-slate-600 dark:text-slate-300">${p.payment_method || 'Online Payment'}</span>
-                        <span class="font-mono font-black text-slate-800 dark:text-white">Rp ${Number(p.amount).toLocaleString('id-ID')}</span>
+                `).join('');
+
+                const row = document.createElement('div');
+                row.className = 'p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3 shadow-xs';
+                row.innerHTML = `
+                    <!-- Header: Invoice, Type, Status -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-mono font-black text-xs text-slate-900 dark:text-white select-all">${p.invoice_number}</span>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${typeBadgeClass}">
+                                    ${typeName}
+                                </span>
+                            </div>
+                            <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i> ${formattedDate} WIB
+                            </span>
+                        </div>
+                        <span class="self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${statusBadgeClass} flex items-center gap-1.5 shadow-2xs">
+                            <i data-lucide="${statusIcon}" class="w-3 h-3"></i>
+                            <span>${statusLabel}</span>
+                        </span>
                     </div>
+
+                    <!-- Items Detail -->
+                    <div class="p-3 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
+                            Rincian Komponen Biaya:
+                        </span>
+                        <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                            ${itemsHtml}
+                        </div>
+                    </div>
+
+                    <!-- Financial Summary Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl bg-slate-100/70 dark:bg-slate-900/40 text-xs border border-slate-200/50 dark:border-slate-800">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block font-medium">Metode Pembayaran</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase block truncate">
+                                ${p.payment_method || 'Online'}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block font-medium">Nominal Pokok</span>
+                            <span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-xs block">
+                                Rp ${baseAmount.toLocaleString('id-ID')}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 block font-medium">Biaya Admin PG</span>
+                            <span class="font-mono font-bold text-slate-500 dark:text-slate-400 text-xs block">
+                                + Rp ${adminFee.toLocaleString('id-ID')}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">Total Transaksi</span>
+                            <span class="font-mono font-black text-slate-900 dark:text-white text-xs block">
+                                Rp ${totalAmount.toLocaleString('id-ID')}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Action: Receipt Button / VA Info -->
                     ${isSuccess ? `
-                        <div class="flex justify-end pt-1">
-                            <a href="/admin/payments/receipt/${p.id}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-extrabold text-brand-emerald hover:underline">
-                                <i data-lucide="download" class="w-3 h-3"></i> Unduh Kwitansi PDF
+                        <div class="flex items-center justify-between pt-1 text-xs">
+                            <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                                Kas Berhasil Tercatat
+                            </span>
+                            <a href="/admin/payments/receipt/${p.id}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm transition">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Unduh Kwitansi PDF</span>
                             </a>
                         </div>
-                    ` : ''}
+                    ` : (vaNo ? `
+                        <div class="flex items-center justify-between pt-1 text-xs text-slate-500">
+                            <span class="text-[11px]">Nomor VA: <strong class="font-mono text-slate-800 dark:text-slate-200 select-all">${vaNo}</strong></span>
+                        </div>
+                    ` : '')}
                 `;
                 listContainer.appendChild(row);
             });
@@ -972,6 +1171,7 @@
 
     function closeTransactionsModal() {
         document.getElementById('transactions-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 </script>
 @endsection
