@@ -28,6 +28,18 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Clear invalid / background AJAX endpoints stored in session intended URL
+        $intended = $request->session()->get('url.intended');
+        if ($intended && (
+            str_contains($intended, 'notifications') ||
+            str_contains($intended, 'unread-count') ||
+            str_contains($intended, 'dropdown') ||
+            str_contains($intended, 'api/') ||
+            str_contains($intended, 'ajax')
+        )) {
+            $request->session()->forget('url.intended');
+        }
+
         if (Auth::user()->isAdmin()) {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }

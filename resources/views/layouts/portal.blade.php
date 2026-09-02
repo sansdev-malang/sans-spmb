@@ -327,7 +327,7 @@
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
                                     <i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Edit Profile
                                 </a>
-                                <form method="POST" action="{{ route('logout') }}">
+                                <form method="POST" action="{{ route('logout') }}" hx-boost="false">
                                     @csrf
                                     <button type="submit" class="w-full text-left px-4 py-2.5 text-red-655 hover:bg-red-50 dark:hover:bg-red-950/20 transition flex items-center gap-2 font-bold">
                                         <i data-lucide="log-out" class="w-4 h-4 text-red-500"></i> Keluar / Logout

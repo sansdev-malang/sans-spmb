@@ -593,7 +593,7 @@
                         <span>Ganti Password</span>
                     </a>
                     <div>
-                        <form method="POST" action="{{ route('logout') }}" class="w-full">
+                        <form method="POST" action="{{ route('logout') }}" hx-boost="false" class="w-full">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:bg-red-950/30 hover:text-red-300 transition font-bold text-left rounded-lg mx-1 my-0.5 mt-1.5" style="width: calc(100% - 8px);">
                                 <i data-lucide="log-out" class="w-4 h-4 flex-shrink-0"></i>
@@ -896,7 +896,9 @@
                 `;
             }
 
-            fetch('/admin/notifications/dropdown')
+            fetch('/admin/notifications/dropdown', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to load');
                     return response.text();
@@ -917,7 +919,9 @@
 
         // Notification badge count fetcher
         function fetchNotificationCount() {
-            fetch('/admin/notifications/unread-count')
+            fetch('/admin/notifications/unread-count', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
                 .then(response => {
                     if (!response.ok) throw new Error();
                     return response.text();
@@ -976,21 +980,25 @@
         function openSidebar() {
             const sidebar = document.getElementById('sidebar-left');
             const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.remove('-translate-x-full');
-            overlay.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.add('opacity-100');
-            }, 10);
+            if (sidebar) sidebar.classList.remove('-translate-x-full');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.add('opacity-100');
+                }, 10);
+            }
         }
 
         function closeSidebar() {
             const sidebar = document.getElementById('sidebar-left');
             const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.remove('opacity-100');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 300);
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (overlay) {
+                overlay.classList.remove('opacity-100');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+            }
         }
 
         document.addEventListener('click', function(e) {
@@ -1284,11 +1292,6 @@
                         window.location.href = "{{ route('login') }}";
                         return;
                     }
-                }
-                // If hx-select element was not found in response HTML (prevents empty swap blank page)
-                if (event.detail.target && event.detail.select && !event.detail.fragment) {
-                    event.detail.shouldSwap = false;
-                    window.location.reload();
                 }
             });
 
