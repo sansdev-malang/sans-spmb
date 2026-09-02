@@ -21,6 +21,10 @@ class Registration extends Model
         'min_installment_amount' => 'float',
     ];
 
+    protected $appends = [
+        'registration_fee_name',
+    ];
+
     public function scopeScopedByAdmin($query)
     {
         if (auth()->check() && auth()->user()->spmb_unit_id) {
@@ -283,6 +287,44 @@ class Registration extends Model
             'items' => $mergedItems,
             'total' => $total,
         ];
+    }
+
+    /**
+     * Get the master registration form fee for this candidate
+     */
+    public function getRegistrationFee()
+    {
+        $regCat = SpmbFeeCategory::where(function($q) {
+            $q->where('name', 'like', '%Formulir%')
+              ->orWhere('name', 'like', '%Pendaftaran%')
+              ->orWhere('name', 'like', '%Registrasi%');
+        })->first();
+
+        if ($regCat) {
+            $fee = SpmbFee::where('spmb_fee_category_id', $regCat->id)
+                ->where('spmb_unit_id', $this->spmb_unit_id)
+                ->where('is_active', true)
+                ->first();
+            if ($fee) {
+                return $fee;
+            }
+        }
+
+        return SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
+            ->where('is_active', true)
+            ->whereHas('category', function($q) {
+                $q->where('name', 'like', '%Formulir%')
+                  ->orWhere('name', 'like', '%Pendaftaran%');
+            })->first();
+    }
+
+    public function getRegistrationFeeNameAttribute()
+    {
+        $fee = $this->getRegistrationFee();
+        if ($fee) {
+            return $fee->name;
+        }
+        return 'Formulir Pendaftaran ' . ($this->unit->code ?? $this->unit->name ?? '');
     }
 
     /**

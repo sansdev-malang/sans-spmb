@@ -1045,7 +1045,7 @@
 
                 if (isRegFee) {
                     items.push({
-                        name: 'Biaya Formulir Pendaftaran Awal',
+                        name: cand.registration_fee_name || info.fee_name || 'Formulir Pendaftaran',
                         amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
                     });
                 } else {
