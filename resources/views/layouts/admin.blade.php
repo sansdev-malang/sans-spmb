@@ -29,8 +29,8 @@
     <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
     
     <!-- Quill Rich Text Editor (Loaded globally for subpages) -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.min.js"></script>
     
     <!-- Local Compiled CSS/JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -388,7 +388,7 @@
 
     <div id="admin-layout-wrapper" class="flex w-full min-h-screen">
         <!-- Sidebar Left Layout -->
-    <aside id="sidebar-left" class="w-64 bg-admin-dark text-slate-300 flex flex-col fixed inset-y-0 left-0 z-40 border-r border-slate-800 transition-all duration-300 transform -translate-x-full lg:translate-x-0">
+    <aside id="sidebar-left" class="w-64 bg-admin-dark text-slate-300 flex flex-col fixed inset-y-0 left-0 z-50 border-r border-slate-800 transition-all duration-300 transform -translate-x-full lg:translate-x-0">
         
         <!-- Brand Logo / Info -->
         <div class="brand-header h-16 flex items-center gap-3 px-6 border-b border-slate-800">
@@ -1263,6 +1263,35 @@
                 }
             });
             
+            // Handle HTMX Session Expiry, 401 Unauthorized, 419 Page Expired, or Redirect to /login
+            document.body.addEventListener('htmx:responseError', function(event) {
+                if (event.detail.xhr && (event.detail.xhr.status === 401 || event.detail.xhr.status === 419)) {
+                    window.location.href = "{{ route('login') }}";
+                }
+            });
+
+            // Prevent blank page when session expires during boosted HTMX navigation
+            document.body.addEventListener('htmx:beforeSwap', function(event) {
+                const xhr = event.detail.xhr;
+                if (xhr) {
+                    if (xhr.status === 401 || xhr.status === 419) {
+                        event.detail.shouldSwap = false;
+                        window.location.href = "{{ route('login') }}";
+                        return;
+                    }
+                    if (xhr.responseURL && (xhr.responseURL.includes('/login') || xhr.responseURL.includes('/masuk'))) {
+                        event.detail.shouldSwap = false;
+                        window.location.href = "{{ route('login') }}";
+                        return;
+                    }
+                }
+                // If hx-select element was not found in response HTML (prevents empty swap blank page)
+                if (event.detail.target && event.detail.select && !event.detail.fragment) {
+                    event.detail.shouldSwap = false;
+                    window.location.reload();
+                }
+            });
+
             @if(session('success'))
                 showToast("{{ session('success') }}", 'success');
             @endif

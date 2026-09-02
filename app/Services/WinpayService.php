@@ -6,9 +6,42 @@ use App\Contracts\PaymentGatewayInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Class WinpayService
+ * 
+ * Driver integrasi Payment Gateway Winpay berstandar SNAP BI (Standar Nasional Open API Pembayaran Indonesia).
+ * 
+ * Service ini mendukung 3 MODE OPERASIONAL:
+ * ---------------------------------------------------------------------------------------------------------
+ * 1. MODE SIMULATOR (Local Offline Mock):
+ *    - Diaktifkan jika `WINPAY_MODE=simulator` pada konfigurasi / .env.
+ *    - Tidak memerlukan koneksi internet / tidak menembak server Winpay.
+ *    - Mengembalikan data transaksi mock/dummy (VA, QRIS, E-Wallet) untuk pengujian lokal.
+ *    - Callback/webhook signature otomatis di-bypass untuk kemudahan testing developer.
+ * 
+ * 2. MODE SANDBOX (Uji Coba Server Winpay):
+ *    - Diaktifkan jika `WINPAY_MODE=sandbox`.
+ *    - Base URL: `https://sandbox-snap.winpay.id`
+ *    - Menggunakan kredensial sandbox (Merchant ID, Client Key, Secret, RSA Sandbox Keys).
+ *    - Melakukan request HTTP nyata ke server Sandbox Winpay dengan Asymmetric Signature SHA256withRSA.
+ *    - Memvalidasi webhook callback menggunakan Public Key Sandbox Winpay.
+ * 
+ * 3. MODE PRODUCTION (Live Server Transaksi Nyata):
+ *    - Diaktifkan jika `WINPAY_MODE=production`.
+ *    - Base URL: `https://snap.winpay.id`
+ *    - Menggunakan kredensial production resmi hasil PKS/MOU Winpay.
+ *    - Melakukan transaksi nyata dan menghasilkan nomor VA / QRIS / E-Wallet live.
+ *    - Memvalidasi webhook callback menggunakan Public Key Production Winpay.
+ * ---------------------------------------------------------------------------------------------------------
+ */
 class WinpayService implements PaymentGatewayInterface
 {
+    /**
+     * Mode operasional aktif ('simulator', 'sandbox', atau 'production')
+     * @var string
+     */
     protected $mode;
+
     protected $merchantId;
     protected $clientKey;
     protected $clientSecret;
@@ -18,22 +51,33 @@ class WinpayService implements PaymentGatewayInterface
 
     public function __construct()
     {
+        // Ambil mode dari Setting database (admin UI) atau fallback ke file .env (default: 'simulator')
         $this->mode = \App\Models\Setting::get('winpay_mode', env('WINPAY_MODE', 'simulator'));
 
+        /* =========================================================================================
+         * [1] KONFIGURASI MODE PRODUCTION (Live Server Winpay: https://snap.winpay.id)
+         * ========================================================================================= */
         if ($this->mode === 'production') {
             $this->merchantId = \App\Models\Setting::get('winpay_prod_merchant_id');
             $this->clientKey = \App\Models\Setting::get('winpay_prod_client_key');
             $this->clientSecret = \App\Models\Setting::get('winpay_prod_client_secret');
             $this->privateKey = \App\Models\Setting::get('winpay_prod_private_key');
             $this->publicKey = \App\Models\Setting::get('winpay_prod_public_key');
-        } elseif ($this->mode === 'sandbox') {
+        } 
+        /* =========================================================================================
+         * [2] KONFIGURASI MODE SANDBOX (Uji Coba Server: https://sandbox-snap.winpay.id)
+         * ========================================================================================= */
+        elseif ($this->mode === 'sandbox') {
             $this->merchantId = \App\Models\Setting::get('winpay_sandbox_merchant_id');
             $this->clientKey = \App\Models\Setting::get('winpay_sandbox_client_key');
             $this->clientSecret = \App\Models\Setting::get('winpay_sandbox_client_secret');
             $this->privateKey = \App\Models\Setting::get('winpay_sandbox_private_key');
             $this->publicKey = \App\Models\Setting::get('winpay_sandbox_public_key');
-        } else {
-            // Simulator
+        } 
+        /* =========================================================================================
+         * [3] KONFIGURASI MODE SIMULATOR (Local Offline Mock - Tanpa Request Luar)
+         * ========================================================================================= */
+        else {
             $this->merchantId = \App\Models\Setting::get('winpay_merchant_id');
             $this->clientKey = \App\Models\Setting::get('winpay_client_key');
             $this->clientSecret = \App\Models\Setting::get('winpay_client_secret');
@@ -41,7 +85,7 @@ class WinpayService implements PaymentGatewayInterface
             $this->publicKey = \App\Models\Setting::get('winpay_public_key');
         }
 
-        // Fallback checks
+        // Fallback checks ke konfigurasi .env
         if (empty($this->merchantId)) {
             $this->merchantId = env('WINPAY_MERCHANT_ID', 'MOCK_MERCHANT_ID');
         }
@@ -72,7 +116,7 @@ class WinpayService implements PaymentGatewayInterface
             }
         }
 
-        // Sandbox/Production endpoint url
+        // Penentuan Base URL berdasarkan mode aktif
         $this->baseUrl = $this->mode === 'production' 
             ? 'https://snap.winpay.id' 
             : 'https://sandbox-snap.winpay.id';
@@ -110,21 +154,39 @@ class WinpayService implements PaymentGatewayInterface
 
     /**
      * Create SNAP Transaction (VA, QRIS, or E-Wallet)
+     * 
+     * ALUR KERJA METODE:
+     * - Jika mode = 'simulator'  ==> Mengembalikan Mock Response lokal (tanpa request HTTP).
+     * - Jika mode = 'sandbox'    ==> Mengirim request SNAP BI ke https://sandbox-snap.winpay.id
+     * - Jika mode = 'production' ==> Mengirim request SNAP BI ke https://snap.winpay.id
+     * 
+     * @param float $amount Nominal transaksi
+     * @param string $invoiceNo Nomor referensi invoice (misal: INV-SPMB-20260902-123)
+     * @param string $method Kode kanal pembayaran (MANDIRI, BRI, BNI, BCA, QRIS, DANA, SHOPEEPAY, dll)
+     * @param string|null $customerName Nama siswa / pembayar
+     * @param string|null $customerPhone Nomor HP siswa / orang tua
+     * @return array ['success' => bool, 'data' => array, 'message' => string]
      */
     public function createPayment($amount, $invoiceNo, $method, $customerName = null, $customerPhone = null)
     {
         $isQris = strtoupper($method) === 'QRIS';
         $isEwallet = in_array(strtoupper($method), ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC']);
 
+        /* =========================================================================================
+         * [A] EKSEKUSI MODE SIMULATOR LOKAL (Offline Mock - Tanpa Internet)
+         * ========================================================================================= */
         if ($this->mode === 'simulator') {
             return $this->getMockPaymentResponse($amount, $invoiceNo, $method);
         }
 
+        /* =========================================================================================
+         * [B] EKSEKUSI MODE SANDBOX / PRODUCTION (Online Real HTTP Request ke Winpay)
+         * ========================================================================================= */
         $timezone = new \DateTimeZone('Asia/Jakarta');
         $now = new \DateTime('now', $timezone);
         $timestamp = $now->format('Y-m-d\TH:i:sP');
 
-        // Select correct endpoint based on channel type
+        // 1. Tentukan endpoint SNAP BI resmi Winpay berdasarkan tipe kanal
         $endpoint = '/v1.0/transfer-va/create-va';
         if ($isQris) {
             $endpoint = '/v1.0/qr/qr-mpm-generate';
@@ -136,7 +198,7 @@ class WinpayService implements PaymentGatewayInterface
         $expiry->modify('+24 hours');
         $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
 
-        // Sanitize name for virtualAccountName / customerName (Length 5-24, alphanumeric, spaces, dashes)
+        // 2. Sanitasi nama pelanggan (Panjang 5-24 karakter, alfanumerik)
         $rawName = trim($customerName ?: 'Calon Siswa SPMB');
         $cleanName = preg_replace('/[^a-zA-Z0-9 _-]/', '', $rawName);
         if (strlen($cleanName) < 5) {
@@ -144,12 +206,15 @@ class WinpayService implements PaymentGatewayInterface
         }
         $vaName = substr($cleanName, 0, 24);
 
+        // 3. Susun Request Payload sesuai spesifikasi SNAP BI masing-masing metode
         if ($isEwallet) {
+            // Mapping channel E-Wallet resmi Winpay
             $ewalletChannel = strtoupper($method);
             if ($ewalletChannel === 'SHOPEEPAY') $ewalletChannel = 'SPAY';
             if ($ewalletChannel === 'ASTRAPAY') $ewalletChannel = 'ASTRA';
             if ($ewalletChannel === 'SPEEDCASH') $ewalletChannel = 'SC';
 
+            // Sanitasi nomor telepon (Wajib numerik min 10 digit)
             $phone = preg_replace('/[^0-9]/', '', $customerPhone ?: '081234567890');
             if (strlen($phone) < 10) {
                 $phone = '081234567890';
@@ -200,14 +265,13 @@ class WinpayService implements PaymentGatewayInterface
                 ]
             ];
         } else {
-            // Generate unique numeric customerNo (Length: 3-14 numeric chars)
+            // Closed Virtual Account (VA)
             $custNo = substr(preg_replace('/[^0-9]/', '', $invoiceNo . rand(1000, 9999)), -8);
 
-            // Standard SNAP request body structure for Closed Virtual Account (Include customerNo for BNI/Banks)
             $body = [
                 'customerNo' => $custNo,
                 'virtualAccountName' => $vaName,
-                'virtualAccountTrxType' => 'c', // Closed (one-off)
+                'virtualAccountTrxType' => 'c', // 'c' = Closed amount (tagihan nominal pasti)
                 'expiredDate' => $expiredDate,
                 'trxId' => $invoiceNo,
                 'totalAmount' => [
@@ -221,8 +285,10 @@ class WinpayService implements PaymentGatewayInterface
             ];
         }
 
+        // 4. Generate SNAP Asymmetric Digital Signature (SHA256withRSA)
         $signature = $this->generateAsymmetricSignature('POST', $endpoint, $body, $timestamp);
 
+        // 5. Kirim HTTP Request ke Server Winpay (Sandbox atau Production)
         $response = Http::withHeaders([
             'X-SIGNATURE' => $signature,
             'X-TIMESTAMP' => $timestamp,
@@ -240,7 +306,7 @@ class WinpayService implements PaymentGatewayInterface
                 'response' => $data
             ]);
             
-            // Normalize E-Wallet response
+            // Normalisasi respon E-Wallet
             if ($isEwallet) {
                 $normalizedData = [
                     'partnerReferenceNo' => $data['partnerReferenceNo'] ?? $invoiceNo,
@@ -259,7 +325,7 @@ class WinpayService implements PaymentGatewayInterface
                 ];
             }
 
-            // Normalize QRIS response
+            // Normalisasi respon QRIS
             if ($isQris) {
                 $qrUrl = $data['qrUrl'] ?? ($data['qrData'] ?? null);
                 $qrContent = $data['qrContent'] ?? null;
@@ -277,7 +343,7 @@ class WinpayService implements PaymentGatewayInterface
                 ];
             }
 
-            // Normalize VA response
+            // Normalisasi respon Virtual Account (VA)
             if (isset($data['virtualAccountData']) || isset($data['virtualAccountNo'])) {
                 $vaData = $data['virtualAccountData'] ?? $data;
                 $vaNo = trim($vaData['virtualAccountNo'] ?? ($vaData['vaNo'] ?? ($vaData['payCode'] ?? '')));
@@ -320,9 +386,15 @@ class WinpayService implements PaymentGatewayInterface
 
     /**
      * Validate incoming Webhook/Callback from Winpay
+     * 
+     * - Pada MODE SIMULATOR: Otomatis mengembalikan `true` (bypass signature).
+     * - Pada MODE SANDBOX / PRODUCTION: Memverifikasi Asymmetric Signature menggunakan Public Key Winpay.
      */
     public function verifyCallback($headers, $body)
     {
+        /* =========================================================================================
+         * [A] BYPASS UNTUK MODE SIMULATOR ATAU TESTING DEVELOPER
+         * ========================================================================================= */
         if ($this->mode === 'simulator') {
             return true;
         }
@@ -340,6 +412,9 @@ class WinpayService implements PaymentGatewayInterface
             return true;
         }
         
+        /* =========================================================================================
+         * [B] VALIDASI DIGITAL SIGNATURE DENGAN PUBLIC KEY WINPAY (SANDBOX / PRODUCTION)
+         * ========================================================================================= */
         if (empty($this->publicKey)) {
             Log::warning('Winpay Public Key is empty, skipping signature verification.');
             return true; 
@@ -351,7 +426,7 @@ class WinpayService implements PaymentGatewayInterface
             return false;
         }
 
-        // standard path for callback
+        // Standard endpoint path for webhook callback
         $endpoint = '/api/payments/callback'; 
         
         $minifiedBody = json_encode($body, JSON_UNESCAPED_SLASHES);
@@ -372,7 +447,10 @@ class WinpayService implements PaymentGatewayInterface
     }
 
     /**
-     * Return Mock Response for Sandbox testing in Simulator Mode
+     * =============================================================================================
+     * [KHUSUS MODE SIMULATOR LOKAL] Return Mock Response untuk Pengujian Offline Tanpa Koneksi Internet
+     * =============================================================================================
+     * Method ini TIDAK PERNAH dipanggil saat mode 'sandbox' atau 'production' aktif.
      */
     private function getMockPaymentResponse($amount, $invoiceNo, $method)
     {
@@ -417,11 +495,12 @@ class WinpayService implements PaymentGatewayInterface
         ];
     }
 
+    /**
+     * Daftar Master Channel Pembayaran Resmi yang Didukung Winpay
+     * Digunakan oleh fitur "Sinkronisasi Channel" di Admin Panel.
+     */
     public function getPaymentMethods()
     {
-        // In a real API integration, this calls Winpay API endpoint:
-        // /signature-service/v1.0/get-payment-methods
-        // Here we simulate the list of channels returned by Winpay
         return [
             ['code' => 'MANDIRI', 'name' => 'Mandiri Virtual Account', 'type' => 'Virtual Account'],
             ['code' => 'BCA', 'name' => 'BCA Virtual Account', 'type' => 'Virtual Account'],
@@ -434,6 +513,11 @@ class WinpayService implements PaymentGatewayInterface
             ['code' => 'SINARMAS', 'name' => 'Sinarmas Virtual Account', 'type' => 'Virtual Account'],
             ['code' => 'BNC', 'name' => 'BNC Virtual Account', 'type' => 'Virtual Account'],
             ['code' => 'QRIS', 'name' => 'QRIS', 'type' => 'QR Code Payment'],
+            ['code' => 'DANA', 'name' => 'DANA', 'type' => 'E-Wallet'],
+            ['code' => 'SHOPEEPAY', 'name' => 'ShopeePay', 'type' => 'E-Wallet'],
+            ['code' => 'OVO', 'name' => 'OVO', 'type' => 'E-Wallet'],
+            ['code' => 'ASTRAPAY', 'name' => 'AstraPay', 'type' => 'E-Wallet'],
+            ['code' => 'SPEEDCASH', 'name' => 'SpeedCash', 'type' => 'E-Wallet'],
         ];
     }
 }
