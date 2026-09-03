@@ -181,7 +181,7 @@
         <div id="nav-inner" class="max-w-7xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-sm px-4 sm:px-6 transition-all duration-300">
             <div class="flex items-center justify-between h-14">
                 <!-- Brand logo -->
-                <a href="/" class="flex items-center gap-2.5 flex-shrink-0">
+                <a href="{{ request()->routeIs('dashboard*') ? route('dashboard') : '/' }}" class="flex items-center gap-2.5 flex-shrink-0">
                     @if(!empty($schoolLogo))
                         <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-8 object-contain">
                     @else
