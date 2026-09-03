@@ -337,10 +337,11 @@ Route::middleware('auth')->group(function () {
                     ?? \App\Models\SpmbPeriod::value('id');
             });
             
-            // Base query for candidate billing
+            // Base query for candidate billing (Khusus calon siswa yang telah lolos seleksi / masuk tahap daftar ulang DSP)
             $query = \App\Models\Registration::scopedByAdmin()
                 ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
-                ->where('spmb_period_id', $selectedPeriodId);
+                ->where('spmb_period_id', $selectedPeriodId)
+                ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
 
             // Filter stats query
             $baseStatsQuery = (clone $query);

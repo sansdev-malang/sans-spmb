@@ -295,7 +295,7 @@
                         @php
                             $feeDetails = $cand->getFinalFeeDetails();
                             $items = array_map(function($it) use ($cand) {
-                                $it['paid_amount'] = $cand->getItemPaidAmount($it['name']);
+                                $it['paid_amount'] = $cand->getItemPaidAmount($it['name'], $it['id'] ?? null);
                                 $it['discount_amount'] = $cand->getItemDiscountAmount($it['name'], $it['id'] ?? null);
                                 $it['net_amount'] = max(0, $it['amount'] - $it['discount_amount']);
                                 $it['is_fully_paid'] = ($it['paid_amount'] >= $it['net_amount'] && $it['paid_amount'] > 0);
