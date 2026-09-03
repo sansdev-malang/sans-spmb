@@ -254,8 +254,8 @@
                                 </button>
                             @endif
                         </div>
-                    @else
-                        <!-- Editorial / Portal Landing Navigation links -->
+                    @elseif(request()->is('/') || request()->routeIs('home') || request()->routeIs('unit.detail') || !auth()->check())
+                        <!-- Editorial / Portal Landing Navigation links (Only shown on Landing page / Public views) -->
                         <div class="flex items-center gap-7 text-xs font-bold text-slate-500 dark:text-slate-400">
                             <a href="/#program" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Program</a>
                             <a href="/#panca-karakter" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Panca Karakter</a>
@@ -348,10 +348,12 @@
         <!-- Mobile Menu Drawer -->
         <div id="mobile-menu" class="hidden md:hidden max-w-7xl mx-auto mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-lg overflow-hidden">
             <div class="px-4 py-4 space-y-1">
-                <a href="/#program" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Program</a>
-                <a href="/#panca-karakter" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Panca Karakter</a>
-                <a href="/#partnership" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Partnership</a>
-                <a href="/#kata-mereka" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Kata Mereka</a>
+                @if(request()->is('/') || request()->routeIs('home') || !auth()->check())
+                    <a href="/#program" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Program</a>
+                    <a href="/#panca-karakter" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Panca Karakter</a>
+                    <a href="/#partnership" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Partnership</a>
+                    <a href="/#kata-mereka" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Kata Mereka</a>
+                @endif
                 
                 @guest
                     <div class="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
