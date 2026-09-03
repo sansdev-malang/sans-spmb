@@ -121,10 +121,17 @@
 
             {{-- CTA Buttons --}}
             <div class="flex flex-wrap gap-3 pt-1">
-                <a href="{{ route('register') }}"
-                   class="inline-flex items-center gap-2 bg-custom-primary hover:opacity-90 text-white px-7 py-3.5 rounded-xl font-bold text-sm shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-                    Daftar Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </a>
+                @auth
+                    <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('dashboard') }}"
+                       class="inline-flex items-center gap-2 bg-custom-primary hover:opacity-90 text-white px-7 py-3.5 rounded-xl font-bold text-sm shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                        Buka Dashboard <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                @else
+                    <a href="{{ route('register') }}"
+                       class="inline-flex items-center gap-2 bg-custom-primary hover:opacity-90 text-white px-7 py-3.5 rounded-xl font-bold text-sm shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                        Daftar Sekarang <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                @endauth
                 <a href="#program"
                    class="inline-flex items-center gap-2 border-2 border-custom-primary text-custom-primary dark:text-emerald-400 dark:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 px-7 py-3.5 rounded-xl font-bold text-sm transition-all duration-200">
                     Jelajahi Program

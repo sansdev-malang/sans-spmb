@@ -177,7 +177,7 @@
 
     <!-- Header Navigation - Floating Premium (Fixed Seamless Overlay) -->
     @php
-        $isLanding = (request()->is('/') || request()->routeIs('home'));
+        $isLanding = (request()->is('/') || request()->routeIs('home') || request()->routeIs('unit.detail') || request()->is('unit/*'));
     @endphp
     <nav id="main-nav" class="fixed top-0 inset-x-0 z-50 px-4 lg:px-8 py-3 bg-transparent transition-all duration-300">
         <!-- Floating Nav Inner -->
