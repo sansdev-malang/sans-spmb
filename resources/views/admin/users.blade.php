@@ -23,9 +23,15 @@
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
         <button onclick="switchUserTab('admin_role')" id="userTabBtn-admin_role" class="user-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow">
             <i data-lucide="shield-check" class="w-4 h-4"></i> Panitia / Admin
+            <span class="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-0.5">{{ $adminsCount }}</span>
         </button>
         <button onclick="switchUserTab('candidate_role')" id="userTabBtn-candidate_role" class="user-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
-            <i data-lucide="user" class="w-4 h-4"></i> Orang Tua / Calon Siswa
+            <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i> Orang Tua / Calon Siswa (Aktif)
+            <span class="bg-slate-100 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-slate-200 ml-0.5">{{ $candidatesCount }}</span>
+        </button>
+        <button onclick="switchUserTab('unregistered_role')" id="userTabBtn-unregistered_role" class="user-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
+            <i data-lucide="user-x" class="w-4 h-4 text-amber-500"></i> Belum Memilih Unit / Belum Bayar
+            <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-200 ml-0.5">{{ $unregisteredCount }}</span>
         </button>
     </div>
 
@@ -40,6 +46,9 @@
             @endif
             @if(request('candidates_page'))
                 <input type="hidden" name="candidates_page" value="{{ request('candidates_page') }}">
+            @endif
+            @if(request('unregistered_page'))
+                <input type="hidden" name="unregistered_page" value="{{ request('unregistered_page') }}">
             @endif
             
             <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -80,9 +89,9 @@
                     <!-- Per Page Select -->
                     <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
+                        <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
+                        <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
+                        <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
                     </select>
                 </div>
             </div>
@@ -149,7 +158,7 @@
             @endif
         </div>
 
-        <!-- Tab 2: Candidate Role -->
+        <!-- Tab 2: Candidate Role (Aktif / Sudah Bayar Formulir) -->
         <div id="userTabContent-candidate_role" class="user-tab-content p-8 space-y-6 hidden">
             <div class="overflow-x-auto border border-slate-100 rounded-xl">
                 <table class="w-full text-left border-collapse">
@@ -157,7 +166,7 @@
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6 text-center w-12">No.</th>
                             <th class="py-4 px-6">Nama Pengguna</th>
-                            <th class="py-4 px-6">Alamat Email</th>
+                            <th class="py-4 px-6">Alamat Email & Kontak</th>
                             <th class="py-4 px-6">Tanggal Dibuat</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
@@ -172,8 +181,8 @@
                                     <div class="font-extrabold text-slate-800">{{ $cand->name }}</div>
                                     @if($cand->registrations->isNotEmpty())
                                         <div class="text-[10px] text-slate-400 font-semibold mt-1.5 flex flex-wrap gap-1.5 items-center">
-                                            <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200 text-[9px] font-bold">
-                                                {{ $cand->registrations->count() }} Pendaftaran
+                                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-200">
+                                                {{ $cand->registrations->count() }} Pendaftaran Aktif
                                             </span>
                                             @foreach($cand->registrations as $reg)
                                                 <span class="bg-emerald-50 text-brand-emerald px-2 py-0.5 rounded-full border border-emerald-100 text-[9px] font-extrabold uppercase">
@@ -187,8 +196,25 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 font-medium text-slate-600">{{ $cand->email }}</td>
-                                <td class="py-4 px-6 text-slate-500 text-xs">{{ $cand->created_at->format('d M Y, H:i') }}</td>
+                                <td class="py-4 px-6">
+                                    <div class="font-medium text-slate-600">{{ $cand->email }}</div>
+                                    @php
+                                        $candPhone = $cand->registrations->first()?->parent_phone;
+                                    @endphp
+                                    @if(!empty($candPhone))
+                                        @php
+                                            $cleanPhone = preg_replace('/[^0-9]/', '', $candPhone);
+                                            if (str_starts_with($cleanPhone, '0')) $cleanPhone = '62' . substr($cleanPhone, 1);
+                                        @endphp
+                                        <a href="https://wa.me/{{ $cleanPhone }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-bold hover:underline mt-0.5">
+                                            <i data-lucide="message-circle" class="w-3 h-3"></i> {{ $candPhone }}
+                                        </a>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6 text-slate-500 text-xs">
+                                    {{ $cand->created_at->format('d M Y, H:i') }}
+                                    <span class="text-[10px] text-slate-400 block font-normal">{{ $cand->created_at->diffForHumans() }}</span>
+                                </td>
                                 <td class="py-4 px-6 text-right space-x-2">
                                     <button onclick="openEditUserModal({{ json_encode($cand) }})" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
                                     <button onclick="openResetPasswordModal({{ json_encode($cand) }})" class="text-xs text-amber-600 font-bold hover:underline">Reset Password</button>
@@ -197,7 +223,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada user calon siswa.</td>
+                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada user calon siswa yang telah melunasi formulir.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -210,7 +236,96 @@
             @endif
         </div>
 
+        <!-- Tab 3: Unregistered / Unpaid Role (Belum Memilih Unit / Belum Bayar Formulir) -->
+        <div id="userTabContent-unregistered_role" class="user-tab-content p-8 space-y-6 hidden">
+            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
+                            <th class="py-4 px-6 text-center w-12">No.</th>
+                            <th class="py-4 px-6">Nama Pengguna</th>
+                            <th class="py-4 px-6">Alamat Email & No. HP</th>
+                            <th class="py-4 px-6">Status Prospek / Kendala</th>
+                            <th class="py-4 px-6">Tanggal Registrasi Akun</th>
+                            <th class="py-4 px-6 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm divide-y divide-slate-100">
+                        @forelse($unregistered as $unreg)
+                            <tr class="hover:bg-slate-50/30 transition">
+                                <td class="py-4 px-6 text-center text-slate-500 font-bold text-xs">
+                                    {{ ($unregistered->currentPage() - 1) * $unregistered->perPage() + $loop->iteration }}
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="font-extrabold text-slate-800">{{ $unreg->name }}</div>
+                                    @if($unreg->registrations->isNotEmpty())
+                                        <div class="text-[10px] text-slate-400 font-semibold mt-1 flex flex-wrap gap-1 items-center">
+                                            @foreach($unreg->registrations as $reg)
+                                                <span>{{ $reg->candidate_name ?? 'Draft' }} ({{ $reg->unit->name ?? '-' }})</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="font-medium text-slate-600">{{ $unreg->email }}</div>
+                                    @php
+                                        $leadPhone = $unreg->registrations->first()?->parent_phone;
+                                    @endphp
+                                    @if(!empty($leadPhone))
+                                        @php
+                                            $cleanLeadPhone = preg_replace('/[^0-9]/', '', $leadPhone);
+                                            if (str_starts_with($cleanLeadPhone, '0')) $cleanLeadPhone = '62' . substr($cleanLeadPhone, 1);
+                                            $waMsg = "Halo Bapak/Ibu " . $unreg->name . ", kami dari Panitia SPMB Sekolah Anak Saleh ingin menanyakan apakah ada kendala dalam proses pendaftaran ananda?";
+                                        @endphp
+                                        <a href="https://wa.me/{{ $cleanLeadPhone }}?text={{ urlencode($waMsg) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-bold hover:underline mt-0.5" title="Chat Follow-up WhatsApp">
+                                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> {{ $leadPhone }}
+                                        </a>
+                                    @else
+                                        <span class="text-[10px] text-slate-400 italic">No. HP belum diisi</span>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6">
+                                    @if($unreg->registrations->isEmpty())
+                                        <span class="inline-flex items-center gap-1 bg-slate-100 text-slate-650 px-2.5 py-1 rounded-full text-[10px] font-bold border border-slate-200">
+                                            <i data-lucide="help-circle" class="w-3 h-3 text-slate-400"></i> Belum Memilih Unit
+                                        </span>
+                                    @else
+                                        <div class="flex flex-col gap-1">
+                                            @foreach($unreg->registrations as $reg)
+                                                <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-rose-200 w-fit">
+                                                    <i data-lucide="alert-circle" class="w-3 h-3 text-rose-500"></i> Belum Bayar Formulir ({{ $reg->unit->name ?? '-' }})
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6 text-slate-500 text-xs">
+                                    {{ $unreg->created_at->format('d M Y, H:i') }}
+                                    <span class="text-[10px] text-slate-400 block font-normal">{{ $unreg->created_at->diffForHumans() }}</span>
+                                </td>
+                                <td class="py-4 px-6 text-right space-x-2">
+                                    <button onclick="openEditUserModal({{ json_encode($unreg) }})" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
+                                    <button onclick="openResetPasswordModal({{ json_encode($unreg) }})" class="text-xs text-amber-600 font-bold hover:underline">Reset Password</button>
+                                    <button onclick="deleteUser('{{ $unreg->name }}', '{{ route('admin.users.destroy', $unreg->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-8 px-6 text-center text-slate-400">Tidak ada akun pendaftar yang belum memilih unit atau tertunda pembayaran.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if($unregistered->hasPages())
+                <div class="pt-4">
+                    {{ $unregistered->appends(request()->query())->links() }}
+                </div>
+            @endif
+        </div>
+
     </div>
+
     @if(session('success'))
         <script>
             if (typeof showToast === 'function') {
@@ -384,7 +499,14 @@
     // Tab switching memory
     function switchUserTab(tabId) {
         document.querySelectorAll('.user-tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('userTabContent-' + tabId).classList.remove('hidden');
+        let targetEl = document.getElementById('userTabContent-' + tabId);
+        if (!targetEl) {
+            tabId = 'admin_role';
+            targetEl = document.getElementById('userTabContent-admin_role');
+        }
+        if (targetEl) {
+            targetEl.classList.remove('hidden');
+        }
 
         document.querySelectorAll('.user-tab-btn').forEach(btn => {
             btn.className = "user-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";

@@ -21,6 +21,8 @@ class UserController extends Controller
         });
 
         $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $search = $request->search;
+        $unitId = $request->unit_id;
 
         // 1. Admins query
         $adminsQuery = User::whereIn('role', ['admin', 'super_admin']);
@@ -28,54 +30,101 @@ class UserController extends Controller
             $adminsQuery->where('spmb_unit_id', auth()->user()->spmb_unit_id);
         } else {
             if ($request->filled('unit_id')) {
-                $adminsQuery->where('spmb_unit_id', $request->unit_id);
+                $adminsQuery->where('spmb_unit_id', $unitId);
             }
         }
         if ($request->filled('search')) {
-            $search = $request->search;
             $adminsQuery->where(function($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
                   ->orWhere('email', 'like', '%' . $search . '%');
             });
         }
+        $adminsCount = (clone $adminsQuery)->count();
         $admins = $adminsQuery->latest()->paginate($request->integer('per_page', 10), ['*'], 'admins_page');
 
-        // 2. Candidates query
-        $candidatesQuery = User::where('role', 'candidate');
-        if (!$isSuperAdmin) {
-            $unitId = auth()->user()->spmb_unit_id;
-            $candidatesQuery->where(function($q) use ($unitId) {
-                $q->where('spmb_unit_id', $unitId)
-                  ->orWhereHas('registrations', function($sq) use ($unitId) {
-                      $sq->where('spmb_unit_id', $unitId);
-                  });
-            });
-        } else {
-            if ($request->filled('unit_id')) {
-                $unitId = $request->unit_id;
-                $candidatesQuery->where(function($q) use ($unitId) {
-                    $q->where('spmb_unit_id', $unitId)
-                      ->orWhereHas('registrations', function($sq) use ($unitId) {
-                          $sq->where('spmb_unit_id', $unitId);
-                      });
+        // 2. Active Candidates (Sudah memilih unit & sudah lunas formulir pendaftaran)
+        $candidatesQuery = User::where('role', 'candidate')
+            ->whereHas('registrations', function($rq) use ($selectedPeriodId, $isSuperAdmin, $unitId) {
+                if ($selectedPeriodId) {
+                    $rq->where('spmb_period_id', $selectedPeriodId);
+                }
+                if (!$isSuperAdmin) {
+                    $rq->where('spmb_unit_id', auth()->user()->spmb_unit_id);
+                } elseif ($unitId) {
+                    $rq->where('spmb_unit_id', $unitId);
+                }
+                // Sudah lunas formulir atau bukan draf
+                $rq->where(function($sq) {
+                    $sq->where('registration_status', '!=', 'draft')
+                       ->orWhereHas('payments', function($pq) {
+                           $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                       });
                 });
-            }
-            $candidatesQuery->whereHas('registrations', function($q) use ($selectedPeriodId) {
-                $q->where('spmb_period_id', $selectedPeriodId);
             });
-        }
+
         if ($request->filled('search')) {
-            $search = $request->search;
             $candidatesQuery->where(function($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%');
+                  ->orWhere('email', 'like', '%' . $search . '%')
+                  ->orWhereHas('registrations', function($rq) use ($search) {
+                      $rq->where('candidate_name', 'like', '%' . $search . '%')
+                         ->orWhere('parent_phone', 'like', '%' . $search . '%');
+                  });
             });
         }
-        $candidates = $candidatesQuery->with(['registrations.unit'])->latest()->paginate($request->integer('per_page', 10), ['*'], 'candidates_page');
+        $candidatesCount = (clone $candidatesQuery)->count();
+        $candidates = $candidatesQuery->with(['registrations' => function($rq) use ($selectedPeriodId) {
+            if ($selectedPeriodId) $rq->where('spmb_period_id', $selectedPeriodId);
+            $rq->with(['unit', 'payments']);
+        }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'candidates_page');
+
+        // 3. Unregistered / Unpaid Leads (Belum memilih unit ATAU belum bayar formulir)
+        $unregisteredQuery = User::where('role', 'candidate')
+            ->whereDoesntHave('registrations', function($rq) use ($selectedPeriodId) {
+                if ($selectedPeriodId) {
+                    $rq->where('spmb_period_id', $selectedPeriodId);
+                }
+                $rq->where(function($sq) {
+                    $sq->where('registration_status', '!=', 'draft')
+                       ->orWhereHas('payments', function($pq) {
+                           $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                       });
+                });
+            });
+
+        if (!$isSuperAdmin) {
+            $myUnitId = auth()->user()->spmb_unit_id;
+            $unregisteredQuery->where(function($q) use ($myUnitId) {
+                $q->doesntHave('registrations')
+                  ->orWhereHas('registrations', function($rq) use ($myUnitId) {
+                      $rq->where('spmb_unit_id', $myUnitId);
+                  });
+            });
+        } elseif ($request->filled('unit_id')) {
+            $unregisteredQuery->whereHas('registrations', function($rq) use ($unitId) {
+                $rq->where('spmb_unit_id', $unitId);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $unregisteredQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%')
+                  ->orWhereHas('registrations', function($rq) use ($search) {
+                      $rq->where('candidate_name', 'like', '%' . $search . '%')
+                         ->orWhere('parent_phone', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+        $unregisteredCount = (clone $unregisteredQuery)->count();
+        $unregistered = $unregisteredQuery->with(['registrations' => function($rq) use ($selectedPeriodId) {
+            if ($selectedPeriodId) $rq->where('spmb_period_id', $selectedPeriodId);
+            $rq->with(['unit', 'payments']);
+        }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'unregistered_page');
             
         $units = $isSuperAdmin ? \App\Models\SpmbUnit::all() : \App\Models\SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
 
-        return view('admin.users', compact('admins', 'candidates', 'units'));
+        return view('admin.users', compact('admins', 'candidates', 'unregistered', 'units', 'adminsCount', 'candidatesCount', 'unregisteredCount'));
     }
 
     public function store(Request $request)
