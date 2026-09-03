@@ -116,8 +116,8 @@ Route::middleware('auth')->group(function () {
             }
 
             $totalCount = (clone $baseStatsQuery)->count();
-            $maleCount = (clone $baseStatsQuery)->where('gender', 'L')->count();
-            $femaleCount = (clone $baseStatsQuery)->where('gender', 'P')->count();
+            $maleCount = (clone $baseStatsQuery)->whereIn('gender', ['L', 'male', 'Laki-laki', 'laki-laki', 'Laki-Laki'])->count();
+            $femaleCount = (clone $baseStatsQuery)->whereIn('gender', ['P', 'female', 'Perempuan', 'perempuan'])->count();
             $verifiedCount = (clone $baseStatsQuery)->whereIn('registration_status', ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])->count();
             $pendingCount = (clone $baseStatsQuery)->where('registration_status', 'submitted')->count();
 
@@ -204,7 +204,14 @@ Route::middleware('auth')->group(function () {
 
             // Filter by Gender
             if ($request->filled('gender')) {
-                $query->where('gender', $request->gender);
+                $g = strtolower($request->gender);
+                if (in_array($g, ['l', 'male', 'laki-laki'])) {
+                    $query->whereIn('gender', ['L', 'male', 'Laki-laki', 'laki-laki', 'Laki-Laki']);
+                } elseif (in_array($g, ['p', 'female', 'perempuan'])) {
+                    $query->whereIn('gender', ['P', 'female', 'Perempuan', 'perempuan']);
+                } else {
+                    $query->where('gender', $request->gender);
+                }
             }
 
             // Filter by Wave
@@ -289,7 +296,14 @@ Route::middleware('auth')->group(function () {
 
             // Filter by Gender
             if ($request->filled('gender')) {
-                $query->where('gender', $request->gender);
+                $g = strtolower($request->gender);
+                if (in_array($g, ['l', 'male', 'laki-laki'])) {
+                    $query->whereIn('gender', ['L', 'male', 'Laki-laki', 'laki-laki', 'Laki-Laki']);
+                } elseif (in_array($g, ['p', 'female', 'perempuan'])) {
+                    $query->whereIn('gender', ['P', 'female', 'Perempuan', 'perempuan']);
+                } else {
+                    $query->where('gender', $request->gender);
+                }
             }
 
             // Filter by Wave

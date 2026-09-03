@@ -316,7 +316,7 @@
                                         'nickname' => $cand->nickname ?? '-',
                                         'nik' => $cand->nik ?? '-',
                                         'family_card_no' => $cand->getFieldValue('family_card_no') ?? '-',
-                                        'gender' => $cand->gender === 'male' ? 'Laki-laki' : 'Perempuan',
+                                        'gender' => in_array(strtolower($cand->gender ?? ''), ['male', 'l', 'laki-laki']) ? 'Laki-laki' : (in_array(strtolower($cand->gender ?? ''), ['female', 'p', 'perempuan']) ? 'Perempuan' : ($cand->gender ?: '-')),
                                         'birth_place' => $cand->birth_place ?? '-',
                                         'birth_date' => $cand->birth_date ? $cand->birth_date->format('d F Y') : '-',
                                         'religion' => $cand->religion ?? '-',
