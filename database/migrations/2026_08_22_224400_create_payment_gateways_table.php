@@ -20,38 +20,6 @@ return new class extends Migration
             $table->json('settings_schema');
             $table->timestamps();
         });
-
-        // Seed initial gateways
-        DB::table('payment_gateways')->insert([
-            [
-                'name' => 'Winpay Gateway',
-                'code' => 'winpay',
-                'is_active' => true,
-                'settings_schema' => json_encode([
-                    ['key' => 'merchant_id', 'label' => 'Merchant ID', 'type' => 'text'],
-                    ['key' => 'client_key', 'label' => 'Client Key', 'type' => 'text'],
-                    ['key' => 'client_secret', 'label' => 'Client Secret', 'type' => 'password'],
-                    ['key' => 'private_key', 'label' => 'Private Key (RSA)', 'type' => 'textarea'],
-                    ['key' => 'public_key', 'label' => 'Public Key (RSA)', 'type' => 'textarea']
-                ]),
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'BNI SNAP QRIS MPM',
-                'code' => 'bni',
-                'is_active' => true,
-                'settings_schema' => json_encode([
-                    ['key' => 'merchant_id', 'label' => 'Merchant ID', 'type' => 'text'],
-                    ['key' => 'terminal_id', 'label' => 'Terminal ID (TID)', 'type' => 'text'],
-                    ['key' => 'client_id', 'label' => 'Client ID', 'type' => 'text'],
-                    ['key' => 'client_secret', 'label' => 'Client Secret', 'type' => 'password'],
-                    ['key' => 'private_key', 'label' => 'Private Key (RSA)', 'type' => 'textarea']
-                ]),
-                'created_at' => now(),
-                'updated_at' => now()
-            ]
-        ]);
     }
 
     /**
