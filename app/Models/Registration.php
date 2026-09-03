@@ -44,6 +44,10 @@ class Registration extends Model
             return $this->extraServices->pluck('name')->implode(', ') ?: null;
         }
 
+        if ($fieldName === 'id_label') {
+            return $this->id_label;
+        }
+
         $columns = [
             'candidate_name', 'nickname', 'nik', 'family_card_no', 'gender', 'birth_place', 
             'birth_date', 'religion', 'previous_school', 'admission_level',
