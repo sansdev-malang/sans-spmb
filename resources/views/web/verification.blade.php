@@ -166,7 +166,7 @@
             </div>
 
             <!-- Next steps instruction -->
-            @if(in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']))
+            @if($registration->registration_status === 'verified')
                 <div class="bg-emerald-50/20 border border-brand-emerald/30 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="space-y-1">
                         <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
@@ -179,6 +179,22 @@
                     </div>
                     <a href="{{ route('dashboard.observation', $registration->id) }}" class="w-full sm:w-auto whitespace-nowrap bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
                         <span>Lanjutkan ke Ta'aruf</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            @elseif(in_array($registration->registration_status, ['taaruf_completed', 'agreement_signed', 'completed']))
+                <div class="bg-emerald-50/20 border border-brand-emerald/30 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-emerald"></i>
+                            Tahapan Verifikasi Dokumen Selesai
+                        </h4>
+                        <p class="text-xs text-slate-650 leading-relaxed max-w-xl">
+                            Seluruh berkas persyaratan telah terverifikasi dan sesi Ta'aruf telah diselesaikan. Silakan lanjut ke tahapan <strong>Administrasi</strong> untuk melihat rincian pembiayaan dan status penerimaan.
+                        </p>
+                    </div>
+                    <a href="{{ route('dashboard.result', $registration->id) }}" class="w-full sm:w-auto whitespace-nowrap bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
+                        <span>Lanjutkan ke Administrasi</span>
                         <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </a>
                 </div>

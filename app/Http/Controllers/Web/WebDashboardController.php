@@ -16,6 +16,7 @@ use App\Services\WinpayService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class WebDashboardController extends Controller
 {
@@ -418,26 +419,24 @@ class WebDashboardController extends Controller
         // Determine active payment based on phase
         if (in_array($registration->registration_status, ['agreement_signed', 'completed'])) {
             $activePayment = $registration->activeFinalPayment;
-            $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+            $feeDetails = $this->getFinalFeeDetails($registration);
 
-            // Filter out already paid items
-            $paidItemNames = [];
-            $successfulPayments = $registration->payments()
-                ->where('status', 'success')
-                ->where('payment_type', 'final_fee')
-                ->get();
-            foreach ($successfulPayments as $p) {
-                if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
-                    foreach ($p->payment_info['selected_items'] as $item) {
-                        $paidItemNames[] = $item['name'];
-                    }
+            // Filter out already fully paid items
+            $fullyPaidItemNames = [];
+            foreach ($feeDetails['items'] as $item) {
+                $itemGross = (float) ($item['amount'] ?? 0);
+                $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                $itemNet = max(0, $itemGross - $itemDiscount);
+                $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
+                if (($itemNet - $itemPaid) <= 0 && $itemNet > 0) {
+                    $fullyPaidItemNames[] = $item['name'];
                 }
             }
 
-            // Exclude already paid items from original feeDetails items list
+            // Exclude already fully paid items from payable items list
             $unpaidItems = [];
             foreach ($feeDetails['items'] as &$item) {
-                if (!in_array($item['name'], $paidItemNames)) {
+                if (!in_array($item['name'], $fullyPaidItemNames)) {
                     if (!isset($item['gateways'])) {
                         $feeRow = \App\Models\SpmbFee::where('name', $item['name'])
                             ->where('spmb_unit_id', $registration->spmb_unit_id)
@@ -448,6 +447,7 @@ class WebDashboardController extends Controller
                 }
             }
             unset($item);
+            $paidItemNames = $fullyPaidItemNames;
             $latestSuccessPayment = $registration->payments()
                 ->where('status', 'success')
                 ->where('payment_type', 'final_fee')
@@ -742,7 +742,7 @@ class WebDashboardController extends Controller
         $gate = $this->checkAccessGate($registration, 'result');
         if ($gate) return $gate;
         
-        $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+        $feeDetails = $this->getFinalFeeDetails($registration);
         
         // Patch gateways for backward compatibility
         if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
@@ -757,20 +757,20 @@ class WebDashboardController extends Controller
             unset($item);
         }
         
-        // Calculate paid item names from successful payments
-        $paidItemNames = [];
-        $successfulPayments = $registration->payments()
-            ->where('status', 'success')
-            ->where('payment_type', 'final_fee')
-            ->get();
-            
-        foreach ($successfulPayments as $p) {
-            if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
-                foreach ($p->payment_info['selected_items'] as $item) {
-                    $paidItemNames[] = $item['name'];
+        // Calculate fully paid item names
+        $fullyPaidItemNames = [];
+        if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
+            foreach ($feeDetails['items'] as $item) {
+                $itemGross = (float) ($item['amount'] ?? 0);
+                $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                $itemNet = max(0, $itemGross - $itemDiscount);
+                $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
+                if (($itemNet - $itemPaid) <= 0 && $itemNet > 0) {
+                    $fullyPaidItemNames[] = $item['name'];
                 }
             }
         }
+        $paidItemNames = $fullyPaidItemNames;
         
         $grossFee = $registration->getGrossFee() ?: ($feeDetails['total'] ?? 0);
         $discountAmount = (float) ($registration->discount_amount ?? 0);
@@ -1041,26 +1041,24 @@ class WebDashboardController extends Controller
             // Determine payment type
             if ($status === 'agreement_signed') {
                 $paymentType = 'final_fee';
-                $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+                $feeDetails = $this->getFinalFeeDetails($registration);
 
-                // Filter out already paid items
-                $paidItemNames = [];
-                $successfulPayments = $registration->payments()
-                    ->where('status', 'success')
-                    ->where('payment_type', 'final_fee')
-                    ->get();
-                foreach ($successfulPayments as $p) {
-                    if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
-                        foreach ($p->payment_info['selected_items'] as $item) {
-                            $paidItemNames[] = $item['name'];
-                        }
+                // Filter out already fully paid items
+                $fullyPaidItemNames = [];
+                foreach ($feeDetails['items'] as $item) {
+                    $itemGross = (float) ($item['amount'] ?? 0);
+                    $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                    $itemNet = max(0, $itemGross - $itemDiscount);
+                    $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
+                    if (($itemNet - $itemPaid) <= 0 && $itemNet > 0) {
+                        $fullyPaidItemNames[] = $item['name'];
                     }
                 }
 
-                // Exclude already paid items from original feeDetails items list
+                // Exclude already fully paid items from original feeDetails items list
                 $unpaidItems = [];
                 foreach ($feeDetails['items'] as &$item) {
-                    if (!in_array($item['name'], $paidItemNames)) {
+                    if (!in_array($item['name'], $fullyPaidItemNames)) {
                         if (!isset($item['gateways'])) {
                             $feeRow = \App\Models\SpmbFee::where('name', $item['name'])
                                 ->where('spmb_unit_id', $registration->spmb_unit_id)
@@ -1070,6 +1068,8 @@ class WebDashboardController extends Controller
                         $unpaidItems[] = $item;
                     }
                 }
+                unset($item);
+                $paidItemNames = $fullyPaidItemNames;
                 $allSnapshotItems = $feeDetails['items'];
                 // Apply manual checked items filter if passed in query string or POST input
                 $selectedItemsQuery = $request->input('items') ?? request()->query('items');
@@ -1340,13 +1340,11 @@ class WebDashboardController extends Controller
         }
 
         try {
-            // URL Callback Lokal/Eksternal
-            $callbackUrl = url('/api/payments/callback');
-            
             // Format Payload asli SNAP BI
             $payload = [
                 'trxId' => $payment->invoice_number,
                 'paymentStatus' => 'SUCCESS',
+                'responseCode' => '2002500',
                 'paymentAmount' => [
                     'value' => number_format($payment->amount, 2, '.', ''),
                     'currency' => 'IDR'
@@ -1356,22 +1354,39 @@ class WebDashboardController extends Controller
                 ]
             ];
 
-            // Kirim request HTTP POST riil ke API callback kita
-            $response = \Illuminate\Support\Facades\Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'X-TIMESTAMP' => date('c'),
-                'X-SIGNATURE' => 'SIMULATED_SIGNATURE',
-                'X-Developer-Simulator' => 'true'
-            ])->post($callbackUrl, $payload);
+            // Dispatch directly to PaymentController callback to avoid local webserver deadlock
+            $callbackReq = \Illuminate\Http\Request::create(
+                '/api/payments/callback',
+                'POST',
+                [],
+                [],
+                [],
+                [
+                    'HTTP_CONTENT_TYPE' => 'application/json',
+                    'HTTP_X_TIMESTAMP' => date('c'),
+                    'HTTP_X_SIGNATURE' => 'SIMULATED_SIGNATURE',
+                    'HTTP_X_DEVELOPER_SIMULATOR' => 'true',
+                ],
+                json_encode($payload)
+            );
 
-            if ($response->successful()) {
-                return redirect()->back()->with('success', 'Callback Berhasil! Response: ' . $response->body());
+            $callbackResponse = app(\App\Http\Controllers\Api\PaymentController::class)->callback($callbackReq);
+
+            if ($callbackResponse->getStatusCode() === 200) {
+                $registration->refresh();
+                if ($payment->payment_type === 'final_fee' || in_array($registration->registration_status, ['agreement_signed', 'completed'])) {
+                    return redirect()->route('dashboard.result', $registration->id)->with('success', 'Alhamdulillah! Pembayaran administrasi sebesar Rp ' . number_format($payment->amount, 0, ',', '.') . ' berhasil diselesaikan.');
+                }
+                return redirect()->route('dashboard.form', $registration->id)->with('success', 'Alhamdulillah! Pembayaran biaya pendaftaran berhasil. Silakan lengkapi formulir pendaftaran.');
             } else {
-                Log::error('Simulate callback failed', ['status' => $response->status(), 'body' => $response->body()]);
-                return redirect()->back()->with('error', 'Gagal memicu callback: (HTTP ' . $response->status() . ') ' . $response->body());
+                Log::error('Simulate callback failed', [
+                    'status' => $callbackResponse->getStatusCode(),
+                    'body' => $callbackResponse->getContent()
+                ]);
+                return redirect()->back()->with('error', 'Gagal memproses callback: ' . $callbackResponse->getContent());
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Simulate callback exception', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Gagal memproses simulasi pembayaran: ' . $e->getMessage());
         }
@@ -1406,7 +1421,7 @@ class WebDashboardController extends Controller
             $itemsQuery = '';
             if (isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items'])) {
                 $selectedNames = array_column($payment->payment_info['selected_items'], 'name');
-                $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+                $feeDetails = $this->getFinalFeeDetails($registration);
                 if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
                     // Collect names of successful payments to compute the unpaid list
                     $paidItemNames = [];
@@ -1469,11 +1484,35 @@ class WebDashboardController extends Controller
             return redirect()->back()->with('error', 'Bukti pembayaran hanya tersedia untuk transaksi yang sudah lunas.');
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('web.payment-receipt-pdf', compact('payment', 'registration'));
+        $isSettlement = request()->query('type') === 'settlement';
+        $filterItemName = request()->query('item_name');
+        $filterItemId = request()->query('item_id');
+
+        $feeDetails = $this->getFinalFeeDetails($registration);
+        $allSuccessfulPayments = $registration->payments()
+            ->where('status', 'success')
+            ->where('payment_type', 'final_fee')
+            ->orderBy('created_at')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('web.payment-receipt-pdf', compact(
+            'payment', 
+            'registration', 
+            'isSettlement', 
+            'filterItemName', 
+            'filterItemId', 
+            'feeDetails',
+            'allSuccessfulPayments'
+        ));
         
+        $candidateSlug = $registration->candidate_name ? \Illuminate\Support\Str::slug($registration->candidate_name) : $registration->id;
+        $filename = $isSettlement 
+            ? 'Kwitansi-Utama-Pelunasan-SPMB-' . $candidateSlug . ($filterItemName ? '-' . \Illuminate\Support\Str::slug($filterItemName) : '') . '.pdf'
+            : 'Bukti-Bayar-SPMB-' . $payment->invoice_number . '.pdf';
+
         $response = response()->make($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="Bukti-Bayar-SPMB-' . $payment->invoice_number . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
         
         if (request()->has('download_token')) {

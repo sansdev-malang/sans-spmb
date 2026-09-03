@@ -167,9 +167,12 @@ class Registration extends Model
               ->orWhere('name', 'like', '%Layanan%');
         })->pluck('id')->toArray();
 
-        // 3. Fetch active fees for this candidate's unit from master
+        // 3. Fetch active fees for this candidate's unit from master (or global null unit)
         $unitFeesQuery = SpmbFee::with('category')
-            ->where('spmb_unit_id', $unitId)
+            ->where(function($q) use ($unitId) {
+                $q->where('spmb_unit_id', $unitId)
+                  ->orWhereNull('spmb_unit_id');
+            })
             ->where('is_active', true);
 
         if (!empty($regCatIds)) {
@@ -223,6 +226,35 @@ class Registration extends Model
 
                 if (!$hasOtherGradeKeyword) {
                     $selectedMasterFees->push($fee);
+                }
+            }
+        }
+
+        // 3b. Fallback: For any selected extraService not yet resolved, search across all active extra fee categories
+        if ($extraServices->isNotEmpty()) {
+            foreach ($extraServices as $es) {
+                $esName = strtolower(trim($es->name ?? ''));
+                $esCode = strtolower(trim($es->code ?? ''));
+                $alreadyFound = $selectedMasterFees->contains(function($f) use ($esName, $esCode) {
+                    $fn = strtolower(trim($f->name));
+                    return ($fn === $esName || $fn === $esCode || (!empty($esCode) && str_contains($fn, $esCode)) || (!empty($fn) && str_contains($esName, $fn)));
+                });
+                if (!$alreadyFound) {
+                    $fallbackFee = SpmbFee::with('category')
+                        ->whereIn('spmb_fee_category_id', $extraCatIds)
+                        ->where('is_active', true)
+                        ->where(function($q) use ($esName, $esCode) {
+                            $q->whereRaw('LOWER(name) = ?', [$esName])
+                              ->orWhereRaw('LOWER(name) = ?', [$esCode]);
+                            if (!empty($esCode)) {
+                                $q->orWhere('name', 'like', '%' . $esCode . '%');
+                            }
+                        })
+                        ->orderByRaw('CASE WHEN spmb_unit_id = ? THEN 0 ELSE 1 END', [$unitId])
+                        ->first();
+                    if ($fallbackFee) {
+                        $selectedMasterFees->push($fallbackFee);
+                    }
                 }
             }
         }

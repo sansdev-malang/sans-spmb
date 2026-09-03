@@ -134,6 +134,38 @@ class SpmbFeeCategoryAndFeeSeeder extends Seeder
                 'payment_gateway' => ['winpay'],
                 'is_active' => 1,
             ],
+            [
+                'spmb_fee_category_id' => $catTambahan,
+                'spmb_unit_id' => $unitSd,
+                'name' => 'TPA',
+                'amount' => 1400000,
+                'payment_gateway' => ['winpay'],
+                'is_active' => 1,
+            ],
+            [
+                'spmb_fee_category_id' => $catTambahan,
+                'spmb_unit_id' => $unitSd,
+                'name' => 'TPQ',
+                'amount' => 1500000,
+                'payment_gateway' => ['winpay'],
+                'is_active' => 1,
+            ],
+            [
+                'spmb_fee_category_id' => $catTambahan,
+                'spmb_unit_id' => $unitSmp,
+                'name' => 'TPA',
+                'amount' => 1400000,
+                'payment_gateway' => ['winpay'],
+                'is_active' => 1,
+            ],
+            [
+                'spmb_fee_category_id' => $catTambahan,
+                'spmb_unit_id' => $unitSmp,
+                'name' => 'TPQ',
+                'amount' => 1500000,
+                'payment_gateway' => ['winpay'],
+                'is_active' => 1,
+            ],
         ];
         foreach ($fees as $fee) {
             SpmbFee::updateOrCreate(

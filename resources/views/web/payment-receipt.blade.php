@@ -66,7 +66,104 @@
         <!-- Receipt Card Container -->
         <div class="bg-white print-border rounded-3xl shadow-lg border border-slate-150 overflow-hidden relative p-8 md:p-10 text-left">
             
-            <!-- School Header Info -->
+            @php
+                $isFormPayment = ($payment->payment_type === 'registration_fee');
+                $allFinalPayments = $registration->payments()
+                    ->where('status', 'success')
+                    ->where('payment_type', 'final_fee')
+                    ->orderBy('created_at')
+                    ->get();
+
+                // Extract items in current payment
+                $currentPaymentItems = [];
+                if ($payment->items && $payment->items->isNotEmpty()) {
+                    foreach ($payment->items as $it) {
+                        $currentPaymentItems[] = [
+                            'name' => $it->fee_name,
+                            'amount' => (float) $it->amount,
+                        ];
+                    }
+                } elseif (isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items'])) {
+                    foreach ($payment->payment_info['selected_items'] as $it) {
+                        $currentPaymentItems[] = [
+                            'name' => $it['name'] ?? '',
+                            'amount' => (float) ($it['amount'] ?? 0),
+                        ];
+                    }
+                }
+
+                // Check whether any item in this payment is part of an installment plan
+                $hasAnyInstallmentItem = false;
+                $primaryItemInstallmentNo = 1;
+                $annotatedItems = [];
+
+                foreach ($currentPaymentItems as $cItem) {
+                    $cName = $cItem['name'];
+                    $itemGross = 0;
+                    $itemDiscount = $registration->getItemDiscountAmount($cName);
+                    if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
+                        foreach ($feeDetails['items'] as $fdItem) {
+                            if (strcasecmp(trim($fdItem['name']), trim($cName)) === 0) {
+                                $itemGross = (float)($fdItem['amount'] ?? 0);
+                                break;
+                            }
+                        }
+                    }
+                    $itemNet = max(0, $itemGross - $itemDiscount);
+
+                    $itemHistory = [];
+                    $cumulativePaidUpToThis = 0;
+                    $isPaidAfterThis = false;
+
+                    foreach ($allFinalPayments as $p) {
+                        $foundAmt = 0;
+                        if ($p->items && $p->items->isNotEmpty()) {
+                            foreach ($p->items as $pi) {
+                                if (strcasecmp(trim($pi->fee_name), trim($cName)) === 0) {
+                                    $foundAmt += (float) $pi->amount;
+                                }
+                            }
+                        } elseif (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
+                            foreach ($p->payment_info['selected_items'] as $si) {
+                                if (strcasecmp(trim($si['name'] ?? ''), trim($cName)) === 0) {
+                                    $foundAmt += (float) ($si['amount'] ?? 0);
+                                }
+                            }
+                        }
+                        if ($foundAmt > 0) {
+                            $itemHistory[] = $p->id;
+                            if (!$isPaidAfterThis) {
+                                $cumulativePaidUpToThis += $foundAmt;
+                            }
+                            if ($p->id === $payment->id) {
+                                $isPaidAfterThis = true;
+                            }
+                        }
+                    }
+
+                    $isItemInstallment = count($itemHistory) > 1;
+                    $itemInstIndex = array_search($payment->id, $itemHistory);
+                    $itemInstNo = ($itemInstIndex !== false) ? ($itemInstIndex + 1) : 1;
+                    $itemRemainingAfterThis = max(0, $itemNet - $cumulativePaidUpToThis);
+
+                    if ($isItemInstallment) {
+                        $hasAnyInstallmentItem = true;
+                        $primaryItemInstallmentNo = $itemInstNo;
+                    }
+
+                    $annotatedItems[] = [
+                        'name' => $cName,
+                        'amount' => $cItem['amount'],
+                        'is_installment' => $isItemInstallment,
+                        'installment_no' => $itemInstNo,
+                        'item_net' => $itemNet,
+                        'item_remaining' => $itemRemainingAfterThis,
+                    ];
+                }
+
+                $isFullySettled = ($registration->registration_status === 'completed' || $registration->remaining_balance <= 0);
+            @endphp
+            <!-- Receipt Header / Branding -->
             <div class="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-100">
                 <div>
                     <h1 class="text-lg font-extrabold text-slate-900 leading-tight">
@@ -77,15 +174,27 @@
                     </p>
                 </div>
                 <div class="text-right">
-                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> LUNAS
-                    </span>
+                    @if($hasAnyInstallmentItem)
+                        <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i> ANGSURAN KE-{{ $primaryItemInstallmentNo }}
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> LUNAS
+                        </span>
+                    @endif
                 </div>
             </div>
 
             <!-- Receipt Title -->
             <div class="py-6 text-center">
-                <h2 class="text-sm font-black text-slate-400 uppercase tracking-widest">Bukti Pembayaran Resmi</h2>
+                @if($isFormPayment)
+                    <h2 class="text-sm font-black text-slate-400 uppercase tracking-widest">Bukti Pembayaran Biaya Pendaftaran</h2>
+                @elseif($hasAnyInstallmentItem)
+                    <h2 class="text-sm font-black text-blue-600 uppercase tracking-widest">Bukti Pembayaran Angsuran Ke-{{ $primaryItemInstallmentNo }}</h2>
+                @else
+                    <h2 class="text-sm font-black text-slate-400 uppercase tracking-widest">Bukti Pembayaran Resmi</h2>
+                @endif
                 <p class="text-xs text-slate-500 font-bold mt-1">Nomor: {{ $payment->invoice_number }}</p>
             </div>
 
@@ -141,22 +250,17 @@
             <div class="space-y-3 mb-8">
                 <span class="text-[10px] text-slate-400 font-black uppercase tracking-wider block mb-2">Rincian Pembayaran</span>
                 
-                <!-- Base Amount -->
-                @if($payment->items && $payment->items->isNotEmpty())
-                    @foreach($payment->items as $item)
+                @if(!empty($annotatedItems))
+                    @foreach($annotatedItems as $it)
                         <div class="flex justify-between items-center text-xs text-slate-600">
-                            <span>{{ $item->fee_name }}</span>
-                            <span class="font-bold text-slate-800">
-                                Rp {{ number_format($item->amount, 0, ',', '.') }}
+                            <span>
+                                {{ $it['name'] }}
+                                @if($it['is_installment'])
+                                    <span class="text-[10px] text-blue-600 font-semibold">(Setoran Angsuran #{{ $it['installment_no'] }})</span>
+                                @endif
                             </span>
-                        </div>
-                    @endforeach
-                @elseif($payment->payment_type === 'final_fee' && isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items']))
-                    @foreach($payment->payment_info['selected_items'] as $item)
-                        <div class="flex justify-between items-center text-xs text-slate-600">
-                            <span>{{ $item['name'] }}</span>
                             <span class="font-bold text-slate-800">
-                                Rp {{ number_format($item['amount'], 0, ',', '.') }}
+                                Rp {{ number_format($it['amount'], 0, ',', '.') }}
                             </span>
                         </div>
                     @endforeach
@@ -214,6 +318,28 @@
                         Rp {{ number_format($payment->amount, 0, ',', '.') }}
                     </span>
                 </div>
+                @if($payment->payment_type === 'final_fee' && $hasAnyInstallmentItem)
+                    @foreach($annotatedItems as $aItem)
+                        @if($aItem['is_installment'])
+                            <div class="pt-2 border-t border-dashed border-slate-200 flex justify-between items-center text-xs">
+                                <span class="text-slate-500 font-medium">
+                                    @if($aItem['item_remaining'] > 0)
+                                        Sisa Tagihan {{ $aItem['name'] }} Belum Lunas
+                                    @else
+                                        Status Pelunasan {{ $aItem['name'] }}
+                                    @endif
+                                </span>
+                                <span class="font-bold {{ $aItem['item_remaining'] > 0 ? 'text-amber-600' : 'text-emerald-600' }}">
+                                    @if($aItem['item_remaining'] > 0)
+                                        Rp {{ number_format($aItem['item_remaining'], 0, ',', '.') }}
+                                    @else
+                                        LUNAS SEPENUHNYA (100%)
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
+                    @endforeach
+                @endif
             </div>
 
             <!-- Receipt Bottom Note -->

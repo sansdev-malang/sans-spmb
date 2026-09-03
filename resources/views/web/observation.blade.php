@@ -306,6 +306,12 @@
                         <p><strong>Status:</strong> <span class="text-green-600 font-bold">DISAPAKATI / VALID</span></p>
                         <p><strong>Tanggal:</strong> {{ ($registration->signed_at ?? $registration->updated_at)->format('d M Y H:i') }} WIB</p>
                     </div>
+                    <div class="pt-2">
+                        <a href="{{ route('dashboard.result', $registration->id) }}" class="inline-flex items-center gap-2 bg-brand-emerald hover-emerald text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-md transition">
+                            <span>Lanjutkan ke Administrasi</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
                 </div>
 
             @else

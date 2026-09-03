@@ -169,37 +169,42 @@
                                     @php
                                         $itemId = $item['id'] ?? null;
                                         $itemName = $item['name'];
-                                        $isPaid = isset($paidItemNames) && in_array($itemName, $paidItemNames);
                                         
-                                        // Find payment receipt for this specific item
-                                        $itemPayment = null;
+                                        // Collect all payment receipts for this specific item in chronological order
+                                        $itemPayments = [];
                                         if (isset($successfulPayments)) {
-                                            foreach ($successfulPayments as $p) {
+                                            foreach ($successfulPayments->sortBy('created_at') as $p) {
+                                                $foundAmount = 0;
                                                 if ($p->items && $p->items->isNotEmpty()) {
                                                     foreach ($p->items as $pItem) {
                                                         if (($itemId && (int)$pItem->spmb_fee_id === (int)$itemId) || strcasecmp(trim($pItem->fee_name), trim($itemName)) === 0) {
-                                                            $itemPayment = $p;
-                                                            break 2;
+                                                            $foundAmount += (float) $pItem->amount;
                                                         }
                                                     }
                                                 } elseif (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
                                                     foreach ($p->payment_info['selected_items'] as $si) {
                                                         if (($itemId && isset($si['id']) && (int)$si['id'] === (int)$itemId) || strcasecmp(trim($si['name'] ?? ''), trim($itemName)) === 0) {
-                                                            $itemPayment = $p;
-                                                            break 2;
+                                                            $foundAmount += (float) ($si['amount'] ?? 0);
                                                         }
                                                     }
                                                 }
+                                                if ($foundAmount > 0) {
+                                                    $itemPayments[] = [
+                                                        'payment' => $p,
+                                                        'amount' => $foundAmount,
+                                                        'date' => $p->created_at ? $p->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') : '-',
+                                                        'method' => $p->payment_method ?? 'VA'
+                                                    ];
+                                                }
                                             }
                                         }
-                                    @endphp
-                                    @php
+
                                         $itemGross = (float) ($item['amount'] ?? 0);
                                         $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
                                         $itemNet = max(0, $itemGross - $itemDiscount);
                                         $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
                                         $itemRemaining = max(0, $itemNet - $itemPaid);
-                                        $isItemLunas = ($isPaid || $itemRemaining <= 0);
+                                        $isItemLunas = ($itemRemaining <= 0);
                                         $canCicil = (!$isItemLunas) && (!empty($item['is_installment_allowed']) || ($installmentMode ?? 'none') === 'all');
                                         $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
                                     @endphp
@@ -252,14 +257,70 @@
                                                     </div>
                                                 @endif
 
-                                                @if($isItemLunas && $itemPayment)
-                                                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
-                                                        <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas via {{ $itemPayment->channel_display_name }} ({{ $itemPayment->created_at ? $itemPayment->created_at->format('d M Y') : '' }})
-                                                    </div>
+                                                @if($isItemLunas)
+                                                    @if(count($itemPayments) > 1)
+                                                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
+                                                            <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas (Total: Rp {{ number_format($itemNet, 0, ',', '.') }} melalui {{ count($itemPayments) }}x pembayaran)
+                                                        </div>
+                                                        <div class="mt-2 bg-emerald-50/40 dark:bg-emerald-950/20 p-2.5 rounded-xl border border-emerald-200/50 dark:border-emerald-900/40 space-y-1.5">
+                                                            <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                                                                <span class="flex items-center gap-1.5">
+                                                                    <i data-lucide="history" class="w-3.5 h-3.5 text-brand-emerald"></i> Riwayat Angsuran Cicilan:
+                                                                </span>
+                                                            </div>
+                                                            <div class="space-y-1 pt-0.5">
+                                                                @foreach($itemPayments as $idx => $ip)
+                                                                    <div class="flex items-center justify-between gap-2 text-[10px] bg-white dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-emerald-100 dark:border-slate-700/60">
+                                                                        <div class="flex items-center gap-2 flex-wrap">
+                                                                            <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[9px]">Cicilan #{{ $idx + 1 }}</span>
+                                                                            <span class="font-bold text-emerald-600 dark:text-emerald-400 font-mono">Rp {{ number_format($ip['amount'], 0, ',', '.') }}</span>
+                                                                            <span class="text-slate-400 text-[9px]">({{ $ip['date'] }})</span>
+                                                                        </div>
+                                                                        <a href="{{ route('dashboard.payment.receipt', $ip['payment']->id) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap" title="Unduh Kwitansi Cicilan ke-{{ $idx + 1 }}">
+                                                                            <i data-lucide="download" class="w-2.5 h-2.5"></i> Kwitansi #{{ $idx + 1 }}
+                                                                        </a>
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    @elseif(count($itemPayments) === 1)
+                                                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
+                                                            <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas via {{ $itemPayments[0]['method'] }} ({{ $itemPayments[0]['date'] }} WIB)
+                                                        </div>
+                                                    @endif
                                                 @elseif(!$isItemLunas && $itemPaid > 0)
-                                                    <div class="text-[10px] text-slate-400 font-medium">
-                                                        Total: Rp {{ number_format($itemNet, 0, ',', '.') }} • Telah Dicicil: <span class="text-emerald-600 font-bold">Rp {{ number_format($itemPaid, 0, ',', '.') }}</span>
+                                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex flex-wrap items-center gap-1.5 mt-1">
+                                                        <span>Tarif Pokok: <strong class="font-mono text-slate-700 dark:text-slate-200">Rp {{ number_format($itemNet, 0, ',', '.') }}</strong></span>
+                                                        <span>•</span>
+                                                        <span>Telah Dicicil: <strong class="text-emerald-600 dark:text-emerald-400 font-bold font-mono">Rp {{ number_format($itemPaid, 0, ',', '.') }}</strong> ({{ count($itemPayments) }}x Pembayaran)</span>
+                                                        <span>•</span>
+                                                        <span>Sisa: <strong class="text-amber-600 dark:text-amber-400 font-bold font-mono">Rp {{ number_format($itemRemaining, 0, ',', '.') }}</strong></span>
                                                     </div>
+
+                                                    {{-- List Riwayat Cicilan yang Sudah Dibayarkan dengan Tombol Kwitansi Masing-Masing --}}
+                                                    @if(!empty($itemPayments))
+                                                        <div class="mt-2.5 bg-slate-50/90 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-1.5">
+                                                            <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                                                                <span class="flex items-center gap-1.5">
+                                                                    <i data-lucide="receipt-text" class="w-3.5 h-3.5 text-brand-emerald"></i> Riwayat Kwitansi Pembayaran Cicilan ({{ count($itemPayments) }}x):
+                                                                </span>
+                                                            </div>
+                                                            <div class="space-y-1 pt-0.5">
+                                                                @foreach($itemPayments as $idx => $ip)
+                                                                    <div class="flex items-center justify-between gap-2 text-[10px] bg-white dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-700/60 shadow-xs">
+                                                                        <div class="flex items-center gap-2 flex-wrap">
+                                                                            <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[9px]">Cicilan #{{ $idx + 1 }}</span>
+                                                                            <span class="font-bold text-emerald-600 dark:text-emerald-400 font-mono">Rp {{ number_format($ip['amount'], 0, ',', '.') }}</span>
+                                                                            <span class="text-slate-400 text-[9px]">via {{ $ip['method'] }} • {{ $ip['date'] }} WIB</span>
+                                                                        </div>
+                                                                        <a href="{{ route('dashboard.payment.receipt', $ip['payment']->id) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap transition" title="Unduh Kwitansi Cicilan ke-{{ $idx + 1 }}">
+                                                                            <i data-lucide="download" class="w-2.5 h-2.5"></i> Kwitansi Cicilan #{{ $idx + 1 }}
+                                                                        </a>
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    @endif
                                                 @endif
 
                                                 {{-- Accordion Input Cicilan pada Item yang Boleh Dicicil --}}
@@ -309,19 +370,34 @@
                                             <span id="display-item-amount-{{ $loop->index }}" class="font-mono">
                                                 Rp {{ number_format($isItemLunas ? $itemNet : $itemRemaining, 0, ',', '.') }}
                                             </span>
+                                            @if(!$isItemLunas && $itemPaid > 0)
+                                                <span class="block text-[10px] text-slate-400 font-normal mt-0.5">Sisa Tagihan</span>
+                                            @endif
                                         </td>
                                         <td class="p-4 text-center align-top pt-4.5">
                                             @if($isItemLunas || $registration->registration_status === 'completed')
-                                                <div class="flex items-center justify-center gap-1.5">
+                                                <div class="flex flex-col items-center justify-center gap-1.5">
                                                     <span class="text-[9px] bg-green-50 dark:bg-green-950/20 text-green-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Lunas</span>
-                                                    @if($itemPayment)
-                                                        <a href="{{ route('dashboard.payment.receipt', $itemPayment->id) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-0.5 text-[9px] font-bold text-brand-emerald hover:underline" title="Unduh Kwitansi">
-                                                            <i data-lucide="download" class="w-3 h-3 text-brand-emerald"></i> Unduh
+                                                    @if(!empty($itemPayments))
+                                                        @php
+                                                            $isMultipleInstallments = count($itemPayments) > 1;
+                                                            $btnLabel = $isMultipleInstallments ? 'Kwitansi Utama' : 'Kwitansi';
+                                                            $btnTitle = $isMultipleInstallments ? 'Unduh Kwitansi Utama / Pelunasan' : 'Unduh Kwitansi';
+                                                            $receiptUrl = route('dashboard.payment.receipt', end($itemPayments)['payment']->id);
+                                                            if ($isMultipleInstallments) {
+                                                                $receiptUrl .= '?type=settlement&item_name=' . urlencode($item['name']);
+                                                            }
+                                                        @endphp
+                                                        <a href="{{ $receiptUrl }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap" title="{{ $btnTitle }}">
+                                                            <i data-lucide="download" class="w-2.5 h-2.5 text-brand-emerald"></i> {{ $btnLabel }}
                                                         </a>
                                                     @endif
                                                 </div>
                                             @elseif($itemPaid > 0)
-                                                <span class="text-[9px] bg-blue-50 dark:bg-blue-950/20 text-blue-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Dicicil</span>
+                                                <div class="flex flex-col items-center justify-center gap-1">
+                                                    <span class="text-[9px] bg-blue-50 dark:bg-blue-950/20 text-blue-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Dicicil</span>
+                                                    <span class="text-[9px] text-slate-400 font-medium">Belum Lunas</span>
+                                                </div>
                                             @else
                                                 <span class="text-[9px] bg-amber-50 dark:bg-amber-955/20 text-amber-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Tanggungan</span>
                                             @endif

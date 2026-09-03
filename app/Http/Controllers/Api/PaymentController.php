@@ -73,7 +73,7 @@ class PaymentController extends Controller
 
             if ($status === 'agreement_signed') {
                 $paymentType = 'final_fee';
-                $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+                $feeDetails = $this->getFinalFeeDetails($registration);
                 $allSnapshotItems = $feeDetails['items'] ?? [];
 
                 $inputItems = $request->input('items');
@@ -102,8 +102,10 @@ class PaymentController extends Controller
                         if ($keyFound !== null) {
                             $isInstallmentAllowed = $registration->isFeeInstallmentAllowed($itemName, $itemId);
                             $itemGross = (float) ($item['amount'] ?? 0);
+                            $itemDiscount = $registration->getItemDiscountAmount($itemName, $itemId);
+                            $itemNet = max(0, $itemGross - $itemDiscount);
                             $itemPaid = $registration->getItemPaidAmount($itemName, $itemId);
-                            $itemRemaining = max(0, $itemGross - $itemPaid);
+                            $itemRemaining = max(0, $itemNet - $itemPaid);
 
                             if ($itemRemaining <= 0) continue;
 

@@ -98,6 +98,7 @@ Route::middleware('auth')->group(function () {
         // Admin Billing & Payment Transaction Pages
         Route::get('/admin/payments/data', [AdminPaymentController::class, 'data'])->name('admin.payments.data');
         Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
+        Route::get('/admin/payments/receipt/{id}', [WebDashboardController::class, 'downloadReceipt'])->name('admin.payments.receipt');
 
         // Setting Biaya (Accessible to both Super Admin and Unit Admin)
         Route::get('/admin/spmb-settings/fees', [SpmbFeesController::class, 'index'])->name('admin.spmb-settings.fees');

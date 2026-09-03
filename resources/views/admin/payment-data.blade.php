@@ -474,9 +474,25 @@
                                         <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
                                     </button>
 
+                                    @php
+                                        $yearVal = $cand->period->year ?? '2027-2028';
+                                        $idLabelVal = $cand->id_label ?? ('SANS-' . $yearVal . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT));
+                                        $candPayload = [
+                                            'id' => $cand->id,
+                                            'candidate_name' => $cand->candidate_name ?? 'Calon Siswa',
+                                            'id_label' => $idLabelVal,
+                                            'total_gross' => (float) $gross,
+                                            'total_discount' => (float) $discount,
+                                            'total_net' => (float) $net,
+                                            'total_paid' => (float) $paid,
+                                            'remaining_balance' => (float) $remaining,
+                                            'unit_name' => $cand->unit->name ?? 'PAUD/TK',
+                                            'admission_level' => $cand->admission_level ?? '',
+                                        ];
+                                    @endphp
                                     <!-- Button Riwayat Transaksi -->
                                     <button type="button" 
-                                            onclick='openTransactionsModal(@json($cand), @json($successfulPayments))'
+                                            onclick='openTransactionsModal(@json($candPayload), @json($successfulPayments), @json($feeDetails))'
                                             class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-700 hover:text-white dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-2xs"
                                             title="Lihat Riwayat Transaksi & Kwitansi">
                                         <i data-lucide="receipt" class="w-4 h-4"></i>
@@ -747,7 +763,7 @@
 <!-- MODAL 2: RIWAYAT TRANSAKSI & BUKTI KWITANSI PEMBAYARAN SISWA             -->
 <!-- ========================================================================= -->
 <div id="transactions-modal" onclick="if(event.target === this) closeTransactionsModal()" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <!-- Header -->
         <div class="bg-slate-900 p-6 text-white flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -808,8 +824,16 @@
         }
     });
 
+    const candidatesDataMap = {};
+
     function openPolicyModal(cand, feeDetails) {
         document.body.classList.add('overflow-hidden');
+        
+        // If candidate was updated in memory/AJAX, use the latest data
+        if (candidatesDataMap[cand.id]) {
+            cand = Object.assign({}, cand, candidatesDataMap[cand.id]);
+        }
+
         currentCandidate = cand;
         currentFeeDetails = feeDetails;
 
@@ -984,7 +1008,7 @@
             div.innerHTML = `
                 <div class="flex items-center gap-2.5">
                     <input type="checkbox" 
-                           name="installment_fee_ids[]" 
+                           name="installment_allowed_fee_ids[]" 
                            value="${it.id || it.name}" 
                            ${isChecked ? 'checked' : ''}
                            ${(isFullyPaid || isItemPaid) ? 'disabled' : ''}
@@ -1117,20 +1141,18 @@
         const row = document.getElementById(`cand-row-${regId}`);
         if (!row) return;
 
-        // 1. Update currentCandidate in memory
+        // 1. Update currentCandidate & candidatesDataMap in memory
+        if (!candidatesDataMap[regId] && currentCandidate) {
+            candidatesDataMap[regId] = Object.assign({}, currentCandidate);
+        }
+        if (candidatesDataMap[regId]) {
+            Object.assign(candidatesDataMap[regId], resData);
+        } else {
+            candidatesDataMap[regId] = Object.assign({}, resData);
+        }
+
         if (currentCandidate && currentCandidate.id === regId) {
-            currentCandidate.discount_mode = resData.discount_mode;
-            currentCandidate.discount_amount = resData.discount_amount;
-            currentCandidate.item_discounts = resData.item_discounts;
-            currentCandidate.total_discount = resData.total_discount;
-            currentCandidate.discount_notes = resData.discount_notes;
-            currentCandidate.installment_mode = resData.installment_mode;
-            currentCandidate.installment_allowed_fee_ids = resData.installment_allowed_fee_ids;
-            currentCandidate.min_installment_amount = resData.min_installment_amount;
-            currentCandidate.gross_fee = resData.gross_fee;
-            currentCandidate.net_fee = resData.net_fee;
-            currentCandidate.total_paid_final_fee = resData.total_paid;
-            currentCandidate.remaining_balance = resData.remaining_balance;
+            Object.assign(currentCandidate, resData);
         }
 
         // 2. Rincian Komponen Biaya (Column 3, index 2)
@@ -1284,10 +1306,13 @@
         if (window.lucide) lucide.createIcons();
     }
 
-    function openTransactionsModal(cand, payments) {
+    function openTransactionsModal(cand, payments, feeDetails) {
         document.body.classList.add('overflow-hidden');
-        document.getElementById('tx-modal-name').textContent = cand.candidate_name || 'Calon Siswa';
-        document.getElementById('tx-modal-id').textContent = cand.id_label || ('SANS-2027-' + String(cand.id).padStart(4, '0'));
+        const idLabel = (cand && cand.id_label) ? cand.id_label : ('SANS-2027-' + String((cand && cand.id) ? cand.id : 1).padStart(4, '0'));
+        const candName = (cand && cand.candidate_name) ? cand.candidate_name : 'Calon Siswa';
+
+        document.getElementById('tx-modal-name').textContent = candName;
+        document.getElementById('tx-modal-id').textContent = idLabel;
 
         const listContainer = document.getElementById('tx-modal-list');
         listContainer.innerHTML = '';
@@ -1305,151 +1330,426 @@
                     <p class="text-xs text-slate-400 mt-1">Calon siswa ini belum memiliki transaksi pembayaran yang berstatus lunas/berhasil.</p>
                 </div>
             `;
-        } else {
+            document.getElementById('transactions-modal').classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+
+        // 1. TOP SUMMARY CARD
+        let totalNet = Number((cand && cand.total_net) || 0);
+        let totalPaid = Number((cand && cand.total_paid) || 0);
+        let remainingBalance = Number((cand && cand.remaining_balance !== undefined) ? cand.remaining_balance : 0);
+
+        // Fallback calculations if cand properties are 0 / missing
+        if (totalPaid === 0 && successPayments.length > 0) {
             successPayments.forEach(p => {
-                const isRegFee = (p.payment_type === 'registration_fee');
-
-                // Dynamic Category Badges from master SpmbFeeCategory
-                const catList = (p.category_names && p.category_names.length > 0) 
-                    ? p.category_names 
-                    : [isRegFee ? 'Formulir Pendaftaran' : 'Biaya Administrasi'];
-
-                const categoryBadgesHtml = catList.map(catName => {
-                    let badgeStyle = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
-                    const lower = catName.toLowerCase();
-                    if (lower.includes('formulir') || lower.includes('pendaftaran') || lower.includes('registrasi')) {
-                        badgeStyle = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
-                    } else if (lower.includes('tambahan') || lower.includes('non-formal') || lower.includes('tpa') || lower.includes('tpq')) {
-                        badgeStyle = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
-                    }
-                    return `<span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${badgeStyle}">${catName}</span>`;
-                }).join(' ');
-
-                // Parsing selected items
-                let items = [];
-                let info = p.payment_info;
-                if (typeof info === 'string') {
-                    try { info = JSON.parse(info); } catch(e) { info = {}; }
+                if (p.payment_type === 'final_fee') {
+                    const baseAmt = Number(p.base_amount || (p.amount - (p.admin_fee || 0)));
+                    totalPaid += baseAmt;
                 }
-                info = info || {};
+            });
+        }
+        if (totalNet === 0 && feeDetails && Array.isArray(feeDetails.items)) {
+            feeDetails.items.forEach(it => {
+                totalNet += Number(it.amount || 0);
+            });
+            remainingBalance = Math.max(0, totalNet - totalPaid);
+        }
 
-                if (isRegFee) {
-                    items.push({
-                        name: cand.registration_fee_name || info.fee_name || 'Formulir Pendaftaran',
-                        amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
-                    });
-                } else {
-                    if (Array.isArray(p.items) && p.items.length > 0) {
-                        items = p.items.map(it => ({
-                            name: it.fee_name || 'Komponen Biaya',
-                            amount: Number(it.amount || 0)
-                        }));
-                    } else if (Array.isArray(info.selected_items) && info.selected_items.length > 0) {
-                        items = info.selected_items.map(it => ({
-                            name: it.name || 'Komponen Biaya',
-                            amount: Number(it.amount || 0)
-                        }));
-                    } else {
-                        items.push({
-                            name: 'Pelunasan / Cicilan Biaya Masuk',
-                            amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
-                        });
+        const isOverallLunas = (remainingBalance <= 0 && totalNet > 0);
+
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white border border-slate-700 shadow-md space-y-3';
+        summaryCard.innerHTML = `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 block">
+                        Ringkasan Keuangan Pendaftar
+                    </span>
+                    <h4 class="text-sm font-extrabold text-white mt-0.5">
+                        ${candName} 
+                        <span class="text-xs text-slate-400 font-normal font-mono">(${idLabel})</span>
+                    </h4>
+                </div>
+                <div class="self-start sm:self-center">
+                    ${isOverallLunas 
+                        ? `<span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> LUNAS SEPENUHNYA</span>`
+                        : `<span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> SISA TUNGGAKAN</span>`
                     }
-                }
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <span class="text-[10px] text-slate-400 block uppercase font-bold">Total Tagihan</span>
+                    <span class="font-mono font-extrabold text-xs sm:text-sm text-white block mt-0.5">
+                        Rp ${totalNet.toLocaleString('id-ID')}
+                    </span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <span class="text-[10px] text-emerald-400 block uppercase font-bold">Total Terbayar</span>
+                    <span class="font-mono font-extrabold text-xs sm:text-sm text-emerald-400 block mt-0.5">
+                        Rp ${totalPaid.toLocaleString('id-ID')}
+                    </span>
+                    <span class="text-[9px] text-slate-400 block">(${successPayments.length}x Transaksi)</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                    <span class="text-[10px] ${remainingBalance > 0 ? 'text-amber-400' : 'text-slate-400'} block uppercase font-bold">Sisa Tagihan</span>
+                    <span class="font-mono font-extrabold text-xs sm:text-sm ${remainingBalance > 0 ? 'text-amber-400' : 'text-emerald-400'} block mt-0.5">
+                        ${remainingBalance > 0 ? 'Rp ' + remainingBalance.toLocaleString('id-ID') : 'Rp 0 (Lunas)'}
+                    </span>
+                </div>
+            </div>
+        `;
+        listContainer.appendChild(summaryCard);
 
-                const baseAmount = Number(p.base_amount || (p.amount - (p.admin_fee || 0)));
-                const adminFee = Number(p.admin_fee || (p.amount - baseAmount));
-                const totalAmount = Number(p.amount);
+        // 2. DETECT INSTALLMENTS PER COMPONENT
+        const allItemsList = (feeDetails && Array.isArray(feeDetails.items)) ? feeDetails.items : [];
+        const itemTracker = {};
 
-                const formattedDate = new Date(p.created_at).toLocaleString('id-ID', {
-                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        successPayments.forEach(p => {
+            const isRegFee = (p.payment_type === 'registration_fee');
+            let pItems = [];
+            let info = p.payment_info;
+            if (typeof info === 'string') {
+                try { info = JSON.parse(info); } catch(e) { info = {}; }
+            }
+            info = info || {};
+
+            if (isRegFee) {
+                pItems.push({
+                    name: cand.registration_fee_name || info.fee_name || 'Formulir Pendaftaran',
+                    amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
                 });
+            } else if (Array.isArray(p.items) && p.items.length > 0) {
+                pItems = p.items.map(it => ({
+                    name: it.fee_name || 'Komponen Biaya',
+                    amount: Number(it.amount || 0)
+                }));
+            } else if (Array.isArray(info.selected_items) && info.selected_items.length > 0) {
+                pItems = info.selected_items.map(it => ({
+                    name: it.name || 'Komponen Biaya',
+                    amount: Number(it.amount || 0)
+                }));
+            } else {
+                pItems.push({
+                    name: 'Pelunasan / Cicilan Biaya Masuk',
+                    amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
+                });
+            }
 
-                const itemsHtml = items.map(it => `
-                    <div class="flex items-center justify-between py-1.5 text-xs">
-                        <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald flex-shrink-0"></span>
-                            <span>${it.name}</span>
+            pItems.forEach(it => {
+                const name = it.name;
+                if (!itemTracker[name]) {
+                    itemTracker[name] = {
+                        name: name,
+                        payments: [],
+                        totalPaid: 0
+                    };
+                }
+                itemTracker[name].payments.push({
+                    payment_id: p.id,
+                    invoice_number: p.invoice_number,
+                    date: p.created_at,
+                    payment_method: p.payment_method,
+                    amount: it.amount
+                });
+                itemTracker[name].totalPaid += it.amount;
+            });
+        });
+
+        // 3. GROUPED INSTALLMENT SECTION (JIKA ADA KOMPONEN YANG DICICIL LEBIH DARI 1X)
+        const installmentComponents = Object.values(itemTracker).filter(it => it.payments.length > 1);
+
+        if (installmentComponents.length > 0) {
+            const instGroupContainer = document.createElement('div');
+            instGroupContainer.className = 'space-y-3 pt-2';
+            
+            let instHtml = `
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <h5 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        Kelompok Rincian Cicilan & Angsuran Komponen
+                    </h5>
+                </div>
+            `;
+
+            installmentComponents.forEach(comp => {
+                const feeMatch = allItemsList.find(f => f.name.toLowerCase() === comp.name.toLowerCase());
+                const compGross = feeMatch ? Number(feeMatch.amount || 0) : comp.totalPaid;
+                const compPaid = comp.totalPaid;
+                const compRemaining = Math.max(0, compGross - compPaid);
+                const isCompLunas = (compRemaining <= 0);
+                const lastPayment = comp.payments[comp.payments.length - 1];
+
+                let stepsHtml = comp.payments.map((inst, idx) => {
+                    const instDate = new Date(inst.date).toLocaleString('id-ID', {
+                        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+                    return `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 text-xs shadow-2xs">
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                    Cicilan #${idx + 1}
+                                </span>
+                                <div>
+                                    <span class="font-mono font-black text-slate-800 dark:text-white text-xs block">
+                                        Rp ${inst.amount.toLocaleString('id-ID')}
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                                        ${inst.invoice_number} • ${instDate} WIB (${inst.payment_method || 'Online'})
+                                    </span>
+                                </div>
+                            </div>
+                            <a href="/admin/payments/receipt/${inst.payment_id}" target="_blank" download class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition">
+                                <i data-lucide="download" class="w-3.5 h-3.5 text-blue-600"></i> Kwitansi #${idx + 1}
+                            </a>
+                        </div>
+                    `;
+                }).join('');
+
+                instHtml += `
+                    <div class="p-4.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/80 space-y-3.5">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-100 dark:border-blue-900/60 pb-3">
+                            <div>
+                                <span class="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 block uppercase tracking-wider">
+                                    Komponen Pembayaran Dicicil
+                                </span>
+                                <h4 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 mt-0.5">
+                                    <span>${comp.name}</span>
+                                    ${isCompLunas 
+                                        ? `<span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300">LUNAS (${comp.payments.length}x Cicilan)</span>`
+                                        : `<span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300">DICICIL (${comp.payments.length}x Pembayaran)</span>`
+                                    }
+                                </h4>
+                            </div>
+                            ${isCompLunas ? `
+                                <a href="/admin/payments/receipt/${lastPayment.payment_id}?type=settlement&item_name=${encodeURIComponent(comp.name)}" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition self-start sm:self-center">
+                                    <i data-lucide="award" class="w-3.5 h-3.5 text-yellow-300"></i>
+                                    <span>Unduh Kwitansi Utama (Pelunasan)</span>
+                                </a>
+                            ` : ''}
+                        </div>
+
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                                Riwayat Transaksi Angsuran:
+                            </span>
+                            <div class="space-y-2">
+                                ${stepsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            instGroupContainer.innerHTML = instHtml;
+            listContainer.appendChild(instGroupContainer);
+        }
+
+        // 4. CHRONOLOGICAL ALL INVOICE CARDS SECTION
+        const fullLogsHeader = document.createElement('div');
+        fullLogsHeader.className = 'flex items-center gap-2 pt-3';
+        fullLogsHeader.innerHTML = `
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <h5 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                Daftar Seluruh Transaksi & Invoice Masuk
+            </h5>
+        `;
+        listContainer.appendChild(fullLogsHeader);
+
+        successPayments.forEach(p => {
+            const isRegFee = (p.payment_type === 'registration_fee');
+
+            // Dynamic Category Badges
+            const catList = (p.category_names && p.category_names.length > 0) 
+                ? p.category_names 
+                : [isRegFee ? 'Formulir Pendaftaran' : 'Biaya Administrasi'];
+
+            const categoryBadgesHtml = catList.map(catName => {
+                let badgeStyle = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+                const lower = catName.toLowerCase();
+                if (lower.includes('formulir') || lower.includes('pendaftaran') || lower.includes('registrasi')) {
+                    badgeStyle = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+                } else if (lower.includes('tambahan') || lower.includes('non-formal') || lower.includes('tpa') || lower.includes('tpq')) {
+                    badgeStyle = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+                }
+                return `<span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${badgeStyle}">${catName}</span>`;
+            }).join(' ');
+
+            // Parse items
+            let items = [];
+            let info = p.payment_info;
+            if (typeof info === 'string') {
+                try { info = JSON.parse(info); } catch(e) { info = {}; }
+            }
+            info = info || {};
+
+            if (isRegFee) {
+                items.push({
+                    name: cand.registration_fee_name || info.fee_name || 'Formulir Pendaftaran',
+                    amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
+                });
+            } else if (Array.isArray(p.items) && p.items.length > 0) {
+                items = p.items.map(it => ({
+                    name: it.fee_name || 'Komponen Biaya',
+                    amount: Number(it.amount || 0)
+                }));
+            } else if (Array.isArray(info.selected_items) && info.selected_items.length > 0) {
+                items = info.selected_items.map(it => ({
+                    name: it.name || 'Komponen Biaya',
+                    amount: Number(it.amount || 0)
+                }));
+            } else {
+                items.push({
+                    name: 'Pelunasan / Cicilan Biaya Masuk',
+                    amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
+                });
+            }
+
+            // Check if this payment contains an installment item
+            let hasInstallmentItemInThisTx = false;
+            let primaryItemInstNo = 1;
+            let canDownloadSettlement = false;
+            let settlementItemName = '';
+
+            const itemsHtml = items.map(it => {
+                const tracker = itemTracker[it.name];
+                let installmentTag = '';
+                if (tracker && tracker.payments.length > 1) {
+                    hasInstallmentItemInThisTx = true;
+                    const instIdx = tracker.payments.findIndex(x => x.payment_id === p.id);
+                    const instNo = (instIdx !== -1) ? (instIdx + 1) : 1;
+                    primaryItemInstNo = instNo;
+                    
+                    const feeMatch = allItemsList.find(f => f.name.toLowerCase() === it.name.toLowerCase());
+                    const compGross = feeMatch ? Number(feeMatch.amount || 0) : tracker.totalPaid;
+                    const isLastPaymentForThis = (instIdx === tracker.payments.length - 1);
+                    const isSettled = (tracker.totalPaid >= compGross);
+
+                    if (isLastPaymentForThis && isSettled) {
+                        canDownloadSettlement = true;
+                        settlementItemName = it.name;
+                    }
+
+                    installmentTag = `
+                        <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
+                            (Setoran Angsuran #${instNo} dari ${tracker.payments.length}${isLastPaymentForThis && isSettled ? ' • Pelunasan 100%' : ''})
                         </span>
-                        <span class="font-mono font-extrabold text-slate-800 dark:text-slate-100">
+                    `;
+                }
+                return `
+                    <div class="flex items-center justify-between py-2 text-xs">
+                        <span class="font-bold text-slate-700 dark:text-slate-200 flex flex-col">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald flex-shrink-0"></span>
+                                <span>${it.name}</span>
+                            </span>
+                            ${installmentTag}
+                        </span>
+                        <span class="font-mono font-black text-slate-800 dark:text-slate-100">
                             Rp ${it.amount.toLocaleString('id-ID')}
                         </span>
                     </div>
-                `).join('');
+                `;
+            }).join('');
 
-                const row = document.createElement('div');
-                row.className = 'p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3 shadow-xs';
-                row.innerHTML = `
-                    <!-- Header: Invoice, Categories, Status -->
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="font-mono font-black text-xs text-slate-900 dark:text-white select-all">${p.invoice_number}</span>
-                                ${categoryBadgesHtml}
-                            </div>
-                            <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
-                                <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i> ${formattedDate} WIB
-                            </span>
+            const baseAmount = Number(p.base_amount || (p.amount - (p.admin_fee || 0)));
+            const adminFee = Number(p.admin_fee || (p.amount - baseAmount));
+            const totalAmount = Number(p.amount);
+
+            const formattedDate = new Date(p.created_at).toLocaleString('id-ID', {
+                day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            const receiptBtnLabel = hasInstallmentItemInThisTx 
+                ? `Unduh Kwitansi Cicilan #${primaryItemInstNo}`
+                : `Unduh Kwitansi PDF`;
+
+            const row = document.createElement('div');
+            row.className = 'p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3.5 shadow-xs';
+            row.innerHTML = `
+                <!-- Header: Invoice, Categories, Status -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-mono font-black text-xs text-slate-900 dark:text-white select-all">${p.invoice_number}</span>
+                            ${categoryBadgesHtml}
+                            ${hasInstallmentItemInThisTx ? `
+                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300">
+                                    Angsuran #${primaryItemInstNo}
+                                </span>
+                            ` : ''}
                         </div>
-                        <span class="self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5 shadow-2xs">
-                            <i data-lucide="check-circle-2" class="w-3 h-3"></i>
-                            <span>LUNAS / BERHASIL</span>
+                        <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                            <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i> ${formattedDate} WIB
                         </span>
                     </div>
+                    <span class="self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5 shadow-2xs">
+                        <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                        <span>${hasInstallmentItemInThisTx ? `SETORAN ANGSURAN BERHASIL` : `LUNAS / BERHASIL`}</span>
+                    </span>
+                </div>
 
-                    <!-- Items Detail -->
-                    <div class="p-3 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
-                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
-                            Rincian Komponen Biaya:
-                        </span>
-                        <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
-                            ${itemsHtml}
-                        </div>
+                <!-- Items Detail -->
+                <div class="p-3.5 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
+                        Rincian Komponen Biaya:
+                    </span>
+                    <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                        ${itemsHtml}
                     </div>
+                </div>
 
-                    <!-- Financial Summary Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl bg-slate-100/70 dark:bg-slate-900/40 text-xs border border-slate-200/50 dark:border-slate-800">
-                        <div>
-                            <span class="text-[10px] text-slate-400 block font-medium">Metode Pembayaran</span>
-                            <span class="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase block truncate">
-                                ${p.payment_method || 'Online'}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 block font-medium">Nominal Pokok</span>
-                            <span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-xs block">
-                                Rp ${baseAmount.toLocaleString('id-ID')}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 block font-medium">Biaya Admin PG</span>
-                            <span class="font-mono font-bold text-slate-500 dark:text-slate-400 text-xs block">
-                                + Rp ${adminFee.toLocaleString('id-ID')}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">Total Transaksi</span>
-                            <span class="font-mono font-black text-slate-900 dark:text-white text-xs block">
-                                Rp ${totalAmount.toLocaleString('id-ID')}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Footer Action: Receipt Button -->
-                    <div class="flex items-center justify-between pt-1 text-xs">
-                        <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1.5">
-                            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-                            Kas Berhasil Tercatat
+                <!-- Financial Summary Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl bg-slate-100/70 dark:bg-slate-900/40 text-xs border border-slate-200/50 dark:border-slate-800">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block font-medium">Metode Pembayaran</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase block truncate">
+                            ${p.payment_method || 'Online'}
                         </span>
-                        <a href="/admin/payments/receipt/${p.id}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm transition">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block font-medium">Nominal Pokok</span>
+                        <span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-xs block">
+                            Rp ${baseAmount.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block font-medium">Biaya Admin PG</span>
+                        <span class="font-mono font-bold text-slate-500 dark:text-slate-400 text-xs block">
+                            + Rp ${adminFee.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">Total Transaksi</span>
+                        <span class="font-mono font-black text-slate-900 dark:text-white text-xs block">
+                            Rp ${totalAmount.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Footer Action: Receipt Button -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-xs">
+                    <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                        Kas Berhasil Tercatat
+                    </span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${canDownloadSettlement ? `
+                            <a href="/admin/payments/receipt/${p.id}?type=settlement&item_name=${encodeURIComponent(settlementItemName)}" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-sm transition">
+                                <i data-lucide="award" class="w-3.5 h-3.5 text-yellow-200"></i>
+                                <span>Kwitansi Utama</span>
+                            </a>
+                        ` : ''}
+                        <a href="/admin/payments/receipt/${p.id}" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            <span>Unduh Kwitansi PDF</span>
+                            <span>${receiptBtnLabel}</span>
                         </a>
                     </div>
-                `;
-                listContainer.appendChild(row);
-            });
-        }
+                </div>
+            `;
+            listContainer.appendChild(row);
+        });
 
         document.getElementById('transactions-modal').classList.remove('hidden');
         if (window.lucide) lucide.createIcons();

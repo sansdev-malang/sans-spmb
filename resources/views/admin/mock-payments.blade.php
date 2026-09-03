@@ -215,12 +215,29 @@
                             </td>
                             <td class="py-4 px-6">
                                 @php
-                                    $fee = \App\Models\SpmbFee::where('name', 'like', '%' . ($pay->registration->admission_level ?? 'TK A') . '%')->first()
-                                        ?? \App\Models\SpmbFee::where('is_active', true)->first()
-                                        ?? (object)['name' => 'Pendaftaran TK A'];
+                                    $reg = $pay->registration;
+                                    if ($pay->payment_type === 'registration_fee') {
+                                        $fee = $reg ? $reg->getRegistrationFee() : null;
+                                        $feeTitle = $fee ? $fee->name : ('Formulir Pendaftaran ' . ($reg->unit->name ?? ''));
+                                        $catTitle = 'Formulir Pendaftaran';
+                                    } else {
+                                        $itemNames = [];
+                                        if ($pay->items && $pay->items->isNotEmpty()) {
+                                            $itemNames = $pay->items->pluck('fee_name')->toArray();
+                                        } elseif (isset($pay->payment_info['selected_items']) && is_array($pay->payment_info['selected_items'])) {
+                                            $itemNames = array_column($pay->payment_info['selected_items'], 'name');
+                                        }
+                                        
+                                        if (!empty($itemNames)) {
+                                            $feeTitle = implode(', ', $itemNames);
+                                        } else {
+                                            $feeTitle = 'Biaya Administrasi Masuk';
+                                        }
+                                        $catTitle = 'Pelunasan Biaya Administrasi';
+                                    }
                                 @endphp
-                                <div class="font-semibold text-slate-700 text-xs">{{ $fee->name }}</div>
-                                <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $fee->category->name ?? 'Formulir Pendaftaran' }}</div>
+                                <div class="font-semibold text-slate-700 text-xs" title="{{ $feeTitle }}">{{ \Illuminate\Support\Str::limit($feeTitle, 45) }}</div>
+                                <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $catTitle }}</div>
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">

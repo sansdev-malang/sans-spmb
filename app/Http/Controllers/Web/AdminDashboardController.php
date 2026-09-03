@@ -294,6 +294,7 @@ class AdminDashboardController extends Controller
             'discount_notes' => 'nullable|string|max:255',
             'installment_mode' => 'required|in:none,all,selective',
             'installment_allowed_fee_ids' => 'nullable|array',
+            'installment_fee_ids' => 'nullable|array',
             'min_installment_amount' => 'nullable|numeric|min:0',
         ]);
 
@@ -330,7 +331,10 @@ class AdminDashboardController extends Controller
         }
 
         $installmentMode = $validated['installment_mode'];
-        $allowedFeeIds = ($installmentMode === 'selective') ? ($validated['installment_allowed_fee_ids'] ?? []) : null;
+        $allowedFeeIds = null;
+        if ($installmentMode === 'selective') {
+            $allowedFeeIds = $validated['installment_allowed_fee_ids'] ?? ($validated['installment_fee_ids'] ?? []);
+        }
 
         $registration->update([
             'discount_mode' => $discountMode,
