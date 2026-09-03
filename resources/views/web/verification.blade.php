@@ -167,11 +167,20 @@
 
             <!-- Next steps instruction -->
             @if(in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']))
-                <div class="bg-emerald-50/10 border border-brand-emerald/30 p-5 rounded-xl space-y-2">
-                    <h4 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">Langkah Selanjutnya</h4>
-                    <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
-                        Dokumen pendaftaran Anda telah lengkap diverifikasi dengan benar. Tahapan sesi Ta'aruf kini telah aktif. Silakan buka menu <strong>Ta'aruf</strong> untuk melihat ketentuan kehadiran tatap muka di unit sekolah.
-                    </p>
+                <div class="bg-emerald-50/20 border border-brand-emerald/30 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-emerald"></i>
+                            Langkah Selanjutnya
+                        </h4>
+                        <p class="text-xs text-slate-650 leading-relaxed max-w-xl">
+                            Dokumen pendaftaran Anda telah lengkap diverifikasi dengan benar. Tahapan sesi Ta'aruf kini telah aktif. Silakan lanjut ke tahapan <strong>Ta'aruf</strong> untuk melihat ketentuan kehadiran tatap muka di unit sekolah.
+                        </p>
+                    </div>
+                    <a href="{{ route('dashboard.observation', $registration->id) }}" class="w-full sm:w-auto whitespace-nowrap bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
+                        <span>Lanjutkan ke Ta'aruf</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
                 </div>
             @endif
 
