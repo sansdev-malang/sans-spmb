@@ -16,8 +16,8 @@ class SpmbPeriodWaveTypeSeeder extends Seeder
     {
         // 1. Periods
         $periods = [
-            ['id' => 1, 'year' => '2027-2028', 'is_active' => 1],
-            ['id' => 2, 'year' => '2029-2030', 'is_active' => 0],
+            ['year' => '2027-2028', 'is_active' => 1],
+            ['year' => '2029-2030', 'is_active' => 0],
         ];
         foreach ($periods as $period) {
             SpmbPeriod::updateOrCreate(['year' => $period['year']], [
@@ -40,7 +40,7 @@ class SpmbPeriodWaveTypeSeeder extends Seeder
             [
                 'name' => 'Gelombang 2',
                 'description' => 'Pendaftaran gelombang kedua reguler',
-                'is_active' => 0,
+                'is_active' => 1,
             ],
         ];
         foreach ($waves as $wave) {
@@ -60,12 +60,12 @@ class SpmbPeriodWaveTypeSeeder extends Seeder
             [
                 'name' => 'Mutasi Masuk / Pindahan',
                 'description' => 'Jalur pendaftaran bagi siswa mutasi atau pindahan dari sekolah lain',
-                'is_active' => 0,
+                'is_active' => 1,
             ],
             [
                 'name' => 'Lanjutan / Internal',
                 'description' => 'Jalur khusus bagi lulusan/alumni internal sekolah Anak Saleh yang melanjutkan pendidikan ke jenjang berikutnya.',
-                'is_active' => 0,
+                'is_active' => 1,
             ],
         ];
         foreach ($types as $type) {

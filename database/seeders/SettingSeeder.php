@@ -51,6 +51,7 @@ class SettingSeeder extends Seeder
                 "TTDX5e5Qi6zAtUOOF1rPV9B8sWTmyLDkqOMGurIoLV0goItbLIbj1usf/sAmCHIz\n" .
                 "HXAZEuYXVTbkUdedO9K0jqRc\n" .
                 "-----END PRIVATE KEY-----"],
+            ['key' => 'spmb_qrcode_url', 'value' => 'https://spmb.sans.sch.id'],
         ];
 
         foreach ($settings as $setting) {

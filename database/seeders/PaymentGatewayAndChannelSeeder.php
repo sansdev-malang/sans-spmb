@@ -16,7 +16,6 @@ class PaymentGatewayAndChannelSeeder extends Seeder
         // 1. Payment Gateways
         $gateways = [
             [
-                'id' => 1,
                 'name' => 'Winpay Gateway',
                 'code' => 'winpay',
                 'is_active' => true,
@@ -28,145 +27,89 @@ class PaymentGatewayAndChannelSeeder extends Seeder
                     ['key' => 'public_key', 'type' => 'textarea', 'label' => 'Public Key (RSA)'],
                 ],
             ],
-            [
-                'id' => 2,
-                'name' => 'BNI SNAP QRIS MPM',
-                'code' => 'bni',
-                'is_active' => true,
-                'settings_schema' => [
-                    ['key' => 'merchant_id', 'type' => 'text', 'label' => 'Merchant ID'],
-                    ['key' => 'terminal_id', 'type' => 'text', 'label' => 'Terminal ID (TID)'],
-                    ['key' => 'client_id', 'type' => 'text', 'label' => 'Client ID'],
-                    ['key' => 'client_secret', 'type' => 'password', 'label' => 'Client Secret'],
-                    ['key' => 'private_key', 'type' => 'textarea', 'label' => 'Private Key (RSA)'],
-                ],
-            ],
         ];
 
         foreach ($gateways as $gw) {
-            PaymentGateway::updateOrCreate(['id' => $gw['id']], [
+            PaymentGateway::updateOrCreate(['code' => $gw['code']], [
                 'name' => $gw['name'],
-                'code' => $gw['code'],
                 'is_active' => $gw['is_active'],
                 'settings_schema' => $gw['settings_schema'],
             ]);
         }
 
+        $winpayId = PaymentGateway::where('code', 'winpay')->first()?->id ?? 1;
+
         // 2. Payment Channels
         $channels = [
-            // Winpay Channels (gateway id 1)
             [
                 'code' => 'MANDIRI',
                 'name' => 'Mandiri Virtual Account',
                 'type' => 'va',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'BCA',
                 'name' => 'BCA Virtual Account',
                 'type' => 'va',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'BNI',
                 'name' => 'BNI Virtual Account',
                 'type' => 'va',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'BRI',
                 'name' => 'BRI Virtual Account',
                 'type' => 'va',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
-            ],
-            [
-                'code' => 'PERMATA',
-                'name' => 'Permata Virtual Account',
-                'type' => 'va',
-                'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'BSI',
                 'name' => 'BSI Virtual Account',
                 'type' => 'va',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
-            ],
-            [
-                'code' => 'MUAMALAT',
-                'name' => 'Muamalat Virtual Account',
-                'type' => 'va',
-                'is_active' => true,
-                'payment_gateway_id' => 1,
-            ],
-            [
-                'code' => 'CIMB',
-                'name' => 'CIMB Niaga Virtual Account',
-                'type' => 'va',
-                'is_active' => true,
-                'payment_gateway_id' => 1,
-            ],
-            [
-                'code' => 'SINARMAS',
-                'name' => 'Sinarmas Virtual Account',
-                'type' => 'va',
-                'is_active' => true,
-                'payment_gateway_id' => 1,
-            ],
-            [
-                'code' => 'BNC',
-                'name' => 'BNC Virtual Account',
-                'type' => 'va',
-                'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'QRIS',
                 'name' => 'QRIS',
                 'type' => 'qris',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'DANA',
                 'name' => 'DANA',
                 'type' => 'ewallet',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
-                'code' => 'SHOPEEPAY',
+                'code' => 'SPAY',
                 'name' => 'ShopeePay',
                 'type' => 'ewallet',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'INDOMARET',
                 'name' => 'Indomaret',
                 'type' => 'retail',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
+                'payment_gateway_id' => $winpayId,
             ],
             [
                 'code' => 'ALFAMART',
                 'name' => 'Alfamart',
                 'type' => 'retail',
                 'is_active' => true,
-                'payment_gateway_id' => 1,
-            ],
-            // BNI SNAP Channels (gateway id 2)
-            [
-                'code' => 'BNI_QRIS',
-                'name' => 'BNI SNAP QRIS',
-                'type' => 'qris',
-                'is_active' => true,
-                'payment_gateway_id' => 2,
+                'payment_gateway_id' => $winpayId,
             ],
         ];
 

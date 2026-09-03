@@ -21,7 +21,7 @@ class SpmbFormStepAndFieldSeeder extends Seeder
 
         // 1. Form Steps
         $formSteps = [
-            ['id' => 1, 'title' => 'Pilihan Program & Layanan', 'order' => 1, 'is_active' => 1],
+            ['id' => 1, 'title' => 'Program & Layanan', 'order' => 1, 'is_active' => 1],
             ['id' => 2, 'title' => 'Informasi Calon Siswa', 'order' => 2, 'is_active' => 1],
             ['id' => 3, 'title' => 'Tempat Tinggal', 'order' => 3, 'is_active' => 1],
             ['id' => 4, 'title' => 'Data Orang Tua', 'order' => 4, 'is_active' => 1],
