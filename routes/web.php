@@ -114,6 +114,29 @@ Route::middleware('auth')->group(function () {
             if ($request->filled('unit_id')) {
                 $baseStatsQuery->where('spmb_unit_id', $request->unit_id);
             }
+            if ($request->filled('wave_id')) {
+                $baseStatsQuery->where('spmb_wave_id', $request->wave_id);
+            }
+            if ($request->filled('type_id')) {
+                $baseStatsQuery->where('spmb_type_id', $request->type_id);
+            }
+            if ($request->filled('class_program_id')) {
+                $baseStatsQuery->where('spmb_class_program_id', $request->class_program_id);
+            }
+            if ($request->filled('start_date')) {
+                $baseStatsQuery->whereDate('created_at', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $baseStatsQuery->whereDate('created_at', '<=', $request->end_date);
+            }
+            if ($request->filled('search')) {
+                $search = trim($request->search);
+                $baseStatsQuery->where(function($q) use ($search) {
+                    $q->where('candidate_name', 'like', "%{$search}%")
+                      ->orWhere('parent_phone', 'like', "%{$search}%")
+                      ->orWhere('nik', 'like', "%{$search}%");
+                });
+            }
 
             $totalCount = (clone $baseStatsQuery)->count();
             $maleCount = (clone $baseStatsQuery)->whereIn('gender', ['L', 'male', 'Laki-laki', 'laki-laki', 'Laki-Laki'])->count();

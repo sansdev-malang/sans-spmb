@@ -4,7 +4,7 @@
 @section('page_title', 'Data Pendaftar (Aktif)')
 
 @section('content')
-<div class="space-y-6">
+<div id="candidates-container" class="space-y-6" hx-boost="true" hx-target="#candidates-container" hx-select="#candidates-container">
     <!-- Header Summary Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -174,12 +174,9 @@
     </div>
 
     <!-- Candidate List Table -->
-    <div id="candidates-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#candidates-card" hx-select="#candidates-card">
+    <div id="candidates-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
          <!-- Search & Filter Form -->
         <form id="candidateFilterForm" action="{{ route('admin.candidates') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
-            @if(request('unit_id'))
-                <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
-            @endif
             @if(request('stage') && request('stage') !== 'all')
                 <input type="hidden" name="stage" value="{{ request('stage') }}">
             @endif
