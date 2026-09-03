@@ -12,8 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UserSeeder::class,
             SpmbUnitAndGradeSeeder::class,
+            UserSeeder::class,
             SpmbClassProgramAndServiceSeeder::class,
             SpmbPeriodWaveTypeSeeder::class,
             SpmbFeeCategoryAndFeeSeeder::class,
