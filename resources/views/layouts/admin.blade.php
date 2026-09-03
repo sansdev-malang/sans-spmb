@@ -440,6 +440,13 @@
                     {{ Route::is('admin.verification') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
                     <i data-lucide="check-square" class="w-4 h-4"></i> <span class="sidebar-text">Verifikasi Data</span>
                 </a>
+
+                <a href="{{ route('admin.taaruf') }}" 
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.taaruf') ? 'active' : '' }}
+                    {{ Route::is('admin.taaruf') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="calendar-check" class="w-4 h-4"></i> <span class="sidebar-text">Jadwal Ta'aruf</span>
+                </a>
                 
                 <a href="{{ route('admin.candidates') }}" 
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 

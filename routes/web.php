@@ -18,6 +18,7 @@ use App\Http\Controllers\Web\SpmbFormSettingsController;
 use App\Http\Controllers\Web\SpmbAgreementsController;
 use App\Http\Controllers\Web\PaymentGatewayController;
 use App\Http\Controllers\Web\PaymentChannelController;
+use App\Http\Controllers\Web\AdminTaarufController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,6 +95,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/candidates', [AdminCandidateController::class, 'index'])->name('admin.candidates');
         Route::post('/admin/candidates/{id}/installment-settings', [AdminDashboardController::class, 'updateInstallmentSettings'])->name('admin.candidates.installment-settings');
         Route::get('/admin/history', [AdminCandidateController::class, 'history'])->name('admin.history');
+
+        // Admin Ta'aruf / Observation Schedule Management
+        Route::get('/admin/taaruf', [AdminTaarufController::class, 'index'])->name('admin.taaruf');
+        Route::post('/admin/taaruf/{id}/schedule', [AdminTaarufController::class, 'updateSchedule'])->name('admin.taaruf.schedule.update');
+        Route::delete('/admin/taaruf/{id}/schedule', [AdminTaarufController::class, 'deleteSchedule'])->name('admin.taaruf.schedule.delete');
+        Route::post('/admin/taaruf/{id}/complete', [AdminTaarufController::class, 'completeTaaruf'])->name('admin.taaruf.complete');
+        Route::post('/admin/taaruf/units/{unitId}/settings', [AdminTaarufController::class, 'updateUnitSettings'])->name('admin.taaruf.units.settings');
 
         // Admin Billing & Payment Transaction Pages
         Route::get('/admin/payments/data', [AdminPaymentController::class, 'data'])->name('admin.payments.data');

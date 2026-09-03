@@ -187,8 +187,31 @@
 
                         <!-- Form Block -->
                         @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
-                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm {{ ($step->is_completed && !$hasInvalidFields) ? 'hidden' : '' }}">
+                            @php
+                                $stepFieldNames = $step->fields->pluck('field_name')->toArray();
+                                $stepHasErrors = $errors->any() && count(array_intersect($stepFieldNames, array_keys($errors->messages()))) > 0;
+                            @endphp
+                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm {{ ($step->is_completed && !$hasInvalidFields && !$stepHasErrors) ? 'hidden' : '' }}">
                                 @csrf
+
+                                @if($stepHasErrors)
+                                    <div class="p-4 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-300 text-xs space-y-1.5 shadow-sm">
+                                        <div class="flex items-center gap-2 font-bold text-red-800 dark:text-red-200">
+                                            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
+                                            <span>Terdapat data/berkas yang belum lengkap pada tahapan ini:</span>
+                                        </div>
+                                        <ul class="list-disc list-inside text-[11px] font-semibold pl-1 space-y-0.5">
+                                            @foreach($stepFieldNames as $sfn)
+                                                @if($errors->has($sfn))
+                                                    @foreach($errors->get($sfn) as $msg)
+                                                        <li>{{ $msg }}</li>
+                                                    @endforeach
+                                                @endif
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     @foreach($step->fields as $field)
                                         @php
@@ -215,6 +238,7 @@
                                                 }
                                             }
                                             $isFullWidth = in_array($field->type, ['textarea', 'file']) || strlen($fieldLabel) > 30;
+                                            $hasFieldError = $errors->has($field->field_name);
                                         @endphp
                                         <div class="{{ $isFullWidth ? 'md:col-span-2' : '' }}">
                                             <label class="block text-xs font-semibold text-slate-600 mb-1">
@@ -223,7 +247,12 @@
                                             
                                             @if($field->field_name === 'extra_services')
                                                  @php
-                                                     $activeServices = \App\Models\SpmbExtraService::where('is_active', true)->get();
+                                                     $activeServices = \App\Models\SpmbExtraService::where('is_active', true)
+                                                          ->where(function($q) use ($registration) {
+                                                              $q->whereNull('spmb_unit_id')
+                                                                ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
+                                                          })
+                                                          ->get();
                                                      $selectedServiceIds = $registration->extraServices->pluck('id')->toArray();
                                                  @endphp
                                                  <div class="flex flex-wrap gap-2.5 mt-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
@@ -276,28 +305,28 @@
                                                 <div class="space-y-2" id="wrapper-{{ $uniqueId }}">
                                                     <!-- Drag & Drop Dropzone Box -->
                                                     <div id="dropzone-{{ $uniqueId }}" 
-                                                         class="dropzone-box group relative border-2 border-dashed border-slate-300 dark:border-slate-750 hover:border-brand-emerald dark:hover:border-emerald-500 rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer bg-slate-50/70 hover:bg-emerald-50/30 dark:bg-slate-900/40 dark:hover:bg-slate-900/80 text-center"
+                                                         class="dropzone-box group relative border-2 border-dashed {{ $hasFieldError ? 'border-red-400 bg-red-50/40 ring-4 ring-red-500/20' : 'border-slate-300 dark:border-slate-750 hover:border-brand-emerald dark:hover:border-emerald-500 bg-slate-50/70 hover:bg-emerald-50/30 dark:bg-slate-900/40 dark:hover:bg-slate-900/80' }} rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer text-center"
                                                          data-input-id="input-{{ $uniqueId }}"
                                                          data-unique-id="{{ $uniqueId }}">
                                                         
-                                                        <!-- Hidden Real File Input -->
+                                                        <!-- Hidden Real File Input (without native required to prevent silent browser freeze) -->
                                                         <input type="file" 
                                                                id="input-{{ $uniqueId }}" 
                                                                name="{{ $field->field_name }}" 
                                                                class="hidden file-input-element" 
                                                                data-unique-id="{{ $uniqueId }}"
                                                                data-has-existing="{{ $hasExisting ? '1' : '0' }}"
+                                                               data-is-required="{{ $field->is_required ? '1' : '0' }}"
                                                                data-label="{{ $fieldLabel }}"
-                                                               accept=".pdf,.jpg,.jpeg,.png"
-                                                               {{ ($field->is_required && empty($val)) ? 'required' : '' }}>
+                                                               accept=".pdf,.jpg,.jpeg,.png">
 
                                                         <!-- Empty / Prompt State -->
                                                         <div id="prompt-{{ $uniqueId }}" class="{{ $hasExisting ? 'hidden' : 'block' }} pointer-events-none">
-                                                            <div class="w-12 h-12 mx-auto mb-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-brand-emerald dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
-                                                                <i data-lucide="cloud-upload" class="w-6 h-6"></i>
+                                                            <div class="w-12 h-12 mx-auto mb-2 rounded-2xl {{ $hasFieldError ? 'bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400' : 'bg-emerald-50 dark:bg-emerald-950/50 text-brand-emerald dark:text-emerald-400' }} flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
+                                                                <i data-lucide="{{ $hasFieldError ? 'alert-triangle' : 'cloud-upload' }}" class="w-6 h-6"></i>
                                                             </div>
-                                                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">
-                                                                <span class="text-brand-emerald dark:text-emerald-400 underline decoration-dashed underline-offset-4 font-extrabold">Klik untuk memilih</span> atau seret file ke sini
+                                                            <p class="text-xs font-bold {{ $hasFieldError ? 'text-red-700 dark:text-red-300' : 'text-slate-700 dark:text-slate-200' }}">
+                                                                <span class="{{ $hasFieldError ? 'text-red-700 dark:text-red-300 underline font-black' : 'text-brand-emerald dark:text-emerald-400 underline decoration-dashed font-extrabold' }} underline-offset-4">Klik untuk memilih</span> atau seret file ke sini
                                                             </p>
                                                             <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                                                                 Format yang didukung: PDF, JPG, JPEG, PNG (Maks. 2 MB)
@@ -363,7 +392,9 @@
                                             @endif
 
                                             @error($field->field_name)
-                                                <span class="text-red-600 text-xs mt-1 block font-bold">{{ $message }}</span>
+                                                <span class="text-red-600 text-xs mt-1 block font-bold flex items-center gap-1">
+                                                    <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> {{ $message }}
+                                                </span>
                                             @enderror
                                         </div>
                                     @endforeach
@@ -554,6 +585,14 @@
                 const promptBox = document.getElementById('prompt-' + uniqueId);
                 const existingBox = document.getElementById('existing-' + uniqueId);
                 const previewBox = document.getElementById('preview-' + uniqueId);
+                const dropzone = document.getElementById('dropzone-' + uniqueId);
+
+                // Clear any previous error highlighting
+                if (dropzone) {
+                    dropzone.classList.remove('border-red-400', 'bg-red-50/40', 'ring-4', 'ring-red-500/20');
+                    const errNode = dropzone.parentElement.querySelector('.client-file-error');
+                    if (errNode) errNode.remove();
+                }
 
                 const fileNameEl = document.getElementById('file-name-' + uniqueId);
                 const fileSizeEl = document.getElementById('file-size-' + uniqueId);
@@ -597,6 +636,13 @@
                 const promptBox = document.getElementById('prompt-' + uniqueId);
                 const existingBox = document.getElementById('existing-' + uniqueId);
                 const previewBox = document.getElementById('preview-' + uniqueId);
+                const dropzone = document.getElementById('dropzone-' + uniqueId);
+
+                if (dropzone) {
+                    dropzone.classList.remove('border-red-400', 'bg-red-50/40', 'ring-4', 'ring-red-500/20');
+                    const errNode = dropzone.parentElement.querySelector('.client-file-error');
+                    if (errNode) errNode.remove();
+                }
 
                 if (previewBox) previewBox.classList.add('hidden');
 
@@ -608,7 +654,7 @@
                 }
             };
 
-            // 2. AJAX Form Submission with Real-time Upload Progress Percentage
+            // 2. AJAX Form Submission with Real-time Upload Progress Percentage & Client-Side Validation
             const formsWithFiles = document.querySelectorAll('form[enctype="multipart/form-data"]');
             const progressModal = document.getElementById('uploadProgressModal');
             const progressBar = document.getElementById('uploadModalBar');
@@ -621,7 +667,57 @@
 
             formsWithFiles.forEach(form => {
                 form.addEventListener('submit', function(e) {
-                    const fileInputs = form.querySelectorAll('input[type="file"]');
+                    // 1. Client-Side Validation for Required File Inputs
+                    let missingRequiredFile = false;
+                    let firstMissingEl = null;
+
+                    const fileInputs = form.querySelectorAll('.file-input-element');
+                    fileInputs.forEach(fi => {
+                        const isRequired = fi.getAttribute('data-is-required') === '1';
+                        const hasExisting = fi.getAttribute('data-has-existing') === '1';
+                        const hasNewFile = (fi.files && fi.files.length > 0);
+                        const uniqueId = fi.getAttribute('data-unique-id');
+                        const label = fi.getAttribute('data-label') || 'Berkas';
+                        const dropzone = document.getElementById('dropzone-' + uniqueId);
+
+                        if (isRequired && !hasExisting && !hasNewFile) {
+                            missingRequiredFile = true;
+                            if (!firstMissingEl) firstMissingEl = dropzone || fi;
+
+                            if (dropzone) {
+                                dropzone.classList.add('border-red-400', 'bg-red-50/40', 'ring-4', 'ring-red-500/20');
+                                let errNode = dropzone.parentElement.querySelector('.client-file-error');
+                                if (!errNode) {
+                                    errNode = document.createElement('div');
+                                    errNode.className = 'client-file-error text-red-600 text-xs mt-1.5 font-bold flex items-center gap-1';
+                                    errNode.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> ${label} wajib diunggah!`;
+                                    dropzone.parentElement.appendChild(errNode);
+                                }
+                            }
+                        } else {
+                            if (dropzone) {
+                                dropzone.classList.remove('border-red-400', 'bg-red-50/40', 'ring-4', 'ring-red-500/20');
+                                const errNode = dropzone.parentElement.querySelector('.client-file-error');
+                                if (errNode) errNode.remove();
+                            }
+                        }
+                    });
+
+                    if (missingRequiredFile) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof showToast === 'function') {
+                            showToast('Mohon lengkapi semua berkas lampiran yang wajib diunggah!', 'error');
+                        } else {
+                            alert('Mohon lengkapi semua berkas lampiran yang wajib diunggah!');
+                        }
+                        if (firstMissingEl) {
+                            firstMissingEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        if (window.lucide) lucide.createIcons();
+                        return false;
+                    }
+
                     let hasSelectedNewFiles = false;
                     fileInputs.forEach(fi => {
                         if (fi.files && fi.files.length > 0) {

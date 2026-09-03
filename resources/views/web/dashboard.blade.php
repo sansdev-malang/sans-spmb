@@ -311,16 +311,31 @@
                 @elseif($registration->registration_status === 'verified')
                     <!-- Case 4: Sesi Ta'aruf -->
                     <div class="text-center py-6 space-y-4 max-w-md mx-auto">
-                        <div class="h-16 w-16 bg-brand-yellow/10 text-amber-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-                            <i data-lucide="users" class="w-8 h-8"></i>
+                        <div class="h-16 w-16 {{ $registration->observation_date ? 'bg-emerald-50 text-brand-emerald' : 'bg-blue-50 text-blue-600' }} rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+                            <i data-lucide="{{ $registration->observation_date ? 'calendar-check' : 'users' }}" class="w-8 h-8"></i>
                         </div>
-                        <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Sesi Ta'aruf Offline Aktif</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Alhamdulillah, berkas persyaratan dinyatakan lolos verifikasi. Silakan persiapkan kehadiran tatap muka ananda dan orang tua di unit sekolah untuk mengikuti wawancara Ta'aruf.
-                        </p>
-                        <div class="pt-4">
+                        <h3 class="text-base font-extrabold text-slate-850 dark:text-white">
+                            {{ $registration->unit?->taaruf_title ?? 'Sesi Ta\'aruf Offline' }}
+                        </h3>
+                        @if($registration->observation_date)
+                            <div class="inline-flex flex-col items-center gap-1 p-3 bg-emerald-50/60 dark:bg-emerald-950/30 border border-brand-emerald/30 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-300">
+                                <span class="text-brand-emerald font-black flex items-center gap-1.5">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                    {{ $registration->observation_date->translatedFormat('l, d F Y') }}
+                                </span>
+                                <span class="text-slate-500 text-[11px]">⏰ {{ $registration->observation_time }}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Jadwal resmi telah ditetapkan. Silakan klik tombol di bawah untuk melihat rincian lokasi, ruangan, dan perlengkapan wajib yang harus dibawa.
+                            </p>
+                        @else
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Berkas persyaratan dinyatakan lolos verifikasi. Panitia unit sedang mengalokasikan jadwal sesi tatap muka untuk ananda.
+                            </p>
+                        @endif
+                        <div class="pt-2">
                             <a href="{{ route('dashboard.observation', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
-                                <i data-lucide="calendar" class="w-4 h-4"></i> Lihat Informasi Ta'aruf & Unit
+                                <i data-lucide="calendar" class="w-4 h-4"></i> Lihat Detail Undangan & Ketentuan
                             </a>
                         </div>
                     </div>

@@ -258,6 +258,12 @@
                                     @endif
  
                                     @if ($reg->registration_status === 'verified')
+                                        <!-- Atur Jadwal Ta'aruf Link -->
+                                        <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->id]) }}" class="bg-brand-emerald hover-emerald text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Atur Jadwal Ta'aruf">
+                                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                                            <span>Jadwal Ta'aruf</span>
+                                        </a>
+
                                         <!-- Selesaikan Ta'aruf -->
                                         <form action="{{ route('admin.registrations.complete-taaruf', $reg->id) }}" method="POST" class="inline">
                                             @csrf

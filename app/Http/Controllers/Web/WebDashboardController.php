@@ -686,9 +686,9 @@ class WebDashboardController extends Controller
         $observationDetails = null;
         if (in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
             $observationDetails = [
-                'title' => 'Sesi Ta\'aruf Tatap Muka',
-                'location' => $registration->unit?->name ?? 'Sekolah Anak Saleh',
-                'notes' => 'Undangan resmi kehadiran offline akan dikirimkan panitia melalui WhatsApp ke nomor ' . $registration->parent_phone
+                'title' => $registration->unit?->taaruf_title ?? 'Sesi Ta\'aruf Tatap Muka',
+                'location' => $registration->observation_location ?: ($registration->unit?->taaruf_default_location ?? 'Sekolah Anak Saleh'),
+                'notes' => $registration->observation_notes ?: ($registration->unit?->taaruf_instructions ?? '')
             ];
         }
         

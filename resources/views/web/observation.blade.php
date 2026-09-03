@@ -130,63 +130,157 @@
         <div class="p-8">
             
             @if ($registration->registration_status === 'verified')
-                <!-- 1. State: Verified (Informasi Ta'aruf Offline) -->
+                @php
+                    $isScheduled = !empty($registration->observation_date);
+                    $unitTitle = $registration->unit?->taaruf_title ?? 'Sesi Ta\'aruf & Observasi Offline';
+                    $defaultLoc = $registration->unit?->taaruf_default_location ?? 'Sekolah Anak Saleh';
+                    $instructions = $registration->unit?->taaruf_instructions;
+                    $requiredItems = $registration->unit?->taaruf_required_items;
+                @endphp
+                <!-- 1. State: Verified (Informasi & Jadwal Ta'aruf) -->
                 <div class="space-y-6">
-                    <div class="border border-brand-emerald/30 bg-emerald-50/10 rounded-2xl p-6 space-y-4">
-                        <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 bg-brand-emerald text-white rounded-xl flex items-center justify-center font-bold text-lg">
-                                🤝
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-slate-800 dark:text-white">Undangan Sesi Ta'aruf Offline</h3>
-                                <p class="text-xs text-slate-500 font-semibold">Tatap Muka di Unit Sekolah Anak Saleh</p>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                <div>
-                                    <span class="text-slate-400 block">Unit Sekolah</span>
-                                    <span class="font-bold text-slate-800 dark:text-white">{{ $registration->unit->name }} ({{ $registration->unit->code }})</span>
+                    
+                    @if($isScheduled)
+                        <!-- Kartu Jadwal Resmi Terjadwal -->
+                        <div class="border-2 border-brand-emerald/40 bg-gradient-to-b from-emerald-50/40 to-white dark:from-emerald-950/20 dark:to-slate-900 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100 dark:border-emerald-900/60 pb-5">
+                                <div class="flex items-center gap-3.5">
+                                    <div class="h-12 w-12 bg-gradient-to-tr from-brand-emerald to-emerald-400 text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-md shadow-emerald-500/20 flex-shrink-0">
+                                        📅
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="font-black text-slate-800 dark:text-white text-base sm:text-lg">{{ $unitTitle }}</h3>
+                                        </div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Undangan Resmi Sesi Tatap Muka di {{ $registration->unit->name }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span class="text-slate-400 block">Tingkat Kelas</span>
-                                    <span class="font-bold text-slate-800 dark:text-white">{{ $registration->grade->name }} ({{ $registration->classProgram->name ?? 'Reguler' }})</span>
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <span class="text-slate-400 block">No. HP Wali Terdaftar (Penerima Undangan WA)</span>
-                                    <span class="font-bold text-slate-800 dark:text-white flex items-center gap-1">
-                                        {{ $registration->parent_phone }}
-                                        <span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold">Aktif WhatsApp</span>
-                                    </span>
-                                </div>
+                                <span class="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                    <span class="w-2 h-2 rounded-full bg-brand-emerald animate-pulse"></span>
+                                    Terjadwal Resmi
+                                </span>
                             </div>
-                        </div>
 
-                        <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
-                            Jadwal tanggal dan waktu spesifik untuk sesi Ta'aruf tatap muka akan dikirimkan langsung oleh panitia unit bersangkutan melalui pesan resmi WhatsApp ke nomor di atas. Mohon pastikan nomor Anda selalu aktif.
-                        </p>
-                    </div>
+                            <!-- Rincian Waktu & Lokasi Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-sm">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Hari & Tanggal Pelaksanaan</span>
+                                    <div class="font-extrabold text-slate-800 dark:text-white text-sm sm:text-base flex items-center gap-2">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-brand-emerald"></i>
+                                        <span>{{ $registration->observation_date->translatedFormat('l, d F Y') }}</span>
+                                    </div>
+                                </div>
 
-                    <!-- Info Tahap Selanjutnya -->
-                    <div class="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/50 p-5 rounded-2xl flex items-start gap-3">
-                        <i data-lucide="info" class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"></i>
-                        <div class="space-y-1">
-                            <h4 class="font-extrabold text-xs text-blue-800 dark:text-blue-300 uppercase tracking-wider">Tahap Selanjutnya: Administrasi Keuangan</h4>
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-sm">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Waktu / Sesi</span>
+                                    <div class="font-extrabold text-slate-800 dark:text-white text-sm sm:text-base flex items-center gap-2">
+                                        <i data-lucide="clock" class="w-4 h-4 text-brand-emerald"></i>
+                                        <span>{{ $registration->observation_time }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-sm sm:col-span-2">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Lokasi & Ruangan</span>
+                                    <div class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm flex items-start gap-2">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-rose-500 mt-0.5 flex-shrink-0"></i>
+                                        <span>{{ $registration->observation_location ?: $defaultLoc }}</span>
+                                    </div>
+                                </div>
+
+                                @if($registration->observation_interviewer)
+                                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-sm sm:col-span-2">
+                                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Pewawancara / Tim Penguji</span>
+                                        <div class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm flex items-center gap-2">
+                                            <i data-lucide="user-check" class="w-4 h-4 text-blue-500"></i>
+                                            <span>{{ $registration->observation_interviewer }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if($registration->observation_notes)
+                                <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs space-y-1">
+                                    <div class="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                        <i data-lucide="info" class="w-4 h-4 text-amber-600"></i>
+                                        <span>Catatan Khusus Panitia:</span>
+                                    </div>
+                                    <p class="text-slate-700 dark:text-slate-300 leading-relaxed pl-5 whitespace-pre-line">{{ $registration->observation_notes }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        <!-- Kartu Menunggu Penjadwalan -->
+                        <div class="border border-brand-emerald/30 bg-emerald-50/10 rounded-3xl p-6 sm:p-8 space-y-5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100 dark:border-emerald-900/60 pb-5">
+                                <div class="flex items-center gap-3.5">
+                                    <div class="h-12 w-12 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center font-bold text-xl flex-shrink-0">
+                                        ⏳
+                                    </div>
+                                    <div>
+                                        <h3 class="font-black text-slate-800 dark:text-white text-base">{{ $unitTitle }}</h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Tatap Muka di {{ $registration->unit->name }}</p>
+                                    </div>
+                                </div>
+                                <span class="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                    Menunggu Alokasi Jadwal
+                                </span>
+                            </div>
+
+                            <div class="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                        <span class="text-slate-400 block">Unit Sekolah</span>
+                                        <span class="font-bold text-slate-800 dark:text-white">{{ $registration->unit->name }} ({{ $registration->unit->code }})</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 block">Tingkat Kelas</span>
+                                        <span class="font-bold text-slate-800 dark:text-white">{{ $registration->grade->name }} ({{ $registration->classProgram->name ?? 'Reguler' }})</span>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <span class="text-slate-400 block">No. HP Wali Terdaftar</span>
+                                        <span class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                            {{ $registration->parent_phone }}
+                                            <span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold">Aktif WhatsApp</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
-                                Setelah rangkaian wawancara ta'aruf tatap muka selesai dilaksanakan dan status kelulusan disetujui oleh panitia unit, Anda akan diarahkan untuk menyetujui Surat Pernyataan Kesanggupan Orang Tua secara digital dan dapat melanjutkan ke tahap pelunasan biaya masuk sekolah pada menu <strong>Administrasi</strong>.
+                                Berkas pendaftaran ananda telah diverifikasi oleh panitia. Jadwal tanggal, waktu sesi, dan ruangan untuk sesi <strong>{{ $unitTitle }}</strong> sedang dialokasikan oleh panitia unit <strong>{{ $registration->unit->name }}</strong>. Rincian jadwal resmi akan langsung tampil otomatis pada kartu di halaman ini.
                             </p>
                         </div>
-                    </div>
+                    @endif
 
-                    <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-xl text-xs text-slate-500 leading-relaxed space-y-2">
-                        <p class="font-bold text-slate-700 dark:text-slate-300">Ketentuan Kehadiran Sesi Ta'aruf Offline:</p>
-                        <ul class="list-disc pl-4 space-y-1">
-                            <li>Wali murid (Ayah dan Ibu) wajib hadir mendampingi calon siswa ke unit sekolah sesuai undangan.</li>
-                            <li>Harap hadir 10 menit sebelum waktu undangan untuk registrasi kehadiran fisik.</li>
-                            <li>Berpakaian rapi, sopan, dan Islami sesuai ketentuan lingkungan Sekolah Anak Saleh.</li>
-                        </ul>
-                    </div>
+                    <!-- Ketentuan & Perlengkapan Bawaan Spesifik Unit -->
+                    @if($instructions || $requiredItems)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @if($instructions)
+                                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-xs space-y-2">
+                                    <h4 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-xs uppercase tracking-wider">
+                                        <i data-lucide="clipboard-list" class="w-4 h-4 text-brand-emerald"></i>
+                                        Ketentuan Kehadiran ({{ $registration->unit->code }}):
+                                    </h4>
+                                    <div class="text-slate-650 dark:text-slate-400 leading-relaxed whitespace-pre-line pl-1">
+                                        {{ $instructions }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($requiredItems)
+                                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-xs space-y-2">
+                                    <h4 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-xs uppercase tracking-wider">
+                                        <i data-lucide="briefcase" class="w-4 h-4 text-brand-emerald"></i>
+                                        Perlengkapan Wajib Dibawa:
+                                    </h4>
+                                    <div class="text-slate-650 dark:text-slate-400 leading-relaxed whitespace-pre-line pl-1">
+                                        {{ $requiredItems }}
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
             @elseif ($registration->registration_status === 'taaruf_completed')

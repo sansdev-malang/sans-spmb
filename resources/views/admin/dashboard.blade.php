@@ -29,9 +29,12 @@
                 @endif
             </p>
         </div>
-        <div class="flex gap-2 relative z-10 flex-shrink-0">
-            <a href="{{ route('admin.verification') }}" class="bg-brand-yellow hover:bg-yellow-500 text-slate-900 px-5 py-3 rounded-2xl text-sm font-black shadow-md transition flex items-center gap-1.5">
-                <i data-lucide="file-check-corner" class="w-4 h-4 text-slate-900"></i> Verifikasi Berkas Masuk
+        <div class="flex flex-wrap gap-2 relative z-10 flex-shrink-0">
+            <a href="{{ route('admin.verification') }}" class="bg-brand-yellow hover:bg-yellow-500 text-slate-900 px-5 py-3 rounded-2xl text-xs font-black shadow-md transition flex items-center gap-1.5">
+                <i data-lucide="file-check-corner" class="w-4 h-4 text-slate-900"></i> Verifikasi Berkas
+            </a>
+            <a href="{{ route('admin.taaruf') }}" class="bg-white/15 hover:bg-white/25 text-white border border-white/20 px-4 py-3 rounded-2xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+                <i data-lucide="calendar-check" class="w-4 h-4 text-brand-yellow"></i> Jadwal Ta'aruf
             </a>
         </div>
     </div>

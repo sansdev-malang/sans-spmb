@@ -56,7 +56,7 @@ class SpmbSettingsController extends Controller
             return $grade;
         });
 
-        $extraServices = SpmbExtraService::all()->map(function ($service) {
+        $extraServices = SpmbExtraService::with('unit')->get()->map(function ($service) {
             $service->registrations_count = $service->registrations()->count();
             return $service;
         });
@@ -435,6 +435,7 @@ class SpmbSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_extra_services,code',
+            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
             'is_active' => 'boolean'
         ]);
 
@@ -446,6 +447,7 @@ class SpmbSettingsController extends Controller
         }
 
         $data = $request->all();
+        $data['spmb_unit_id'] = $request->filled('spmb_unit_id') ? $request->spmb_unit_id : null;
         $data['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
         SpmbExtraService::create($data);
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil ditambahkan.');
@@ -457,6 +459,7 @@ class SpmbSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_extra_services,code,' . $id,
+            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
             'is_active' => 'boolean'
         ]);
 
@@ -468,6 +471,7 @@ class SpmbSettingsController extends Controller
         }
 
         $data = $request->all();
+        $data['spmb_unit_id'] = $request->filled('spmb_unit_id') ? $request->spmb_unit_id : null;
         $data['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
         $service->update($data);
 

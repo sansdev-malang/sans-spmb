@@ -183,7 +183,7 @@
                         <p class="text-[11px] text-slate-400">Kelola layanan tambahan opsional seperti TPA/Daycare dan TPQ.</p>
                     </div>
                     <button
-                        onclick="openExtraModal('', '', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
+                        onclick="openExtraModal('', '', '', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
                         class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1"
                     >
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -197,6 +197,7 @@
                             <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                                 <th class="py-4 px-6">Nama Layanan</th>
                                 <th class="py-4 px-6">Kode Layanan</th>
+                                <th class="py-4 px-6">Unit Asal</th>
                                 <th class="py-4 px-6 text-center">Status</th>
                                 <th class="py-4 px-6 text-center">Jumlah Siswa</th>
                                 <th class="py-4 px-6 text-center">Aksi</th>
@@ -211,6 +212,13 @@
                                     <td class="py-4 px-6 font-mono font-bold text-brand-emerald">
                                         {{ $service->code }}
                                     </td>
+                                    <td class="py-4 px-6 font-semibold text-slate-600">
+                                        @if($service->unit)
+                                            <span class="text-slate-800 font-bold">{{ $service->unit->name }}</span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-500 border border-slate-200">Semua Unit</span>
+                                        @endif
+                                    </td>
                                     <td class="py-4 px-6 text-center">
                                         <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase border {{ $service->is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-100 text-slate-500 border-slate-200' }}">
                                             {{ $service->is_active ? 'Aktif' : 'Non-Aktif' }}
@@ -221,7 +229,7 @@
                                     </td>
                                     <td class="py-4 px-6">
                                         <div class="flex items-center justify-center gap-2">
-                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Layanan">
+                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->spmb_unit_id }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Layanan">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
                                             @if($service->registrations_count > 0)
@@ -238,7 +246,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-slate-400 text-xs">Belum ada layanan non-formal yang ditambahkan.</td>
+                                    <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada layanan non-formal yang ditambahkan.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -274,6 +282,15 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Kode Layanan</label>
                             <input type="text" id="extraCodeInput" name="code" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: TPA">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Asal (Terkait Unit Sekolah)</label>
+                            <select id="extraUnitInput" name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
+                                <option value="">Semua Unit (Umum)</option>
+                                @foreach($units as $u)
+                                    <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="flex items-center gap-3">
                             <input type="checkbox" id="extraActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
@@ -511,7 +528,7 @@
     }
 
     // Modal Extra Service
-    function openExtraModal(name = '', code = '', isActive = '1', isCreate = true, actionUrl = '') {
+    function openExtraModal(name = '', code = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
         clearModalErrors();
         
         const modal = document.getElementById('extraModal');
@@ -525,6 +542,7 @@
         form.setAttribute('action', actionUrl);
         document.getElementById('extraNameInput').value = name;
         document.getElementById('extraCodeInput').value = code;
+        document.getElementById('extraUnitInput').value = unitId || '';
         document.getElementById('extraActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
         
         if (!isCreate) {
@@ -578,11 +596,11 @@
                 openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
             } else if (failed.startsWith('extra_create')) {
                 switchTab('extra');
-                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
+                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
             } else if (failed.startsWith('extra_edit_')) {
                 switchTab('extra');
                 let id = failed.replace('extra_edit_', '');
-                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
+                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
             }
 
             // Show errors inside the reopened modal
