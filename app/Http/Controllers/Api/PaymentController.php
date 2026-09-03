@@ -592,7 +592,7 @@ class PaymentController extends Controller
                     \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                         'title' => 'Pembayaran Formulir Sukses',
                         'message' => 'Pembayaran formulir untuk calon siswa "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' telah lunas.',
-                        'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
+                        'url' => route('admin.payments') . '?search=' . urlencode($reg->candidate_name),
                         'type' => 'success',
                     ]));
 
