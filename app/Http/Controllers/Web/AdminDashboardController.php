@@ -378,5 +378,17 @@ class AdminDashboardController extends Controller
 
         return redirect()->back()->with('success', 'Pengaturan keringanan & kebijakan cicilan calon siswa berhasil disimpan.');
     }
+
+    /**
+     * Change selected academic period in session.
+     */
+    public function changePeriod(Request $request)
+    {
+        $request->validate([
+            'selected_period_id' => 'required|exists:spmb_periods,id'
+        ]);
+        session(['selected_period_id' => $request->selected_period_id]);
+        return redirect()->back()->with('success', 'Tahun ajaran berhasil diubah.');
+    }
 }
 
