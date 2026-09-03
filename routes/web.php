@@ -1,32 +1,40 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use App\Models\SpmbUnit;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\UserController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\WebDashboardController;
+use App\Http\Controllers\Web\SettingsController;
+use App\Http\Controllers\Web\AdminDashboardController;
+use App\Http\Controllers\Web\AdminCandidateController;
+use App\Http\Controllers\Web\AdminPaymentController;
+use App\Http\Controllers\Web\AdminNotificationController;
+use App\Http\Controllers\Web\AdminLogsController;
+use App\Http\Controllers\Web\SpmbSettingsController;
+use App\Http\Controllers\Web\SpmbFeesController;
+use App\Http\Controllers\Web\SpmbRegistrationSettingsController;
+use App\Http\Controllers\Web\SpmbFormSettingsController;
+use App\Http\Controllers\Web\SpmbAgreementsController;
+use App\Http\Controllers\Web\PaymentGatewayController;
+use App\Http\Controllers\Web\PaymentChannelController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
     return view('welcome');
 });
 
 Route::get('/unit/{code}', function ($code) {
-    $unit = \App\Models\SpmbUnit::where('code', strtoupper($code))->where('is_active', true)->firstOrFail();
+    $unit = SpmbUnit::where('code', strtoupper($code))->where('is_active', true)->firstOrFail();
     return view('unit-detail', compact('unit'));
 })->name('unit.detail');
 
 Route::post('/quick-register', [UserController::class, 'quickRegister'])->name('quick-register');
-
-use App\Http\Controllers\Web\WebDashboardController;
-use App\Http\Controllers\Web\SettingsController;
-use App\Http\Controllers\Web\AdminDashboardController;
-use App\Http\Controllers\Web\AdminCandidateController;
-use App\Http\Controllers\Web\AdminPaymentController;
-use App\Http\Controllers\Web\SpmbSettingsController;
-use App\Http\Controllers\Web\SpmbFeesController;
-use App\Http\Controllers\Web\SpmbRegistrationSettingsController;
-use App\Http\Controllers\Web\SpmbFormSettingsController;
-use App\Http\Controllers\Web\PaymentGatewayController;
-use App\Http\Controllers\Web\PaymentChannelController;
-use App\Http\Controllers\Web\AdminNotificationController;
 
 Route::middleware('auth')->group(function () {
     // Candidate Dashboard
@@ -102,8 +110,8 @@ Route::middleware('auth')->group(function () {
 
         // Routes accessible to both Super Admin and Unit Admin (with internal scoping)
         Route::get('/admin/spmb-settings/qrcode', [SpmbSettingsController::class, 'qrcode'])->name('admin.spmb-settings.qrcode');
-        Route::get('/admin/spmb-settings/agreements', [\App\Http\Controllers\Web\SpmbAgreementsController::class, 'index'])->name('admin.spmb-settings.agreements');
-        Route::post('/admin/spmb-settings/agreements/{id}', [\App\Http\Controllers\Web\SpmbAgreementsController::class, 'update'])->name('admin.spmb-settings.agreements.update');
+        Route::get('/admin/spmb-settings/agreements', [SpmbAgreementsController::class, 'index'])->name('admin.spmb-settings.agreements');
+        Route::post('/admin/spmb-settings/agreements/{id}', [SpmbAgreementsController::class, 'update'])->name('admin.spmb-settings.agreements.update');
         Route::get('/admin/spmb-settings/instructions', [SettingsController::class, 'reRegistrationInstructions'])->name('admin.spmb-settings.instructions');
         Route::post('/admin/spmb-settings/instructions', [SettingsController::class, 'saveReRegistrationInstructions'])->name('admin.spmb-settings.instructions.save');
         Route::get('/admin/spmb-settings/customer-service', [SpmbSettingsController::class, 'customerService'])->name('admin.spmb-settings.cs');
@@ -195,8 +203,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/admin/spmb-settings/registration', [SpmbRegistrationSettingsController::class, 'index'])->name('admin.spmb-settings.registration');
             Route::post('/admin/spmb-settings/registration', [SpmbRegistrationSettingsController::class, 'update'])->name('admin.spmb-settings.registration.update');
 
-
-
             // Setting Formulir CRUD
             Route::get('/admin/spmb-settings/form', [SpmbFormSettingsController::class, 'index'])->name('admin.spmb-settings.form');
             Route::post('/admin/spmb-settings/form/steps', [SpmbFormSettingsController::class, 'storeStep'])->name('admin.spmb-settings.form.steps.store');
@@ -208,8 +214,8 @@ Route::middleware('auth')->group(function () {
             Route::delete('/admin/spmb-settings/form/fields/{id}', [SpmbFormSettingsController::class, 'destroyField'])->name('admin.spmb-settings.form.fields.delete');
 
             // System Logs Viewer
-            Route::get('/admin/logs', [\App\Http\Controllers\Web\AdminLogsController::class, 'index'])->name('admin.logs');
-            Route::post('/admin/logs/clear', [\App\Http\Controllers\Web\AdminLogsController::class, 'clear'])->name('admin.logs.clear');
+            Route::get('/admin/logs', [AdminLogsController::class, 'index'])->name('admin.logs');
+            Route::post('/admin/logs/clear', [AdminLogsController::class, 'clear'])->name('admin.logs.clear');
         });
     });
 });
