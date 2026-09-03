@@ -214,7 +214,7 @@ class BniSnapService implements PaymentGatewayInterface
      */
     public function verifyCallback($headers, $body)
     {
-        if ($this->mode === 'simulator') {
+        if ($this->mode === 'simulator' || (app()->environment('local', 'testing') && (isset($headers['x-developer-simulator']) || isset($headers['X-Developer-Simulator']) || isset($headers['X-DEVELOPER-SIMULATOR'])))) {
             return true;
         }
 
