@@ -289,7 +289,7 @@ class WinpayService implements PaymentGatewayInterface
         $signature = $this->generateAsymmetricSignature('POST', $endpoint, $body, $timestamp);
 
         // 5. Kirim HTTP Request ke Server Winpay (Sandbox atau Production)
-        $response = Http::withHeaders([
+        $response = Http::timeout(30)->withHeaders([
             'X-SIGNATURE' => $signature,
             'X-TIMESTAMP' => $timestamp,
             'X-PARTNER-ID' => $this->clientKey,
@@ -393,7 +393,7 @@ class WinpayService implements PaymentGatewayInterface
     public function verifyCallback($headers, $body)
     {
         /* =========================================================================================
-         * [A] BYPASS UNTUK MODE SIMULATOR ATAU TESTING DEVELOPER
+         * [A] BYPASS HANYA UNTUK MODE SIMULATOR LOKAL
          * ========================================================================================= */
         if ($this->mode === 'simulator') {
             return true;
@@ -403,26 +403,23 @@ class WinpayService implements PaymentGatewayInterface
         if (is_array($signature)) $signature = $signature[0] ?? '';
         $timestamp = $headers['x-timestamp'][0] ?? $headers['X-TIMESTAMP'][0] ?? $headers['x-timestamp'] ?? $headers['X-TIMESTAMP'] ?? '';
         if (is_array($timestamp)) $timestamp = $timestamp[0] ?? '';
-        
-        // Bypass verification if it's a simulated developer callback
-        $devSim = $headers['x-developer-simulator'][0] ?? $headers['X-DEVELOPER-SIMULATOR'][0] ?? $headers['x-developer-simulator'] ?? $headers['X-DEVELOPER-SIMULATOR'] ?? '';
-        if (is_array($devSim)) $devSim = $devSim[0] ?? '';
-        if ($devSim === 'true') {
-            Log::info('Developer simulator request detected, bypassing signature verification.');
-            return true;
+
+        if (empty($signature) || empty($timestamp)) {
+            Log::warning('Winpay Callback rejected: Missing X-SIGNATURE or X-TIMESTAMP header.');
+            return false;
         }
         
         /* =========================================================================================
          * [B] VALIDASI DIGITAL SIGNATURE DENGAN PUBLIC KEY WINPAY (SANDBOX / PRODUCTION)
          * ========================================================================================= */
         if (empty($this->publicKey)) {
-            Log::warning('Winpay Public Key is empty, skipping signature verification.');
-            return true; 
+            Log::error('Winpay Callback rejected (Fail-Closed): Winpay Public Key is not configured on live mode.');
+            return false; // Security: FAIL-CLOSED! Never allow unverified webhook in live environments.
         }
 
         $publicKeyResource = openssl_pkey_get_public($this->publicKey);
         if (!$publicKeyResource) {
-            Log::error('Invalid Winpay Public Key format.');
+            Log::error('Winpay Callback rejected: Invalid Winpay Public Key PEM format.');
             return false;
         }
 
@@ -440,6 +437,10 @@ class WinpayService implements PaymentGatewayInterface
         ]);
 
         $signatureBinary = base64_decode($signature);
+        if ($signatureBinary === false) {
+            Log::error('Winpay Callback rejected: Corrupt base64 signature.');
+            return false;
+        }
         
         $verified = openssl_verify($stringToSign, $signatureBinary, $publicKeyResource, OPENSSL_ALGO_SHA256);
         

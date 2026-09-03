@@ -15,6 +15,7 @@ use App\Models\SpmbClassProgram;
 use App\Services\WinpayService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class WebDashboardController extends Controller
 {
@@ -1054,254 +1055,261 @@ class WebDashboardController extends Controller
         ]);
 
         $registration = $this->getRegistration($id);
-        $status = $registration->registration_status;
 
-        // Determine payment type
-        if ($status === 'agreement_signed') {
-            $paymentType = 'final_fee';
-            $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
+        $lockKey = 'charge_lock_reg_' . $registration->id;
+        $lock = Cache::lock($lockKey, 10);
 
-            // Filter out already paid items
-            $paidItemNames = [];
-            $successfulPayments = $registration->payments()
-                ->where('status', 'success')
-                ->where('payment_type', 'final_fee')
-                ->get();
-            foreach ($successfulPayments as $p) {
-                if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
-                    foreach ($p->payment_info['selected_items'] as $item) {
-                        $paidItemNames[] = $item['name'];
-                    }
-                }
-            }
+        if (!$lock->get()) {
+            return redirect()->back()->with('error', 'Sedang memproses permintaan pembayaran sebelumnya. Silakan tunggu beberapa saat.');
+        }
 
-            // Exclude already paid items from original feeDetails items list
-            $unpaidItems = [];
-            foreach ($feeDetails['items'] as &$item) {
-                if (!in_array($item['name'], $paidItemNames)) {
-                    if (!isset($item['gateways'])) {
-                        $feeRow = \App\Models\SpmbFee::where('name', $item['name'])
-                            ->where('spmb_unit_id', $registration->spmb_unit_id)
-                            ->first();
-                        $item['gateways'] = $feeRow ? (is_array($feeRow->payment_gateway) ? $feeRow->payment_gateway : [$feeRow->payment_gateway]) : ['winpay'];
-                    }
-                    $unpaidItems[] = $item;
-                }
-            }
-            $allSnapshotItems = $feeDetails['items'];
-            // Apply manual checked items filter if passed in query string or POST input
-            $selectedItemsQuery = $request->input('items') ?? request()->query('items');
-            $itemAmountMap = [];
+        try {
+            $status = $registration->registration_status;
 
-            if (is_array($selectedItemsQuery)) {
-                $itemAmountMap = $selectedItemsQuery;
-                $indices = array_keys($selectedItemsQuery);
-            } elseif (is_string($selectedItemsQuery) && trim($selectedItemsQuery) !== '') {
-                $pairs = explode(',', $selectedItemsQuery);
-                $indices = [];
-                foreach ($pairs as $pair) {
-                    $pair = trim($pair);
-                    if (str_contains($pair, ':')) {
-                        [$k, $v] = explode(':', $pair, 2);
-                        $k = trim($k);
-                        $itemAmountMap[$k] = (float) trim($v);
-                        $indices[] = $k;
-                    } else {
-                        $itemAmountMap[$pair] = null;
-                        $indices[] = $pair;
-                    }
-                }
-            } else {
-                $indices = null;
-            }
+            // Determine payment type
+            if ($status === 'agreement_signed') {
+                $paymentType = 'final_fee';
+                $feeDetails = $registration->final_fee_snapshot ?? $this->getFinalFeeDetails($registration);
 
-            if ($indices !== null) {
-                $filteredItems = [];
-                foreach ($indices as $idx) {
-                    $candItem = null;
-                    $customAmt = $itemAmountMap[$idx] ?? null;
-
-                    if (isset($allSnapshotItems[$idx])) {
-                        $candItem = $allSnapshotItems[$idx];
-                    } elseif (isset($unpaidItems[$idx])) {
-                        $candItem = $unpaidItems[$idx];
-                    } else {
-                        foreach ($unpaidItems as $uItem) {
-                            if ((isset($uItem['id']) && (string)$uItem['id'] === (string)$idx) || strcasecmp(trim($uItem['name']), (string)$idx) === 0) {
-                                $candItem = $uItem;
-                                break;
-                            }
+                // Filter out already paid items
+                $paidItemNames = [];
+                $successfulPayments = $registration->payments()
+                    ->where('status', 'success')
+                    ->where('payment_type', 'final_fee')
+                    ->get();
+                foreach ($successfulPayments as $p) {
+                    if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
+                        foreach ($p->payment_info['selected_items'] as $item) {
+                            $paidItemNames[] = $item['name'];
                         }
                     }
+                }
 
-                    if ($candItem && !in_array($candItem['name'], $paidItemNames)) {
-                        $candItem['custom_amount_requested'] = $customAmt;
-                        $filteredItems[] = $candItem;
+                // Exclude already paid items from original feeDetails items list
+                $unpaidItems = [];
+                foreach ($feeDetails['items'] as &$item) {
+                    if (!in_array($item['name'], $paidItemNames)) {
+                        if (!isset($item['gateways'])) {
+                            $feeRow = \App\Models\SpmbFee::where('name', $item['name'])
+                                ->where('spmb_unit_id', $registration->spmb_unit_id)
+                                ->first();
+                            $item['gateways'] = $feeRow ? (is_array($feeRow->payment_gateway) ? $feeRow->payment_gateway : [$feeRow->payment_gateway]) : ['winpay'];
+                        }
+                        $unpaidItems[] = $item;
                     }
                 }
-                $feeDetails['items'] = !empty($filteredItems) ? $filteredItems : $unpaidItems;
-            } else {
-                $feeDetails['items'] = $unpaidItems;
-            }
+                $allSnapshotItems = $feeDetails['items'];
+                // Apply manual checked items filter if passed in query string or POST input
+                $selectedItemsQuery = $request->input('items') ?? request()->query('items');
+                $itemAmountMap = [];
 
-            $selectedTotal = (float) array_sum(array_column($feeDetails['items'], 'amount'));
-            $feeDetails['total'] = $selectedTotal;
-            $discountAmount = (float) ($registration->discount_amount ?? 0);
+                if (is_array($selectedItemsQuery)) {
+                    $itemAmountMap = $selectedItemsQuery;
+                    $indices = array_keys($selectedItemsQuery);
+                } elseif (is_string($selectedItemsQuery) && trim($selectedItemsQuery) !== '') {
+                    $pairs = explode(',', $selectedItemsQuery);
+                    $indices = [];
+                    foreach ($pairs as $pair) {
+                        $pair = trim($pair);
+                        if (str_contains($pair, ':')) {
+                            [$k, $v] = explode(':', $pair, 2);
+                            $k = trim($k);
+                            $itemAmountMap[$k] = (float) trim($v);
+                            $indices[] = $k;
+                        } else {
+                            $itemAmountMap[$pair] = null;
+                            $indices[] = $pair;
+                        }
+                    }
+                } else {
+                    $indices = null;
+                }
 
-            $isGlobalInstallment = ($registration->installment_mode === 'all');
-            $isSelectiveInstallment = ($registration->installment_mode === 'selective');
-            $inputItemAmounts = $request->input('item_amounts', []);
+                if ($indices !== null) {
+                    $filteredItems = [];
+                    foreach ($indices as $idx) {
+                        $candItem = null;
+                        $customAmt = $itemAmountMap[$idx] ?? null;
 
-            $totalCalculatedPrincipal = 0;
-            $processedSelectedItems = [];
+                        if (isset($allSnapshotItems[$idx])) {
+                            $candItem = $allSnapshotItems[$idx];
+                        } elseif (isset($unpaidItems[$idx])) {
+                            $candItem = $unpaidItems[$idx];
+                        } else {
+                            foreach ($unpaidItems as $uItem) {
+                                if ((isset($uItem['id']) && (string)$uItem['id'] === (string)$idx) || strcasecmp(trim($uItem['name']), (string)$idx) === 0) {
+                                    $candItem = $uItem;
+                                    break;
+                                }
+                            }
+                        }
 
-            foreach ($feeDetails['items'] as $item) {
-                $isInstallmentAllowed = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
-                $itemGross = (float) ($item['amount'] ?? 0);
-                $itemPaid = $isGlobalInstallment ? 0 : $registration->getItemPaidAmount($item['name']);
-                $itemRemaining = max(0, $itemGross - $itemPaid);
+                        if ($candItem && !in_array($candItem['name'], $paidItemNames)) {
+                            $candItem['custom_amount_requested'] = $customAmt;
+                            $filteredItems[] = $candItem;
+                        }
+                    }
+                    $feeDetails['items'] = !empty($filteredItems) ? $filteredItems : $unpaidItems;
+                } else {
+                    $feeDetails['items'] = $unpaidItems;
+                }
 
-                if ($itemRemaining <= 0) continue;
+                $selectedTotal = (float) array_sum(array_column($feeDetails['items'], 'amount'));
+                $feeDetails['total'] = $selectedTotal;
+                $discountAmount = (float) ($registration->discount_amount ?? 0);
 
-                $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
+                $isGlobalInstallment = ($registration->installment_mode === 'all');
+                $isSelectiveInstallment = ($registration->installment_mode === 'selective');
+                $inputItemAmounts = $request->input('item_amounts', []);
 
-                if ($isGlobalInstallment || $isInstallmentAllowed) {
-                    if (isset($inputItemAmounts[$item['name']])) {
-                        $rawCustom = str_replace(['.', ',', ' '], '', $inputItemAmounts[$item['name']]);
-                        $itemAmountToPay = floatval($rawCustom);
-                    } elseif (isset($item['custom_amount_requested']) && $item['custom_amount_requested'] !== null) {
-                        $itemAmountToPay = floatval($item['custom_amount_requested']);
+                $totalCalculatedPrincipal = 0;
+                $processedSelectedItems = [];
+
+                foreach ($feeDetails['items'] as $item) {
+                    $isInstallmentAllowed = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
+                    $itemGross = (float) ($item['amount'] ?? 0);
+                    $itemPaid = $isGlobalInstallment ? 0 : $registration->getItemPaidAmount($item['name']);
+                    $itemRemaining = max(0, $itemGross - $itemPaid);
+
+                    if ($itemRemaining <= 0) continue;
+
+                    $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
+
+                    if ($isGlobalInstallment || $isInstallmentAllowed) {
+                        if (isset($inputItemAmounts[$item['name']])) {
+                            $rawCustom = str_replace(['.', ',', ' '], '', $inputItemAmounts[$item['name']]);
+                            $itemAmountToPay = floatval($rawCustom);
+                        } elseif (isset($item['custom_amount_requested']) && $item['custom_amount_requested'] !== null) {
+                            $itemAmountToPay = floatval($item['custom_amount_requested']);
+                        } else {
+                            $itemAmountToPay = $itemRemaining;
+                        }
+
+                        if ($itemAmountToPay < $minItemInstallment) {
+                            return redirect()->back()->with('error', "Nominal cicilan untuk {$item['name']} tidak boleh kurang dari batas minimal Rp " . number_format($minItemInstallment, 0, ',', '.'));
+                        }
+
+                        if ($itemAmountToPay > $itemRemaining) {
+                            $itemAmountToPay = $itemRemaining;
+                        }
                     } else {
                         $itemAmountToPay = $itemRemaining;
                     }
 
-                    if ($itemAmountToPay < $minItemInstallment) {
-                        return redirect()->back()->with('error', "Nominal cicilan untuk {$item['name']} tidak boleh kurang dari batas minimal Rp " . number_format($minItemInstallment, 0, ',', '.'));
-                    }
-                    if ($itemAmountToPay > $itemRemaining) {
-                        return redirect()->back()->with('error', "Nominal cicilan untuk {$item['name']} tidak boleh melebihi sisa tagihan (Rp " . number_format($itemRemaining, 0, ',', '.') . ").");
-                    }
-                } else {
-                    // Mandatory item: must pay full remaining
-                    $itemAmountToPay = $itemRemaining;
+                    $totalCalculatedPrincipal += $itemAmountToPay;
+                    $itemCopy = $item;
+                    $itemCopy['amount'] = $itemAmountToPay;
+                    $processedSelectedItems[] = $itemCopy;
                 }
 
-                $totalCalculatedPrincipal += $itemAmountToPay;
-                $processedSelectedItems[] = [
-                    'id' => $item['id'] ?? null,
-                    'name' => $item['name'],
-                    'amount' => $itemAmountToPay,
-                    'full_amount' => $itemGross,
-                    'gateways' => $item['gateways'] ?? ['winpay'],
+                $amount = $totalCalculatedPrincipal;
+                $feeDetails['items'] = $processedSelectedItems;
+
+                if ($amount <= 0) {
+                    return redirect()->back()->with('error', 'Seluruh item yang dipilih sudah lunas.');
+                }
+
+                $finalFee = \App\Models\SpmbFee::where('spmb_unit_id', $registration->spmb_unit_id)
+                    ->where('spmb_fee_category_id', 2)
+                    ->first();
+                $gateways = $finalFee ? (is_array($finalFee->payment_gateway) ? $finalFee->payment_gateway : [$finalFee->payment_gateway]) : ['winpay'];
+            } elseif (in_array($status, ['draft', 'submitted', 'verified'])) {
+                if ($registration->payment_status === 'paid') {
+                    return redirect()->back()->with('error', 'Biaya pendaftaran Anda sudah lunas.');
+                }
+                $paymentType = 'registration_fee';
+                $fee = $this->getRegistrationFee($registration);
+                $amount = $fee ? $fee->amount : 350000;
+                $gateways = $fee ? (is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]) : ['winpay'];
+            } else {
+                return redirect()->back()->with('error', 'Tidak ada tagihan pembayaran aktif pada tahapan ini.');
+            }
+
+            // Resolve active gateway based on the user's selected payment_method
+            $activeChannel = \App\Models\SpmbPaymentChannel::where('code', $request->payment_method)
+                ->where('is_active', true)
+                ->whereHas('gateway', function($q) use ($gateways) {
+                    $q->whereIn('code', $gateways);
+                })
+                ->first();
+            
+            $gateway = 'winpay';
+            if ($activeChannel && $activeChannel->gateway) {
+                $gateway = $activeChannel->gateway->code;
+            } else {
+                $gateway = reset($gateways) ?: 'winpay';
+            }
+
+            // Fetch fee configurations dynamically from settings
+            $feeBniVa = floatval(\App\Models\Setting::get('fee_bni_va', 1500));
+            $feeBniQris = floatval(\App\Models\Setting::get('fee_bni_qris', 0.7)) / 100;
+            $feeWinpayVa = floatval(\App\Models\Setting::get('fee_winpay_va', 4500));
+
+            // Calculate dynamic admin fee based on payment method and active gateway
+            $adminFee = $feeWinpayVa;
+            if ($activeChannel && $activeChannel->gateway && $activeChannel->gateway->code === 'bni') {
+                if ($activeChannel->type === 'qris') {
+                    $adminFee = round($amount * $feeBniQris);
+                } else {
+                    $adminFee = $feeBniVa;
+                }
+            } else {
+                $adminFee = $feeWinpayVa;
+            }
+
+            $totalAmount = $amount + $adminFee;
+
+            // Generate cryptographically unique invoice number (anti-collision)
+            $randomHex = strtoupper(bin2hex(random_bytes(3)));
+            $invoiceBase = 'INV-SPMB-' . date('Ymd') . '-' . $registration->id . '-' . $randomHex;
+
+            try {
+                $studentName = $registration->student_name ?? $registration->name ?? null;
+                $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
+                $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
+                $response = $gatewayService->createPayment($totalAmount, $invoiceBase, $request->payment_method, $studentName, $studentPhone);
+            } catch (\Throwable $e) {
+                $response = [
+                    'success' => false,
+                    'message' => $e->getMessage()
                 ];
             }
 
-            if (empty($processedSelectedItems) || $totalCalculatedPrincipal <= 0) {
-                return redirect()->back()->with('error', 'Tidak ada komponen biaya aktif yang dipilih untuk dibayar.');
+            if (!$response['success']) {
+                return redirect()->back()->with('error', 'Failed to initiate payment: ' . $response['message']);
             }
 
-            $feeDetails['items'] = $processedSelectedItems;
-            $amount = $totalCalculatedPrincipal;
-            
-            // Calculate the intersection of gateways for the selected items
-            $commonGateways = null;
-            foreach ($feeDetails['items'] as $item) {
-                $itemGateways = $item['gateways'] ?? ['winpay'];
-                if ($commonGateways === null) {
-                    $commonGateways = $itemGateways;
-                } else {
-                    $commonGateways = array_intersect($commonGateways, $itemGateways);
-                }
+            $paymentData = $response['data'];
+            $invoiceNo = $paymentData['trxId'] ?? $paymentData['partnerReferenceNo'] ?? null;
+            $refId = $paymentData['referenceId'] ?? null;
+
+            DB::beginTransaction();
+            try {
+                Payment::create([
+                    'registration_id' => $registration->id,
+                    'invoice_number' => $invoiceNo ?? 'INV-' . time(),
+                    'amount' => $totalAmount,
+                    'base_amount' => $amount,
+                    'admin_fee' => $adminFee,
+                    'payment_method' => $request->payment_method,
+                    'reference_id' => $refId,
+                    'payment_info' => array_merge(is_array($paymentData) ? $paymentData : [], $paymentType === 'final_fee' ? ['selected_items' => $feeDetails['items']] : []),
+                    'status' => 'pending',
+                    'payment_type' => $paymentType
+                ]);
+
+                $registration->update([
+                    'payment_status' => 'pending'
+                ]);
+
+                DB::commit();
+                return redirect()->back()->with('success', 'Invoice pembayaran berhasil diterbitkan.');
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Gagal menyimpan data pembayaran: ' . $e->getMessage());
             }
-            $gateways = !empty($commonGateways) ? array_values($commonGateways) : ['winpay'];
-        } elseif ($status === 'draft') {
-            $paymentType = 'registration_fee';
-            $fee = $this->getRegistrationFee($registration);
-            $amount = $fee ? $fee->amount : 350000;
-            $gateways = $fee ? (is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]) : ['winpay'];
-        } else {
-            return redirect()->back()->with('error', 'Tidak ada tagihan pembayaran aktif pada tahapan ini.');
-        }
-
-        // Resolve active gateway based on the user's selected payment_method
-        $activeChannel = \App\Models\SpmbPaymentChannel::where('code', $request->payment_method)
-            ->where('is_active', true)
-            ->whereHas('gateway', function($q) use ($gateways) {
-                $q->whereIn('code', $gateways);
-            })
-            ->first();
-        
-        $gateway = 'winpay';
-        if ($activeChannel && $activeChannel->gateway) {
-            $gateway = $activeChannel->gateway->code;
-        } else {
-            $gateway = reset($gateways) ?: 'winpay';
-        }
-
-        // Fetch fee configurations dynamically from settings
-        $feeBniVa = floatval(\App\Models\Setting::get('fee_bni_va', 1500));
-        $feeBniQris = floatval(\App\Models\Setting::get('fee_bni_qris', 0.7)) / 100;
-        $feeWinpayVa = floatval(\App\Models\Setting::get('fee_winpay_va', 4500));
-
-        // Calculate dynamic admin fee based on payment method and active gateway
-        $adminFee = $feeWinpayVa;
-        if ($activeChannel && $activeChannel->gateway && $activeChannel->gateway->code === 'bni') {
-            if ($activeChannel->type === 'qris') {
-                $adminFee = round($amount * $feeBniQris);
-            } else {
-                $adminFee = $feeBniVa;
-            }
-        } else {
-            $adminFee = $feeWinpayVa;
-        }
-
-        $totalAmount = $amount + $adminFee;
-        $invoiceBase = 'INV-SPMB-' . date('Ymd') . '-' . $registration->id . '-' . rand(100, 999);
-
-        try {
-            $studentName = $registration->student_name ?? $registration->name ?? null;
-            $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
-            $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
-            $response = $gatewayService->createPayment($totalAmount, $invoiceBase, $request->payment_method, $studentName, $studentPhone);
-        } catch (\Exception $e) {
-            $response = [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
-
-        if (!$response['success']) {
-            return redirect()->back()->with('error', 'Failed to initiate payment: ' . $response['message']);
-        }
-
-        $paymentData = $response['data'];
-        $invoiceNo = $paymentData['trxId'] ?? $paymentData['partnerReferenceNo'] ?? null;
-        $refId = $paymentData['referenceId'] ?? null;
-
-        DB::beginTransaction();
-        try {
-            Payment::create([
-                'registration_id' => $registration->id,
-                'invoice_number' => $invoiceNo ?? 'INV-' . time(),
-                'amount' => $totalAmount,
-                'base_amount' => $amount,
-                'admin_fee' => $adminFee,
-                'payment_method' => $request->payment_method,
-                'reference_id' => $refId,
-                'payment_info' => array_merge(is_array($paymentData) ? $paymentData : [], $paymentType === 'final_fee' ? ['selected_items' => $feeDetails['items']] : []),
-                'status' => 'pending',
-                'payment_type' => $paymentType
-            ]);
-
-            $registration->update([
-                'payment_status' => 'pending'
-            ]);
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Invoice pembayaran berhasil diterbitkan.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal menyimpan data pembayaran: ' . $e->getMessage());
+        } finally {
+            $lock->release();
         }
     }
 
