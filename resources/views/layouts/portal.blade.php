@@ -181,7 +181,7 @@
         <div id="nav-inner" class="max-w-7xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-sm px-4 sm:px-6 transition-all duration-300">
             <div class="flex items-center justify-between h-14">
                 <!-- Brand logo -->
-                <a href="{{ auth()->check() ? route('dashboard') : '/' }}" class="flex items-center gap-2.5 flex-shrink-0">
+                <a href="/" class="flex items-center gap-2.5 flex-shrink-0">
                     @if(!empty($schoolLogo))
                         <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-8 object-contain">
                     @else
@@ -199,79 +199,70 @@
 
                 <!-- Center Navigation area -->
                 <div class="hidden md:flex items-center gap-8">
-                    @guest
-                        <!-- Guest Navigation links - Editorial -->
+                    @if(isset($registration) && $registration->id && !request()->is('/') && !request()->routeIs('home'))
+                        <!-- Candidate Active Registration tabs -->
+                        @php
+                            $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
+                            $status = $registration->registration_status;
+                            $formUnlocked = $formPaid;
+                            $verificationUnlocked = ($status !== 'draft');
+                            $observationUnlocked = in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
+                            $resultUnlocked = in_array($status, ['agreement_signed', 'completed']);
+                        @endphp
+                        <div class="flex items-center gap-6 text-[10px] font-bold tracking-wider uppercase">
+                            <a href="{{ route('dashboard') }}" class="transition pb-1 {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                Beranda
+                            </a>
+
+                            @if($formUnlocked)
+                                <a href="{{ route('dashboard.form', $registration->id) }}" class="transition pb-1 {{ Route::is('dashboard.form') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                    Formulir
+                                </a>
+                            @else
+                                <button onclick="showToast('Menu Formulir terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
+                                    <i data-lucide="lock" class="w-3 h-3"></i> Formulir
+                                </button>
+                            @endif
+
+                            @if($verificationUnlocked)
+                                <a href="{{ route('dashboard.verification', $registration->id) }}" class="transition pb-1 {{ Route::is('dashboard.verification') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                    Verifikasi Data
+                                </a>
+                            @else
+                                <button onclick="showToast('Menu Verifikasi Data terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
+                                    <i data-lucide="lock" class="w-3 h-3"></i> Verifikasi Data
+                                </button>
+                            @endif
+
+                            @if($observationUnlocked)
+                                <a href="{{ route('dashboard.observation', $registration->id) }}" class="transition pb-1 {{ Route::is('dashboard.observation') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                    Ta'Aruf
+                                </a>
+                            @else
+                                <button onclick="showToast('Menu Ta\'Aruf terkunci. Tunggu berkas pendaftaran Anda selesai diverifikasi oleh panitia.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
+                                    <i data-lucide="lock" class="w-3 h-3"></i> Ta'Aruf
+                                </button>
+                            @endif
+
+                            @if($resultUnlocked)
+                                <a href="{{ route('dashboard.result', $registration->id) }}" class="transition pb-1 {{ (Route::is('dashboard.result') || (Route::is('dashboard.payment') && $status === 'agreement_signed')) ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                    Administrasi
+                                </a>
+                            @else
+                                <button onclick="showToast('Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
+                                    <i data-lucide="lock" class="w-3 h-3"></i> Administrasi
+                                </button>
+                            @endif
+                        </div>
+                    @else
+                        <!-- Editorial / Portal Landing Navigation links -->
                         <div class="flex items-center gap-7 text-xs font-bold text-slate-500 dark:text-slate-400">
                             <a href="/#program" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Program</a>
                             <a href="/#panca-karakter" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Panca Karakter</a>
                             <a href="/#partnership" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Partnership</a>
                             <a href="/#kata-mereka" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Kata Mereka</a>
                         </div>
-                    @else
-                        @if(auth()->user()->isAdmin())
-                            <!-- Admin Panel link -->
-                            <div class="flex items-center gap-8 text-xs font-bold text-slate-500 dark:text-slate-400">
-                                <a href="{{ route('admin.dashboard') }}" class="transition pb-1 text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary">
-                                    Admin Panel
-                                </a>
-                            </div>
-                        @elseif(isset($registration) && $registration->id)
-                            <!-- Candidate Active Registration tabs -->
-                            @php
-                                $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
-                                $status = $registration->registration_status;
-                                $formUnlocked = $formPaid;
-                                $verificationUnlocked = ($status !== 'draft');
-                                $observationUnlocked = in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
-                                $resultUnlocked = in_array($status, ['agreement_signed', 'completed']);
-                            @endphp
-                            <div class="flex items-center gap-6 text-[10px] font-bold tracking-wider uppercase">
-                                <a href="{{ route('dashboard') }}" class="transition pb-1 {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
-                                    Beranda
-                                </a>
-
-                                @if($formUnlocked)
-                                    <a href="{{ route('dashboard.form', $registration->id) }}" class="transition pb-1 {{ Route::is('dashboard.form') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
-                                        Formulir
-                                    </a>
-                                @else
-                                    <button onclick="showToast('Menu Formulir terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                        <i data-lucide="lock" class="w-3 h-3"></i> Formulir
-                                    </button>
-                                @endif
-
-                                @if($verificationUnlocked)
-                                    <a href="{{ route('dashboard.verification', $registration->id) }}" class="transition pb-1 {{ Route::is('dashboard.verification') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
-                                        Verifikasi Data
-                                    </a>
-                                @else
-                                    <button onclick="showToast('Menu Verifikasi Data terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                        <i data-lucide="lock" class="w-3 h-3"></i> Verifikasi Data
-                                    </button>
-                                @endif
-
-                                @if($observationUnlocked)
-                                    <a href="{{ route('dashboard.observation', $registration->id) }}" class="transition pb-1 {{ Route::is('dashboard.observation') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
-                                        Ta'Aruf
-                                    </a>
-                                @else
-                                    <button onclick="showToast('Menu Ta\'Aruf terkunci. Tunggu berkas pendaftaran Anda selesai diverifikasi oleh panitia.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                        <i data-lucide="lock" class="w-3 h-3"></i> Ta'Aruf
-                                    </button>
-                                @endif
-
-                                @if($resultUnlocked)
-                                    <a href="{{ route('dashboard.result', $registration->id) }}" class="transition pb-1 {{ (Route::is('dashboard.result') || (Route::is('dashboard.payment') && $status === 'agreement_signed')) ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
-                                        Administrasi
-                                    </a>
-                                @else
-                                    <button onclick="showToast('Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                        <i data-lucide="lock" class="w-3 h-3"></i> Administrasi
-                                    </button>
-                                @endif
-                            </div>
-                        @endif
-                    @endguest
+                    @endif
                 </div>
 
                 <!-- Right Area: Actions / Auth -->
@@ -316,7 +307,7 @@
                                 <div class="h-6 w-6 rounded-full bg-custom-primary text-white flex items-center justify-center font-bold text-xs uppercase dark:bg-emerald-600">
                                     {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
                                 </div>
-                                <span class="hidden md:inline font-bold text-slate-700 dark:text-slate-300 pr-1 max-w-[120px] truncate">{{ auth()->user()->name }}</span>
+                                <span class="hidden md:inline font-bold text-slate-700 dark:text-slate-350 pr-1 max-w-[120px] truncate">{{ auth()->user()->name }}</span>
                                 <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
                             </button>
                             <!-- Dropdown Box -->
@@ -324,7 +315,16 @@
                                 <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 font-medium text-slate-400 dark:text-slate-500 truncate">
                                     {{ auth()->user()->email }}
                                 </div>
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
+                                @if(auth()->user()->isAdmin())
+                                    <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
+                                        <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
+                                    </a>
+                                @else
+                                    <a href="{{ route('dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
+                                        <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
+                                    </a>
+                                @endif
+                                <a href="{{ auth()->user()->isAdmin() ? route('admin.profile.edit') : route('profile.edit') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
                                     <i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Edit Profile
                                 </a>
                                 <form method="POST" action="{{ route('logout') }}" hx-boost="false">
@@ -335,26 +335,53 @@
                                 </form>
                             </div>
                         </div>
+
+                        <!-- Mobile Hamburger Button for Auth -->
+                        <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Menu">
+                            <i id="mobile-menu-icon" data-lucide="menu" class="w-5 h-5"></i>
+                        </button>
                     @endguest
                 </div>
             </div>
         </div>
 
-        <!-- Mobile Menu Drawer (Guest Only) -->
-        @guest
+        <!-- Mobile Menu Drawer -->
         <div id="mobile-menu" class="hidden md:hidden max-w-7xl mx-auto mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-lg overflow-hidden">
             <div class="px-4 py-4 space-y-1">
                 <a href="/#program" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Program</a>
                 <a href="/#panca-karakter" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Panca Karakter</a>
                 <a href="/#partnership" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Partnership</a>
                 <a href="/#kata-mereka" onclick="closeMobileMenu()" class="flex items-center px-4 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Kata Mereka</a>
-                <div class="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
-                    <a href="{{ route('login') }}" class="text-center py-3 rounded-xl border-2 border-custom-primary text-custom-primary dark:text-emerald-400 dark:border-emerald-600 font-bold text-sm transition hover:bg-emerald-50 dark:hover:bg-emerald-950/30">Login</a>
-                    <a href="{{ route('register') }}" class="text-center py-3 rounded-xl bg-custom-primary hover:opacity-90 text-white font-bold text-sm transition dark:bg-emerald-600">Daftar Sekarang</a>
-                </div>
+                
+                @guest
+                    <div class="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
+                        <a href="{{ route('login') }}" class="text-center py-3 rounded-xl border-2 border-custom-primary text-custom-primary dark:text-emerald-400 dark:border-emerald-600 font-bold text-sm transition hover:bg-emerald-50 dark:hover:bg-emerald-950/30">Login</a>
+                        <a href="{{ route('register') }}" class="text-center py-3 rounded-xl bg-custom-primary hover:opacity-90 text-white font-bold text-sm transition dark:bg-emerald-600">Daftar Sekarang</a>
+                    </div>
+                @else
+                    <div class="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                        @if(auth()->user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-4 py-3 rounded-xl bg-custom-primary text-white font-bold text-sm transition dark:bg-emerald-600">
+                                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                            </a>
+                        @else
+                            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 px-4 py-3 rounded-xl bg-custom-primary text-white font-bold text-sm transition dark:bg-emerald-600">
+                                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                            </a>
+                        @endif
+                        <a href="{{ auth()->user()->isAdmin() ? route('admin.profile.edit') : route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition">
+                            <i data-lucide="user" class="w-4 h-4"></i> Edit Profile
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}" hx-boost="false">
+                            @csrf
+                            <button type="submit" class="w-full text-left flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-red-655 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition">
+                                <i data-lucide="log-out" class="w-4 h-4 text-red-500"></i> Keluar / Logout
+                            </button>
+                        </form>
+                    </div>
+                @endguest
             </div>
         </div>
-        @endguest
     </nav>
 
     <!-- Main Content Container -->
