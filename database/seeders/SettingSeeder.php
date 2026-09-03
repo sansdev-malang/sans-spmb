@@ -16,10 +16,17 @@ class SettingSeeder extends Seeder
             ['key' => 'school_name', 'value' => 'Sekolah Anak Saleh'],
             ['key' => 'portal_hero_title', 'value' => 'Membangun Generasi Cerdas, Sholeh, dan Berakhlak Mulia.'],
             ['key' => 'portal_hero_description', 'value' => 'Bergabunglah bersama Sekolah Anak Saleh. Kami menyajikan kurikulum yang mengintegrasikan nilai-nilai Islam dengan pendidikan modern untuk menyiapkan pemimpin masa depan.'],
+            ['key' => 'spmb_qrcode_url', 'value' => 'https://spmb.sans.sch.id'],
+
+            // 1. Simulator Mode (Default for local development and testing)
             ['key' => 'winpay_mode', 'value' => 'simulator'],
             ['key' => 'winpay_merchant_id', 'value' => 'MOCK_MERCHANT_ID'],
             ['key' => 'winpay_client_key', 'value' => 'MOCK_CLIENT_KEY'],
             ['key' => 'winpay_client_secret', 'value' => 'MOCK_CLIENT_SECRET'],
+            ['key' => 'winpay_private_key', 'value' => ''],
+            ['key' => 'winpay_public_key', 'value' => ''],
+
+            // 2. Sandbox Mode (Winpay Testing API)
             ['key' => 'winpay_sandbox_merchant_id', 'value' => '171001519'],
             ['key' => 'winpay_sandbox_client_key', 'value' => 'f754edbc-dc93-49e6-986a-1e9e18158938'],
             ['key' => 'winpay_sandbox_client_secret', 'value' => 'SANDBOX_CLIENT_SECRET'],
@@ -51,7 +58,17 @@ class SettingSeeder extends Seeder
                 "TTDX5e5Qi6zAtUOOF1rPV9B8sWTmyLDkqOMGurIoLV0goItbLIbj1usf/sAmCHIz\n" .
                 "HXAZEuYXVTbkUdedO9K0jqRc\n" .
                 "-----END PRIVATE KEY-----"],
-            ['key' => 'spmb_qrcode_url', 'value' => 'https://spmb.sans.sch.id'],
+            ['key' => 'winpay_sandbox_public_key', 'value' => ''],
+
+            // 3. Production Mode (Prepared keys, safely left blank for live admin panel input)
+            ['key' => 'winpay_prod_merchant_id', 'value' => ''],
+            ['key' => 'winpay_prod_client_key', 'value' => ''],
+            ['key' => 'winpay_prod_client_secret', 'value' => ''],
+            ['key' => 'winpay_prod_private_key', 'value' => ''],
+            ['key' => 'winpay_prod_public_key', 'value' => ''],
+
+            // 4. Default Gateway Admin Fee Settings
+            ['key' => 'fee_winpay_va', 'value' => '4500'],
         ];
 
         foreach ($settings as $setting) {
