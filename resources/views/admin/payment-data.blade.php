@@ -1339,7 +1339,12 @@
                         amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
                     });
                 } else {
-                    if (Array.isArray(info.selected_items) && info.selected_items.length > 0) {
+                    if (Array.isArray(p.items) && p.items.length > 0) {
+                        items = p.items.map(it => ({
+                            name: it.fee_name || 'Komponen Biaya',
+                            amount: Number(it.amount || 0)
+                        }));
+                    } else if (Array.isArray(info.selected_items) && info.selected_items.length > 0) {
                         items = info.selected_items.map(it => ({
                             name: it.name || 'Komponen Biaya',
                             amount: Number(it.amount || 0)

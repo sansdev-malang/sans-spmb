@@ -365,34 +365,6 @@ class WebDashboardController extends Controller
         $gate = $this->checkAccessGate($registration, 'form');
         if ($gate) return $gate;
 
-
-        // 2. Pindahkan field extra_services ke Step 1 dan ubah labelnya menjadi "Layanan Non-Formal"
-        \Illuminate\Support\Facades\DB::table('spmb_form_fields')
-            ->where('field_name', 'extra_services')
-            ->update([
-                'form_step_id' => 1, 
-                'label' => 'Layanan Non-Formal',
-                'order' => 5
-            ]);
-
-        // 3. Hapus field "Tingkat Pendaftaran" (admission_level) dari form wizard karena sudah diisi otomatis di awal
-        \Illuminate\Support\Facades\DB::table('spmb_form_fields')
-            ->where('field_name', 'admission_level')
-            ->delete();
-
-        // 4. Backfill data admission_level untuk pendaftaran lama yang masih kosong
-        \App\Models\Registration::where(function($q) {
-            $q->whereNull('admission_level')->orWhere('admission_level', '');
-        })->chunkById(100, function($registrations) {
-            foreach ($registrations as $reg) {
-                if ($reg->grade) {
-                    $reg->update([
-                        'admission_level' => $reg->grade->name === 'KB' ? 'Play Group' : $reg->grade->name
-                    ]);
-                }
-            }
-        });
-
         $formDetails = $this->getFormDetails($registration);
         $steps = $formDetails['steps'];
         $allStepsCompleted = $formDetails['allStepsCompleted'];
@@ -1263,6 +1235,57 @@ class WebDashboardController extends Controller
             $randomHex = strtoupper(bin2hex(random_bytes(3)));
             $invoiceBase = 'INV-SPMB-' . date('Ymd') . '-' . $registration->id . '-' . $randomHex;
 
+            // Step 1: Create local pending payment first (Anti-Orphan Architecture)
+            DB::beginTransaction();
+            try {
+                $initialPaymentInfo = ['gateway' => $gateway];
+                if ($paymentType === 'final_fee') {
+                    $initialPaymentInfo['selected_items'] = $feeDetails['items'];
+                }
+
+                $payment = Payment::create([
+                    'registration_id' => $registration->id,
+                    'invoice_number' => $invoiceBase,
+                    'amount' => $totalAmount,
+                    'base_amount' => $amount,
+                    'admin_fee' => $adminFee,
+                    'payment_method' => $request->payment_method,
+                    'reference_id' => null,
+                    'payment_info' => $initialPaymentInfo,
+                    'status' => 'pending',
+                    'payment_type' => $paymentType
+                ]);
+
+                $itemsToStore = ($paymentType === 'final_fee') ? ($feeDetails['items'] ?? []) : [
+                    [
+                        'id' => $fee->id ?? null,
+                        'name' => $fee->name ?? 'Formulir Pendaftaran',
+                        'amount' => $amount,
+                    ]
+                ];
+
+                foreach ($itemsToStore as $pIt) {
+                    $feeId = (!empty($pIt['id']) && \App\Models\SpmbFee::where('id', $pIt['id'])->exists()) ? $pIt['id'] : null;
+                    \App\Models\PaymentItem::create([
+                        'payment_id' => $payment->id,
+                        'spmb_fee_id' => $feeId,
+                        'fee_name' => $pIt['name'] ?? 'Biaya Administrasi',
+                        'amount' => $pIt['amount'] ?? 0,
+                    ]);
+                }
+
+                $registration->update([
+                    'payment_status' => 'pending'
+                ]);
+
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::error('Failed to create local pending payment in web dashboard', ['error' => $e->getMessage()]);
+                return redirect()->back()->with('error', 'Gagal membuat tagihan pembayaran: ' . $e->getMessage());
+            }
+
+            // Step 2: Request payment transaction to Gateway
             try {
                 $studentName = $registration->student_name ?? $registration->name ?? null;
                 $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
@@ -1276,38 +1299,26 @@ class WebDashboardController extends Controller
             }
 
             if (!$response['success']) {
-                return redirect()->back()->with('error', 'Failed to initiate payment: ' . $response['message']);
+                $payment->update([
+                    'status' => 'failed',
+                    'payment_info' => array_merge($payment->payment_info ?: [], ['failure_reason' => $response['message']])
+                ]);
+
+                return redirect()->back()->with('error', 'Gagal memproses pembayaran melalui gateway: ' . $response['message']);
             }
 
+            // Step 3: Update local payment record with gateway response
             $paymentData = $response['data'];
-            $invoiceNo = $paymentData['trxId'] ?? $paymentData['partnerReferenceNo'] ?? null;
-            $refId = $paymentData['referenceId'] ?? null;
+            $invoiceNo = $paymentData['trxId'] ?? $paymentData['partnerReferenceNo'] ?? $invoiceBase;
+            $refId = $paymentData['referenceId'] ?? $paymentData['partnerReferenceNo'] ?? null;
 
-            DB::beginTransaction();
-            try {
-                Payment::create([
-                    'registration_id' => $registration->id,
-                    'invoice_number' => $invoiceNo ?? 'INV-' . time(),
-                    'amount' => $totalAmount,
-                    'base_amount' => $amount,
-                    'admin_fee' => $adminFee,
-                    'payment_method' => $request->payment_method,
-                    'reference_id' => $refId,
-                    'payment_info' => array_merge(is_array($paymentData) ? $paymentData : [], $paymentType === 'final_fee' ? ['selected_items' => $feeDetails['items']] : []),
-                    'status' => 'pending',
-                    'payment_type' => $paymentType
-                ]);
+            $payment->update([
+                'invoice_number' => $invoiceNo,
+                'reference_id' => $refId,
+                'payment_info' => array_merge(is_array($paymentData) ? $paymentData : [], $paymentType === 'final_fee' ? ['selected_items' => $feeDetails['items']] : []),
+            ]);
 
-                $registration->update([
-                    'payment_status' => 'pending'
-                ]);
-
-                DB::commit();
-                return redirect()->back()->with('success', 'Invoice pembayaran berhasil diterbitkan.');
-            } catch (\Throwable $e) {
-                DB::rollBack();
-                return redirect()->back()->with('error', 'Gagal menyimpan data pembayaran: ' . $e->getMessage());
-            }
+            return redirect()->back()->with('success', 'Invoice pembayaran berhasil diterbitkan.');
         } finally {
             $lock->release();
         }

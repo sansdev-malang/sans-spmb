@@ -238,7 +238,7 @@ class Registration extends Model
             $processedNames[] = $nameLower;
 
             $snapItem = collect($snapshotItems)->first(fn($si) => strtolower(trim($si['name'] ?? '')) === $nameLower);
-            $paidAmount = $this->getItemPaidAmount($f->name);
+            $paidAmount = $this->getItemPaidAmount($f->name, $f->id);
             $amount = (float) $f->amount;
 
             // If candidate already paid for this item in history, preserve the snapshot/paid nominal
@@ -266,7 +266,7 @@ class Registration extends Model
         foreach ($snapshotItems as $si) {
             $nameLower = strtolower(trim($si['name'] ?? ''));
             if (!in_array($nameLower, $processedNames)) {
-                $paidAmount = $this->getItemPaidAmount($si['name']);
+                $paidAmount = $this->getItemPaidAmount($si['name'], $si['id'] ?? null);
                 if ($paidAmount > 0) {
                     $mergedItems[] = [
                         'id' => $si['id'] ?? null,
@@ -435,11 +435,23 @@ class Registration extends Model
      */
     public function getTotalPaidFinalFeeAttribute()
     {
-        return (float) $this->payments()
+        $successfulPayments = $this->payments()
+            ->with('items')
             ->whereIn('status', ['success', 'settled'])
             ->where('payment_type', 'final_fee')
-            ->selectRaw('COALESCE(SUM(amount - COALESCE(admin_fee, 0)), 0) as total_principal')
-            ->value('total_principal');
+            ->get();
+
+        $totalPrincipal = 0;
+        foreach ($successfulPayments as $p) {
+            if ($p->items && $p->items->isNotEmpty()) {
+                $totalPrincipal += (float) $p->items->sum('amount');
+            } else {
+                $principal = $p->base_amount ?? ($p->amount - ($p->admin_fee ?? 0));
+                $totalPrincipal += (float) $principal;
+            }
+        }
+
+        return (float) $totalPrincipal;
     }
 
     /**
@@ -548,42 +560,58 @@ class Registration extends Model
     }
 
     /**
-     * Get total amount paid specifically for a given fee item name
+     * Get total amount paid specifically for a given fee item (by ID or name)
      */
-    public function getItemPaidAmount($itemName)
+    public function getItemPaidAmount($itemName, $feeId = null)
     {
         $successfulPayments = $this->payments()
+            ->with('items')
             ->whereIn('status', ['success', 'settled'])
             ->where('payment_type', 'final_fee')
             ->get();
 
         $totalPaid = 0;
         foreach ($successfulPayments as $p) {
-            $info = is_array($p->payment_info) ? $p->payment_info : [];
-            $selectedItems = $info['selected_items'] ?? [];
-            if (!is_array($selectedItems)) continue;
+            // 1. Check relational payment_items first
+            if ($p->items && $p->items->isNotEmpty()) {
+                foreach ($p->items as $pItem) {
+                    $matchById = ($feeId !== null && $pItem->spmb_fee_id !== null && (int)$pItem->spmb_fee_id === (int)$feeId);
+                    $matchByName = (strcasecmp(trim($pItem->fee_name ?? ''), trim($itemName)) === 0);
 
-            $itemCount = count($selectedItems);
-            if ($itemCount === 0) continue;
-
-            foreach ($selectedItems as $si) {
-                if (strcasecmp(trim($si['name'] ?? ''), trim($itemName)) === 0) {
-                    if ($itemCount === 1) {
-                        // Single item payment: all principal belongs to this item
-                        $principal = (float) ($p->base_amount ?? ($p->amount - ($p->admin_fee ?? 0)));
-                        $totalPaid += $principal;
-                    } else {
-                        // Multi-item payment
-                        $itemAmount = (float) ($si['amount'] ?? 0);
-                        $totalSelected = array_sum(array_column($selectedItems, 'amount'));
-                        if ($totalSelected > 0) {
-                            $principal = (float) ($p->base_amount ?? ($p->amount - ($p->admin_fee ?? 0)));
-                            $totalPaid += ($principal * ($itemAmount / $totalSelected));
-                        } else {
-                            $totalPaid += $itemAmount;
-                        }
+                    if ($matchById || $matchByName) {
+                        $totalPaid += (float) $pItem->amount;
                     }
-                    break;
+                }
+            } else {
+                // 2. Fallback to legacy payment_info['selected_items']
+                $info = is_array($p->payment_info) ? $p->payment_info : [];
+                $selectedItems = $info['selected_items'] ?? [];
+                if (!is_array($selectedItems)) continue;
+
+                $itemCount = count($selectedItems);
+                if ($itemCount === 0) continue;
+
+                foreach ($selectedItems as $si) {
+                    $siId = $si['id'] ?? null;
+                    $matchById = ($feeId !== null && $siId !== null && (int)$siId === (int)$feeId);
+                    $matchByName = (strcasecmp(trim($si['name'] ?? ''), trim($itemName)) === 0);
+
+                    if ($matchById || $matchByName) {
+                        if ($itemCount === 1) {
+                            $principal = (float) ($p->base_amount ?? ($p->amount - ($p->admin_fee ?? 0)));
+                            $totalPaid += $principal;
+                        } else {
+                            $itemAmount = (float) ($si['amount'] ?? 0);
+                            $totalSelected = array_sum(array_column($selectedItems, 'amount'));
+                            if ($totalSelected > 0) {
+                                $principal = (float) ($p->base_amount ?? ($p->amount - ($p->admin_fee ?? 0)));
+                                $totalPaid += ($principal * ($itemAmount / $totalSelected));
+                            } else {
+                                $totalPaid += $itemAmount;
+                            }
+                        }
+                        break;
+                    }
                 }
             }
         }

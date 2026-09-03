@@ -11,7 +11,11 @@ use App\Http\Controllers\Api\AdminRegistrationController;
 // Public Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Webhook Callback Routes (Multi-gateway support)
 Route::post('/payments/callback', [PaymentController::class, 'callback']);
+Route::post('/payments/callback/winpay', fn (Request $request, PaymentController $c) => $c->callback($request, 'winpay'));
+Route::post('/payments/callback/bni', fn (Request $request, PaymentController $c) => $c->callback($request, 'bni'));
 Route::post('/payments/callback/v1.0/transfer-va/payment', [PaymentController::class, 'callback']);
 Route::post('/payments/callback/v1.0/qr/qr-mpm-notify', [PaymentController::class, 'callback']);
 

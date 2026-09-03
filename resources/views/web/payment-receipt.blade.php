@@ -142,7 +142,16 @@
                 <span class="text-[10px] text-slate-400 font-black uppercase tracking-wider block mb-2">Rincian Pembayaran</span>
                 
                 <!-- Base Amount -->
-                @if($payment->payment_type === 'final_fee' && isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items']))
+                @if($payment->items && $payment->items->isNotEmpty())
+                    @foreach($payment->items as $item)
+                        <div class="flex justify-between items-center text-xs text-slate-600">
+                            <span>{{ $item->fee_name }}</span>
+                            <span class="font-bold text-slate-800">
+                                Rp {{ number_format($item->amount, 0, ',', '.') }}
+                            </span>
+                        </div>
+                    @endforeach
+                @elseif($payment->payment_type === 'final_fee' && isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items']))
                     @foreach($payment->payment_info['selected_items'] as $item)
                         <div class="flex justify-between items-center text-xs text-slate-600">
                             <span>{{ $item['name'] }}</span>

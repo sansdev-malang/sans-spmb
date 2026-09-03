@@ -162,19 +162,29 @@
                                     $successfulPayments = $registration->payments()
                                         ->where('status', 'success')
                                         ->where('payment_type', 'final_fee')
+                                        ->with('items')
                                         ->get();
                                 @endphp
                                 @foreach($feeDetails['items'] as $item)
                                     @php
-                                        $isPaid = isset($paidItemNames) && in_array($item['name'], $paidItemNames);
+                                        $itemId = $item['id'] ?? null;
+                                        $itemName = $item['name'];
+                                        $isPaid = isset($paidItemNames) && in_array($itemName, $paidItemNames);
                                         
                                         // Find payment receipt for this specific item
                                         $itemPayment = null;
-                                        if ($isPaid && isset($successfulPayments)) {
+                                        if (isset($successfulPayments)) {
                                             foreach ($successfulPayments as $p) {
-                                                if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
+                                                if ($p->items && $p->items->isNotEmpty()) {
+                                                    foreach ($p->items as $pItem) {
+                                                        if (($itemId && (int)$pItem->spmb_fee_id === (int)$itemId) || strcasecmp(trim($pItem->fee_name), trim($itemName)) === 0) {
+                                                            $itemPayment = $p;
+                                                            break 2;
+                                                        }
+                                                    }
+                                                } elseif (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
                                                     foreach ($p->payment_info['selected_items'] as $si) {
-                                                        if ($si['name'] === $item['name']) {
+                                                        if (($itemId && isset($si['id']) && (int)$si['id'] === (int)$itemId) || strcasecmp(trim($si['name'] ?? ''), trim($itemName)) === 0) {
                                                             $itemPayment = $p;
                                                             break 2;
                                                         }
@@ -187,7 +197,7 @@
                                         $itemGross = (float) ($item['amount'] ?? 0);
                                         $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
                                         $itemNet = max(0, $itemGross - $itemDiscount);
-                                        $itemPaid = $registration->getItemPaidAmount($item['name']);
+                                        $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
                                         $itemRemaining = max(0, $itemNet - $itemPaid);
                                         $isItemLunas = ($isPaid || $itemRemaining <= 0);
                                         $canCicil = (!$isItemLunas) && (!empty($item['is_installment_allowed']) || ($installmentMode ?? 'none') === 'all');
@@ -762,7 +772,9 @@
                     <div class="space-y-3">
                         @foreach($successfulPayments as $index => $p)
                             @php
-                                $itemNames = collect($p->payment_info['selected_items'] ?? [])->pluck('name')->implode(', ');
+                                $itemNames = ($p->items && $p->items->isNotEmpty())
+                                    ? $p->items->pluck('fee_name')->implode(', ')
+                                    : collect($p->payment_info['selected_items'] ?? [])->pluck('name')->implode(', ');
                             @endphp
                             <div class="border border-slate-150 dark:border-slate-800 rounded-2xl p-4 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/20">
                                 <div class="space-y-1">

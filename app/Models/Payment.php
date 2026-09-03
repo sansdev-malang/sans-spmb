@@ -27,6 +27,11 @@ class Payment extends Model
         return $this->belongsTo(Registration::class);
     }
 
+    public function items()
+    {
+        return $this->hasMany(PaymentItem::class, 'payment_id');
+    }
+
     protected $appends = [
         'category_names',
         'channel_display_name',
@@ -53,27 +58,41 @@ class Payment extends Model
                 $categoryNames[] = $cat ? $cat->name : 'Formulir Pendaftaran';
             }
         } else {
-            $selectedItems = $info['selected_items'] ?? [];
-            if (!empty($selectedItems) && is_array($selectedItems)) {
-                foreach ($selectedItems as $it) {
-                    $itName = $it['name'] ?? '';
-                    if (!$itName) continue;
-
-                    // 1. Look up in SpmbFee
-                    $fee = SpmbFee::where('name', $itName)
-                        ->when($this->registration, function($q) {
-                            $q->where('spmb_unit_id', $this->registration->spmb_unit_id);
-                        })->first();
-                    if (!$fee) {
-                        $fee = SpmbFee::where('name', $itName)->first();
-                    }
-                    if ($fee && $fee->category) {
-                        $categoryNames[] = $fee->category->name;
+            // Check relational payment_items first
+            $relItems = $this->relationLoaded('items') ? $this->items : $this->items()->with('fee.category')->get();
+            if ($relItems->isNotEmpty()) {
+                foreach ($relItems as $pItem) {
+                    if ($pItem->fee && $pItem->fee->category) {
+                        $categoryNames[] = $pItem->fee->category->name;
                     } else {
-                        // 2. Check if category matches extra service name directly
-                        $cat = SpmbFeeCategory::where('name', 'like', "%{$itName}%")->first();
-                        if ($cat) {
-                            $categoryNames[] = $cat->name;
+                        $cat = SpmbFeeCategory::where('name', 'like', "%{$pItem->fee_name}%")->first();
+                        $categoryNames[] = $cat ? $cat->name : $pItem->fee_name;
+                    }
+                }
+            } else {
+                // Fallback to legacy payment_info['selected_items']
+                $selectedItems = $info['selected_items'] ?? [];
+                if (!empty($selectedItems) && is_array($selectedItems)) {
+                    foreach ($selectedItems as $it) {
+                        $itName = $it['name'] ?? '';
+                        if (!$itName) continue;
+
+                        // 1. Look up in SpmbFee
+                        $fee = SpmbFee::where('name', $itName)
+                            ->when($this->registration, function($q) {
+                                $q->where('spmb_unit_id', $this->registration->spmb_unit_id);
+                            })->first();
+                        if (!$fee) {
+                            $fee = SpmbFee::where('name', $itName)->first();
+                        }
+                        if ($fee && $fee->category) {
+                            $categoryNames[] = $fee->category->name;
+                        } else {
+                            // 2. Check if category matches extra service name directly
+                            $cat = SpmbFeeCategory::where('name', 'like', "%{$itName}%")->first();
+                            if ($cat) {
+                                $categoryNames[] = $cat->name;
+                            }
                         }
                     }
                 }

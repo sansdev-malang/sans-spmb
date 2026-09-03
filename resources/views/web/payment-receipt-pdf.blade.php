@@ -224,7 +224,16 @@
                 </tr>
             </thead>
             <tbody>
-                @if($payment->payment_type === 'final_fee' && isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items']))
+                @if($payment->items && $payment->items->isNotEmpty())
+                    @foreach($payment->items as $item)
+                        <tr>
+                            <td>{{ $item->fee_name }}</td>
+                            <td style="text-align: right; font-weight: bold; color: #1e293b;">
+                                Rp {{ number_format($item->amount, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                    @endforeach
+                @elseif($payment->payment_type === 'final_fee' && isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items']))
                     @foreach($payment->payment_info['selected_items'] as $item)
                         <tr>
                             <td>{{ $item['name'] }}</td>
