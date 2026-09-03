@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
+    @include('web.partials.candidate-context-bar')
     <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         <div class="bg-brand-emerald text-white px-6 py-5 flex justify-between items-center">
             <div>

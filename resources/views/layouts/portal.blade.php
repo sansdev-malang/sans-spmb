@@ -22,8 +22,10 @@
         $rawCopyright = \App\Models\Setting::get('footer_copyright_text', '© 2026 {SchoolName}. All rights reserved.');
         $footerCopyright = str_replace(['{SchoolName}', '{Year}'], [$schoolName, date('Y')], $rawCopyright);
 
-        if (!isset($registration) && auth()->check() && !auth()->user()->isAdmin()) {
-            $registration = \App\Models\Registration::where('user_id', auth()->id())
+        $allUserRegistrations = collect();
+        if (auth()->check() && !auth()->user()->isAdmin()) {
+            $allUserRegistrations = \App\Models\Registration::with(['unit', 'grade', 'classProgram'])
+                ->where('user_id', auth()->id())
                 ->where(function($q) {
                     $q->whereHas('payments', function($pq) {
                         $pq->where('payment_type', 'registration_fee')
@@ -31,8 +33,12 @@
                     })
                     ->orWhere('registration_status', '!=', 'draft');
                 })
-                ->orderBy('created_at', 'desc')
-                ->first();
+                ->orderBy('id', 'desc')
+                ->get();
+
+            if (!isset($registration)) {
+                $registration = $allUserRegistrations->first();
+            }
         }
     @endphp
 
@@ -305,6 +311,77 @@
                             </div>
                         </div>
 
+                        @if($allUserRegistrations->count() > 1 && !$isLanding)
+                            <!-- Candidate Switcher Dropdown (Multi-Child) -->
+                            <div class="hidden sm:block relative">
+                                <button type="button" 
+                                        id="candidateSwitcherBtn"
+                                        onclick="toggleCandidateDropdown(event)" 
+                                        class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-brand-emerald/30 text-xs font-bold text-slate-800 dark:text-white hover:bg-emerald-100/70 transition shadow-sm"
+                                        title="Pilih Ananda yang Dikelola">
+                                    <span class="h-5 w-5 rounded-full bg-brand-emerald text-white flex items-center justify-center text-[10px] font-black">
+                                        👦
+                                    </span>
+                                    <span class="max-w-[120px] truncate">{{ $registration->candidate_name ?? 'Pilih Ananda' }}</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-brand-emerald/15 text-brand-emerald dark:text-emerald-400 font-black">{{ $registration->unit->code ?? 'UNIT' }}</span>
+                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                </button>
+
+                                <!-- Dropdown Menu -->
+                                <div id="candidateDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-150 dark:border-slate-800 py-2 z-50 animate-fade-in text-xs">
+                                    <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Ananda</span>
+                                        <span class="text-[10px] font-bold text-brand-emerald">{{ $allUserRegistrations->count() }} Pendaftaran</span>
+                                    </div>
+                                    <div class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 p-1">
+                                        @foreach($allUserRegistrations as $itemReg)
+                                            @php
+                                                $isSelected = ($registration && $registration->id === $itemReg->id);
+                                                // Target URL based on active view
+                                                $targetUrl = route('dashboard.detail', $itemReg->id);
+                                                if (Route::is('dashboard.form')) {
+                                                    $targetUrl = route('dashboard.form', $itemReg->id);
+                                                } elseif (Route::is('dashboard.verification')) {
+                                                    $targetUrl = route('dashboard.verification', $itemReg->id);
+                                                } elseif (Route::is('dashboard.observation')) {
+                                                    $targetUrl = route('dashboard.observation', $itemReg->id);
+                                                } elseif (Route::is('dashboard.result') || Route::is('dashboard.payment')) {
+                                                    $targetUrl = route('dashboard.result', $itemReg->id);
+                                                }
+                                            @endphp
+                                            <a href="{{ $targetUrl }}" class="flex items-center justify-between p-2.5 rounded-xl transition {{ $isSelected ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-brand-emerald/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800' }}">
+                                                <div class="flex items-center gap-2.5 min-w-0">
+                                                    <div class="h-8 w-8 rounded-xl {{ $isSelected ? 'bg-brand-emerald text-white font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }} flex items-center justify-center text-xs flex-shrink-0">
+                                                        {{ substr($itemReg->candidate_name ?? 'A', 0, 1) }}
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <div class="font-extrabold text-slate-800 dark:text-white truncate flex items-center gap-1">
+                                                            <span class="truncate">{{ $itemReg->candidate_name }}</span>
+                                                            @if($isSelected)
+                                                                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-emerald flex-shrink-0"></i>
+                                                            @endif
+                                                        </div>
+                                                        <div class="text-[10px] text-slate-400 truncate">
+                                                            {{ $itemReg->unit?->name }} • {{ $itemReg->grade?->name }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full {{ $isSelected ? 'bg-brand-emerald text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500' }}">
+                                                    {{ $itemReg->unit?->code }}
+                                                </span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                    <div class="p-2 border-t border-slate-100 dark:border-slate-800">
+                                        <a href="{{ route('dashboard') }}#pendaftaran-ananda" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-brand-emerald dark:text-emerald-400 font-bold text-[11px] transition">
+                                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                            <span>Daftarkan Ananda Baru</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- User Profile Dropdown Toggle (Desktop Only) -->
                         <div class="hidden md:block relative">
                             <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-1.5 p-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-bold text-slate-700 dark:text-slate-300" title="Akun">
@@ -365,6 +442,24 @@
                             <span class="text-[10px] text-slate-400 dark:text-slate-500 truncate">{{ auth()->user()->email }}</span>
                         </div>
                     </div>
+
+                    @if($allUserRegistrations->count() > 1 && !$isLanding)
+                        <!-- Mobile Candidate Switcher Pill Strip -->
+                        <div class="p-2.5 bg-emerald-50/50 dark:bg-emerald-950/20 border border-brand-emerald/20 rounded-xl space-y-1.5 mb-3">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pilih Ananda yang Dikelola:</span>
+                            <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+                                @foreach($allUserRegistrations as $itemMobReg)
+                                    @php
+                                        $isMobSelected = ($registration && $registration->id === $itemMobReg->id);
+                                    @endphp
+                                    <a href="{{ route('dashboard.detail', $itemMobReg->id) }}" onclick="closeMobileMenu()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1 {{ $isMobSelected ? 'bg-brand-emerald text-white shadow-sm' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700' }}">
+                                        <span>👦 {{ $itemMobReg->candidate_name }}</span>
+                                        <span class="text-[9px] opacity-80">({{ $itemMobReg->unit?->code }})</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 @endauth
 
                 @if(!$isLanding)
@@ -645,9 +740,21 @@
         function toggleNotifDropdown(event) {}
         @endauth
 
+        // Candidate Switcher dropdown handler
+        function toggleCandidateDropdown(event) {
+            event.stopPropagation();
+            document.getElementById('profileDropdown')?.classList.add('hidden');
+            document.getElementById('notifDropdown')?.classList.add('hidden');
+            const dropdown = document.getElementById('candidateDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+            }
+        }
+
         // Profile dropdown handler
         function toggleProfileDropdown(event) {
             event.stopPropagation();
+            document.getElementById('candidateDropdown')?.classList.add('hidden');
             document.getElementById('notifDropdown')?.classList.add('hidden');
             const dropdown = document.getElementById('profileDropdown');
             dropdown.classList.toggle('hidden');
@@ -656,7 +763,9 @@
         document.addEventListener('click', function(e) {
             const notifDropdown = document.getElementById('notifDropdown');
             const profileDropdown = document.getElementById('profileDropdown');
+            const candidateDropdown = document.getElementById('candidateDropdown');
             const bellButton = document.getElementById('notifBellButton');
+            const switcherBtn = document.getElementById('candidateSwitcherBtn');
             
             if (notifDropdown && !notifDropdown.classList.contains('hidden')) {
                 if (!notifDropdown.contains(e.target) && (!bellButton || !bellButton.contains(e.target))) {
@@ -668,6 +777,11 @@
             }
             if (profileDropdown && !profileDropdown.classList.contains('hidden') && !profileDropdown.contains(e.target)) {
                 profileDropdown.classList.add('hidden');
+            }
+            if (candidateDropdown && !candidateDropdown.classList.contains('hidden')) {
+                if (!candidateDropdown.contains(e.target) && (!switcherBtn || !switcherBtn.contains(e.target))) {
+                    candidateDropdown.classList.add('hidden');
+                }
             }
         });
 

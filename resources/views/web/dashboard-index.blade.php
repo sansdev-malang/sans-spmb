@@ -180,6 +180,36 @@
                                 </p>
                             </div>
                             
+                            <!-- Mini Visual Progress Tracker -->
+                            @php
+                                $stepsVisual = [
+                                    ['label' => 'Bayar', 'done' => $isPaid, 'active' => !$isPaid],
+                                    ['label' => 'Formulir', 'done' => ($status !== 'draft' && $status !== 'failed'), 'active' => ($isPaid && ($status === 'draft' || $status === 'failed'))],
+                                    ['label' => 'Verifikasi', 'done' => in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']), 'active' => ($status === 'submitted')],
+                                    ['label' => 'Ta\'aruf', 'done' => in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']), 'active' => ($status === 'verified')],
+                                    ['label' => 'Administrasi', 'done' => ($status === 'completed'), 'active' => in_array($status, ['taaruf_completed', 'agreement_signed'])],
+                                ];
+                            @endphp
+                            <div class="mb-4 bg-slate-50/80 dark:bg-slate-950/60 rounded-2xl p-3 border border-slate-100 dark:border-slate-800">
+                                <div class="flex items-center justify-between relative">
+                                    <div class="absolute left-3 right-3 top-2.5 h-0.5 bg-slate-200 dark:bg-slate-800 -z-0"></div>
+                                    @foreach($stepsVisual as $sIndex => $sv)
+                                        <div class="flex flex-col items-center relative z-10">
+                                            <div class="h-5 w-5 rounded-full flex items-center justify-center text-[9px] font-black transition shadow-sm {{ $sv['done'] ? 'bg-emerald-600 text-white' : ($sv['active'] ? 'bg-amber-400 text-slate-900 ring-2 ring-amber-200 dark:ring-amber-900/50 scale-110 font-black' : 'bg-slate-200 dark:bg-slate-800 text-slate-400') }}">
+                                                @if($sv['done'])
+                                                    <i data-lucide="check" class="w-3 h-3"></i>
+                                                @else
+                                                    {{ $sIndex + 1 }}
+                                                @endif
+                                            </div>
+                                            <span class="text-[8px] font-bold mt-1 {{ $sv['done'] ? 'text-emerald-700 dark:text-emerald-400' : ($sv['active'] ? 'text-amber-600 dark:text-amber-400 font-extrabold' : 'text-slate-400') }}">
+                                                {{ $sv['label'] }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            
                             <!-- Detailed Information Chips / Table Grid -->
                             <div class="bg-slate-50 dark:bg-slate-950 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 text-[11px] space-y-2 mb-4">
                                 <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">

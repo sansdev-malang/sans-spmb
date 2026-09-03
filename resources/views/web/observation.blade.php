@@ -116,6 +116,7 @@
 </style>
 
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
+    @include('web.partials.candidate-context-bar')
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-150/80 dark:border-slate-800 overflow-hidden">
         
         <!-- Header -->

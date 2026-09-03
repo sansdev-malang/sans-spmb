@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8 space-y-6">
+    @include('web.partials.candidate-context-bar')
 <style>
     /* Styling for dynamic rich text instructions from Quill */
     .instructions-body ul {
