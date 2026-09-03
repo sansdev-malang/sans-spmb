@@ -84,9 +84,6 @@ class SpmbAgreementTemplateSeeder extends Seeder
                     'content' => $agreementBody,
                     'rules_consent_label' => 'Saya menyetujui seluruh tata tertib dan peraturan akademik Sekolah Anak Saleh.',
                     'fees_consent_label' => 'Saya menyanggupi pemenuhan seluruh rincian biaya pendidikan dan administrasi masuk yayasan.',
-                    'place' => 'Malang',
-                    'principal_name' => 'Dra. Hj. Mike Supraptiwi, S.Psi, M.Pd',
-                    'principal_title' => 'Kepala Sekolah',
                 ]
             );
         }
