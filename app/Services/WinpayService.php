@@ -230,13 +230,15 @@ class WinpayService implements PaymentGatewayInterface
         $expiry->modify('+24 hours');
         $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
 
-        // 2. Sanitasi nama pelanggan (Panjang 3-40 karakter, alfanumerik)
+        // 2. Sanitasi nama pelanggan (Wajib Alfanumerik & Spasi saja, Maksimal 30 karakter standar SNAP BI ASPI)
         $rawName = trim($customerName ?: 'Calon Siswa SPMB');
-        $cleanName = preg_replace('/[^a-zA-Z0-9 _-]/', '', $rawName);
+        $cleanName = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $rawName);
+        $cleanName = preg_replace('/\s+/', ' ', $cleanName);
+        $cleanName = trim($cleanName);
         if (strlen($cleanName) < 3) {
             $cleanName = 'SPMB ' . $cleanName;
         }
-        $vaName = substr($cleanName, 0, 40);
+        $vaName = substr($cleanName, 0, 30);
 
         // 3. Susun Request Payload sesuai spesifikasi SNAP BI masing-masing metode
         if ($isEwallet) {

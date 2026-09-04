@@ -305,7 +305,7 @@ class PaymentController extends Controller
                     $feeTypeName = $fee ? $fee->name : 'Formulir';
                 }
 
-                $studentPaymentName = trim("{$unitCode} - {$feeTypeName} - {$candidateName}");
+                $studentPaymentName = trim("{$unitCode} {$feeTypeName} {$candidateName}");
                 $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
                 $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
                 $response = $gatewayService->createPayment($totalAmount, $invoiceNo, $request->payment_method, $studentPaymentName, $studentPhone);
