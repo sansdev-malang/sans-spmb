@@ -115,15 +115,15 @@
             </div>
         </div>
 
-        <div class="p-8 space-y-8">
+        <div class="p-4 sm:p-8 space-y-5 sm:space-y-8">
             
             <!-- ANNOUNCEMENT BANNER -->
-            <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-6 flex flex-col sm:flex-row gap-5 items-center text-center sm:text-left">
-                <div class="h-16 w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
-                    <i data-lucide="party-popper" class="w-8 h-8 text-brand-yellow"></i>
+            <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
+                <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                    <i data-lucide="party-popper" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
                 </div>
                 <div class="space-y-1">
-                    <h3 class="text-lg font-black text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan LULUS & DITERIMA</h3>
+                    <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan LULUS & DITERIMA</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                         Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah lolos seluruh tahapan observasi kesiapan belajar dan berkas pendaftaran.
                     </p>
@@ -133,11 +133,12 @@
             <!-- TUITION FEES COMPONENT BREAKDOWN -->
             <div class="space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <h4 class="font-extrabold text-slate-850 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="receipt" class="w-4 h-4 text-brand-emerald"></i> Rincian Biaya Pendidikan Masuk Awal
+                    <h4 class="font-bold text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="receipt" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-emerald"></i>
+                        <span>Rincian Biaya Masuk Awal</span>
                     </h4>
                     @if(isset($discountAmount) && ($discountAmount > 0 || ($installmentMode ?? 'none') !== 'none'))
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
+                        <span class="self-start sm:self-auto px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
                             Disetujui Keringanan / Cicilan
                         </span>
                     @endif
@@ -172,9 +173,9 @@
                     </div>
                 @endif
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-150/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-inner">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
+                <div class="bg-white dark:bg-slate-900 border border-slate-150/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs sm:shadow-inner">
+                    <table class="w-full text-left text-xs border-collapse block sm:table">
+                        <thead class="hidden sm:table-header-group">
                             <tr class="bg-slate-50 dark:bg-slate-950 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
                                 @if($registration->registration_status !== 'completed')
                                     <th class="p-4 text-center w-12 select-none">Pilih</th>
@@ -184,7 +185,7 @@
                                 <th class="p-4 text-center">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-850">
+                        <tbody class="block sm:table-row-group p-3 sm:p-0 space-y-3 sm:space-y-0 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-850">
                             @if(isset($feeDetails['items']) && is_array($feeDetails['items']))
                                 @php
                                     $successfulPayments = $registration->payments()
@@ -236,9 +237,9 @@
                                         $canCicil = (!$isItemLunas) && (!empty($item['is_installment_allowed']) || ($installmentMode ?? 'none') === 'all');
                                         $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
                                     @endphp
-                                    <tr class="text-slate-650 dark:text-slate-350 {{ $isItemLunas ? 'bg-slate-50/40 dark:bg-slate-950/10' : '' }}">
+                                    <tr class="block sm:table-row bg-slate-50/50 dark:bg-slate-950/30 sm:bg-transparent border border-slate-200/80 dark:border-slate-800 sm:border-0 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none text-slate-650 dark:text-slate-350 {{ $isItemLunas ? 'bg-slate-50/30 dark:bg-slate-950/10' : '' }}">
                                         @if($registration->registration_status !== 'completed')
-                                            <td class="p-4 text-center align-top pt-4.5">
+                                            <td class="float-left sm:float-none p-0 sm:p-4 text-center align-top sm:pt-4.5 mr-2.5 sm:mr-0 mt-0.5 sm:mt-0">
                                                 @if($isItemLunas)
                                                     <span class="inline-flex items-center justify-center text-green-600 dark:text-green-400">
                                                         <i data-lucide="check-circle" class="w-4 h-4"></i>
@@ -259,24 +260,37 @@
                                                 @endif
                                             </td>
                                         @endif
-                                        <td class="p-4 font-medium {{ $isItemLunas ? 'text-slate-400' : '' }}">
+                                        <td class="block sm:table-cell p-0 sm:p-4 font-medium {{ $isItemLunas ? 'text-slate-400' : '' }}">
                                             <div class="flex flex-col gap-0.5">
-                                                <div class="flex items-center gap-2 {{ $isItemLunas ? 'line-through' : '' }}">
-                                                    <span class="font-extrabold text-xs text-slate-850 dark:text-white">{{ $item['name'] }}</span>
-                                                    @if($itemDiscount > 0)
-                                                        <span class="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-[9px] border border-rose-200/60 dark:border-rose-900">
-                                                            🏷️ Diskon Rp {{ number_format($itemDiscount, 0, ',', '.') }}
-                                                        </span>
-                                                    @endif
-                                                    @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
-                                                        <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
-                                                            🔓 Boleh Dicicil
-                                                        </span>
-                                                    @elseif(($installmentMode ?? 'none') === 'all')
-                                                        <span class="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] border border-emerald-200/60 dark:border-emerald-900">
-                                                            ✓ Bisa Dicicil
-                                                        </span>
-                                                    @endif
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <div class="flex items-center gap-2 flex-wrap {{ $isItemLunas ? 'line-through' : '' }}">
+                                                        <span class="font-extrabold text-xs text-slate-850 dark:text-white">{{ $item['name'] }}</span>
+                                                        @if($itemDiscount > 0)
+                                                            <span class="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-[9px] border border-rose-200/60 dark:border-rose-900">
+                                                                🏷️ Diskon Rp {{ number_format($itemDiscount, 0, ',', '.') }}
+                                                            </span>
+                                                        @endif
+                                                        @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
+                                                            <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
+                                                                🔓 Boleh Dicicil
+                                                            </span>
+                                                        @elseif(($installmentMode ?? 'none') === 'all')
+                                                            <span class="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] border border-emerald-200/60 dark:border-emerald-900">
+                                                                ✓ Bisa Dicicil
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    <!-- Mobile Status Badge in Card Top-Right -->
+                                                    <div class="sm:hidden shrink-0">
+                                                        @if($isItemLunas || $registration->registration_status === 'completed')
+                                                            <span class="text-[9px] bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-green-300/40">Lunas</span>
+                                                        @elseif($itemPaid > 0)
+                                                            <span class="text-[9px] bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-blue-300/40">Dicicil</span>
+                                                        @else
+                                                            <span class="text-[9px] bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-amber-300/40">Tanggungan</span>
+                                                        @endif
+                                                    </div>
                                                 </div>
 
                                                 @if($itemDiscount > 0)
@@ -312,15 +326,18 @@
                                                             </div>
                                                         </div>
                                                     @elseif(count($itemPayments) === 1)
-                                                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
-                                                            <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas via {{ $itemPayments[0]['method'] }} ({{ $itemPayments[0]['date'] }} WIB)
+                                                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between gap-1 mt-0.5">
+                                                            <span class="flex items-center gap-1"><i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas via {{ $itemPayments[0]['method'] }} ({{ $itemPayments[0]['date'] }} WIB)</span>
+                                                            <a href="{{ route('dashboard.payment.receipt', $itemPayments[0]['payment']->id) }}" target="_blank" download class="sm:hidden download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap">
+                                                                <i data-lucide="download" class="w-2.5 h-2.5"></i> Kwitansi
+                                                            </a>
                                                         </div>
                                                     @endif
                                                 @elseif(!$isItemLunas && $itemPaid > 0)
                                                     <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex flex-wrap items-center gap-1.5 mt-1">
                                                         <span>Tarif Pokok: <strong class="font-mono text-slate-700 dark:text-slate-200">Rp {{ number_format($itemNet, 0, ',', '.') }}</strong></span>
                                                         <span>•</span>
-                                                        <span>Telah Dicicil: <strong class="text-emerald-600 dark:text-emerald-400 font-bold font-mono">Rp {{ number_format($itemPaid, 0, ',', '.') }}</strong> ({{ count($itemPayments) }}x Pembayaran)</span>
+                                                        <span>Telah Dicicil: <strong class="text-emerald-600 dark:text-emerald-400 font-bold font-mono">Rp {{ number_format($itemPaid, 0, ',', '.') }}</strong> ({{ count($itemPayments) }}x)</span>
                                                         <span>•</span>
                                                         <span>Sisa: <strong class="text-amber-600 dark:text-amber-400 font-bold font-mono">Rp {{ number_format($itemRemaining, 0, ',', '.') }}</strong></span>
                                                     </div>
@@ -360,49 +377,66 @@
                                                             <i data-lucide="chevron-down" id="chevron-{{ $loop->index }}" class="w-3 h-3 transition-transform duration-200"></i>
                                                         </button>
 
-                                                        <div id="accordion-input-box-{{ $loop->index }}" class="hidden mt-2 p-3 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-xl border border-emerald-200/60 dark:border-emerald-900/40 space-y-2 max-w-md">
-                                                            <div class="flex items-center justify-between">
-                                                                <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Nominal Bayar Tahap Ini</span>
-                                                                <span class="text-[9px] text-slate-500 font-mono">Batas Min: <strong class="text-emerald-700 dark:text-emerald-400 font-mono">Rp {{ number_format($minItemInstallment, 0, ',', '.') }}</strong></span>
+                                                        <div id="accordion-input-box-{{ $loop->index }}" class="hidden mt-2.5 p-3.5 sm:p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/60 space-y-2.5 max-w-lg shadow-xs">
+                                                            <!-- Header: Label + Boundary Info Badge -->
+                                                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                                                <label for="input-amount-{{ $loop->index }}" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                                    <i data-lucide="coins" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                                                    <span>Nominal Dicicil Tahap Ini</span>
+                                                                </label>
+                                                                <span class="text-[10px] text-emerald-800 dark:text-emerald-300 bg-white/90 dark:bg-slate-900/80 font-mono font-bold px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800 shadow-xs">
+                                                                    Min: <strong class="text-emerald-600 dark:text-emerald-400">Rp {{ number_format($minItemInstallment, 0, ',', '.') }}</strong>
+                                                                </span>
                                                             </div>
-                                                            <div class="flex items-center gap-2">
-                                                                <div class="relative flex-1">
-                                                                    <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 text-[11px] font-bold text-slate-400 font-mono">Rp</span>
-                                                                    <input type="text"
-                                                                        inputmode="numeric" 
-                                                                        id="input-amount-{{ $loop->index }}"
-                                                                        class="result-item-amount-input w-full pl-8 pr-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold font-mono text-slate-850 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
-                                                                        placeholder="Contoh: {{ number_format($minItemInstallment, 0, ',', '.') }}"
-                                                                        value=""
-                                                                        data-applied-amount="{{ $itemRemaining }}"
-                                                                        data-index="{{ $loop->index }}"
-                                                                        data-max="{{ $itemRemaining }}"
-                                                                        data-min="{{ $minItemInstallment }}"
-                                                                        oninput="formatRupiahInput(this)"
-                                                                        onkeydown="if(event.key === 'Enter'){ event.preventDefault(); applyResultItemInstallment({{ $loop->index }}); }">
-                                                                </div>
-                                                                <button type="button" onclick="applyResultItemInstallment({{ $loop->index }})" class="px-4 py-1.5 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold transition shadow-sm select-none">
-                                                                    OK
+
+                                                            <!-- Full-Width Input Field -->
+                                                            <div class="relative w-full">
+                                                                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-bold text-slate-400 dark:text-slate-500 font-mono select-none">Rp</span>
+                                                                <input type="text"
+                                                                    inputmode="numeric" 
+                                                                    id="input-amount-{{ $loop->index }}"
+                                                                    class="result-item-amount-input w-full pl-10 pr-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold font-mono text-slate-850 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs transition"
+                                                                    placeholder="Contoh: {{ number_format($minItemInstallment, 0, ',', '.') }}"
+                                                                    value=""
+                                                                    data-applied-amount="{{ $itemRemaining }}"
+                                                                    data-index="{{ $loop->index }}"
+                                                                    data-max="{{ $itemRemaining }}"
+                                                                    data-min="{{ $minItemInstallment }}"
+                                                                    oninput="formatRupiahInput(this)"
+                                                                    onkeydown="if(event.key === 'Enter'){ event.preventDefault(); applyResultItemInstallment({{ $loop->index }}); }">
+                                                            </div>
+
+                                                            <!-- Action Buttons Row: Terapkan (Primary) & Bayar Penuh (Secondary) -->
+                                                            <div class="flex items-center gap-2 pt-0.5">
+                                                                <button type="button" onclick="applyResultItemInstallment({{ $loop->index }})" class="flex-1 py-2 px-3.5 bg-brand-emerald hover-emerald text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5 select-none active:scale-[0.98]">
+                                                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                                                    <span>Terapkan</span>
                                                                 </button>
-                                                                <button type="button" onclick="resetResultItemFull({{ $loop->index }})" class="px-2.5 py-1.5 bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition shadow-sm select-none whitespace-nowrap" title="Batalkan cicilan dan bayar penuh">
+                                                                <button type="button" onclick="resetResultItemFull({{ $loop->index }})" class="py-2 px-3 bg-white dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-bold transition select-none whitespace-nowrap active:scale-[0.98] shadow-xs" title="Batalkan cicilan dan bayar penuh">
                                                                     Bayar Penuh
                                                                 </button>
                                                             </div>
-                                                            <p id="error-msg-{{ $loop->index }}" class="hidden text-[10px] text-red-600 font-semibold leading-tight"></p>
+
+                                                            <p id="error-msg-{{ $loop->index }}" class="hidden text-[10px] text-red-600 dark:text-red-400 font-semibold leading-tight pt-0.5"></p>
                                                         </div>
                                                     </div>
                                                 @endif
                                             </div>
                                         </td>
-                                        <td class="p-4 text-right font-bold {{ $isItemLunas ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200' }} align-top pt-4.5">
-                                            <span id="display-item-amount-{{ $loop->index }}" class="font-mono">
-                                                Rp {{ number_format($isItemLunas ? $itemNet : $itemRemaining, 0, ',', '.') }}
-                                            </span>
-                                            @if(!$isItemLunas && $itemPaid > 0)
-                                                <span class="block text-[10px] text-slate-400 font-normal mt-0.5">Sisa Tagihan</span>
-                                            @endif
+                                        <td class="block sm:table-cell p-0 pt-2 sm:p-4 text-right font-bold {{ $isItemLunas ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200' }} align-top sm:pt-4.5 border-t border-slate-100 dark:border-slate-800/60 sm:border-0 mt-2 sm:mt-0">
+                                            <div class="flex items-center justify-between sm:justify-end gap-2">
+                                                <span class="sm:hidden text-[10px] text-slate-400 font-bold uppercase tracking-wider">Nominal:</span>
+                                                <div>
+                                                    <span id="display-item-amount-{{ $loop->index }}" class="font-mono">
+                                                        Rp {{ number_format($isItemLunas ? $itemNet : $itemRemaining, 0, ',', '.') }}
+                                                    </span>
+                                                    @if(!$isItemLunas && $itemPaid > 0)
+                                                        <span class="block text-[10px] text-slate-400 font-normal mt-0.5">Sisa Tagihan</span>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td class="p-4 text-center align-top pt-4.5">
+                                        <td class="hidden sm:table-cell p-4 text-center align-top pt-4.5">
                                             @if($isItemLunas || $registration->registration_status === 'completed')
                                                 <div class="flex flex-col items-center justify-center gap-1.5">
                                                     <span class="text-[9px] bg-green-50 dark:bg-green-950/20 text-green-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Lunas</span>
@@ -439,40 +473,68 @@
                             @endphp
 
                             @if(isset($discountAmount) && $discountAmount > 0)
-                                <tr class="text-rose-600 dark:text-rose-400 bg-rose-50/20">
+                                <tr class="block sm:table-row text-rose-600 dark:text-rose-400 bg-rose-50/30 dark:bg-rose-950/20 border border-rose-200/50 dark:border-rose-900/40 sm:border-0 rounded-2xl sm:rounded-none p-3.5 sm:p-0">
                                     @if($registration->registration_status !== 'completed')
-                                        <td></td>
+                                        <td class="hidden sm:table-cell"></td>
                                     @endif
-                                    <td class="p-4 font-bold">Potongan Keringanan (Diskon)</td>
-                                    <td class="p-4 text-right font-mono font-bold">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</td>
-                                    <td class="p-4 text-center"><span class="text-[9px] bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded font-bold">Diskon</span></td>
+                                    <td class="block sm:table-cell p-0 sm:p-4 font-bold">
+                                        <div class="flex items-center justify-between sm:justify-start gap-2">
+                                            <span>Potongan Keringanan (Diskon)</span>
+                                            <span class="sm:hidden text-[9px] bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded font-bold">Diskon</span>
+                                        </div>
+                                    </td>
+                                    <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold border-t border-rose-100 dark:border-rose-900/30 sm:border-0 mt-1.5 sm:mt-0">
+                                        <div class="flex items-center justify-between sm:justify-end gap-2">
+                                            <span class="sm:hidden text-[10px] text-rose-400 font-bold uppercase tracking-wider">Potongan:</span>
+                                            <span>- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="hidden sm:table-cell p-4 text-center"><span class="text-[9px] bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded font-bold">Diskon</span></td>
                                 </tr>
                             @endif
 
                             {{-- Baris 'Telah Terbayar' hanya muncul jika skema cicilan adalah Cicilan Global (all) --}}
                             @if(($installmentMode ?? 'none') === 'all' && isset($totalPaid) && $totalPaid > 0)
-                                <tr class="text-emerald-600 dark:text-emerald-400 bg-emerald-50/20">
+                                <tr class="block sm:table-row text-emerald-600 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/40 sm:border-0 rounded-2xl sm:rounded-none p-3.5 sm:p-0">
                                     @if($registration->registration_status !== 'completed')
-                                        <td></td>
+                                        <td class="hidden sm:table-cell"></td>
                                     @endif
-                                    <td class="p-4 font-bold">Telah Terbayar (Cicilan Global)</td>
-                                    <td class="p-4 text-right font-mono font-bold">Rp {{ number_format($totalPaid, 0, ',', '.') }}</td>
-                                    <td class="p-4 text-center"><span class="text-[9px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">Terbayar</span></td>
+                                    <td class="block sm:table-cell p-0 sm:p-4 font-bold">
+                                        <div class="flex items-center justify-between sm:justify-start gap-2">
+                                            <span>Telah Terbayar (Cicilan Global)</span>
+                                            <span class="sm:hidden text-[9px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">Terbayar</span>
+                                        </div>
+                                    </td>
+                                    <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold border-t border-emerald-100 dark:border-emerald-900/30 sm:border-0 mt-1.5 sm:mt-0">
+                                        <div class="flex items-center justify-between sm:justify-end gap-2">
+                                            <span class="sm:hidden text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Terbayar:</span>
+                                            <span>Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="hidden sm:table-cell p-4 text-center"><span class="text-[9px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">Terbayar</span></td>
                                 </tr>
                             @endif
 
                             {{-- Baris Sisa Tanggungan Keseluruhan --}}
-                            <tr class="bg-slate-50/50 dark:bg-slate-950/30 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase border-t border-slate-200 dark:border-slate-800">
+                            <tr class="block sm:table-row bg-slate-100/80 dark:bg-slate-850 sm:bg-slate-50/50 sm:dark:bg-slate-950/30 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase border border-slate-200 dark:border-slate-800 sm:border-0 sm:border-t rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
                                 @if($registration->registration_status !== 'completed')
-                                    <td></td>
+                                    <td class="hidden sm:table-cell"></td>
                                 @endif
-                                <td class="p-4 font-extrabold">
-                                    {{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) || (isset($discountAmount) && $discountAmount > 0) ? 'Sisa Tanggungan Keseluruhan' : 'Total Tanggungan' }}
+                                <td class="block sm:table-cell p-0 sm:p-4 font-extrabold">
+                                    <div class="flex items-center justify-between sm:justify-start gap-2">
+                                        <span>{{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) || (isset($discountAmount) && $discountAmount > 0) ? 'Sisa Tanggungan Keseluruhan' : 'Total Tanggungan' }}</span>
+                                        @if($registration->registration_status === 'completed' || (isset($remainingBalance) && $remainingBalance <= 0))
+                                            <span class="sm:hidden text-[9px] bg-green-500 text-white px-2.5 py-0.5 rounded font-bold uppercase tracking-wider shadow-xs">Lunas</span>
+                                        @endif
+                                    </div>
                                 </td>
-                                <td class="p-4 text-right font-mono font-bold text-slate-850 dark:text-white">
-                                    Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
+                                <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold text-slate-850 dark:text-white border-t border-slate-200/60 dark:border-slate-800 sm:border-0 mt-1.5 sm:mt-0">
+                                    <div class="flex items-center justify-between sm:justify-end gap-2">
+                                        <span class="sm:hidden text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total:</span>
+                                        <span>Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}</span>
+                                    </div>
                                 </td>
-                                <td class="p-4 text-center">
+                                <td class="hidden sm:table-cell p-4 text-center">
                                     @if($registration->registration_status === 'completed' || (isset($remainingBalance) && $remainingBalance <= 0))
                                         <span class="text-[10px] bg-green-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm">Lunas</span>
                                     @endif
@@ -481,15 +543,20 @@
 
                             {{-- Baris Total Pembayaran Transaksi Ini (Hanya muncul jika belum lunas) --}}
                             @if($registration->registration_status !== 'completed' && (isset($remainingBalance) && $remainingBalance > 0))
-                                <tr class="bg-emerald-50/50 dark:bg-emerald-950/20 text-xs font-black text-slate-850 dark:text-white uppercase border-t border-emerald-100 dark:border-emerald-900/40">
-                                    <td></td>
-                                    <td class="p-4 text-brand-emerald dark:text-emerald-400">
+                                <tr class="block sm:table-row bg-emerald-50 dark:bg-emerald-950/40 sm:bg-emerald-50/50 sm:dark:bg-emerald-950/20 text-xs font-black text-slate-850 dark:text-white uppercase border border-emerald-300/70 dark:border-emerald-800 sm:border-0 sm:border-t sm:border-emerald-100 sm:dark:border-emerald-900/40 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
+                                    <td class="hidden sm:table-cell"></td>
+                                    <td class="block sm:table-cell p-0 sm:p-4 text-brand-emerald dark:text-emerald-400">
                                         Total Pembayaran Transaksi Ini
                                     </td>
-                                    <td class="p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono" id="total-amount-display">
-                                        Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
+                                    <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono border-t border-emerald-200/60 dark:border-emerald-900/40 sm:border-0 mt-1.5 sm:mt-0">
+                                        <div class="flex items-center justify-between sm:justify-end gap-2">
+                                            <span class="sm:hidden text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Bayar Sekarang:</span>
+                                            <span id="total-amount-display">
+                                                Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td class="p-4 text-center"></td>
+                                    <td class="hidden sm:table-cell p-4 text-center"></td>
                                 </tr>
                             @endif
                         </tbody>
@@ -502,7 +569,7 @@
             </div>
 
             <!-- INSTRUCTIONS BOX -->
-            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
+            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
                 <h5 class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
                     <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i> Informasi Penting & Prosedur Daftar Ulang
                 </h5>
@@ -571,6 +638,9 @@
             if (chevron) chevron.classList.add('rotate-180');
             if (btnText) btnText.textContent = 'Tutup Pengaturan';
             if (errorEl) errorEl.classList.add('hidden');
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
             if (input) {
                 input.classList.remove('border-red-500', 'focus:ring-red-500');
                 const appliedAmt = Number(input.getAttribute('data-applied-amount')) || 0;
