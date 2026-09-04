@@ -1297,19 +1297,22 @@ class WebDashboardController extends Controller
             // Step 2: Request payment transaction to Gateway
             try {
                 $candidateName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Siswa'));
-                $unitCode = $registration->unit?->code ?: ($registration->unit?->name ? strtoupper(substr($registration->unit->name, 0, 4)) : 'SPMB');
 
-                if ($paymentType === 'final_fee') {
-                    if (isset($feeDetails['items']) && count($feeDetails['items']) === 1) {
-                        $feeTypeName = $feeDetails['items'][0]['name'] ?? 'Administrasi';
-                    } else {
-                        $feeTypeName = 'Administrasi';
-                    }
-                } else {
-                    $feeTypeName = $fee ? $fee->name : 'Formulir';
-                }
+                // Susun nama transaksi: {KODE_UNIT} {JENIS_BIAYA} {NAMA_SISWA} (Maksimal 24 Karakter SNAP BI)
+                $rawUnit = $registration->unit?->code ?: ($registration->unit?->name ?? 'SPMB');
+                $cleanUnit = preg_replace('/[^a-zA-Z0-9]/', '', $rawUnit);
+                $unitCode = strtoupper(substr($cleanUnit ?: 'SPMB', 0, 4));
 
-                $studentPaymentName = trim("{$unitCode} {$feeTypeName} {$candidateName}");
+                $feeShort = ($paymentType === 'final_fee') ? 'Adm' : 'Form';
+
+                $cleanStudent = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $candidateName);
+                $cleanStudent = preg_replace('/\s+/', ' ', trim($cleanStudent));
+
+                $prefix = "{$unitCode} {$feeShort} ";
+                $maxStudentLen = max(5, 24 - strlen($prefix));
+                $shortStudent = substr($cleanStudent, 0, $maxStudentLen);
+                $studentPaymentName = trim("{$prefix}{$shortStudent}");
+
                 $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
                 $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
                 $response = $gatewayService->createPayment($totalAmount, $invoiceBase, $request->payment_method, $studentPaymentName, $studentPhone);

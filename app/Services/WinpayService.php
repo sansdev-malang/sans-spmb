@@ -201,14 +201,23 @@ class WinpayService implements PaymentGatewayInterface
      */
     public function createPayment($amount, $invoiceNo, $method, $customerName = null, $customerPhone = null)
     {
-        $isQris = strtoupper($method) === 'QRIS';
-        $isEwallet = in_array(strtoupper($method), ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC']);
+        // 1. Normalisasi & mapping kode channel
+        $cleanMethod = strtoupper(trim($method));
+        if ($cleanMethod === 'DAN') $cleanMethod = 'DANA';
+        if ($cleanMethod === 'SPA') $cleanMethod = 'SPAY';
+        if ($cleanMethod === 'QRI') $cleanMethod = 'QRIS';
+        if ($cleanMethod === 'ALF') $cleanMethod = 'ALFAMART';
+        if ($cleanMethod === 'IND') $cleanMethod = 'INDOMARET';
+        if ($cleanMethod === 'MAN') $cleanMethod = 'MANDIRI';
+
+        $isQris = $cleanMethod === 'QRIS';
+        $isEwallet = in_array($cleanMethod, ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC', 'GOPAY']);
 
         /* =========================================================================================
          * [A] EKSEKUSI MODE SIMULATOR LOKAL (Offline Mock - Tanpa Internet)
          * ========================================================================================= */
         if ($this->mode === 'simulator') {
-            return $this->getMockPaymentResponse($amount, $invoiceNo, $method);
+            return $this->getMockPaymentResponse($amount, $invoiceNo, $cleanMethod);
         }
 
         /* =========================================================================================
@@ -230,29 +239,29 @@ class WinpayService implements PaymentGatewayInterface
         $expiry->modify('+24 hours');
         $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
 
-        // 2. Sanitasi nama pelanggan (Wajib Alfanumerik & Spasi saja, Maksimal 30 karakter standar SNAP BI ASPI)
+        // 2. Sanitasi nama pelanggan (Wajib Alfanumerik & Spasi, Panjang 5-24 karakter standar SNAP BI Winpay)
         $rawName = trim($customerName ?: 'Calon Siswa SPMB');
         $cleanName = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $rawName);
         $cleanName = preg_replace('/\s+/', ' ', $cleanName);
         $cleanName = trim($cleanName);
-        if (strlen($cleanName) < 3) {
-            $cleanName = 'SPMB ' . $cleanName;
+        if (strlen($cleanName) < 5) {
+            $cleanName = str_pad($cleanName, 5, '0', STR_PAD_RIGHT);
         }
-        $vaName = substr($cleanName, 0, 30);
+        $vaName = substr($cleanName, 0, 24);
+
+        // Sanitasi nomor telepon pelanggan (Wajib numerik 10-15 digit)
+        $phone = preg_replace('/[^0-9]/', '', $customerPhone ?: '081234567890');
+        if (strlen($phone) < 10) {
+            $phone = '081234567890';
+        }
 
         // 3. Susun Request Payload sesuai spesifikasi SNAP BI masing-masing metode
         if ($isEwallet) {
             // Mapping channel E-Wallet resmi Winpay
-            $ewalletChannel = strtoupper($method);
+            $ewalletChannel = $cleanMethod;
             if ($ewalletChannel === 'SHOPEEPAY') $ewalletChannel = 'SPAY';
             if ($ewalletChannel === 'ASTRAPAY') $ewalletChannel = 'ASTRA';
             if ($ewalletChannel === 'SPEEDCASH') $ewalletChannel = 'SC';
-
-            // Sanitasi nomor telepon (Wajib numerik min 10 digit)
-            $phone = preg_replace('/[^0-9]/', '', $customerPhone ?: '081234567890');
-            if (strlen($phone) < 10) {
-                $phone = '081234567890';
-            }
 
             $notifyUrl = str_replace('http://', 'https://', url('/api/payments/callback'));
             $returnUrl = str_replace('http://', 'https://', url('/dashboard'));
@@ -299,11 +308,9 @@ class WinpayService implements PaymentGatewayInterface
                 ]
             ];
         } else {
-            // Closed Virtual Account (VA)
-            $custNo = substr(preg_replace('/[^0-9]/', '', $invoiceNo . rand(1000, 9999)), -8);
-
+            // Closed Virtual Account (VA) & Retail
             $body = [
-                'customerNo' => $custNo,
+                'customerNo' => $phone,
                 'virtualAccountName' => $vaName,
                 'virtualAccountTrxType' => 'c', // 'c' = Closed amount (tagihan nominal pasti)
                 'expiredDate' => $expiredDate,
@@ -313,8 +320,7 @@ class WinpayService implements PaymentGatewayInterface
                     'currency' => 'IDR'
                 ],
                 'additionalInfo' => [
-                    'channel' => strtoupper($method),
-                    'invoiceNumber' => $invoiceNo
+                    'channel' => $cleanMethod
                 ]
             ];
         }
@@ -411,7 +417,12 @@ class WinpayService implements PaymentGatewayInterface
             ];
         }
 
-        Log::error('Winpay createPayment failed', ['response' => $response->body()]);
+        Log::error('Winpay createPayment failed', [
+            'endpoint' => $endpoint,
+            'request' => $body,
+            'status' => $response->status(),
+            'response' => $response->body()
+        ]);
         return [
             'success' => false,
             'message' => $response->json('message') ?? ($response->json('responseMessage') ?? 'Payment creation failed')
