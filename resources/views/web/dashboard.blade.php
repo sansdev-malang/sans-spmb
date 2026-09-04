@@ -520,7 +520,7 @@
                                         'extra_services' => ['label' => 'Layanan Tambahan', 'step_id' => 2],
                                         'father_name' => ['label' => 'Nama Ayah Kandung', 'step_id' => 3],
                                         'mother_name' => ['label' => 'Nama Ibu Kandung', 'step_id' => 3],
-                                        'parent_phone' => ['label' => 'No. HP Wali (WhatsApp)', 'step_id' => 3],
+                                        'parent_phone' => ['label' => 'No. WhatsApp Orang Tua', 'step_id' => 3],
                                         'birth_certificate_path' => ['label' => 'Scan Akta Kelahiran', 'step_id' => 4],
                                         'family_card_path' => ['label' => 'Scan Kartu Keluarga', 'step_id' => 4],
                                     ];

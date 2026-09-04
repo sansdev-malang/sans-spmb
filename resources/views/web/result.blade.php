@@ -3,8 +3,12 @@
 @section('title', 'Hasil Seleksi & Administrasi Akhir - Portal SPMB')
 
 @section('content')
+@php
+    $userAllRegs = auth()->check() ? auth()->user()->registrations()->with(['unit', 'grade', 'classProgram'])->where('registration_status', '!=', 'draft')->orWhereHas('payments', function($q) { $q->where('payment_type', 'registration_fee')->where('status', 'success'); })->latest()->get() : collect();
+    $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
+@endphp
+
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8 space-y-6">
-    @include('web.partials.candidate-context-bar')
 <style>
     /* Styling for dynamic rich text instructions from Quill */
     .instructions-body ul {
@@ -29,27 +33,84 @@
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-150/80 dark:border-slate-800 overflow-hidden">
         
         <!-- CARD HEADER -->
-        <div class="bg-brand-emerald text-white px-6 py-5 flex justify-between items-center">
-            <div>
-                <h2 class="font-extrabold text-lg flex items-center gap-2">
-                    <i data-lucide="award" class="w-5 h-5 text-brand-yellow"></i>
-                    Hasil Seleksi & Administrasi Akhir
+        <div class="bg-brand-emerald text-white p-5 sm:p-6 space-y-3 sm:space-y-4">
+            <div class="flex items-start justify-between gap-3 w-full">
+                <h2 class="font-extrabold text-base sm:text-lg text-white flex items-start sm:items-center gap-2 leading-snug min-w-0">
+                    <i data-lucide="award" class="w-5 h-5 text-brand-yellow shrink-0 mt-0.5 sm:mt-0"></i>
+                    <span>Hasil Seleksi & Administrasi Akhir</span>
                 </h2>
-                <div class="flex flex-wrap items-center gap-2 mt-1">
-                    <p class="text-xs text-brand-yellow/90 font-medium">
-                        Pengumuman kelulusan resmi dan rincian pembiayaan pendidikan.
-                    </p>
+                
+                <div class="shrink-0 self-start pt-0.5">
+                    @if($registration->registration_status === 'completed')
+                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-ping"></span> Lunas & Resmi
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i> Menunggu Pelunasan
+                        </span>
+                    @endif
                 </div>
             </div>
-            @if($registration->registration_status === 'completed')
-                <span class="bg-green-700 text-white font-bold text-[10px] uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-green-500 shadow-sm flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-ping"></span> Lunas & Resmi
-                </span>
-            @else
-                <span class="bg-amber-600 text-white font-bold text-[10px] uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-amber-455 shadow-sm">
-                    Menunggu Pelunasan
-                </span>
-            @endif
+
+            <!-- Full-width subtitle -->
+            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Pengumuman kelulusan resmi dan rincian pembiayaan pendidikan.</p>
+
+            <!-- Integrated Candidate Context Info -->
+            <div class="bg-black/15 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <!-- Left: Avatar + Candidate Details -->
+                <div class="flex items-start sm:items-center gap-3 min-w-0">
+                    <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-white/20 text-white font-black text-sm sm:text-base flex items-center justify-center border border-white/20 shadow-inner shrink-0 mt-0.5 sm:mt-0">
+                        {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
+                    </div>
+                    <div class="min-w-0 flex-1 space-y-0.5">
+                        <div class="flex items-center justify-between sm:justify-start gap-2">
+                            <h4 class="font-extrabold text-sm sm:text-base text-white tracking-tight truncate">
+                                {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                            </h4>
+                            @if($registration->id_label)
+                                <span class="sm:hidden text-[10px] font-mono font-bold text-emerald-200 bg-white/15 px-2 py-0.5 rounded-lg border border-white/20 inline-flex items-center gap-1 shadow-xs whitespace-nowrap shrink-0">
+                                    <i data-lucide="tag" class="w-3 h-3 text-emerald-300"></i> {{ $registration->id_label }}
+                                </span>
+                            @endif
+                        </div>
+                        
+                        <p class="text-xs text-emerald-100 font-semibold truncate">
+                            <span class="text-emerald-300 font-bold">{{ $registration->unit?->name }}</span> • {{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})
+                        </p>
+                        
+                        <p class="text-[11px] text-white/75 truncate">
+                            Jalur {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
+                            @if($registration->period?->year)
+                                <span class="text-white/50">(TP {{ $registration->period->year }})</span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right: ID Label Badge (Desktop) & Child Switcher -->
+                <div class="flex items-center sm:justify-end gap-2 shrink-0 {{ $otherRegs->isNotEmpty() ? 'border-t sm:border-t-0 pt-2 sm:pt-0 border-white/10' : '' }}">
+                    @if($registration->id_label)
+                        <span class="hidden sm:inline-flex text-[11px] font-mono font-bold text-emerald-200 bg-white/15 px-2.5 py-1 rounded-xl border border-white/20 items-center gap-1.5 shadow-xs whitespace-nowrap">
+                            <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-300"></i> {{ $registration->id_label }}
+                        </span>
+                    @endif
+
+                    @if($otherRegs->isNotEmpty())
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            @foreach($otherRegs as $other)
+                                <a href="{{ route('dashboard.result', $other->id) }}" 
+                                   class="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
+                                   title="Beralih ke {{ $other->candidate_name }}">
+                                    <span>👦 {{ $other->candidate_name }}</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/80 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
+                                    <i data-lucide="arrow-right" class="w-3 h-3 text-emerald-300"></i>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
 
         <div class="p-8 space-y-8">

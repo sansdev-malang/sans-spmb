@@ -43,26 +43,41 @@
             <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Pantau status peninjauan berkas persyaratan pendaftaran oleh panitia SPMB.</p>
 
             <!-- Integrated Candidate Context Info -->
-            <div class="bg-black/15 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-                <!-- Left: Avatar + Candidate Name + Unit/Program -->
-                <div class="flex items-center gap-3.5 min-w-0">
-                    <div class="h-10 w-10 rounded-2xl bg-white/20 text-white font-black text-sm flex items-center justify-center border border-white/20 shadow-inner shrink-0">
+            <div class="bg-black/15 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <!-- Left: Avatar + Candidate Details -->
+                <div class="flex items-start sm:items-center gap-3 min-w-0">
+                    <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-white/20 text-white font-black text-sm sm:text-base flex items-center justify-center border border-white/20 shadow-inner shrink-0 mt-0.5 sm:mt-0">
                         {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
                     </div>
-                    <div class="min-w-0">
-                        <h4 class="font-extrabold text-sm sm:text-base text-white tracking-tight truncate">
-                            {{ $registration->candidate_name }}
-                        </h4>
-                        <p class="text-xs text-white/80 mt-0.5">
-                            <span class="font-bold text-emerald-200">{{ $registration->unit?->name }}</span> • {{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})
+                    <div class="min-w-0 flex-1 space-y-0.5">
+                        <div class="flex items-center justify-between sm:justify-start gap-2">
+                            <h4 class="font-extrabold text-sm sm:text-base text-white tracking-tight truncate">
+                                {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                            </h4>
+                            @if($registration->id_label)
+                                <span class="sm:hidden text-[10px] font-mono font-bold text-emerald-200 bg-white/15 px-2 py-0.5 rounded-lg border border-white/20 inline-flex items-center gap-1 shadow-xs whitespace-nowrap shrink-0">
+                                    <i data-lucide="tag" class="w-3 h-3 text-emerald-300"></i> {{ $registration->id_label }}
+                                </span>
+                            @endif
+                        </div>
+                        
+                        <p class="text-xs text-emerald-100 font-semibold truncate">
+                            <span class="text-emerald-300 font-bold">{{ $registration->unit?->name }}</span> • {{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})
+                        </p>
+                        
+                        <p class="text-[11px] text-white/75 truncate">
+                            Jalur {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
+                            @if($registration->period?->year)
+                                <span class="text-white/50">(TP {{ $registration->period->year }})</span>
+                            @endif
                         </p>
                     </div>
                 </div>
 
-                <!-- Right: ID Label Badge & Child Switcher -->
-                <div class="flex items-center sm:justify-end gap-2.5 flex-wrap border-t sm:border-t-0 pt-2.5 sm:pt-0 border-white/10 shrink-0">
+                <!-- Right: ID Label Badge (Desktop) & Child Switcher -->
+                <div class="flex items-center sm:justify-end gap-2 shrink-0 {{ $otherRegs->isNotEmpty() ? 'border-t sm:border-t-0 pt-2 sm:pt-0 border-white/10' : '' }}">
                     @if($registration->id_label)
-                        <span class="text-[11px] font-mono font-bold text-emerald-200 bg-white/15 px-2.5 py-1 rounded-xl border border-white/20 inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+                        <span class="hidden sm:inline-flex text-[11px] font-mono font-bold text-emerald-200 bg-white/15 px-2.5 py-1 rounded-xl border border-white/20 items-center gap-1.5 shadow-xs whitespace-nowrap">
                             <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-300"></i> {{ $registration->id_label }}
                         </span>
                     @endif
@@ -71,7 +86,7 @@
                         <div class="flex items-center gap-1.5 flex-wrap">
                             @foreach($otherRegs as $other)
                                 <a href="{{ route('dashboard.verification', $other->id) }}" 
-                                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition border border-white/20 shadow-xs"
+                                   class="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
                                    title="Beralih ke {{ $other->candidate_name }}">
                                     <span>👦 {{ $other->candidate_name }}</span>
                                     <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/80 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
@@ -118,7 +133,7 @@
                                         'extra_services' => ['label' => 'Layanan Tambahan', 'step_id' => 2],
                                         'father_name' => ['label' => 'Nama Ayah Kandung', 'step_id' => 3],
                                         'mother_name' => ['label' => 'Nama Ibu Kandung', 'step_id' => 3],
-                                        'parent_phone' => ['label' => 'No. HP Wali (WhatsApp)', 'step_id' => 3],
+                                        'parent_phone' => ['label' => 'No. WhatsApp Orang Tua', 'step_id' => 3],
                                         'birth_certificate_path' => ['label' => 'Scan Akta Kelahiran', 'step_id' => 4],
                                         'family_card_path' => ['label' => 'Scan Kartu Keluarga', 'step_id' => 4],
                                     ];
