@@ -404,12 +404,14 @@ class PaymentController extends Controller
             'body' => $body
         ]);
 
-        // Prioritaskan invoice number SPMB format INV-...
+        // Prioritaskan invoice number SPMB format INV-... (termasuk originalPartnerReferenceNo untuk Debit/E-Wallet)
         $invoiceNo = null;
         $candidates = [
+            $body['originalPartnerReferenceNo'] ?? null,
             $body['partnerReferenceNo'] ?? null,
             $body['additionalInfo']['invoiceNumber'] ?? null,
             $body['additionalInfo']['partnerReferenceNo'] ?? null,
+            $body['originalReferenceNo'] ?? null,
             $body['trxId'] ?? null,
             $body['referenceNo'] ?? null,
             $body['externalId'] ?? null,
@@ -423,8 +425,11 @@ class PaymentController extends Controller
         }
 
         if (!$invoiceNo) {
-            $invoiceNo = $body['partnerReferenceNo'] 
+            $invoiceNo = $body['originalPartnerReferenceNo']
+                ?? $body['partnerReferenceNo'] 
                 ?? ($body['additionalInfo']['invoiceNumber'] ?? null)
+                ?? ($body['additionalInfo']['partnerReferenceNo'] ?? null)
+                ?? $body['originalReferenceNo']
                 ?? $body['trxId'] 
                 ?? ($body['referenceNo'] ?? null);
         }
@@ -450,7 +455,7 @@ class PaymentController extends Controller
         $isSuccess = false;
         $isFailed = false;
 
-        // Evaluasi status pembayaran berdasarkan responseCode & status resmi SNAP BI
+        // Evaluasi status pembayaran berdasarkan responseCode & status resmi SNAP BI (misal '00' = SUCCESS)
         if (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005400', '2000000'])) {
             $isSuccess = true;
         } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['SUCCESS', 'SUCCESSFUL', 'PAID', 'SETTLED', '00', '0000', 'BERHASIL'])) {
@@ -461,19 +466,42 @@ class PaymentController extends Controller
             $isFailed = true;
         }
 
+        $origPartnerRef = $body['originalPartnerReferenceNo'] ?? null;
+        $partnerRef = $body['partnerReferenceNo'] ?? null;
+        $origRefNo = $body['originalReferenceNo'] ?? null;
+        $trxId = $body['trxId'] ?? null;
+        $refNo = $body['referenceNo'] ?? null;
+
+        // Siapkan struktur ACK standar SNAP BI
+        $ackResponseCode = !empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')
+            ? (string)$body['responseCode']
+            : ($origPartnerRef ? '2005400' : '2002500');
+
+        $ackPayload = [
+            'responseCode' => $ackResponseCode,
+            'responseMessage' => 'Successful'
+        ];
+
+        if (!empty($origPartnerRef)) {
+            $ackPayload['originalPartnerReferenceNo'] = $origPartnerRef;
+        }
+        if (!empty($origRefNo)) {
+            $ackPayload['originalReferenceNo'] = $origRefNo;
+        }
+        if (!empty($partnerRef)) {
+            $ackPayload['partnerReferenceNo'] = $partnerRef;
+        }
+
         // =========================================================================================
         // [3] PENCARIAN RECORD TRANSAKSI & IDEMPOTENCY CHECK DENGAN PESSIMISTIC LOCK
         // =========================================================================================
         DB::beginTransaction();
         try {
-            // Cari transaksi berdasarkan invoice_number atau reference_id (ID Transaksi Winpay)
-            $partnerRef = $body['partnerReferenceNo'] ?? null;
-            $trxId = $body['trxId'] ?? null;
-            $refNo = $body['referenceNo'] ?? null;
-
-            $payment = Payment::where(function($q) use ($invoiceNo, $partnerRef, $trxId, $refNo) {
+            $payment = Payment::where(function($q) use ($invoiceNo, $origPartnerRef, $partnerRef, $origRefNo, $trxId, $refNo) {
                 $q->where('invoice_number', $invoiceNo);
+                if ($origPartnerRef) $q->orWhere('invoice_number', $origPartnerRef);
                 if ($partnerRef) $q->orWhere('invoice_number', $partnerRef);
+                if ($origRefNo) $q->orWhere('invoice_number', $origRefNo)->orWhere('reference_id', $origRefNo);
                 if ($trxId) $q->orWhere('invoice_number', $trxId)->orWhere('reference_id', $trxId);
                 if ($refNo) $q->orWhere('reference_id', $refNo);
             })->lockForUpdate()->first();
@@ -482,7 +510,9 @@ class PaymentController extends Controller
                 DB::rollBack();
                 Log::warning('Payment callback transaction not found in database', [
                     'resolved_invoice' => $invoiceNo,
+                    'originalPartnerReferenceNo' => $origPartnerRef,
                     'partnerReferenceNo' => $partnerRef,
+                    'originalReferenceNo' => $origRefNo,
                     'trxId' => $trxId,
                     'referenceNo' => $refNo,
                 ]);
@@ -493,21 +523,16 @@ class PaymentController extends Controller
             }
 
             // Simpan reference_id dari Winpay jika belum tersimpan
-            if (empty($payment->reference_id) && !empty($refNo ?: $trxId)) {
-                $payment->update(['reference_id' => $refNo ?: $trxId]);
+            $resolvedWinpayRef = $origRefNo ?: ($refNo ?: $trxId);
+            if (empty($payment->reference_id) && !empty($resolvedWinpayRef)) {
+                $payment->update(['reference_id' => $resolvedWinpayRef]);
             }
 
             // Idempotency: Jika invoice sudah sukses diproses sebelumnya, kembalikan 200 OK tanpa memproses ulang
             if ($payment->status === 'success') {
                 DB::rollBack();
                 Log::info('Payment callback idempotent response: already success', ['invoice' => $payment->invoice_number]);
-                $ackCode = !empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')
-                    ? (string)$body['responseCode']
-                    : '2002500';
-                return response()->json([
-                    'responseCode' => $ackCode,
-                    'responseMessage' => 'Success'
-                ], 200, ['Content-Type' => 'application/json;charset=UTF-8']);
+                return response()->json($ackPayload, 200, ['Content-Type' => 'application/json;charset=UTF-8']);
             }
 
             // =========================================================================================
@@ -695,15 +720,7 @@ class PaymentController extends Controller
             }
         }
 
-        $finalAckCode = !empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')
-            ? (string)$body['responseCode']
-            : '2002500';
-        $finalAckMessage = !empty($body['responseMessage']) ? (string)$body['responseMessage'] : 'Success';
-
-        return response()->json([
-            'responseCode' => $finalAckCode,
-            'responseMessage' => $finalAckMessage
-        ], 200, [
+        return response()->json($ackPayload, 200, [
             'Content-Type' => 'application/json;charset=UTF-8'
         ]);
     }
