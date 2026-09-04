@@ -171,93 +171,38 @@
                 <thead>
                     <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
-                        <th class="py-4 px-6">No. Invoice (ID Ref)</th>
-                        <th class="py-4 px-6">Calon Siswa</th>
-                        <th class="py-4 px-6">Keterangan Biaya</th>
-                        <th class="py-4 px-6">Metode / Produk</th>
-                        <th class="py-4 px-6">Nominal</th>
-                        <th class="py-4 px-6">ID Transaksi Winpay</th>
                         <th class="py-4 px-6">Waktu Transaksi</th>
+                        <th class="py-4 px-6">ID Transaksi</th>
+                        <th class="py-4 px-6">Metode / Produk</th>
+                        <th class="py-4 px-6">No. Invoice (ID Ref)</th>
+                        <th class="py-4 px-6">Biaya</th>
                         <th class="py-4 px-6 text-center">Status</th>
+                        <th class="py-4 px-6">Nominal</th>
                         <th class="py-4 px-6 text-center w-28">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-100">
                     @forelse($payments as $pay)
                         <tr class="hover:bg-slate-50/55 transition group">
+                            <!-- 1. No -->
                             <td class="py-4 px-6 text-center text-slate-400 font-bold text-xs">
                                 {{ ($payments->currentPage() - 1) * $payments->perPage() + $loop->iteration }}
                             </td>
+
+                            <!-- 2. Waktu Transaksi -->
                             <td class="py-4 px-6">
-                                <div class="flex items-center gap-2">
-                                    <div class="p-1.5 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-white group-hover:text-brand-emerald border border-transparent group-hover:border-slate-100 transition duration-200">
-                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-mono text-xs font-bold text-slate-700 select-all tracking-tight">{{ $pay->invoice_number }}</div>
-                                        <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">ID Ref di Winpay</div>
-                                    </div>
+                                <div class="flex items-center gap-1 text-slate-700 text-xs font-semibold">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>{{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }}</span>
+                                    <span class="text-[8px] bg-slate-100 text-slate-500 px-1 rounded font-bold">WIB</span>
+                                </div>
+                                <div class="flex items-center gap-1 font-mono text-[9px] text-slate-400 mt-1 pl-4.5">
+                                    <span>{{ $pay->created_at->format('Y-m-d H:i:s') }}</span>
+                                    <span class="text-[7px] border border-slate-200 px-0.5 rounded font-bold uppercase">UTC (Winpay)</span>
                                 </div>
                             </td>
-                            <td class="py-4 px-6">
-                                <div class="font-semibold text-slate-800">{{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}</div>
-                                @if($pay->registration)
-                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5">
-                                        {{ $pay->registration->admission_level ?: ($pay->registration->grade->name ?? '') }}
-                                        @if(($pay->registration->admission_level || isset($pay->registration->grade)) && isset($pay->registration->unit))
-                                            •
-                                        @endif
-                                        {{ $pay->registration->unit->name ?? '' }}
-                                    </div>
-                                @else
-                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5 italic">Draft Pendaftaran</div>
-                                @endif
-                            </td>
-                            <td class="py-4 px-6">
-                                @php
-                                    $reg = $pay->registration;
-                                    if ($pay->payment_type === 'registration_fee') {
-                                        $fee = $reg ? $reg->getRegistrationFee() : null;
-                                        $feeTitle = $fee ? $fee->name : ('Formulir Pendaftaran ' . ($reg->unit->name ?? ''));
-                                        $catTitle = 'Formulir Pendaftaran';
-                                    } else {
-                                        $itemNames = [];
-                                        if ($pay->items && $pay->items->isNotEmpty()) {
-                                            $itemNames = $pay->items->pluck('fee_name')->toArray();
-                                        } elseif (isset($pay->payment_info['selected_items']) && is_array($pay->payment_info['selected_items'])) {
-                                            $itemNames = array_column($pay->payment_info['selected_items'], 'name');
-                                        }
-                                        
-                                        if (!empty($itemNames)) {
-                                            $feeTitle = implode(', ', $itemNames);
-                                        } else {
-                                            $feeTitle = 'Biaya Administrasi Masuk';
-                                        }
-                                        $catTitle = 'Pelunasan Biaya Administrasi';
-                                    }
-                                @endphp
-                                <div class="font-semibold text-slate-700 text-xs" title="{{ $feeTitle }}">{{ \Illuminate\Support\Str::limit($feeTitle, 45) }}</div>
-                                <div class="text-[9px] text-slate-400 font-medium mt-0.5">{{ $catTitle }}</div>
-                            </td>
-                            <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
-                                    <span>{{ $pay->payment_method }}</span>
-                                </div>
-                                @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
-                                    <div class="mt-1 flex items-center gap-1">
-                                        <span class="font-mono text-[10px] text-slate-500 font-bold select-all bg-slate-50 border border-slate-200/50 px-1.5 py-0.5 rounded">
-                                            {{ $pay->payment_info['virtualAccountNo'] }}
-                                        </span>
-                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Nomor VA">
-                                            <i data-lucide="copy" class="w-2.5 h-2.5"></i>
-                                        </button>
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="py-4 px-6 font-bold text-slate-850 text-xs">
-                                Rp {{ number_format($pay->amount, 0, ',', '.') }}
-                            </td>
+
+                            <!-- 3. ID Transaksi (Winpay) -->
                             <td class="py-4 px-6">
                                 @php
                                     $winpayTrxId = $pay->reference_id 
@@ -288,17 +233,71 @@
                                     </div>
                                 @endif
                             </td>
+
+                            <!-- 4. Metode / Produk -->
                             <td class="py-4 px-6">
-                                <div class="flex items-center gap-1 text-slate-700 text-xs font-semibold">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span>{{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }}</span>
-                                    <span class="text-[8px] bg-slate-100 text-slate-500 px-1 rounded font-bold">WIB</span>
+                                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+                                    <span>{{ $pay->payment_method }}</span>
                                 </div>
-                                <div class="flex items-center gap-1 font-mono text-[9px] text-slate-400 mt-1 pl-4.5">
-                                    <span>{{ $pay->created_at->format('Y-m-d H:i:s') }}</span>
-                                    <span class="text-[7px] border border-slate-200 px-0.5 rounded font-bold uppercase">UTC (Winpay)</span>
+                                @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
+                                    <div class="mt-1 flex items-center gap-1">
+                                        <span class="font-mono text-[10px] text-slate-500 font-bold select-all bg-slate-50 border border-slate-200/50 px-1.5 py-0.5 rounded">
+                                            {{ $pay->payment_info['virtualAccountNo'] }}
+                                        </span>
+                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Nomor VA">
+                                            <i data-lucide="copy" class="w-2.5 h-2.5"></i>
+                                        </button>
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- 5. No. Invoice (ID Ref) -->
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-2">
+                                    <div class="p-1.5 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-white group-hover:text-brand-emerald border border-transparent group-hover:border-slate-100 transition duration-200">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-mono text-xs font-bold text-slate-700 select-all tracking-tight">{{ $pay->invoice_number }}</div>
+                                        <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">ID Ref di Winpay</div>
+                                    </div>
                                 </div>
                             </td>
+
+                            <!-- 6. Biaya (Calon Siswa & Keterangan Biaya) -->
+                            <td class="py-4 px-6">
+                                <div class="font-semibold text-slate-800">{{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}</div>
+                                @php
+                                    $reg = $pay->registration;
+                                    if ($pay->payment_type === 'registration_fee') {
+                                        $fee = $reg ? $reg->getRegistrationFee() : null;
+                                        $feeTitle = $fee ? $fee->name : ('Formulir Pendaftaran ' . ($reg->unit->name ?? ''));
+                                    } else {
+                                        $itemNames = [];
+                                        if ($pay->items && $pay->items->isNotEmpty()) {
+                                            $itemNames = $pay->items->pluck('fee_name')->toArray();
+                                        } elseif (isset($pay->payment_info['selected_items']) && is_array($pay->payment_info['selected_items'])) {
+                                            $itemNames = array_column($pay->payment_info['selected_items'], 'name');
+                                        }
+                                        
+                                        if (!empty($itemNames)) {
+                                            $feeTitle = implode(', ', $itemNames);
+                                        } else {
+                                            $feeTitle = 'Biaya Administrasi Masuk';
+                                        }
+                                    }
+                                @endphp
+                                <div class="text-[9px] text-slate-500 font-medium mt-0.5 flex items-center gap-1" title="{{ $feeTitle }}">
+                                    <span>{{ \Illuminate\Support\Str::limit($feeTitle, 35) }}</span>
+                                    @if($pay->registration && $pay->registration->unit)
+                                        <span>•</span>
+                                        <span class="text-slate-400">{{ $pay->registration->unit->name }}</span>
+                                    @endif
+                                </div>
+                            </td>
+
+                            <!-- 7. Status -->
                             <td class="py-4 px-6 text-center">
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
                                     @if($pay->status === 'success') bg-green-50 text-green-700 border border-green-200
@@ -311,6 +310,13 @@
                                     {{ $pay->status }}
                                 </span>
                             </td>
+
+                            <!-- 8. Nominal -->
+                            <td class="py-4 px-6 font-bold text-slate-850 text-xs">
+                                Rp {{ number_format($pay->amount, 0, ',', '.') }}
+                            </td>
+
+                            <!-- 9. Aksi -->
                             <td class="py-4 px-6 text-center">
                                 @if($pay->status === 'success')
                                     <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200" title="Unduh Bukti Pembayaran Resmi">
@@ -324,7 +330,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="py-12 px-6 text-center text-slate-400">
+                            <td colspan="9" class="py-12 px-6 text-center text-slate-400">
                                 Belum ada riwayat transaksi pembayaran.
                             </td>
                         </tr>
