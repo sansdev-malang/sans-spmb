@@ -428,8 +428,16 @@ class WinpayService implements PaymentGatewayInterface
         ]);
 
         $rawMsg = $response->json('message') ?? ($response->json('responseMessage') ?? '');
-        if (strtolower($rawMsg) === 'bad request' || str_contains($rawMsg, '400') || empty($rawMsg)) {
-            $userMsg = 'Metode pembayaran ini belum dapat memproses nominal tagihan (batas minimal Virtual Account Bank adalah Rp 10.000). Silakan pilih metode QRIS atau E-Wallet (DANA/ShopeePay).';
+        $respCode = (string)($response->json('responseCode') ?? '');
+
+        if (strtolower($rawMsg) === 'bad request' || str_contains($rawMsg, '400') || empty($rawMsg) || str_starts_with($respCode, '400')) {
+            if ($isEwallet) {
+                $userMsg = "Kanal E-Wallet ({$cleanMethod}) saat ini belum aktif atau belum dapat memproses transaksi. Silakan gunakan metode pembayaran DANA atau QRIS.";
+            } elseif ($isQris) {
+                $userMsg = "Kanal QRIS saat ini belum dapat memproses transaksi. Silakan gunakan metode DANA atau Virtual Account.";
+            } else {
+                $userMsg = "Metode Virtual Account ({$cleanMethod}) belum dapat memproses nominal tagihan ini (batas minimal Virtual Account Bank adalah Rp 10.000). Silakan gunakan QRIS atau DANA.";
+            }
         } else {
             $userMsg = $rawMsg;
         }
