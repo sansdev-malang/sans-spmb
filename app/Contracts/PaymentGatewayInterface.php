@@ -24,4 +24,13 @@ interface PaymentGatewayInterface
      * @return bool
      */
     public function verifyCallback($headers, $body);
+
+    /**
+     * Cancel / Delete active payment transaction at Gateway (e.g. Delete VA).
+     *
+     * @param string $invoiceNo
+     * @param array $paymentInfo
+     * @return array ['success' => bool, 'message' => string, 'data' => array|null]
+     */
+    public function cancelPayment($invoiceNo, $paymentInfo = []);
 }

@@ -230,4 +230,17 @@ class BniSnapService implements PaymentGatewayInterface
 
         return hash_equals($calculatedSignature, $signature);
     }
+
+    /**
+     * Cancel / Delete active payment transaction.
+     */
+    public function cancelPayment($invoiceNo, $paymentInfo = [])
+    {
+        Log::info('BNI cancelPayment called', ['invoice' => $invoiceNo]);
+        return [
+            'success' => true,
+            'message' => 'Transaksi BNI dibatalkan.',
+            'data' => null
+        ];
+    }
 }

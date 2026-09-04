@@ -1421,15 +1421,34 @@ class WebDashboardController extends Controller
 
         $regId = $payment->registration_id;
 
+        // Tutup / Delete VA di Payment Gateway (Winpay SNAP BI DELETE /v1.0/transfer-va/delete-va)
+        $gatewayCode = $payment->payment_info['gateway'] ?? 'winpay';
+        try {
+            $gatewayService = \App\Services\PaymentGatewayFactory::make($gatewayCode ?: 'winpay');
+            if (method_exists($gatewayService, 'cancelPayment')) {
+                $gatewayService->cancelPayment($payment->invoice_number, $payment->payment_info ?: []);
+            }
+        } catch (\Throwable $gwEx) {
+            Log::warning('Gateway cancel API call warning', [
+                'payment_id' => $payment->id,
+                'invoice' => $payment->invoice_number,
+                'error' => $gwEx->getMessage()
+            ]);
+        }
+
         DB::beginTransaction();
         try {
             $payment->update([
-                'status' => 'expired'
+                'status' => 'cancelled',
+                'payment_info' => array_merge($payment->payment_info ?: [], [
+                    'cancelled_at' => now()->toIso8601String()
+                ])
             ]);
 
             $registration = Registration::find($payment->registration_id);
+            $hasSuccess = $registration->payments()->where('status', 'success')->exists();
             $registration->update([
-                'payment_status' => 'unpaid'
+                'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
             ]);
 
             // Preserve selected items index query parameters upon redirection

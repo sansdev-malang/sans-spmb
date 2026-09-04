@@ -485,6 +485,95 @@ class WinpayService implements PaymentGatewayInterface
     }
 
     /**
+     * Delete / Cancel Virtual Account di Winpay (Standar SNAP BI DELETE /v1.0/transfer-va/delete-va)
+     *
+     * @param string $invoiceNo Nomor referensi invoice (Merchant Ref)
+     * @param array $paymentInfo Data payment_info transaksi yang tersimpan
+     * @return array ['success' => bool, 'message' => string, 'data' => array|null]
+     */
+    public function cancelPayment($invoiceNo, $paymentInfo = [])
+    {
+        // Pada mode simulator lokal, langsung return success
+        if ($this->mode === 'simulator') {
+            Log::info('Winpay cancelPayment bypassed (Simulator mode)', ['invoice' => $invoiceNo]);
+            return [
+                'success' => true,
+                'message' => 'Virtual Account berhasil dinonaktifkan (Simulator)',
+                'data' => null
+            ];
+        }
+
+        $endpoint = '/v1.0/transfer-va/delete-va';
+        $timezone = new \DateTimeZone('Asia/Jakarta');
+        $now = new \DateTime('now', $timezone);
+        $timestamp = $now->format('Y-m-d\TH:i:sP');
+
+        $vaNo = trim($paymentInfo['virtualAccountNo'] ?? ($paymentInfo['virtualAccount'] ?? ''));
+        $customerNo = $paymentInfo['customerNo'] ?? '';
+        $partnerServiceId = $paymentInfo['partnerServiceId'] ?? '';
+        $channel = $paymentInfo['bankName'] ?? ($paymentInfo['additionalInfo']['channel'] ?? 'MANDIRI');
+
+        // Susun payload SNAP BI Delete VA resmi
+        $body = [
+            'partnerServiceId' => $partnerServiceId ?: (strlen($vaNo) > 8 ? substr($vaNo, 0, 7) : ' 888981'),
+            'customerNo' => $customerNo ?: (strlen($vaNo) > 8 ? substr($vaNo, 7) : ''),
+            'virtualAccountNo' => $vaNo,
+            'trxId' => $invoiceNo,
+            'additionalInfo' => [
+                'channel' => strtoupper($channel)
+            ]
+        ];
+
+        $signature = $this->generateAsymmetricSignature('DELETE', $endpoint, $body, $timestamp);
+
+        try {
+            $response = Http::timeout(20)->withHeaders([
+                'X-SIGNATURE' => $signature,
+                'X-TIMESTAMP' => $timestamp,
+                'X-PARTNER-ID' => $this->clientKey,
+                'X-EXTERNAL-ID' => $invoiceNo,
+                'CHANNEL-ID' => 'WEB',
+                'Content-Type' => 'application/json',
+            ])->delete($this->baseUrl . $endpoint, $body);
+
+            if ($response->successful()) {
+                Log::info('Winpay DELETE VA SUCCESS', [
+                    'invoice' => $invoiceNo,
+                    'response' => $response->json()
+                ]);
+                return [
+                    'success' => true,
+                    'message' => $response->json('responseMessage') ?? 'Virtual Account berhasil dinonaktifkan di Winpay.',
+                    'data' => $response->json()
+                ];
+            }
+
+            Log::warning('Winpay DELETE VA non-success response', [
+                'invoice' => $invoiceNo,
+                'status' => $response->status(),
+                'response' => $response->body()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $response->json('responseMessage') ?? 'Gagal menonaktifkan VA di Winpay.',
+                'data' => $response->json()
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Winpay DELETE VA exception', [
+                'invoice' => $invoiceNo,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+    /**
      * =============================================================================================
      * [KHUSUS MODE SIMULATOR LOKAL] Return Mock Response untuk Pengujian Offline Tanpa Koneksi Internet
      * =============================================================================================
