@@ -45,7 +45,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
-                <span class="text-2xl font-black text-slate-800 block mt-1 stat-counter" data-target="{{ $totalCandidates }}">0</span>
+                <span class="text-2xl font-black text-slate-800 block mt-1 stat-counter" data-target="{{ $totalCandidates }}">{{ number_format($totalCandidates, 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="users" class="w-5 h-5"></i>
@@ -55,7 +55,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Berkas Masuk</span>
-                <span class="text-2xl font-black text-amber-600 block mt-1 stat-counter" data-target="{{ $submittedCandidates }}">0</span>
+                <span class="text-2xl font-black text-amber-600 block mt-1 stat-counter" data-target="{{ $submittedCandidates }}">{{ number_format($submittedCandidates, 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="file-text" class="w-5 h-5"></i>
@@ -65,7 +65,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
-                <span class="text-2xl font-black text-green-600 block mt-1 stat-counter" data-target="{{ $verifiedCandidates }}">0</span>
+                <span class="text-2xl font-black text-green-600 block mt-1 stat-counter" data-target="{{ $verifiedCandidates }}">{{ number_format($verifiedCandidates, 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="check-circle" class="w-5 h-5"></i>
@@ -75,7 +75,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Transaksi Lunas</span>
-                <span class="text-2xl font-black text-emerald-600 block mt-1 stat-counter" data-target="{{ $paidTransactions }}">0</span>
+                <span class="text-2xl font-black text-emerald-600 block mt-1 stat-counter" data-target="{{ $paidTransactions }}">{{ number_format($paidTransactions, 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="wallet" class="w-5 h-5"></i>
@@ -85,7 +85,7 @@
         <div class="col-span-2 md:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Revenue</span>
-                <span class="text-lg font-black text-slate-800 block mt-1 stat-counter" data-target="{{ $totalRevenue }}" data-prefix="Rp " data-format="currency">Rp 0</span>
+                <span class="text-lg font-black text-slate-800 block mt-1 stat-counter" data-target="{{ $totalRevenue }}" data-prefix="Rp " data-format="currency">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</span>
             </div>
             <div class="h-10 w-10 bg-brand-yellow/10 text-brand-yellow rounded-xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="coins" class="w-5 h-5"></i>
@@ -111,11 +111,11 @@
                     @endphp
                     <div class="space-y-1">
                         <div class="flex justify-between text-xs font-bold text-slate-700">
-                            <span>{{ $stat->admission_level }}</span>
+                            <span>{{ $stat->level_name }}</span>
                             <span>{{ $stat->count }} Siswa ({{ $percentage }}%)</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                            <div class="bg-brand-emerald h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: 0%"></div>
+                            <div class="bg-brand-emerald h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: {{ $percentage }}%"></div>
                         </div>
                     </div>
                 @empty
@@ -124,32 +124,31 @@
             </div>
         </div>
 
-        <!-- Graph 2: Form Status Metrics (Circular Progress Bars) -->
+        <!-- Graph 2: Form Status Metrics (Alur Tahapan SPMB Dinamis) -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4 dashboard-animate-card">
             <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
-                    <i data-lucide="pie-chart" class="w-4 h-4 text-brand-emerald"></i>
-                    Status Peninjauan Berkas
+                    <i data-lucide="git-branch" class="w-4 h-4 text-brand-emerald"></i>
+                    Status Alur Pendaftaran
                 </h3>
             </div>
-            <div class="grid grid-cols-2 gap-4 pt-2">
-                @foreach($statusStats as $label => $count)
-                    @php
-                        $percentage = $totalCandidates > 0 ? round(($count / $totalCandidates) * 100) : 0;
-                        $colorClass = $label === 'Verified' ? 'bg-green-500' : ($label === 'Submitted' ? 'bg-blue-500' : ($label === 'Failed' ? 'bg-red-500' : 'bg-slate-400'));
-                        $textColor = $label === 'Verified' ? 'text-green-600' : ($label === 'Submitted' ? 'text-blue-600' : ($label === 'Failed' ? 'text-red-600' : 'text-slate-500'));
-                    @endphp
-                    <div class="p-3 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2 flex flex-col justify-between">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">{{ $label }}</span>
-                        <div class="flex items-baseline justify-between">
-                            <span class="text-xl font-black text-slate-800">{{ $count }}</span>
-                            <span class="text-xs font-bold {{ $textColor }}">{{ $percentage }}%</span>
+            <div class="space-y-3 pt-2">
+                @forelse($pipelineStages as $stage)
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-xs font-bold text-slate-700">
+                            <span class="flex items-center gap-1.5">
+                                <span class="h-2 w-2 rounded-full {{ $stage['dot'] }}"></span>
+                                {{ $stage['label'] }}
+                            </span>
+                            <span>{{ $stage['count'] }} Siswa ({{ $stage['percentage'] }}%)</span>
                         </div>
-                        <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                            <div class="{{ $colorClass }} h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: 0%"></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="{{ $stage['color'] }} h-full rounded-full progress-bar" data-width="{{ $stage['percentage'] }}" style="width: {{ $stage['percentage'] }}%"></div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <p class="text-xs text-slate-400 text-center py-6 font-semibold">Belum ada data alur pendaftaran.</p>
+                @endforelse
             </div>
         </div>
 
@@ -162,21 +161,28 @@
                 </h3>
             </div>
             <div class="space-y-4 pt-2">
-                @foreach($paymentStats as $label => $count)
+                @php
+                    $paymentLabels = [
+                        'Paid' => ['label' => 'Lunas (Paid)', 'dot' => 'bg-emerald-500', 'bar' => 'bg-emerald-500'],
+                        'Pending' => ['label' => 'Pending', 'dot' => 'bg-yellow-500', 'bar' => 'bg-yellow-500'],
+                        'Unpaid' => ['label' => 'Belum Bayar (Unpaid)', 'dot' => 'bg-slate-300', 'bar' => 'bg-slate-400'],
+                    ];
+                @endphp
+                @foreach($paymentStats as $key => $count)
                     @php
+                        $cfg = $paymentLabels[$key] ?? ['label' => $key, 'dot' => 'bg-slate-400', 'bar' => 'bg-slate-400'];
                         $percentage = $totalCandidates > 0 ? round(($count / $totalCandidates) * 100) : 0;
-                        $colorClass = $label === 'Paid' ? 'bg-emerald-500' : ($label === 'Pending' ? 'bg-yellow-500' : 'bg-slate-300');
                     @endphp
                     <div class="space-y-1">
                         <div class="flex justify-between text-xs font-bold text-slate-700">
-                            <span class="flex items-center gap-1">
-                                <span class="h-2 w-2 rounded-full {{ $colorClass }}"></span>
-                                {{ $label }}
+                            <span class="flex items-center gap-1.5">
+                                <span class="h-2 w-2 rounded-full {{ $cfg['dot'] }}"></span>
+                                {{ $cfg['label'] }}
                             </span>
                             <span>{{ $count }} Transaksi ({{ $percentage }}%)</span>
                         </div>
                         <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                            <div class="{{ $colorClass }} h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: 0%"></div>
+                            <div class="{{ $cfg['bar'] }} h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: {{ $percentage }}%"></div>
                         </div>
                     </div>
                 @endforeach
@@ -266,13 +272,16 @@
                 <!-- System Indicators -->
                 <div class="grid grid-cols-2 gap-2 text-xs pt-1">
                     <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl mini-card-reveal">
-                        <span class="text-xs font-bold text-slate-400 block uppercase">Total User</span>
-                        <span class="font-extrabold text-slate-800 text-sm mt-0.5 block">{{ $totalUsersCount }} Akun</span>
+                        <span class="text-xs font-bold text-slate-400 block uppercase">Wali Terdaftar</span>
+                        <span class="font-extrabold text-slate-800 text-sm mt-0.5 block">{{ $totalGuardiansCount }} Akun</span>
                     </div>
                     <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl mini-card-reveal">
                         <span class="text-xs font-bold text-slate-400 block uppercase">Gelombang Aktif</span>
-                        <span class="font-extrabold text-brand-emerald text-xs mt-0.5 block truncate" title="{{ $activeWave->name ?? 'Tidak ada' }}">
-                            {{ $activeWave->name ?? 'Tidak ada' }}
+                        @php
+                            $activeWaveNames = $activeWaves->pluck('name')->implode(', ');
+                        @endphp
+                        <span class="font-extrabold text-brand-emerald text-xs mt-0.5 block truncate" title="{{ $activeWaveNames ?: 'Tidak ada' }}">
+                            {{ $activeWaveNames ?: 'Tidak ada' }}
                         </span>
                     </div>
                 </div>
@@ -324,9 +333,12 @@
                             <i data-lucide="check-circle-2" class="w-4.5 h-4.5 text-brand-emerald flex-shrink-0 mt-0.5"></i>
                             <div>
                                 <span class="font-bold block text-slate-800">Status Gelombang</span>
+                                @php
+                                    $unitWaveNames = $activeWaves->pluck('name')->implode(', ');
+                                @endphp
                                 <span class="text-[11px] text-slate-500 font-medium block mt-0.5">
                                     Gelombang registrasi yang aktif saat ini: 
-                                    <strong class="text-brand-emerald">{{ $activeWave->name ?? 'Tidak ada gelombang aktif' }}</strong>.
+                                    <strong class="text-brand-emerald">{{ $unitWaveNames ?: 'Tidak ada gelombang aktif' }}</strong>.
                                 </span>
                             </div>
                         </div>

@@ -49,17 +49,18 @@
 
     <!-- 4 Stats Summary Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- 1. Total Siap Ta'aruf -->
-        <div class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-150 dark:border-slate-800 shadow-sm flex items-center gap-4">
-            <div class="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center flex-shrink-0">
+        <!-- 1. Total Peserta Ta'aruf -->
+        <a href="{{ route('admin.taaruf', array_merge(request()->query(), ['status' => 'all'])) }}" 
+           class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-150 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-slate-400 dark:hover:border-slate-600 transition group">
+            <div class="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
                 <i data-lucide="users" class="w-6 h-6"></i>
             </div>
             <div>
-                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Siap Ta'aruf</span>
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Peserta</span>
                 <span class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">{{ $counts['total'] }}</span>
-                <span class="text-[10px] text-slate-400 block mt-0.5">Calon Siswa</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">Semua Status</span>
             </div>
-        </div>
+        </a>
 
         <!-- 2. Belum Terjadwal -->
         <a href="{{ route('admin.taaruf', array_merge(request()->query(), ['status' => 'unscheduled'])) }}" 

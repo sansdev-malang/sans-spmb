@@ -49,7 +49,6 @@ class RegistrationController extends Controller
         $validGrades = \App\Models\SpmbGrade::where('spmb_unit_id', $unitId)
             ->where('is_active', true)
             ->pluck('name')
-            ->map(fn($n) => $n === 'KB' ? 'Play Group' : $n)
             ->toArray();
 
         $request->validate([
@@ -68,11 +67,10 @@ class RegistrationController extends Controller
         // Dynamically resolve Unit and Grade based on admission_level
         $unit = $registration->unit;
         $level = $request->admission_level;
-        $gradeName = $level === 'Play Group' ? 'KB' : $level;
         
         $grade = \App\Models\SpmbGrade::where('spmb_unit_id', $unit?->id)
-            ->where(function($q) use ($gradeName) {
-                $q->where('name', $gradeName)
+            ->where(function($q) use ($level) {
+                $q->where('name', $level)
                   ->orWhere('name', 'KB Saja'); // for old test data compatibility
             })
             ->first();

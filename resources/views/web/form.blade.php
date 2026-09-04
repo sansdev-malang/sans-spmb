@@ -375,10 +375,7 @@
                                                         $ops = \App\Models\SpmbGrade::where('spmb_unit_id', $unitId)
                                                             ->where('is_active', true)
                                                             ->get()
-                                                            ->map(function($item) {
-                                                                $val = $item->name === 'KB' ? 'Play Group' : $item->name;
-                                                                return ['value' => $val, 'label' => $val];
-                                                            });
+                                                            ->map(fn($item) => ['value' => $item->name, 'label' => $item->name]);
                                                     } elseif (!empty($field->options)) {
                                                         $ops = collect(explode(',', $field->options))->map(fn($o) => ['value' => trim($o), 'label' => trim($o)]);
                                                     }

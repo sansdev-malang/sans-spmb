@@ -73,7 +73,7 @@ class AdminDashboardController extends Controller
         // General stats
         $totalCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->count();
         $submittedCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'submitted')->count();
-        $verifiedCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'verified')->count();
+        $verifiedCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->whereIn('registration_status', ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])->count();
         
         $paidTransactions = \App\Models\Payment::scopedByAdmin()
             ->where('status', 'success')
@@ -87,26 +87,97 @@ class AdminDashboardController extends Controller
                 $q->where('spmb_period_id', $selectedPeriodId);
             })->sum('amount');
 
-        // Charts stats (by level)
-        $levelStats = Registration::scopedByAdmin()->selectRaw('admission_level, count(*) as count')
+        // Charts stats (by grade / level name)
+        $levelStats = Registration::scopedByAdmin()
             ->where('spmb_period_id', $selectedPeriodId)
-            ->whereNotNull('admission_level')
-            ->groupBy('admission_level')
+            ->leftJoin('spmb_grades', 'registrations.spmb_grade_id', '=', 'spmb_grades.id')
+            ->selectRaw('COALESCE(spmb_grades.name, registrations.admission_level, "Lainnya") as level_name, count(registrations.id) as count')
+            ->groupBy('level_name')
+            ->orderBy('count', 'desc')
             ->get();
 
-        // Charts stats (by status)
-        $statusStats = [
-            'Draft' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'draft')->count(),
-            'Submitted' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'submitted')->count(),
-            'Verified' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'verified')->count(),
-            'Failed' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'failed')->count(),
+        // Charts stats (by complete registration lifecycle pipeline with dynamic stage counts)
+        $statusDefinitions = [
+            'draft' => [
+                'label' => 'Draft Formulir',
+                'color' => 'bg-slate-400',
+                'dot' => 'bg-slate-400',
+            ],
+            'submitted' => [
+                'label' => 'Menunggu Verifikasi',
+                'color' => 'bg-amber-500',
+                'dot' => 'bg-amber-500',
+            ],
+            'failed' => [
+                'label' => 'Perlu Revisi Berkas',
+                'color' => 'bg-rose-500',
+                'dot' => 'bg-rose-500',
+            ],
+            'verified' => [
+                'label' => 'Observasi / Ta\'aruf',
+                'color' => 'bg-indigo-500',
+                'dot' => 'bg-indigo-500',
+            ],
+            'taaruf_completed' => [
+                'label' => 'Penandatanganan Akad',
+                'color' => 'bg-purple-500',
+                'dot' => 'bg-purple-500',
+            ],
+            'agreement_signed' => [
+                'label' => 'Pembayaran Biaya Masuk',
+                'color' => 'bg-blue-500',
+                'dot' => 'bg-blue-500',
+            ],
+            'completed' => [
+                'label' => 'Resmi Diterima (Lunas)',
+                'color' => 'bg-emerald-500',
+                'dot' => 'bg-emerald-500',
+            ],
         ];
 
-        // Charts stats (by payment)
+        $rawStatusCounts = Registration::scopedByAdmin()
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->selectRaw('registration_status, count(*) as count')
+            ->groupBy('registration_status')
+            ->pluck('count', 'registration_status')
+            ->toArray();
+
+        $pipelineStages = [];
+        foreach ($statusDefinitions as $statusCode => $meta) {
+            $count = $rawStatusCounts[$statusCode] ?? 0;
+            if ($statusCode === 'failed' && $count === 0) {
+                continue;
+            }
+            $percentage = $totalCandidates > 0 ? round(($count / $totalCandidates) * 100) : 0;
+            $pipelineStages[] = [
+                'status' => $statusCode,
+                'label' => $meta['label'],
+                'count' => $count,
+                'percentage' => $percentage,
+                'color' => $meta['color'],
+                'dot' => $meta['dot'],
+            ];
+        }
+
+        // Charts stats (by registration fee payment status)
         $paymentStats = [
-            'Unpaid' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('payment_status', 'unpaid')->count(),
-            'Pending' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('payment_status', 'pending')->count(),
-            'Paid' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('payment_status', 'paid')->count(),
+            'Paid' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)
+                ->where(function($q) {
+                    $q->where('payment_status', 'paid')
+                      ->orWhereHas('payments', function($pq) {
+                          $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                      });
+                })->count(),
+            'Pending' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)
+                ->where('payment_status', 'pending')
+                ->whereDoesntHave('payments', function($pq) {
+                    $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                })->count(),
+            'Unpaid' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)
+                ->where('payment_status', 'unpaid')
+                ->whereDoesntHave('payments', function($pq) {
+                    $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                })->count(),
         ];
 
         // Recent Registrations (5 items)
@@ -120,11 +191,13 @@ class AdminDashboardController extends Controller
         // Recent Logs (5 items)
         $recentLogs = $isSuperAdmin ? SpmbActivityLog::latest()->limit(5)->get() : collect();
 
-        // Active Wave/Gelombang Info
-        $activeWave = \App\Models\SpmbWave::where('is_active', true)->first();
+        // Active Wave/Gelombang Info (All active waves)
+        $activeWaves = \App\Models\SpmbWave::where('is_active', true)->get();
 
-        // Total registered users
-        $totalUsersCount = \App\Models\User::count();
+        // Total registered guardians (wali murid with registrations)
+        $totalGuardiansCount = \App\Models\User::whereHas('registrations', function($q) use ($selectedPeriodId) {
+            $q->scopedByAdmin()->where('spmb_period_id', $selectedPeriodId);
+        })->count();
 
         return view('admin.dashboard', compact(
             'totalCandidates',
@@ -133,12 +206,12 @@ class AdminDashboardController extends Controller
             'paidTransactions',
             'totalRevenue',
             'levelStats',
-            'statusStats',
+            'pipelineStages',
             'paymentStats',
             'recentRegistrations',
             'recentLogs',
-            'activeWave',
-            'totalUsersCount'
+            'activeWaves',
+            'totalGuardiansCount'
         ));
     }
 

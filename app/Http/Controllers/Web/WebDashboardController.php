@@ -197,7 +197,7 @@ class WebDashboardController extends Controller
             'candidate_name' => $request->candidate_name,
             'spmb_unit_id' => $request->spmb_unit_id,
             'spmb_grade_id' => $request->spmb_grade_id,
-            'admission_level' => $grade ? ($grade->name === 'KB' ? 'Play Group' : $grade->name) : null,
+            'admission_level' => $grade ? $grade->name : null,
             'spmb_period_id' => $activePeriod?->id,
             'spmb_wave_id' => $request->spmb_wave_id,
             'spmb_type_id' => $request->spmb_type_id,
@@ -959,7 +959,6 @@ class WebDashboardController extends Controller
         $validGrades = \App\Models\SpmbGrade::where('spmb_unit_id', $unitId)
             ->where('is_active', true)
             ->pluck('name')
-            ->map(fn($n) => $n === 'KB' ? 'Play Group' : $n)
             ->toArray();
 
         $request->validate([

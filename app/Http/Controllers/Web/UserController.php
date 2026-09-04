@@ -294,10 +294,7 @@ class UserController extends Controller
         $grade = \App\Models\SpmbGrade::where('spmb_unit_id', $unit->id)->where('is_active', true)->first();
 
         // Map admission level dynamically
-        $admissionLevel = $grade ? $grade->name : 'Play Group';
-        if ($admissionLevel === 'KB Saja' || $admissionLevel === 'KB') {
-            $admissionLevel = 'Play Group';
-        }
+        $admissionLevel = $grade ? $grade->name : null;
 
         // Get active configs
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
