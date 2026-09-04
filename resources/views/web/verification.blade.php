@@ -12,28 +12,28 @@
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden">
         <!-- Verification Card Header -->
         <div class="bg-brand-emerald text-white p-5 sm:p-6 space-y-3 sm:space-y-4">
-            <div class="flex items-start justify-between gap-3 w-full">
-                <h2 class="font-extrabold text-base sm:text-lg text-white flex items-start sm:items-center gap-2 leading-snug min-w-0">
-                    <i data-lucide="shield-check" class="w-5 h-5 text-brand-yellow shrink-0 mt-0.5 sm:mt-0"></i>
-                    <span>Status Peninjauan & Verifikasi Dokumen</span>
+            <div class="flex items-center justify-between gap-2.5 w-full">
+                <h2 class="font-extrabold text-sm sm:text-lg text-white flex items-center gap-2 leading-tight min-w-0">
+                    <i data-lucide="shield-check" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-yellow shrink-0"></i>
+                    <span class="truncate sm:whitespace-normal">Verifikasi Berkas & Dokumen</span>
                 </h2>
                 
-                <div class="shrink-0 self-start pt-0.5">
+                <div class="shrink-0 self-center sm:self-start pt-0">
                     @if(in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']))
-                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
-                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Terverifikasi
+                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="check-circle" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Terverifikasi
                         </span>
                     @elseif($registration->registration_status === 'failed')
-                        <span class="inline-flex items-center gap-1 bg-red-750 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-red-500 shadow-xs whitespace-nowrap">
-                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Gagal
+                        <span class="inline-flex items-center gap-1 bg-red-750 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-red-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="alert-circle" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Gagal
                         </span>
                     @elseif($registration->registration_status === 'submitted')
-                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
-                            <i data-lucide="clock" class="w-3.5 h-3.5"></i> Ditinjau
+                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="clock" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Ditinjau
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1 bg-slate-700 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-slate-500 shadow-xs whitespace-nowrap">
-                            <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Belum Lengkap
+                        <span class="inline-flex items-center gap-1 bg-slate-700 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-slate-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="help-circle" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Belum Lengkap
                         </span>
                     @endif
                 </div>

@@ -3,12 +3,6 @@
 @section('title', 'Hasil Seleksi & Administrasi Akhir - Portal SPMB')
 
 @section('content')
-@php
-    $userAllRegs = auth()->check() ? auth()->user()->registrations()->with(['unit', 'grade', 'classProgram'])->where('registration_status', '!=', 'draft')->orWhereHas('payments', function($q) { $q->where('payment_type', 'registration_fee')->where('status', 'success'); })->latest()->get() : collect();
-    $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
-@endphp
-
-<div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8 space-y-6">
 <style>
     /* Styling for dynamic rich text instructions from Quill */
     .instructions-body ul {
@@ -29,25 +23,30 @@
     }
 </style>
 
-    <!-- MAIN CARD -->
+<div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
+    @php
+        $userAllRegs = auth()->check() ? auth()->user()->registrations()->with(['unit', 'grade', 'classProgram'])->where('registration_status', '!=', 'draft')->orWhereHas('payments', function($q) { $q->where('payment_type', 'registration_fee')->where('status', 'success'); })->latest()->get() : collect();
+        $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
+    @endphp
+
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-150/80 dark:border-slate-800 overflow-hidden">
         
         <!-- CARD HEADER -->
         <div class="bg-brand-emerald text-white p-5 sm:p-6 space-y-3 sm:space-y-4">
-            <div class="flex items-start justify-between gap-3 w-full">
-                <h2 class="font-extrabold text-base sm:text-lg text-white flex items-start sm:items-center gap-2 leading-snug min-w-0">
-                    <i data-lucide="award" class="w-5 h-5 text-brand-yellow shrink-0 mt-0.5 sm:mt-0"></i>
-                    <span>Hasil Seleksi & Administrasi Akhir</span>
+            <div class="flex items-center justify-between gap-2.5 w-full">
+                <h2 class="font-extrabold text-sm sm:text-lg text-white flex items-center gap-2 leading-tight min-w-0">
+                    <i data-lucide="award" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-yellow shrink-0"></i>
+                    <span class="truncate sm:whitespace-normal">Hasil Seleksi & Administrasi</span>
                 </h2>
                 
-                <div class="shrink-0 self-start pt-0.5">
+                <div class="shrink-0 self-center sm:self-start pt-0">
                     @if($registration->registration_status === 'completed')
-                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-ping"></span> Lunas & Resmi
+                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-ping"></span> Lunas &amp; Resmi
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[10px] uppercase tracking-wider px-2.5 sm:px-3 py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
-                            <i data-lucide="clock" class="w-3.5 h-3.5"></i> Menunggu Pelunasan
+                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="clock" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> <span class="hidden sm:inline">Menunggu </span>Pelunasan
                         </span>
                     @endif
                 </div>
@@ -77,6 +76,9 @@
                         
                         <p class="text-xs text-emerald-100 font-semibold truncate">
                             <span class="text-emerald-300 font-bold">{{ $registration->unit?->name }}</span> • {{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})
+                            @if($registration->extraServices && $registration->extraServices->isNotEmpty())
+                                <span class="text-brand-yellow font-bold">• {{ $registration->extraServices->pluck('name')->join(', ') }}</span>
+                            @endif
                         </p>
                         
                         <p class="text-[11px] text-white/75 truncate">
@@ -102,9 +104,9 @@
                                 <a href="{{ route('dashboard.result', $other->id) }}" 
                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
                                    title="Beralih ke {{ $other->candidate_name }}">
-                                    <span>👦 {{ $other->candidate_name }}</span>
-                                    <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/80 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
-                                    <i data-lucide="arrow-right" class="w-3 h-3 text-emerald-300"></i>
+                                   <span>👦 {{ $other->candidate_name }}</span>
+                                   <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/80 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
+                                   <i data-lucide="arrow-right" class="w-3 h-3 text-emerald-300"></i>
                                 </a>
                             @endforeach
                         </div>
@@ -125,42 +127,6 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                         Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah lolos seluruh tahapan observasi kesiapan belajar dan berkas pendaftaran.
                     </p>
-                </div>
-            </div>
-
-            <!-- STUDENT PROFILE META -->
-            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-6 border border-slate-100 dark:border-slate-850 grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-5 text-xs">
-                <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">No. Registrasi</span>
-                    <span class="font-extrabold text-brand-emerald dark:text-emerald-450 mt-1 block">SANS-{{ substr($registration->period->year ?? '2026', 0, 4) }}-{{ str_pad($registration->id, 4, '0', STR_PAD_LEFT) }}</span>
-                </div>
-                <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Nama Calon Siswa</span>
-                    <span class="font-extrabold text-slate-800 dark:text-slate-200 mt-1 block">{{ $registration->candidate_name }}</span>
-                </div>
-                <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Tingkat / Unit</span>
-                    <span class="font-extrabold text-slate-800 dark:text-slate-200 mt-1 block">{{ $registration->admission_level }} - {{ $registration->unit->name ?? '-' }}</span>
-                </div>
-                <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Program Kelas</span>
-                    <span class="font-extrabold text-slate-800 dark:text-slate-200 mt-1 block">{{ $registration->classProgram->name ?? 'Reguler' }}</span>
-                </div>
-                <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Layanan Tambahan</span>
-                    @if($registration->extraServices->count() > 0)
-                        <ul class="list-disc pl-3.5 mt-1 font-extrabold text-brand-emerald dark:text-emerald-450 space-y-0.5">
-                            @foreach($registration->extraServices as $service)
-                                <li>{{ $service->name }}</li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <span class="font-extrabold text-slate-500 dark:text-slate-400 mt-1 block">Tidak Ada</span>
-                    @endif
-                </div>
-                <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Tahun Pelajaran</span>
-                    <span class="font-extrabold text-slate-800 dark:text-slate-200 mt-1 block">{{ $registration->period->year ?? '2027-2028' }}</span>
                 </div>
             </div>
 
