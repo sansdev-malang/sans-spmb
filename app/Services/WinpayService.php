@@ -309,11 +309,7 @@ class WinpayService implements PaymentGatewayInterface
             ];
         } else {
             // Closed Virtual Account (VA) & Retail
-            // Nomor customer untuk VA dibatasi 8 digit agar total nomor VA (Prefix Bank + CustNo) tidak melebihi batas 16 digit perbankan (Mandiri, BCA, BNI, BRI)
-            $custNo = substr(preg_replace('/[^0-9]/', '', $phone ?: ($invoiceNo . rand(1000, 9999))), -8);
-            if (strlen($custNo) < 8) {
-                $custNo = str_pad($custNo, 8, '0', STR_PAD_LEFT);
-            }
+            $custNo = substr(preg_replace('/[^0-9]/', '', $invoiceNo . rand(1000, 9999)), -8);
 
             $body = [
                 'customerNo' => $custNo,
@@ -326,7 +322,8 @@ class WinpayService implements PaymentGatewayInterface
                     'currency' => 'IDR'
                 ],
                 'additionalInfo' => [
-                    'channel' => $cleanMethod
+                    'channel' => $cleanMethod,
+                    'invoiceNumber' => $invoiceNo
                 ]
             ];
         }
