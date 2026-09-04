@@ -238,10 +238,14 @@
                                 @endphp
                                 <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                                     <span class="font-medium text-slate-700">{{ $feeTitle }}</span>
-                                    @if($pay->registration && $pay->registration->unit)
+                                    @php
+                                        $unitShort = $pay->registration?->unit?->code 
+                                            ?: trim(str_replace(['Anak Saleh', 'Sekolah ', 'Terpadu '], '', $pay->registration?->unit?->name ?? ''));
+                                    @endphp
+                                    @if($unitShort)
                                         <span class="text-slate-300">•</span>
-                                        <span class="text-[10px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
-                                            {{ $pay->registration->unit->name }}
+                                        <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded uppercase tracking-wide">
+                                            {{ $unitShort }}
                                         </span>
                                     @endif
                                 </div>
