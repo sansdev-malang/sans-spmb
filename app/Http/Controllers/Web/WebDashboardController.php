@@ -1221,21 +1221,29 @@ class WebDashboardController extends Controller
                 $gateway = reset($gateways) ?: 'winpay';
             }
 
-            // Fetch fee configurations dynamically from settings
-            $feeBniVa = floatval(\App\Models\Setting::get('fee_bni_va', 1500));
-            $feeBniQris = floatval(\App\Models\Setting::get('fee_bni_qris', 0.7)) / 100;
-            $feeWinpayVa = floatval(\App\Models\Setting::get('fee_winpay_va', 4500));
-
-            // Calculate dynamic admin fee based on payment method and active gateway
-            $adminFee = $feeWinpayVa;
-            if ($activeChannel && $activeChannel->gateway && $activeChannel->gateway->code === 'bni') {
-                if ($activeChannel->type === 'qris') {
-                    $adminFee = round($amount * $feeBniQris);
-                } else {
-                    $adminFee = $feeBniVa;
-                }
+            // Calculate dynamic admin fee based on active channel configuration & gateway
+            if ($activeChannel) {
+                $adminFee = $activeChannel->calculateFee($amount);
+            } elseif ($gateway === 'bni') {
+                $feeBniVa = floatval(\App\Models\Setting::get('fee_bni_va', 1500));
+                $feeBniQris = floatval(\App\Models\Setting::get('fee_bni_qris', 0.7)) / 100;
+                $adminFee = (str_contains(strtolower($request->payment_method), 'qr')) ? round($amount * $feeBniQris) : $feeBniVa;
             } else {
-                $adminFee = $feeWinpayVa;
+                $feeWinpayVa = floatval(\App\Models\Setting::get('fee_winpay_va', 4500));
+                $feeWinpayRetail = floatval(\App\Models\Setting::get('fee_winpay_retail', 4500));
+                $feeWinpayQris = floatval(\App\Models\Setting::get('fee_winpay_qris', 0.7)) / 100;
+                $feeWinpayEwallet = floatval(\App\Models\Setting::get('fee_winpay_ewallet', 2.0)) / 100;
+
+                $methodUpper = strtoupper($request->payment_method);
+                if (str_contains($methodUpper, 'QRIS')) {
+                    $adminFee = round($amount * $feeWinpayQris);
+                } elseif (str_contains($methodUpper, 'DANA') || str_contains($methodUpper, 'SHOPEE') || str_contains($methodUpper, 'OVO') || str_contains($methodUpper, 'LINKAJA')) {
+                    $adminFee = round($amount * $feeWinpayEwallet);
+                } elseif (str_contains($methodUpper, 'INDOMARET') || str_contains($methodUpper, 'ALFAMART')) {
+                    $adminFee = $feeWinpayRetail;
+                } else {
+                    $adminFee = $feeWinpayVa;
+                }
             }
 
             $totalAmount = $amount + $adminFee;

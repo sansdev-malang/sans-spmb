@@ -70,6 +70,8 @@ class PaymentChannelController extends Controller
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_payment_channels,code',
             'type' => 'required|string|max:50',
+            'fee_type' => 'required|in:flat,percent',
+            'fee_value' => 'required|numeric|min:0',
             'payment_gateway_id' => 'required|exists:payment_gateways,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -85,6 +87,8 @@ class PaymentChannelController extends Controller
             'name' => $request->name,
             'code' => strtoupper($request->code),
             'type' => strtolower($request->type),
+            'fee_type' => $request->fee_type,
+            'fee_value' => $request->fee_value,
             'logo' => $logoPath,
             'payment_gateway_id' => $request->payment_gateway_id,
             'is_active' => $request->has('is_active')
@@ -108,6 +112,8 @@ class PaymentChannelController extends Controller
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_payment_channels,code,' . $id,
             'type' => 'required|string|max:50',
+            'fee_type' => 'required|in:flat,percent',
+            'fee_value' => 'required|numeric|min:0',
             'payment_gateway_id' => 'required|exists:payment_gateways,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -118,6 +124,8 @@ class PaymentChannelController extends Controller
             'name' => $request->name,
             'code' => strtoupper($request->code),
             'type' => strtolower($request->type),
+            'fee_type' => $request->fee_type,
+            'fee_value' => $request->fee_value,
             'payment_gateway_id' => $request->payment_gateway_id,
             'is_active' => $request->has('is_active')
         ];
@@ -196,26 +204,45 @@ class PaymentChannelController extends Controller
 
                 // Map Winpay type to local types ('Virtual Account' -> 'va', 'QR Code Payment' -> 'qris', etc.)
                 $type = 'va';
+                $feeType = 'flat';
+                $feeValue = 4500.00;
+
                 $lowerType = strtolower($ext['type']);
                 if (str_contains($lowerType, 'qr')) {
                     $type = 'qris';
+                    $feeType = 'percent';
+                    $feeValue = 0.70;
                 } elseif (str_contains($lowerType, 'wallet')) {
                     $type = 'ewallet';
+                    $feeType = 'percent';
+                    $feeValue = 2.00;
                 } elseif (str_contains($lowerType, 'retail')) {
                     $type = 'retail';
+                    $feeType = 'flat';
+                    $feeValue = 4500.00;
                 }
 
-                SpmbPaymentChannel::updateOrCreate(
-                    [
-                        'code' => $ext['code'],
-                        'payment_gateway_id' => $winpayGateway->id
-                    ],
-                    [
+                $existing = SpmbPaymentChannel::where('code', $ext['code'])
+                    ->where('payment_gateway_id', $winpayGateway->id)
+                    ->first();
+
+                if ($existing) {
+                    $existing->update([
                         'name' => $ext['name'],
                         'type' => $type,
                         'is_active' => true
-                    ]
-                );
+                    ]);
+                } else {
+                    SpmbPaymentChannel::create([
+                        'code' => $ext['code'],
+                        'payment_gateway_id' => $winpayGateway->id,
+                        'name' => $ext['name'],
+                        'type' => $type,
+                        'fee_type' => $feeType,
+                        'fee_value' => $feeValue,
+                        'is_active' => true
+                    ]);
+                }
             }
 
             return redirect()->route('admin.payment-channels.index', ['tab' => 'winpay'])

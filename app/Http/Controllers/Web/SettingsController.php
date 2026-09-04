@@ -53,6 +53,9 @@ class SettingsController extends Controller
             'fee_bni_va' => Setting::get('fee_bni_va', '1500'),
             'fee_bni_qris' => Setting::get('fee_bni_qris', '0.7'),
             'fee_winpay_va' => Setting::get('fee_winpay_va', '4500'),
+            'fee_winpay_retail' => Setting::get('fee_winpay_retail', '4500'),
+            'fee_winpay_qris' => Setting::get('fee_winpay_qris', '0.7'),
+            'fee_winpay_ewallet' => Setting::get('fee_winpay_ewallet', '2.0'),
         ];
 
         $channels = SpmbPaymentChannel::orderBy('type')->orderBy('name')->get();
@@ -64,45 +67,57 @@ class SettingsController extends Controller
             $lowerCode = strtolower($gw->code);
 
             if ($gw->code === 'winpay') {
-                $key = 'fee_winpay_va';
                 $gatewayFees[$gw->code] = [
                     'gateway_name' => $gw->name,
                     'fields' => [
                         [
-                            'key' => $key,
+                            'key' => 'fee_winpay_va',
                             'type' => 'va',
-                            'label' => 'Biaya Flat Transaksi (Rp)',
-                            'desc' => 'Biaya flat transaksi untuk semua metode/channel pembayaran Winpay.',
-                            'value' => Setting::get($key, '4500'),
-                        ]
+                            'label' => 'Biaya Virtual Account (VA) Bank (Rp)',
+                            'desc' => 'Biaya flat per transaksi untuk semua channel VA (Mandiri, BRI, BNI, Permata, dll).',
+                            'value' => Setting::get('fee_winpay_va', '4500'),
+                        ],
+                        [
+                            'key' => 'fee_winpay_retail',
+                            'type' => 'retail',
+                            'label' => 'Biaya Modern Retail (Indomaret & Alfamart) (Rp)',
+                            'desc' => 'Biaya flat per transaksi pembayaran via gerai retail modern.',
+                            'value' => Setting::get('fee_winpay_retail', '4500'),
+                        ],
+                        [
+                            'key' => 'fee_winpay_qris',
+                            'type' => 'qris',
+                            'label' => 'MDR QRIS (%)',
+                            'desc' => 'Tarif persentase MDR pemindaian QRIS dinamis.',
+                            'value' => Setting::get('fee_winpay_qris', '0.7'),
+                        ],
+                        [
+                            'key' => 'fee_winpay_ewallet',
+                            'type' => 'ewallet',
+                            'label' => 'MDR E-Wallet (DANA, ShopeePay, dll.) (%)',
+                            'desc' => 'Tarif persentase pemotongan gateway untuk pembayaran dompet digital (E-Wallet).',
+                            'value' => Setting::get('fee_winpay_ewallet', '2.0'),
+                        ],
                     ]
                 ];
-            } elseif ($gw->code === 'bni_va') {
-                $key = 'fee_bni_va';
+            } elseif ($gw->code === 'bni_va' || $gw->code === 'bni') {
                 $gatewayFees[$gw->code] = [
                     'gateway_name' => $gw->name,
                     'fields' => [
                         [
-                            'key' => $key,
+                            'key' => 'fee_bni_va',
                             'type' => 'va',
-                            'label' => 'Biaya Virtual Account BNI (Rp)',
+                            'label' => 'Biaya Virtual Account BNI Direct (Rp)',
                             'desc' => 'Biaya flat transaksi Virtual Account BNI Host-to-Host.',
-                            'value' => Setting::get($key, '1500'),
-                        ]
-                    ]
-                ];
-            } elseif ($gw->code === 'qris_bni' || $gw->code === 'bni_qris' || $gw->code === 'bni') {
-                $key = 'fee_bni_qris';
-                $gatewayFees[$gw->code] = [
-                    'gateway_name' => $gw->name,
-                    'fields' => [
+                            'value' => Setting::get('fee_bni_va', '1500'),
+                        ],
                         [
-                            'key' => $key,
+                            'key' => 'fee_bni_qris',
                             'type' => 'qris',
                             'label' => 'MDR QRIS BNI (%)',
-                            'desc' => 'Tarif MDR persentase untuk channel QRIS BNI.',
-                            'value' => Setting::get($key, '0.7'),
-                        ]
+                            'desc' => 'Tarif MDR persentase untuk channel QRIS BNI MPM.',
+                            'value' => Setting::get('fee_bni_qris', '0.7'),
+                        ],
                     ]
                 ];
             } else {
@@ -218,17 +233,15 @@ class SettingsController extends Controller
             $lowerCode = strtolower($gw->code);
 
             if ($gw->code === 'winpay') {
-                $key = 'fee_winpay_va';
-                $validationRules[$key] = 'required|numeric|min:0';
-                $feeKeys[] = $key;
-            } elseif ($gw->code === 'bni_va') {
-                $key = 'fee_bni_va';
-                $validationRules[$key] = 'required|numeric|min:0';
-                $feeKeys[] = $key;
-            } elseif ($gw->code === 'qris_bni' || $gw->code === 'bni_qris' || $gw->code === 'bni') {
-                $key = 'fee_bni_qris';
-                $validationRules[$key] = 'required|numeric|min:0';
-                $feeKeys[] = $key;
+                $validationRules['fee_winpay_va'] = 'required|numeric|min:0';
+                $validationRules['fee_winpay_retail'] = 'required|numeric|min:0';
+                $validationRules['fee_winpay_qris'] = 'required|numeric|min:0';
+                $validationRules['fee_winpay_ewallet'] = 'required|numeric|min:0';
+                $feeKeys = array_merge($feeKeys, ['fee_winpay_va', 'fee_winpay_retail', 'fee_winpay_qris', 'fee_winpay_ewallet']);
+            } elseif ($gw->code === 'bni_va' || $gw->code === 'bni') {
+                $validationRules['fee_bni_va'] = 'required|numeric|min:0';
+                $validationRules['fee_bni_qris'] = 'required|numeric|min:0';
+                $feeKeys = array_merge($feeKeys, ['fee_bni_va', 'fee_bni_qris']);
             } else {
                 $isVa = (str_contains($lowerName, 'virtual') || str_contains($lowerName, 'va') || str_contains($lowerCode, 'va'));
                 $isQris = (str_contains($lowerName, 'qris') || str_contains($lowerCode, 'qris'));
@@ -303,8 +316,47 @@ class SettingsController extends Controller
             Setting::set($key, $request->input($key));
         }
 
+        // Synchronize category fees to existing SpmbPaymentChannel records
+        $winpayGw = \App\Models\PaymentGateway::where('code', 'winpay')->first();
+        if ($winpayGw) {
+            if ($request->filled('fee_winpay_va')) {
+                SpmbPaymentChannel::where('payment_gateway_id', $winpayGw->id)
+                    ->where('type', 'va')
+                    ->update(['fee_type' => 'flat', 'fee_value' => $request->fee_winpay_va]);
+            }
+            if ($request->filled('fee_winpay_retail')) {
+                SpmbPaymentChannel::where('payment_gateway_id', $winpayGw->id)
+                    ->where('type', 'retail')
+                    ->update(['fee_type' => 'flat', 'fee_value' => $request->fee_winpay_retail]);
+            }
+            if ($request->filled('fee_winpay_qris')) {
+                SpmbPaymentChannel::where('payment_gateway_id', $winpayGw->id)
+                    ->where('type', 'qris')
+                    ->update(['fee_type' => 'percent', 'fee_value' => $request->fee_winpay_qris]);
+            }
+            if ($request->filled('fee_winpay_ewallet')) {
+                SpmbPaymentChannel::where('payment_gateway_id', $winpayGw->id)
+                    ->where('type', 'ewallet')
+                    ->update(['fee_type' => 'percent', 'fee_value' => $request->fee_winpay_ewallet]);
+            }
+        }
+
+        $bniGw = \App\Models\PaymentGateway::where('code', 'bni')->first();
+        if ($bniGw) {
+            if ($request->filled('fee_bni_va')) {
+                SpmbPaymentChannel::where('payment_gateway_id', $bniGw->id)
+                    ->where('type', 'va')
+                    ->update(['fee_type' => 'flat', 'fee_value' => $request->fee_bni_va]);
+            }
+            if ($request->filled('fee_bni_qris')) {
+                SpmbPaymentChannel::where('payment_gateway_id', $bniGw->id)
+                    ->where('type', 'qris')
+                    ->update(['fee_type' => 'percent', 'fee_value' => $request->fee_bni_qris]);
+            }
+        }
+
         $activeTab = $request->input('active_tab', 'winpay');
-        return redirect()->route('admin.settings', ['tab' => $activeTab])->with('success', 'Konfigurasi Payment Gateway berhasil diperbarui.');
+        return redirect()->route('admin.settings', ['tab' => $activeTab])->with('success', 'Konfigurasi Biaya Admin Transaksi berhasil diperbarui dan diterapkan ke seluruh channel pembayaran terkait.');
     }
 
 

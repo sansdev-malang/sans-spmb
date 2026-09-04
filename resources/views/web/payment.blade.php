@@ -296,7 +296,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                  @forelse($channels as $channel)
                                     <label class="border border-slate-200 hover:border-brand-emerald hover:bg-emerald-50/5 dark:border-slate-800 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/5 rounded-xl p-3.5 flex items-center gap-3.5 cursor-pointer transition relative">
-                                        <input type="radio" name="payment_method" value="{{ $channel->code }}" data-type="{{ $channel->type }}" data-gateway="{{ $channel->gateway->code ?? '' }}" class="text-brand-emerald focus:ring-brand-emerald h-4 w-4" {{ $loop->first ? 'checked' : '' }}>
+                                        <input type="radio" name="payment_method" value="{{ $channel->code }}" data-type="{{ $channel->type }}" data-gateway="{{ $channel->gateway->code ?? '' }}" data-fee-type="{{ $channel->fee_type ?? 'flat' }}" data-fee-value="{{ $channel->fee_value ?? 4500 }}" class="text-brand-emerald focus:ring-brand-emerald h-4 w-4" {{ $loop->first ? 'checked' : '' }}>
                                         
                                         <!-- Logo Container -->
                                         <div class="h-8 w-16 flex items-center justify-center p-0.5 select-none shrink-0">
@@ -311,20 +311,27 @@
 
                                         <!-- Text Details -->
                                         <div class="min-w-0 flex-1">
-                                            <span class="text-xs font-extrabold text-slate-850 dark:text-slate-200 block truncate leading-tight">{{ $channel->name }}</span>
-                                            <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5">
-                                                @if($channel->type === 'va')
-                                                    Virtual Account
-                                                @elseif($channel->type === 'qris')
-                                                    QRIS
-                                                @elseif($channel->type === 'ewallet')
-                                                    E-Wallet
-                                                @elseif($channel->type === 'retail')
-                                                    Modern Retail
-                                                @else
-                                                    {{ $channel->type }}
-                                                @endif
-                                            </span>
+                                            <div class="flex items-center justify-between gap-1">
+                                                <span class="text-xs font-extrabold text-slate-850 dark:text-slate-200 block truncate leading-tight">{{ $channel->name }}</span>
+                                            </div>
+                                            <div class="flex items-center justify-between gap-2 mt-0.5">
+                                                <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                                                    @if($channel->type === 'va')
+                                                        Virtual Account
+                                                    @elseif($channel->type === 'qris')
+                                                        QRIS
+                                                    @elseif($channel->type === 'ewallet')
+                                                        E-Wallet
+                                                    @elseif($channel->type === 'retail')
+                                                        Modern Retail
+                                                    @else
+                                                        {{ $channel->type }}
+                                                    @endif
+                                                </span>
+                                                <span class="text-[9px] font-black text-brand-emerald dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-900/50">
+                                                    {{ $channel->fee_label }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </label>
                                 @empty
@@ -508,9 +515,6 @@
 </div>
 
 <script>
-    const feeBniVa = {{ \App\Models\Setting::get('fee_bni_va', 1500) }};
-    const feeBniQris = {{ \App\Models\Setting::get('fee_bni_qris', 0.7) }} / 100;
-    const feeWinpayVa = {{ \App\Models\Setting::get('fee_winpay_va', 4500) }};
     const currentBaseAmount = {{ (float) $feeAmount }};
 
     function updateSummary() {
@@ -521,20 +525,14 @@
         const selectedRadio = document.querySelector('input[name="payment_method"]:checked');
         if (!selectedRadio) return;
 
-        const method = selectedRadio.value;
-        const channelType = selectedRadio.getAttribute('data-type');
-        const channelGateway = selectedRadio.getAttribute('data-gateway');
-        let adminFee = 0;
+        const feeType = selectedRadio.getAttribute('data-fee-type') || 'flat';
+        const feeVal = parseFloat(selectedRadio.getAttribute('data-fee-value')) || 0;
 
-        if (channelGateway === 'bni') {
-            if (channelType === 'qris') {
-                adminFee = Math.round(currentBaseAmount * feeBniQris);
-            } else {
-                adminFee = feeBniVa;
-            }
+        let adminFee = 0;
+        if (feeType === 'percent') {
+            adminFee = Math.round(currentBaseAmount * (feeVal / 100));
         } else {
-            // Winpay gateway
-            adminFee = feeWinpayVa;
+            adminFee = Math.round(feeVal);
         }
 
         const grandTotal = currentBaseAmount + adminFee;

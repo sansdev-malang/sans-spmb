@@ -113,6 +113,7 @@
                         <th class="py-4 px-6">Nama Channel</th>
                         <th class="py-4 px-6">Kode Pembayaran</th>
                         <th class="py-4 px-6">Tipe Channel</th>
+                        <th class="py-4 px-6">Biaya Transaksi (Admin)</th>
                         <th class="py-4 px-6 text-center">Status Aktif</th>
                         <th class="py-4 px-6 text-right">Aksi</th>
                     </tr>
@@ -151,6 +152,21 @@
                                     {{ strtoupper($channel->type) }}
                                 </span>
                             </td>
+                            <td class="py-4 px-6">
+                                @if($channel->fee_type === 'percent')
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/50">
+                                        <i data-lucide="percent" class="w-3.5 h-3.5 text-purple-500"></i>
+                                        {{ rtrim(rtrim(number_format($channel->fee_value, 2, '.', ''), '0'), '.') }}%
+                                        <span class="text-[9px] font-bold text-purple-500/80 ml-0.5 uppercase tracking-tight">(MDR)</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/50 font-mono">
+                                        <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                        Rp {{ number_format($channel->fee_value, 0, ',', '.') }}
+                                        <span class="text-[9px] font-bold text-emerald-500/80 ml-0.5 uppercase tracking-tight">(Flat)</span>
+                                    </span>
+                                @endif
+                            </td>
                             <td class="py-4 px-6 text-center">
                                 <form action="{{ route('admin.payment-channels.toggle', $channel->id) }}" method="POST" class="inline-block">
                                     @csrf
@@ -172,7 +188,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-12 px-6 text-center text-slate-400">
+                            <td colspan="6" class="py-12 px-6 text-center text-slate-400">
                                 <div class="flex flex-col items-center justify-center gap-2">
                                     <i data-lucide="credit-card" class="w-8 h-8 text-slate-300"></i>
                                     <p class="text-xs font-bold">Belum ada channel pembayaran terdaftar pada gateway ini.</p>
@@ -226,12 +242,36 @@
 
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tipe Channel</label>
-                <select name="type" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                <select name="type" id="create_type" onchange="autoSuggestFeeType('create')" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
                     <option value="va">Virtual Account (VA)</option>
                     <option value="qris">QRIS</option>
                     <option value="ewallet">E-Wallet</option>
-                    <option value="retail">Retail Outlet</option>
+                    <option value="retail">Modern Retail</option>
                 </select>
+            </div>
+
+            <!-- Fee Configuration Fields -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/70 dark:border-slate-800/80 space-y-3">
+                <div class="text-[11px] font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
+                    <i data-lucide="percent" class="w-3.5 h-3.5 text-brand-emerald"></i> Konfigurasi Biaya Transaksi
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Skema Biaya</label>
+                        <select name="fee_type" id="create_fee_type" onchange="toggleFeeTypeInput('create')" required class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                            <option value="flat">Nominal Tetap (Flat Rp)</option>
+                            <option value="percent">Persentase (%)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nilai Biaya</label>
+                        <div class="relative">
+                            <span id="create_fee_prefix" class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-xs">Rp</span>
+                            <input type="number" step="any" min="0" name="fee_value" id="create_fee_value" required value="4500" placeholder="4500" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-7 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition font-mono">
+                            <span id="create_fee_suffix" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 font-bold text-xs hidden">%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -292,8 +332,32 @@
                     <option value="va">Virtual Account (VA)</option>
                     <option value="qris">QRIS</option>
                     <option value="ewallet">E-Wallet</option>
-                    <option value="retail">Retail Outlet</option>
+                    <option value="retail">Modern Retail</option>
                 </select>
+            </div>
+
+            <!-- Fee Configuration Fields -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/70 dark:border-slate-800/80 space-y-3">
+                <div class="text-[11px] font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
+                    <i data-lucide="percent" class="w-3.5 h-3.5 text-brand-emerald"></i> Konfigurasi Biaya Transaksi
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Skema Biaya</label>
+                        <select name="fee_type" id="edit_fee_type" onchange="toggleFeeTypeInput('edit')" required class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                            <option value="flat">Nominal Tetap (Flat Rp)</option>
+                            <option value="percent">Persentase (%)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nilai Biaya</label>
+                        <div class="relative">
+                            <span id="edit_fee_prefix" class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-xs">Rp</span>
+                            <input type="number" step="any" min="0" name="fee_value" id="edit_fee_value" required placeholder="4500" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-7 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition font-mono">
+                            <span id="edit_fee_suffix" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 font-bold text-xs hidden">%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Current Logo Preview -->
@@ -330,11 +394,57 @@
 </div>
 
 <script>
+    function toggleFeeTypeInput(mode) {
+        const typeEl = document.getElementById(mode + '_fee_type');
+        const prefixEl = document.getElementById(mode + '_fee_prefix');
+        const suffixEl = document.getElementById(mode + '_fee_suffix');
+        const inputEl = document.getElementById(mode + '_fee_value');
+
+        if (!typeEl) return;
+
+        if (typeEl.value === 'percent') {
+            prefixEl.classList.add('hidden');
+            suffixEl.classList.remove('hidden');
+            inputEl.classList.remove('pl-9');
+            inputEl.classList.add('pl-3');
+            inputEl.placeholder = '0.70';
+            inputEl.step = '0.01';
+        } else {
+            prefixEl.classList.remove('hidden');
+            suffixEl.classList.add('hidden');
+            inputEl.classList.remove('pl-3');
+            inputEl.classList.add('pl-9');
+            inputEl.placeholder = '4500';
+            inputEl.step = '1';
+        }
+    }
+
+    function autoSuggestFeeType(mode) {
+        const channelTypeEl = document.getElementById(mode + '_type');
+        const feeTypeEl = document.getElementById(mode + '_fee_type');
+        const feeValEl = document.getElementById(mode + '_fee_value');
+        if (!channelTypeEl || !feeTypeEl || !feeValEl) return;
+
+        const val = channelTypeEl.value;
+        if (val === 'qris') {
+            feeTypeEl.value = 'percent';
+            feeValEl.value = '0.70';
+        } else if (val === 'ewallet') {
+            feeTypeEl.value = 'percent';
+            feeValEl.value = '2.00';
+        } else if (val === 'retail' || val === 'va') {
+            feeTypeEl.value = 'flat';
+            feeValEl.value = '4500';
+        }
+        toggleFeeTypeInput(mode);
+    }
+
     // Create Modal Handler
     function openCreateModal() {
         const modal = document.getElementById('createModal');
         const body = document.getElementById('createModalBody');
         modal.classList.remove('hidden');
+        toggleFeeTypeInput('create');
         setTimeout(() => {
             body.classList.remove('scale-95');
             body.classList.add('scale-100');
@@ -357,7 +467,11 @@
         document.getElementById('edit_name').value = channel.name;
         document.getElementById('edit_code').value = channel.code;
         document.getElementById('edit_type').value = channel.type;
+        document.getElementById('edit_fee_type').value = channel.fee_type || 'flat';
+        document.getElementById('edit_fee_value').value = channel.fee_value ?? 4500;
         document.getElementById('edit_is_active').checked = !!channel.is_active;
+
+        toggleFeeTypeInput('edit');
         
         // Show/hide current logo preview
         const previewContainer = document.getElementById('edit_logo_preview_container');
