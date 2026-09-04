@@ -36,54 +36,65 @@
         </div>
     @else
         <!-- PAYMENT FLOW INTERFACE -->
-        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-            <div class="bg-brand-emerald text-white px-6 py-5 flex justify-between items-center">
-                <div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div class="bg-brand-emerald text-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5">
+                <div class="flex-1 min-w-0">
                     @if($registration->registration_status === 'draft')
-                        <h2 class="font-extrabold text-lg flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-5 h-5 text-brand-yellow"></i>
-                            Biaya Formulir Pendaftaran
+                        <h2 class="font-extrabold text-base sm:text-lg flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-5 h-5 text-brand-yellow shrink-0"></i>
+                            <span>Biaya Formulir Pendaftaran</span>
                         </h2>
-                        <p class="text-xs text-brand-yellow font-medium mt-0.5">Selesaikan pembayaran biaya pendaftaran untuk membuka akses pengisian formulir pendaftaran.</p>
+                        <p class="text-xs text-brand-yellow/90 font-medium mt-1 leading-relaxed">Selesaikan pembayaran biaya pendaftaran untuk membuka akses pengisian formulir pendaftaran.</p>
                     @else
-                        <h2 class="font-extrabold text-lg flex items-center gap-2">
-                            <i data-lucide="credit-card" class="w-5 h-5 text-brand-yellow"></i>
-                            Biaya Seleksi & Administrasi
+                        <h2 class="font-extrabold text-base sm:text-lg flex items-center gap-2">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-brand-yellow shrink-0"></i>
+                            <span>Biaya Seleksi & Administrasi</span>
                         </h2>
-                        <p class="text-xs text-brand-yellow font-medium mt-0.5">Selesaikan pembayaran biaya seleksi administrasi untuk menjadwalkan tes observasi.</p>
+                        <p class="text-xs text-brand-yellow/90 font-medium mt-1 leading-relaxed">Selesaikan pembayaran biaya seleksi administrasi untuk menjadwalkan tes observasi.</p>
                     @endif
                 </div>
                 
-                @if($registration->payment_status === 'paid')
-                    <span class="bg-green-700 text-white font-bold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full border border-green-500 shadow-sm">
-                        Lunas
-                    </span>
-                @else
-                    <span class="bg-red-700 text-white font-bold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full border border-red-500 shadow-sm">
-                        Belum Lunas
-                    </span>
-                @endif
+                <div class="shrink-0 self-start sm:self-center">
+                    @if($registration->payment_status === 'paid')
+                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Lunas
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 bg-red-700 text-white font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border border-red-500 shadow-xs whitespace-nowrap">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i> Belum Lunas
+                        </span>
+                    @endif
+                </div>
             </div>
 
-            <div class="p-6 space-y-6">
+            <div class="p-5 sm:p-6 space-y-6">
                 <!-- Invoice details card -->
-                <div class="bg-slate-50 dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <div>
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Jenis Pembayaran</span>
-                        <span class="text-sm font-extrabold text-slate-800 dark:text-white block mt-0.5 mb-2.5">{{ $feeName }}</span>
-                        
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Nominal Pembayaran</span>
-                        <span id="displayInvoiceAmount" class="text-xl font-black text-brand-emerald dark:text-emerald-450 block">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="text-right flex flex-col justify-between self-stretch">
+                <div class="bg-slate-50 dark:bg-slate-950/60 p-5 sm:p-6 rounded-2xl border border-slate-200/70 dark:border-slate-800 space-y-4">
+                    <!-- Top Info: Jenis Pembayaran & Pendaftar -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3.5 border-b border-slate-200/60 dark:border-slate-800">
                         <div>
-                            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Pendaftar</span>
-                            <span class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ $registration->candidate_name }}</span>
+                            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Jenis Pembayaran</span>
+                            <div class="text-sm font-extrabold text-slate-850 dark:text-white flex items-center gap-1.5">
+                                <i data-lucide="receipt" class="w-4 h-4 text-brand-emerald"></i>
+                                {{ $feeName }}
+                            </div>
                         </div>
-                        <div class="mt-2.5">
-                            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Unit Pendidikan</span>
-                            <span class="text-xs font-bold text-slate-600 dark:text-slate-350">{{ $registration->unit->name ?? '-' }}</span>
+                        <div class="sm:text-right">
+                            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Pendaftar & Unit</span>
+                            <div class="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                <span>{{ $registration->candidate_name }}</span>
+                                <span class="text-slate-300 dark:text-slate-700 font-normal mx-1.5">•</span>
+                                <span class="text-brand-emerald dark:text-emerald-450 font-bold">{{ $registration->unit->name ?? '-' }}</span>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Bottom Info: Nominal Tagihan -->
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Total Tagihan</span>
+                        <span id="displayInvoiceAmount" class="text-xl sm:text-2xl font-black text-brand-emerald dark:text-emerald-450 font-mono">
+                            Rp {{ number_format($feeAmount, 0, ',', '.') }}
+                        </span>
                     </div>
                 </div>
 
