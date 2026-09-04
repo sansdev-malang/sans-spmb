@@ -359,9 +359,10 @@
 
                 <!-- Waktu / Sesi Pelaksanaan -->
                 <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
                         Waktu / Sesi Pelaksanaan <span class="text-rose-500">*</span>
                     </label>
+                    <p class="text-[11px] text-slate-400 mb-2">Pilih sesi cepat dari dropdown untuk mengisi otomatis, atau ketik langsung jadwal khusus pada kolom input.</p>
                     <div class="space-y-2">
                         <select id="modalTimePreset" onchange="applyTimePreset(this.value)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">-- Pilih Preset Sesi Cepat --</option>
@@ -668,6 +669,19 @@
                     }
                 });
             });
+        }
+    });
+
+    // Close modal by clicking outside
+    document.getElementById('scheduleModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeScheduleModal();
+        }
+    });
+
+    document.getElementById('unitSettingsModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeUnitSettingsModal();
         }
     });
 

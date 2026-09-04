@@ -207,12 +207,12 @@
                             </td>
                             <td class="py-4 px-6 space-y-1">
                                 @if($reg->birth_certificate_path)
-                                    <a href="{{ Storage::url($reg->birth_certificate_path) }}" target="_blank" class="text-xs text-brand-emerald font-semibold hover:underline block flex items-center gap-1">
+                                    <a href="{{ Storage::url($reg->birth_certificate_path) }}" target="_blank" hx-boost="false" class="text-xs text-brand-emerald font-semibold hover:underline block flex items-center gap-1">
                                         <i data-lucide="file-digit" class="w-3.5 h-3.5"></i> Akte Kelahiran
                                     </a>
                                 @endif
                                 @if($reg->family_card_path)
-                                    <a href="{{ Storage::url($reg->family_card_path) }}" target="_blank" class="text-xs text-brand-emerald font-semibold hover:underline block flex items-center gap-1">
+                                    <a href="{{ Storage::url($reg->family_card_path) }}" target="_blank" hx-boost="false" class="text-xs text-brand-emerald font-semibold hover:underline block flex items-center gap-1">
                                         <i data-lucide="file-digit" class="w-3.5 h-3.5"></i> Kartu Keluarga
                                     </a>
                                 @endif
@@ -259,13 +259,13 @@
  
                                     @if ($reg->registration_status === 'verified')
                                         <!-- Atur Jadwal Ta'aruf Link -->
-                                        <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->id]) }}" class="bg-brand-emerald hover-emerald text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Atur Jadwal Ta'aruf">
+                                        <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" class="bg-brand-emerald hover-emerald text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Atur Jadwal Ta'aruf">
                                             <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
                                             <span>Jadwal Ta'aruf</span>
                                         </a>
 
                                         <!-- Selesaikan Ta'aruf -->
-                                        <form action="{{ route('admin.registrations.complete-taaruf', $reg->id) }}" method="POST" class="inline">
+                                        <form action="{{ route('admin.registrations.complete-taaruf', $reg->id) }}" method="POST" hx-boost="false" class="inline">
                                             @csrf
                                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
                                                 Selesaikan Ta'aruf
@@ -692,6 +692,13 @@
     // Close modal by clicking outside
     document.getElementById('detailModal').addEventListener('click', function(e) {
         if (e.target === this) {
+            closeDetailModal();
+        }
+    });
+
+    // Close on escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
             closeDetailModal();
         }
     });

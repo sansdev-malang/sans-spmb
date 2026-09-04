@@ -288,6 +288,51 @@
                                     <p class="text-slate-700 dark:text-slate-300 leading-relaxed pl-5 whitespace-pre-line">{{ $registration->observation_notes }}</p>
                                 </div>
                             @endif
+
+                            <!-- Alur & Informasi Tahap Selanjutnya -->
+                            <div class="p-4 sm:p-5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/50 space-y-3">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-extrabold text-slate-800 dark:text-white text-xs">Langkah & Tahapan Selanjutnya</h4>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Alur setelah pelaksanaan sesi Ta'aruf & Observasi</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-950/80 space-y-1 shadow-xs">
+                                        <div class="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 text-[11px]">
+                                            <span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-black flex-shrink-0">1</span>
+                                            <span>Hadir Sesuai Jadwal</span>
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                            Hadir 15 menit sebelum sesi dimulai dengan membawa perlengkapan yang diminta.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-950/80 space-y-1 shadow-xs">
+                                        <div class="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 text-[11px]">
+                                            <span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-black flex-shrink-0">2</span>
+                                            <span>Validasi Panitia</span>
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                            Setelah sesi tatap muka selesai, panitia akan menyelesaikan status observasi di sistem.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-950/80 space-y-1 shadow-xs">
+                                        <div class="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 text-[11px]">
+                                            <span class="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-black flex-shrink-0">3</span>
+                                            <span>Aktivasi Tahap Lanjutan</span>
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                            Formulir <strong class="text-slate-700 dark:text-slate-200">Surat Pernyataan</strong> &amp; menu <strong class="text-slate-700 dark:text-slate-200">Administrasi</strong> otomatis terbuka.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @else
                         <!-- Kartu Menunggu Penjadwalan -->
