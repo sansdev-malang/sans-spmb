@@ -1296,7 +1296,7 @@ class WebDashboardController extends Controller
 
             // Step 2: Request payment transaction to Gateway
             try {
-                $studentName = $registration->student_name ?? $registration->name ?? null;
+                $studentName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Siswa SPMB'));
                 $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
                 $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
                 $response = $gatewayService->createPayment($totalAmount, $invoiceBase, $request->payment_method, $studentName, $studentPhone);

@@ -405,6 +405,20 @@
                             </div>
                         @endif
                         
+                        <!-- Invoice and Gateway Reference Details -->
+                        <div class="bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-xl p-4 space-y-2 text-xs">
+                            <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                                <span class="font-medium">No. Invoice (Merchant Ref):</span>
+                                <span class="font-mono font-bold text-slate-800 dark:text-slate-200 select-all">{{ $activePayment->invoice_number }}</span>
+                            </div>
+                            @if(!empty($activePayment->reference_id))
+                                <div class="flex justify-between items-center text-slate-600 dark:text-slate-400 border-t border-slate-200/50 dark:border-slate-800 pt-2">
+                                    <span class="font-medium">ID Referensi Gateway:</span>
+                                    <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400 select-all">{{ $activePayment->reference_id }}</span>
+                                </div>
+                            @endif
+                        </div>
+
                         <div class="bg-slate-50 p-4 rounded-xl text-xs text-slate-500 leading-relaxed space-y-1">
                             <p><strong>Instruksi Pembayaran:</strong></p>
                             <ol class="list-decimal pl-4 space-y-1">
