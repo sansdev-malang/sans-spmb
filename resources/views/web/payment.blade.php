@@ -145,17 +145,17 @@
                 @endif
 
                 @if($latestFailedPayment && !$isPaymentPending && $registration->payment_status !== 'paid')
-                    <!-- Notifikasi Riwayat Gagal Sebelumnya -->
+                    <!-- Notifikasi Pembuatan Tagihan Belum Berhasil -->
                     <div class="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-start gap-3">
                         <div class="h-8 w-8 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
                         </div>
                         <div class="space-y-1">
                             <h4 class="font-extrabold text-xs text-amber-900 dark:text-amber-300">
-                                Permintaan Pembayaran Sebelumnya Belum Berhasil
+                                Pembuatan Tagihan Belum Berhasil
                             </h4>
                             <p class="text-[11px] text-amber-750 dark:text-amber-400 leading-relaxed">
-                                {{ $latestFailedPayment->payment_info['failure_reason'] ?? 'Permintaan pembuatan tagihan belum dapat diselesaikan oleh gateway. Silakan pilih kembali kanal pembayaran di bawah dan klik Bayar Sekarang.' }}
+                                {{ $latestFailedPayment->payment_info['failure_reason'] ?? 'Pembuatan tagihan untuk metode pembayaran yang dipilih belum dapat diselesaikan oleh sistem perbankan. Silakan pilih kanal pembayaran lain (seperti QRIS atau E-Wallet) di bawah ini lalu klik Bayar Sekarang.' }}
                             </p>
                         </div>
                     </div>

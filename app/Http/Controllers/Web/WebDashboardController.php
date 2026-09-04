@@ -1335,7 +1335,7 @@ class WebDashboardController extends Controller
                     'payment_status' => $hasPrevSuccess ? 'partially_paid' : 'unpaid'
                 ]);
 
-                return redirect()->back()->with('error', 'Gagal memproses pembayaran melalui gateway: ' . $response['message']);
+                return redirect()->back()->with('error', $response['message']);
             }
 
             // Step 3: Update local payment record with gateway response
