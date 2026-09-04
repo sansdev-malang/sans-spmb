@@ -904,20 +904,28 @@
             }
 
             fetch('/admin/notifications/dropdown', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                }
             })
                 .then(response => {
-                    if (!response.ok) throw new Error('Failed to load');
+                    if (response.redirected || !response.ok || response.status === 401 || response.status === 419) {
+                        throw new Error('Session expired or unauthorized');
+                    }
                     return response.text();
                 })
                 .then(html => {
+                    if (html.includes('Masuk Akun') || html.includes('auth-panel-card') || html.includes('<!DOCTYPE') || html.includes('<html')) {
+                        throw new Error('Received login page instead of notifications');
+                    }
                     dropdown.innerHTML = html;
                     if (window.lucide) {
                         window.lucide.createIcons();
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching notifications:', error);
+                    // Silently fail without breaking UI
                 })
                 .finally(() => {
                     isFetchingNotif = false;
@@ -927,13 +935,21 @@
         // Notification badge count fetcher
         function fetchNotificationCount() {
             fetch('/admin/notifications/unread-count', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                }
             })
                 .then(response => {
-                    if (!response.ok) throw new Error();
+                    if (response.redirected || !response.ok || response.status === 401 || response.status === 419) {
+                        throw new Error('Session expired or unauthorized');
+                    }
                     return response.text();
                 })
                 .then(html => {
+                    if (html.includes('Masuk Akun') || html.includes('<!DOCTYPE') || html.includes('<html')) {
+                        return;
+                    }
                     const badge = document.getElementById('unread-notifications-badge');
                     if (badge) {
                         badge.innerHTML = html;
