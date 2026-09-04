@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
-    @include('web.partials.candidate-context-bar')
     <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         <div class="bg-brand-emerald text-white px-6 py-5">
             <h2 class="font-extrabold text-lg flex items-center gap-2">
@@ -29,46 +28,79 @@
         </style>
 
         <div class="p-6 space-y-8">
-            <!-- Informasi Pendaftaran Terpilih (Premium Design) -->
-            <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 to-brand-emerald text-white rounded-3xl p-6 shadow-md border border-emerald-800/10">
-                <!-- Background patterns -->
-                <div class="absolute right-0 top-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl"></div>
-                <div class="absolute left-1/3 bottom-0 w-28 h-28 bg-teal-500/10 rounded-full blur-2xl"></div>
+            <!-- Informasi Pendaftaran Terpilih (Unified Context Card) -->
+            @php
+                $userAllRegs = auth()->check() ? auth()->user()->registrations()->with(['unit', 'grade', 'classProgram'])->where('registration_status', '!=', 'draft')->orWhereHas('payments', function($q) { $q->where('payment_type', 'registration_fee')->where('status', 'success'); })->latest()->get() : collect();
+                $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
+            @endphp
+            <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 to-slate-950 text-white rounded-3xl p-5 sm:p-6 shadow-md border border-slate-800 space-y-4">
+                <!-- Subtle dark glow patterns -->
+                <div class="absolute right-0 top-0 w-36 h-36 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute left-1/3 bottom-0 w-28 h-28 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="space-y-1">
-                        <div class="flex items-center gap-2 text-emerald-400 font-bold text-[10px] uppercase tracking-widest">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-glow"></span>
-                            <span>Informasi Pendaftaran Terpilih</span>
+                    <!-- Avatar & Candidate Name with Reg ID -->
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="h-11 w-11 rounded-2xl bg-emerald-500/20 text-emerald-300 font-black text-base flex items-center justify-center border border-emerald-400/30 shadow-inner flex-shrink-0">
+                            {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
                         </div>
-                        <h4 class="text-base font-extrabold tracking-tight text-white">
-                            {{ $registration->candidate_name ?? 'Calon Siswa' }}
-                        </h4>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="text-base sm:text-lg font-black tracking-tight text-white truncate">
+                                    {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                                </h4>
+                                @if($registration->id_label)
+                                    <span class="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-lg border border-emerald-800/50 inline-flex items-center gap-1 shadow-xs">
+                                        <i data-lucide="tag" class="w-3 h-3 text-emerald-400"></i> {{ $registration->id_label }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-xs">
+                    <!-- Metadata Pill Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-800/50 rounded-2xl p-3 sm:p-3.5 border border-slate-700/50 text-xs">
                         <div>
-                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Unit Sekolah</span>
-                            <span class="font-extrabold text-emerald-300 mt-0.5 block">{{ $registration->unit->name ?? '-' }}</span>
+                            <span class="text-slate-400 font-bold uppercase block text-[8px] tracking-widest">Unit & Program</span>
+                            <span class="font-extrabold text-emerald-400 mt-0.5 block truncate">{{ $registration->unit->name ?? '-' }}</span>
+                            <span class="text-[10px] text-slate-300 block truncate">{{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
                         </div>
                         <div>
-                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Tahun Pelajaran</span>
+                            <span class="text-slate-400 font-bold uppercase block text-[8px] tracking-widest">Tahun Pelajaran</span>
                             <span class="font-extrabold text-white mt-0.5 block">{{ $registration->period->year ?? '-' }}</span>
                         </div>
                         <div>
-                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Jalur</span>
-                            <span class="font-extrabold text-white mt-0.5 block">{{ $registration->type->name ?? '-' }}</span>
+                            <span class="text-slate-400 font-bold uppercase block text-[8px] tracking-widest">Jalur</span>
+                            <span class="font-extrabold text-white mt-0.5 block truncate">{{ $registration->type->name ?? '-' }}</span>
                         </div>
                         <div>
-                            <span class="text-white/50 font-bold uppercase block text-[8px] tracking-widest">Gelombang</span>
-                            <span class="font-extrabold text-white mt-0.5 block">{{ $registration->wave->name ?? '-' }}</span>
+                            <span class="text-slate-400 font-bold uppercase block text-[8px] tracking-widest">Gelombang</span>
+                            <span class="font-extrabold text-white mt-0.5 block truncate">{{ $registration->wave->name ?? '-' }}</span>
                         </div>
                     </div>
                 </div>
+
+                <!-- Child Switcher (if parent has multiple children) -->
+                @if($otherRegs->isNotEmpty())
+                    <div class="relative pt-3 border-t border-white/10 flex items-center gap-2 flex-wrap text-xs">
+                        <span class="text-white/50 font-bold text-[10px] uppercase tracking-wider whitespace-nowrap">Beralih Ananda:</span>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            @foreach($otherRegs as $other)
+                                <a href="{{ route('dashboard.form', $other->id) }}" 
+                                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold transition border border-white/15 shadow-xs"
+                                   title="Beralih ke formulir {{ $other->candidate_name }}">
+                                    <span>👦 {{ $other->candidate_name }}</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/70 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
+                                    <i data-lucide="arrow-right" class="w-3 h-3 text-emerald-400"></i>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Horizontal Step Progress Timeline -->
-            <div class="mb-12 mt-2 px-2 max-w-2xl mx-auto">
+            <div class="mb-6 sm:mb-12 mt-2 px-2 max-w-2xl mx-auto">
                 <div class="relative flex items-center justify-between w-full">
                     <!-- Line connector background -->
                     <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 dark:bg-slate-800 rounded-full z-0"></div>
@@ -107,8 +139,8 @@
                                 @endif
                             </div>
                             
-                            <!-- Step Title Label -->
-                            <span class="absolute top-11 text-[9px] sm:text-[10px] font-bold text-center whitespace-nowrap transition-colors duration-300 mt-0.5
+                            <!-- Step Title Label (hidden on mobile to prevent overlapping) -->
+                            <span class="hidden sm:block absolute top-11 text-[9px] sm:text-[10px] font-bold text-center whitespace-nowrap transition-colors duration-300 mt-0.5
                                 {{ $isActive 
                                     ? 'text-brand-emerald dark:text-emerald-450' 
                                     : ($isCompleted ? 'text-slate-700 dark:text-slate-350' : 'text-slate-400') }}">
@@ -118,9 +150,6 @@
                     @endforeach
                 </div>
             </div>
-            
-            <!-- Extra space to prevent labels overlap -->
-            <div class="mb-4 sm:hidden"></div>
             <!-- Checking if all steps are completed but registration is still draft or failed -->
             @if (in_array($registration->registration_status, ['draft', 'failed']) && $allStepsCompleted)
                 <div class="bg-emerald-50 border border-brand-emerald/30 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
@@ -161,38 +190,58 @@
                         if (is_array($registration->invalid_fields)) {
                             $hasInvalidFields = count(array_intersect($stepFieldNames, $registration->invalid_fields)) > 0;
                         }
+                        $stepHasErrors = $errors->any() && count(array_intersect($stepFieldNames, array_keys($errors->messages()))) > 0;
+                        $isCurrentActive = (!$step->is_completed && $registration->registration_status === 'draft');
+                        $isAccordionItem = $step->is_completed && !$hasInvalidFields && !$stepHasErrors;
                     @endphp
-                    <div class="border rounded-xl p-5 {{ $hasInvalidFields ? 'border-red-400 bg-red-50/5 ring-2 ring-red-200' : ((!$step->is_completed && $registration->registration_status === 'draft') ? 'border-brand-emerald bg-emerald-50/10' : 'border-slate-200') }}">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-slate-800 flex items-center gap-2">
-                                <span class="h-6 w-6 rounded-full bg-brand-emerald text-white text-xs flex items-center justify-center font-bold">{{ $index + 1 }}</span>
-                                {{ $step->title }}
-                            </span>
-                            <div class="flex items-center gap-2">
-                                @if ($hasInvalidFields)
-                                    <span class="text-[10px] bg-rose-100 text-rose-700 px-2.5 py-1 rounded-full font-bold flex items-center gap-1 shadow-sm">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span> Perlu Perbaikan
+                    <div class="border rounded-2xl transition-all duration-200 overflow-hidden {{ $hasInvalidFields ? 'border-red-400 bg-red-50/5 ring-2 ring-red-200' : ($isCurrentActive ? 'border-brand-emerald bg-white ring-4 ring-emerald-500/10 shadow-sm' : 'border-slate-200/80 bg-white hover:border-slate-300 shadow-xs') }}">
+                        
+                        @if ($isAccordionItem)
+                            <!-- Accordion Header for Completed Step -->
+                            <div onclick="toggleStepAccordion({{ $step->id }})" class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none group transition bg-white hover:bg-slate-50/70">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="h-8 w-8 rounded-xl bg-emerald-100 text-brand-emerald flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+                                        <i data-lucide="check" class="w-4 h-4 text-brand-emerald"></i>
+                                    </div>
+                                    <span class="font-extrabold text-sm text-slate-800 tracking-tight truncate group-hover:text-brand-emerald transition-colors">
+                                        {{ $step->title }}
                                     </span>
-                                @elseif ($step->is_completed)
-                                    <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-semibold">Tersimpan</span>
-                                @endif
-                                @if ($step->is_completed)
+                                </div>
+                                
+                                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                                    <span class="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1 shadow-xs">
+                                        Tersimpan
+                                    </span>
                                     @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
-                                        <button type="button" onclick="document.getElementById('readonly-step-{{ $step->id }}').classList.add('hidden'); document.getElementById('form-step-{{ $step->id }}').classList.remove('hidden');" class="text-[10px] text-brand-emerald font-bold hover:underline">
+                                        <button type="button" onclick="event.stopPropagation(); openStepEdit({{ $step->id }});" class="text-xs text-brand-emerald font-bold hover:underline px-2 py-1 rounded-lg hover:bg-emerald-50 transition">
                                             Ubah Data
                                         </button>
                                     @endif
-                                @endif
+                                    <div id="chevron-box-{{ $step->id }}" class="text-slate-400 group-hover:text-slate-600 transition-transform duration-200 p-1">
+                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        @else
+                            <!-- Active Step Header / Error Header -->
+                            <div class="p-5 pb-0 flex justify-between items-center mb-4">
+                                <span class="font-extrabold text-slate-800 flex items-center gap-2.5 text-sm sm:text-base">
+                                    <span class="h-7 w-7 rounded-xl bg-brand-emerald text-white text-xs flex items-center justify-center font-black shadow-xs">{{ $index + 1 }}</span>
+                                    {{ $step->title }}
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    @if ($hasInvalidFields)
+                                        <span class="text-[10px] bg-rose-100 text-rose-700 px-2.5 py-1 rounded-full font-bold flex items-center gap-1 shadow-sm border border-rose-200">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span> Perlu Perbaikan
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
 
                         <!-- Form Block -->
                         @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
-                            @php
-                                $stepFieldNames = $step->fields->pluck('field_name')->toArray();
-                                $stepHasErrors = $errors->any() && count(array_intersect($stepFieldNames, array_keys($errors->messages()))) > 0;
-                            @endphp
-                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm {{ ($step->is_completed && !$hasInvalidFields && !$stepHasErrors) ? 'hidden' : '' }}">
+                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm p-5 {{ $isAccordionItem ? 'pt-3 border-t border-slate-100 hidden' : '' }}">
                                 @csrf
 
                                 @if($stepHasErrors)
@@ -402,7 +451,7 @@
                                 </div>
                                 <div class="flex justify-between items-center pt-4 border-t border-slate-100">
                                     @if ($step->is_completed)
-                                        <button type="button" onclick="document.getElementById('form-step-{{ $step->id }}').classList.add('hidden'); document.getElementById('readonly-step-{{ $step->id }}').classList.remove('hidden');" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold text-xs transition">
+                                        <button type="button" onclick="cancelStepEdit({{ $step->id }})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-xs transition">
                                             Batal
                                         </button>
                                     @else
@@ -415,9 +464,10 @@
                             </form>
                         @endif
 
-                        <!-- Readonly Block -->
+                        <!-- Readonly Block (Accordion Content) -->
                         @if ($step->is_completed)
-                            <div id="readonly-step-{{ $step->id }}" class="text-xs text-slate-600 grid grid-cols-1 md:grid-cols-2 gap-3 mt-2 bg-slate-50 p-4 rounded-lg border border-slate-100 {{ $hasInvalidFields ? 'hidden' : '' }}">
+                            <div id="readonly-step-{{ $step->id }}" class="hidden px-5 pb-5 pt-1 border-t border-slate-100 {{ $hasInvalidFields ? '!hidden' : '' }}">
+                                <div class="text-xs text-slate-600 grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-3 bg-slate-50 p-4 rounded-xl border border-slate-200/60">
                                 
                                 @foreach($step->fields as $field)
                                     @php
@@ -852,5 +902,55 @@
                 }
             }
         });
+
+        // Global Accordion Handlers for Completed Steps
+        window.toggleStepAccordion = function(stepId) {
+            const readonlyEl = document.getElementById('readonly-step-' + stepId);
+            const chevronBox = document.getElementById('chevron-box-' + stepId);
+            const formEl = document.getElementById('form-step-' + stepId);
+            
+            // If form edit is currently open, close form and show summary
+            if (formEl && !formEl.classList.contains('hidden')) {
+                formEl.classList.add('hidden');
+                if (readonlyEl) {
+                    readonlyEl.classList.remove('hidden');
+                    if (chevronBox) chevronBox.classList.add('rotate-180');
+                }
+                return;
+            }
+            
+            if (readonlyEl) {
+                const isHidden = readonlyEl.classList.contains('hidden');
+                if (isHidden) {
+                    readonlyEl.classList.remove('hidden');
+                    if (chevronBox) chevronBox.classList.add('rotate-180');
+                } else {
+                    readonlyEl.classList.add('hidden');
+                    if (chevronBox) chevronBox.classList.remove('rotate-180');
+                }
+            }
+        };
+
+        window.openStepEdit = function(stepId) {
+            const readonlyEl = document.getElementById('readonly-step-' + stepId);
+            const formEl = document.getElementById('form-step-' + stepId);
+            const chevronBox = document.getElementById('chevron-box-' + stepId);
+            
+            if (readonlyEl) readonlyEl.classList.add('hidden');
+            if (formEl) formEl.classList.remove('hidden');
+            if (chevronBox) chevronBox.classList.remove('rotate-180');
+        };
+
+        window.cancelStepEdit = function(stepId) {
+            const readonlyEl = document.getElementById('readonly-step-' + stepId);
+            const formEl = document.getElementById('form-step-' + stepId);
+            const chevronBox = document.getElementById('chevron-box-' + stepId);
+            
+            if (formEl) formEl.classList.add('hidden');
+            if (readonlyEl) {
+                readonlyEl.classList.add('hidden');
+                if (chevronBox) chevronBox.classList.remove('rotate-180');
+            }
+        };
     </script>
 @endsection
