@@ -472,10 +472,17 @@ class PaymentController extends Controller
         $trxId = $body['trxId'] ?? null;
         $refNo = $body['referenceNo'] ?? null;
 
-        // Siapkan struktur ACK standar SNAP BI
-        $ackResponseCode = !empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')
-            ? (string)$body['responseCode']
-            : ($origPartnerRef ? '2005400' : '2002500');
+        // Siapkan struktur ACK standar SNAP BI Winpay
+        $ackResponseCode = '2002500';
+        if (!empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')) {
+            $ackResponseCode = (string)$body['responseCode'];
+        } elseif (!empty($origPartnerRef) || !empty($body['additionalInfo']['contractId']) || !empty($body['additionalInfo']['channel'])) {
+            // Standar Winpay SNAP BI untuk E-Wallet & Direct Debit Notification ACK adalah 2005600
+            $ackResponseCode = '2005600';
+        } elseif (!empty($trxId) || !empty($body['virtualAccountNo'])) {
+            // Standar Winpay SNAP BI untuk Virtual Account Payment Notification ACK adalah 2002700
+            $ackResponseCode = '2002700';
+        }
 
         $ackPayload = [
             'responseCode' => $ackResponseCode,
