@@ -15,21 +15,21 @@ class SettingsController extends Controller
         $settings = [
             // Winpay
             'winpay_mode' => Setting::get('winpay_mode', 'simulator'),
-            'winpay_prod_merchant_id' => Setting::get('winpay_prod_merchant_id', ''),
-            'winpay_prod_client_key' => Setting::get('winpay_prod_client_key', ''),
-            'winpay_prod_client_secret' => Setting::get('winpay_prod_client_secret', ''),
-            'winpay_prod_private_key' => Setting::get('winpay_prod_private_key', ''),
-            'winpay_prod_public_key' => Setting::get('winpay_prod_public_key', ''),
+            'winpay_prod_merchant_id' => Setting::get('winpay_production_merchant_id', Setting::get('winpay_prod_merchant_id', '')),
+            'winpay_prod_client_key' => Setting::get('winpay_production_client_key', Setting::get('winpay_prod_client_key', '')),
+            'winpay_prod_client_secret' => Setting::get('winpay_production_client_secret', Setting::get('winpay_prod_client_secret', '')),
+            'winpay_prod_private_key' => Setting::get('winpay_production_private_key', Setting::get('winpay_prod_private_key', '')),
+            'winpay_prod_public_key' => Setting::get('winpay_production_public_key', Setting::get('winpay_prod_public_key', '')),
             'winpay_sandbox_merchant_id' => Setting::get('winpay_sandbox_merchant_id', ''),
             'winpay_sandbox_client_key' => Setting::get('winpay_sandbox_client_key', ''),
             'winpay_sandbox_client_secret' => Setting::get('winpay_sandbox_client_secret', ''),
             'winpay_sandbox_private_key' => Setting::get('winpay_sandbox_private_key', ''),
             'winpay_sandbox_public_key' => Setting::get('winpay_sandbox_public_key', ''),
-            'winpay_merchant_id' => Setting::get('winpay_merchant_id', 'MOCK_MERCHANT_ID'),
-            'winpay_client_key' => Setting::get('winpay_client_key', 'MOCK_CLIENT_KEY'),
-            'winpay_client_secret' => Setting::get('winpay_client_secret', 'MOCK_CLIENT_SECRET'),
-            'winpay_private_key' => Setting::get('winpay_private_key', ''),
-            'winpay_public_key' => Setting::get('winpay_public_key', ''),
+            'winpay_merchant_id' => Setting::get('winpay_simulator_merchant_id', Setting::get('winpay_merchant_id', 'MOCK_MERCHANT_ID')),
+            'winpay_client_key' => Setting::get('winpay_simulator_client_key', Setting::get('winpay_client_key', 'MOCK_CLIENT_KEY')),
+            'winpay_client_secret' => Setting::get('winpay_simulator_client_secret', Setting::get('winpay_client_secret', 'MOCK_CLIENT_SECRET')),
+            'winpay_private_key' => Setting::get('winpay_simulator_private_key', Setting::get('winpay_private_key', '')),
+            'winpay_public_key' => Setting::get('winpay_simulator_public_key', Setting::get('winpay_public_key', '')),
             
             // BNI SNAP QRIS MPM
             'bni_mode' => Setting::get('bni_mode', 'simulator'),
@@ -251,11 +251,20 @@ class SettingsController extends Controller
         Setting::set('bni_mode', $request->bni_mode);
         
         // Production Settings
-        Setting::set('winpay_prod_merchant_id', $request->winpay_prod_merchant_id ?? '');
-        Setting::set('winpay_prod_client_key', $request->winpay_prod_client_key ?? '');
+        $winpayProdMid = $request->winpay_prod_merchant_id ?? '';
+        $winpayProdCKey = $request->winpay_prod_client_key ?? '';
+        $winpayProdPriv = $request->winpay_prod_private_key ?? '';
+        $winpayProdPub = $request->winpay_prod_public_key ?? '';
+
+        Setting::set('winpay_prod_merchant_id', $winpayProdMid);
+        Setting::set('winpay_production_merchant_id', $winpayProdMid);
+        Setting::set('winpay_prod_client_key', $winpayProdCKey);
+        Setting::set('winpay_production_client_key', $winpayProdCKey);
         Setting::set('winpay_prod_client_secret', $request->winpay_prod_client_secret ?? '');
-        Setting::set('winpay_prod_private_key', $request->winpay_prod_private_key ?? '');
-        Setting::set('winpay_prod_public_key', $request->winpay_prod_public_key ?? '');
+        Setting::set('winpay_prod_private_key', $winpayProdPriv);
+        Setting::set('winpay_production_private_key', $winpayProdPriv);
+        Setting::set('winpay_prod_public_key', $winpayProdPub);
+        Setting::set('winpay_production_public_key', $winpayProdPub);
 
         Setting::set('bni_prod_merchant_id', $request->bni_prod_merchant_id ?? '');
         Setting::set('bni_prod_terminal_id', $request->bni_prod_terminal_id ?? '');

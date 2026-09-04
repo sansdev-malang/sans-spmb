@@ -132,7 +132,11 @@ class PaymentGatewayController extends Controller
             foreach ($gateway->settings_schema as $field) {
                 $keyName = $field['key'];
                 $settingKey = $this->getSettingKey($gateway->code, $env, $keyName);
-                $settings[$env][$keyName] = Setting::get($settingKey, '');
+                $val = Setting::get($settingKey, '');
+                if (empty($val) && $gateway->code === 'winpay' && $env === 'production') {
+                    $val = Setting::get("winpay_prod_{$keyName}", '');
+                }
+                $settings[$env][$keyName] = $val;
             }
         }
 
@@ -165,6 +169,11 @@ class PaymentGatewayController extends Controller
                 $settingKey = $this->getSettingKey($gateway->code, $env, $keyName);
                 $value = $request->input("settings.{$env}.{$keyName}");
                 Setting::set($settingKey, $value ?? '');
+
+                // Mirror for legacy / alternative key format
+                if ($gateway->code === 'winpay' && $env === 'production') {
+                    Setting::set("winpay_prod_{$keyName}", $value ?? '');
+                }
             }
         }
 

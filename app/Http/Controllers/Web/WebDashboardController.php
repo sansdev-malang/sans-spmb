@@ -629,6 +629,15 @@ class WebDashboardController extends Controller
             $minPaymentRequired = $feeAmount;
         }
 
+        // Auto-heal inconsistent pending payment status if no active pending transaction exists
+        if ($registration->payment_status === 'pending' && (!$activePayment || $activePayment->status !== 'pending')) {
+            $hasSuccess = $registration->payments()->where('status', 'success')->exists();
+            $registration->update([
+                'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
+            ]);
+            $registration->refresh();
+        }
+
         $channels = SpmbPaymentChannel::where('is_active', true)
             ->whereHas('gateway', function($q) use ($feeGateways) {
                 $q->whereIn('code', $feeGateways);
@@ -1302,6 +1311,12 @@ class WebDashboardController extends Controller
                 $payment->update([
                     'status' => 'failed',
                     'payment_info' => array_merge($payment->payment_info ?: [], ['failure_reason' => $response['message']])
+                ]);
+
+                // Revert registration payment_status so the UI is not left in pending state
+                $hasPrevSuccess = $registration->payments()->where('status', 'success')->exists();
+                $registration->update([
+                    'payment_status' => $hasPrevSuccess ? 'partially_paid' : 'unpaid'
                 ]);
 
                 return redirect()->back()->with('error', 'Gagal memproses pembayaran melalui gateway: ' . $response['message']);

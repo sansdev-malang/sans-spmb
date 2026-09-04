@@ -57,10 +57,14 @@ class WinpayService implements PaymentGatewayInterface
          * [1] KONFIGURASI MODE PRODUCTION (Live Server Winpay: https://snap.winpay.id)
          * ========================================================================================= */
         if ($this->mode === 'production') {
-            $this->merchantId = \App\Models\Setting::get('winpay_prod_merchant_id');
-            $this->clientKey = \App\Models\Setting::get('winpay_prod_client_key');
-            $this->privateKey = \App\Models\Setting::get('winpay_prod_private_key');
-            $this->publicKey = \App\Models\Setting::get('winpay_prod_public_key');
+            $this->merchantId = \App\Models\Setting::get('winpay_production_merchant_id') 
+                ?: \App\Models\Setting::get('winpay_prod_merchant_id');
+            $this->clientKey = \App\Models\Setting::get('winpay_production_client_key') 
+                ?: \App\Models\Setting::get('winpay_prod_client_key');
+            $this->privateKey = \App\Models\Setting::get('winpay_production_private_key') 
+                ?: \App\Models\Setting::get('winpay_prod_private_key');
+            $this->publicKey = \App\Models\Setting::get('winpay_production_public_key') 
+                ?: \App\Models\Setting::get('winpay_prod_public_key');
         } 
         /* =========================================================================================
          * [2] KONFIGURASI MODE SANDBOX (Uji Coba Server: https://sandbox-snap.winpay.id)
@@ -75,13 +79,17 @@ class WinpayService implements PaymentGatewayInterface
          * [3] KONFIGURASI MODE SIMULATOR (Local Offline Mock - Tanpa Request Luar)
          * ========================================================================================= */
         else {
-            $this->merchantId = \App\Models\Setting::get('winpay_merchant_id');
-            $this->clientKey = \App\Models\Setting::get('winpay_client_key');
-            $this->privateKey = \App\Models\Setting::get('winpay_private_key');
-            $this->publicKey = \App\Models\Setting::get('winpay_public_key');
+            $this->merchantId = \App\Models\Setting::get('winpay_simulator_merchant_id') 
+                ?: \App\Models\Setting::get('winpay_merchant_id');
+            $this->clientKey = \App\Models\Setting::get('winpay_simulator_client_key') 
+                ?: \App\Models\Setting::get('winpay_client_key');
+            $this->privateKey = \App\Models\Setting::get('winpay_simulator_private_key') 
+                ?: \App\Models\Setting::get('winpay_private_key');
+            $this->publicKey = \App\Models\Setting::get('winpay_simulator_public_key') 
+                ?: \App\Models\Setting::get('winpay_public_key');
         }
 
-        // Fallback checks ke konfigurasi .env
+        // Fallback checks ke konfigurasi .env jika database belum terisi
         if (empty($this->merchantId)) {
             $this->merchantId = env('WINPAY_MERCHANT_ID', 'MOCK_MERCHANT_ID');
         }
@@ -116,6 +124,32 @@ class WinpayService implements PaymentGatewayInterface
     }
 
     /**
+     * Format RSA Private Key ke string PEM valid jika belum memiliki header
+     */
+    protected function formatPrivateKey($key)
+    {
+        if (empty($key)) return '';
+        $key = trim($key);
+        if (str_contains($key, '-----BEGIN')) {
+            return $key;
+        }
+        return "-----BEGIN RSA PRIVATE KEY-----\n" . wordwrap($key, 64, "\n", true) . "\n-----END RSA PRIVATE KEY-----";
+    }
+
+    /**
+     * Format RSA Public Key ke string PEM valid jika belum memiliki header
+     */
+    protected function formatPublicKey($key)
+    {
+        if (empty($key)) return '';
+        $key = trim($key);
+        if (str_contains($key, '-----BEGIN')) {
+            return $key;
+        }
+        return "-----BEGIN PUBLIC KEY-----\n" . wordwrap($key, 64, "\n", true) . "\n-----END PUBLIC KEY-----";
+    }
+
+    /**
      * Generate SNAP Asymmetric Signature (SHA256withRSA) for direct transaction
      */
     public function generateAsymmetricSignature($method, $endpoint, $bodyArray, $timestamp)
@@ -125,9 +159,14 @@ class WinpayService implements PaymentGatewayInterface
             return '';
         }
 
-        $privateKeyResource = openssl_pkey_get_private($this->privateKey);
+        $formattedKey = $this->formatPrivateKey($this->privateKey);
+        $privateKeyResource = openssl_pkey_get_private($formattedKey);
         if (!$privateKeyResource) {
-            Log::error('Invalid Winpay Private Key format.');
+            $privateKeyResource = openssl_pkey_get_private($this->privateKey);
+        }
+
+        if (!$privateKeyResource) {
+            Log::error('Invalid Winpay Private Key format. Unable to parse with OpenSSL.');
             return '';
         }
 
@@ -410,7 +449,12 @@ class WinpayService implements PaymentGatewayInterface
             return false; // Security: FAIL-CLOSED! Never allow unverified webhook in live environments.
         }
 
-        $publicKeyResource = openssl_pkey_get_public($this->publicKey);
+        $formattedPublicKey = $this->formatPublicKey($this->publicKey);
+        $publicKeyResource = openssl_pkey_get_public($formattedPublicKey);
+        if (!$publicKeyResource) {
+            $publicKeyResource = openssl_pkey_get_public($this->publicKey);
+        }
+
         if (!$publicKeyResource) {
             Log::error('Winpay Callback rejected: Invalid Winpay Public Key PEM format.');
             return false;

@@ -8,6 +8,8 @@
     @php
         $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
         $successPayment = $registration->payments()->where('status', 'success')->latest()->first();
+        $latestFailedPayment = $registration->payments()->where('status', 'failed')->latest()->first();
+        $isPaymentPending = ($registration->payment_status === 'pending' && $activePayment && $activePayment->status === 'pending');
     @endphp
 
     <!-- Check if candidate is still in draft and paid -->
@@ -142,8 +144,25 @@
                     </div>
                 @endif
 
-                <!-- 2. Form Select payment method if unpaid or partially paid -->
-                @if ($registration->payment_status === 'unpaid' || $registration->payment_status === 'partially_paid')
+                @if($latestFailedPayment && !$isPaymentPending && $registration->payment_status !== 'paid')
+                    <!-- Notifikasi Riwayat Gagal Sebelumnya -->
+                    <div class="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-start gap-3">
+                        <div class="h-8 w-8 rounded-xl bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="font-extrabold text-xs text-amber-900 dark:text-amber-300">
+                                Permintaan Pembayaran Sebelumnya Belum Berhasil
+                            </h4>
+                            <p class="text-[11px] text-amber-750 dark:text-amber-400 leading-relaxed">
+                                {{ $latestFailedPayment->payment_info['failure_reason'] ?? 'Permintaan pembuatan tagihan belum dapat diselesaikan oleh gateway. Silakan pilih kembali kanal pembayaran di bawah dan klik Bayar Sekarang.' }}
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- 2. Form Select payment method if unpaid or partially paid (or failed pending) -->
+                @if (!$isPaymentPending && $registration->payment_status !== 'paid')
                     <form action="{{ route('dashboard.charge', $registration->id) }}" method="POST" class="space-y-6">
                         @csrf
                         <input type="hidden" name="items" value="{{ request()->query('items') }}">
@@ -336,7 +355,7 @@
                 @endif
 
                 <!-- 3. Display VA / QRIS Details when status is pending -->
-                @if ($registration->payment_status === 'pending' && $activePayment)
+                @if ($isPaymentPending)
                     <div class="border border-slate-200 rounded-xl p-6 space-y-6">
                         <div class="text-center">
                             <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Metode Pembayaran</span>
