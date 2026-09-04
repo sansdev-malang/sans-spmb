@@ -212,6 +212,7 @@ class WinpayService implements PaymentGatewayInterface
 
         $isQris = $cleanMethod === 'QRIS';
         $isEwallet = in_array($cleanMethod, ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC', 'GOPAY']);
+        $isRetail = in_array($cleanMethod, ['ALFAMART', 'INDOMARET', 'ALF', 'IND', 'FASTPAY']);
 
         /* =========================================================================================
          * [A] EKSEKUSI MODE SIMULATOR LOKAL (Offline Mock - Tanpa Internet)
@@ -431,7 +432,9 @@ class WinpayService implements PaymentGatewayInterface
         $respCode = (string)($response->json('responseCode') ?? '');
 
         if (strtolower($rawMsg) === 'bad request' || str_contains($rawMsg, '400') || empty($rawMsg) || str_starts_with($respCode, '400')) {
-            if ($isEwallet) {
+            if ($isRetail) {
+                $userMsg = "Kanal Gerai Ritel ({$cleanMethod}) saat ini belum aktif atau belum dapat memproses nominal tagihan ini (batas minimal kasir minimarket adalah Rp 10.000). Silakan gunakan QRIS atau DANA.";
+            } elseif ($isEwallet) {
                 $userMsg = "Kanal E-Wallet ({$cleanMethod}) saat ini belum aktif atau belum dapat memproses transaksi. Silakan gunakan metode pembayaran DANA atau QRIS.";
             } elseif ($isQris) {
                 $userMsg = "Kanal QRIS saat ini belum dapat memproses transaksi. Silakan gunakan metode DANA atau Virtual Account.";
