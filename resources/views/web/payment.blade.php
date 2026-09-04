@@ -291,19 +291,19 @@
                             </div>
                         @endif
 
-                        <div class="space-y-3">
+                        <div class="space-y-2.5">
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Pilih Metode Pembayaran</label>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-2.5">
                                  @forelse($channels as $channel)
-                                    <label class="border border-slate-200 dark:border-slate-800 hover:border-brand-emerald dark:hover:border-emerald-600 bg-white dark:bg-slate-900 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition shadow-xs hover:shadow-sm relative select-none">
-                                        <input type="radio" name="payment_method" value="{{ $channel->code }}" data-type="{{ $channel->type }}" data-gateway="{{ $channel->gateway->code ?? '' }}" data-fee-type="{{ $channel->fee_type ?? 'flat' }}" data-fee-value="{{ $channel->fee_value ?? 4500 }}" class="text-brand-emerald focus:ring-brand-emerald h-4 w-4 shrink-0" {{ $loop->first ? 'checked' : '' }}>
+                                    <label class="border border-slate-200 dark:border-slate-800 hover:border-brand-emerald dark:hover:border-emerald-600 bg-white dark:bg-slate-900 has-[:checked]:border-brand-emerald has-[:checked]:ring-1 has-[:checked]:ring-brand-emerald/30 has-[:checked]:bg-emerald-50/15 dark:has-[:checked]:bg-emerald-950/20 rounded-xl px-2.5 py-1.5 h-11 sm:h-12 flex items-center gap-2 cursor-pointer transition shadow-xs hover:shadow-sm relative select-none">
+                                        <input type="radio" name="payment_method" value="{{ $channel->code }}" data-type="{{ $channel->type }}" data-gateway="{{ $channel->gateway->code ?? '' }}" data-fee-type="{{ $channel->fee_type ?? 'flat' }}" data-fee-value="{{ $channel->fee_value ?? 4500 }}" class="text-brand-emerald focus:ring-brand-emerald h-3.5 w-3.5 shrink-0" {{ $loop->first ? 'checked' : '' }}>
                                         
                                         <!-- Logo Container -->
-                                        <div class="h-9 flex-1 flex items-center justify-center p-0.5 overflow-hidden">
+                                        <div class="flex-1 h-full flex items-center justify-center overflow-hidden">
                                             @if($channel->getLogoUrl())
-                                                <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" title="{{ $channel->name }}" class="max-h-8 max-w-full object-contain">
+                                                <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" title="{{ $channel->name }}" class="max-h-6 sm:max-h-7 max-w-full object-contain">
                                             @else
-                                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 text-center truncate">
+                                                <span class="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 text-center truncate leading-tight">
                                                     {{ $channel->name }}
                                                 </span>
                                             @endif
