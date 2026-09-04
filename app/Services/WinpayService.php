@@ -457,7 +457,7 @@ class WinpayService implements PaymentGatewayInterface
      * - Pada MODE SIMULATOR: Otomatis mengembalikan `true` (bypass signature).
      * - Pada MODE SANDBOX / PRODUCTION: Memverifikasi Asymmetric Signature menggunakan Public Key Winpay.
      */
-    public function verifyCallback($headers, $body)
+    public function verifyCallback($headers, $body, $rawContent = null, $requestUri = null)
     {
         /* =========================================================================================
          * [A] BYPASS UNTUK MODE SIMULATOR LOKAL & DEVELOPER TEST
@@ -495,28 +495,74 @@ class WinpayService implements PaymentGatewayInterface
             return false;
         }
 
-        // Standard endpoint path for webhook callback
-        $endpoint = '/api/payments/callback'; 
-        
-        $minifiedBody = json_encode($body, JSON_UNESCAPED_SLASHES);
-        $hashedBody = strtolower(bin2hex(hash('sha256', $minifiedBody, true)));
-
-        $stringToSign = implode(':', [
-            'POST',
-            $endpoint,
-            $hashedBody,
-            $timestamp
-        ]);
-
         $signatureBinary = base64_decode($signature);
         if ($signatureBinary === false) {
             Log::error('Winpay Callback rejected: Corrupt base64 signature.');
             return false;
         }
+
+        // Kumpulkan kandidat path endpoint yang mungkin ditandatangani oleh Winpay
+        $endpointCandidates = ['/api/payments/callback', 'api/payments/callback'];
+        if (!empty($requestUri)) {
+            $parsedPath = parse_url($requestUri, PHP_URL_PATH);
+            if ($parsedPath) {
+                $endpointCandidates[] = $parsedPath;
+                $endpointCandidates[] = ltrim($parsedPath, '/');
+            }
+        }
+        $endpointCandidates = array_unique(array_filter($endpointCandidates));
+
+        // Kumpulkan kandidat payload body hash yang mungkin di-hash oleh Winpay
+        $bodyCandidates = [];
         
-        $verified = openssl_verify($stringToSign, $signatureBinary, $publicKeyResource, OPENSSL_ALGO_SHA256);
-        
-        return $verified === 1;
+        // 1. Raw body persis seperti diterima lewat HTTP wire (solusi paling akurat untuk SNAP BI)
+        if (!empty($rawContent)) {
+            $bodyCandidates[] = $rawContent;
+            
+            // 1b. Minified raw content (menghilangkan whitespace tanpa merusak format angka float)
+            $decoded = json_decode($rawContent, true);
+            if ($decoded !== null) {
+                $bodyCandidates[] = json_encode($decoded, JSON_UNESCAPED_SLASHES);
+            }
+        }
+
+        // 2. Encoded body array (fallback)
+        if (!empty($body)) {
+            $bodyCandidates[] = json_encode($body, JSON_UNESCAPED_SLASHES);
+        }
+
+        $bodyCandidates = array_unique(array_filter($bodyCandidates));
+
+        // Lakukan pengujian verifikasi signature pada semua kandidat
+        foreach ($endpointCandidates as $ep) {
+            foreach ($bodyCandidates as $bContent) {
+                $hashedBody = strtolower(bin2hex(hash('sha256', $bContent, true)));
+                $stringToSign = implode(':', [
+                    'POST',
+                    $ep,
+                    $hashedBody,
+                    $timestamp
+                ]);
+
+                $verified = openssl_verify($stringToSign, $signatureBinary, $publicKeyResource, OPENSSL_ALGO_SHA256);
+                if ($verified === 1) {
+                    Log::info('Winpay Callback signature verified successfully', [
+                        'endpoint' => $ep,
+                        'timestamp' => $timestamp
+                    ]);
+                    return true;
+                }
+            }
+        }
+
+        Log::warning('Winpay Callback signature mismatch', [
+            'timestamp' => $timestamp,
+            'signature_snippet' => substr($signature, 0, 30) . '...',
+            'endpoints_tested' => $endpointCandidates,
+            'body_length' => strlen($rawContent ?: ''),
+        ]);
+
+        return false;
     }
 
     /**

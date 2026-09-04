@@ -359,6 +359,8 @@ class PaymentController extends Controller
     {
         $headers = $request->headers->all();
         $body = $request->json()->all();
+        $rawContent = $request->getContent();
+        $requestUri = $request->getRequestUri();
 
         // Resolusi gateway yang mengirim callback
         $gatewayCode = $explicitGateway ?: 'winpay';
@@ -374,7 +376,7 @@ class PaymentController extends Controller
         try {
             $gatewayService = \App\Services\PaymentGatewayFactory::make($gatewayCode);
             $verified = method_exists($gatewayService, 'verifyCallback')
-                ? $gatewayService->verifyCallback($headers, $body)
+                ? $gatewayService->verifyCallback($headers, $body, $rawContent, $requestUri)
                 : false;
         } catch (\Throwable $e) {
             Log::error('Callback signature verification error', ['gateway' => $gatewayCode, 'error' => $e->getMessage()]);
@@ -382,7 +384,11 @@ class PaymentController extends Controller
         }
 
         if (!$verified) {
-            Log::warning('Payment Webhook rejected: Unauthorized digital signature', ['gateway' => $gatewayCode]);
+            Log::warning('Payment Webhook rejected: Unauthorized digital signature', [
+                'gateway' => $gatewayCode,
+                'path' => $requestUri,
+                'timestamp' => $request->header('X-TIMESTAMP') ?: $request->header('x-timestamp'),
+            ]);
             return response()->json([
                 'responseCode' => '4012700',
                 'responseMessage' => 'Unauthorized signature'
@@ -406,20 +412,25 @@ class PaymentController extends Controller
 
         Log::info('Payment Webhook verified', ['gateway' => $gatewayCode, 'invoice' => $invoiceNo]);
 
-        $responseCode = $body['responseCode'] ?? null;
-        $rawStatus = $body['paymentStatus'] ?? $body['latestTransactionStatus'] ?? $body['latestStatus'] ?? null;
+        $responseCode = (string)($body['responseCode'] ?? '');
+        $rawStatus = $body['paymentStatus'] 
+            ?? $body['latestTransactionStatus'] 
+            ?? $body['latestStatus'] 
+            ?? $body['status'] 
+            ?? $body['transactionStatus'] 
+            ?? null;
 
         $isSuccess = false;
         $isFailed = false;
 
         // Evaluasi status pembayaran berdasarkan responseCode & status resmi SNAP BI
-        if (in_array($responseCode, ['2002500', '2002600', '2002700', '2000000'])) {
+        if (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005400', '2000000'])) {
             $isSuccess = true;
-        } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['SUCCESS', 'PAID', 'SETTLED', '00', '0000'])) {
+        } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['SUCCESS', 'SUCCESSFUL', 'PAID', 'SETTLED', '00', '0000', 'BERHASIL'])) {
             $isSuccess = true;
-        } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['FAILED', 'EXPIRED', 'CANCELLED', 'REJECTED'])) {
+        } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['FAILED', 'EXPIRED', 'CANCELLED', 'REJECTED', 'GAGAL'])) {
             $isFailed = true;
-        } elseif ($responseCode && (str_starts_with((string)$responseCode, '40') || str_starts_with((string)$responseCode, '50'))) {
+        } elseif ($responseCode && (str_starts_with($responseCode, '40') || str_starts_with($responseCode, '50'))) {
             $isFailed = true;
         }
 
@@ -429,6 +440,11 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
             $payment = Payment::where('invoice_number', $invoiceNo)->lockForUpdate()->first();
+
+            if (!$payment) {
+                // Fallback pencarian melalui reference_id
+                $payment = Payment::where('reference_id', $invoiceNo)->lockForUpdate()->first();
+            }
 
             if (!$payment) {
                 DB::rollBack();
@@ -454,7 +470,13 @@ class PaymentController extends Controller
             // =========================================================================================
             $callbackAmount = isset($body['paymentAmount']['value']) 
                 ? floatval($body['paymentAmount']['value']) 
-                : (isset($body['amount']['value']) ? floatval($body['amount']['value']) : (isset($body['paidAmount']['value']) ? floatval($body['paidAmount']['value']) : null));
+                : (isset($body['amount']['value']) 
+                    ? floatval($body['amount']['value']) 
+                    : (isset($body['paidAmount']['value']) 
+                        ? floatval($body['paidAmount']['value']) 
+                        : (isset($body['totalAmount']['value']) 
+                            ? floatval($body['totalAmount']['value']) 
+                            : (isset($body['amount']) && is_numeric($body['amount']) ? floatval($body['amount']) : null))));
 
             if ($callbackAmount !== null && $callbackAmount > 0) {
                 $expectedAmount = floatval($payment->amount);
