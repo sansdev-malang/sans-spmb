@@ -33,10 +33,13 @@
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                     <i data-lucide="lock" class="w-4 h-4"></i>
                 </span>
-                <x-text-input id="password" class="block pl-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 py-3 text-xs font-semibold focus:outline-none transition"
+                <x-text-input id="password" class="block pl-10 pr-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 py-3 text-xs font-semibold focus:outline-none transition"
                                 type="password"
                                 name="password"
                                 required autocomplete="new-password" />
+                <button type="button" onclick="toggleRegisterPasswordVisibility('password')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-custom-primary transition" aria-label="Lihat password">
+                    <i id="password-toggle-icon" data-lucide="eye" class="w-4 h-4"></i>
+                </button>
             </div>
             <x-input-error :messages="$errors->get('password')" class="mt-1" />
         </div>
@@ -48,9 +51,12 @@
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                     <i data-lucide="shield-check" class="w-4 h-4"></i>
                 </span>
-                <x-text-input id="password_confirmation" class="block pl-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 py-3 text-xs font-semibold focus:outline-none transition"
+                <x-text-input id="password_confirmation" class="block pl-10 pr-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 py-3 text-xs font-semibold focus:outline-none transition"
                                 type="password"
                                 name="password_confirmation" required autocomplete="new-password" />
+                <button type="button" onclick="toggleRegisterPasswordVisibility('password_confirmation')" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-custom-primary transition" aria-label="Lihat password">
+                    <i id="password_confirmation-toggle-icon" data-lucide="eye" class="w-4 h-4"></i>
+                </button>
             </div>
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1" />
         </div>
@@ -70,4 +76,21 @@
             </a>
         </div>
     </form>
+
+    <script>
+        function toggleRegisterPasswordVisibility(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleIcon = document.getElementById(`${fieldId}-toggle-icon`);
+
+            if (!passwordInput || !toggleIcon) return;
+
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            toggleIcon.setAttribute('data-lucide', isPassword ? 'eye-closed' : 'eye');
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+    </script>
 </x-guest-layout>

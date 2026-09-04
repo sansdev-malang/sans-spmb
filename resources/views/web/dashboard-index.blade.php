@@ -19,9 +19,6 @@
     <!-- WELCOME BANNER & ONBOARDING CARD GRID (ALWAYS SHOWN) -->
     <div class="max-w-4xl mx-auto pt-2 pb-6 space-y-6 text-center">
         <div class="space-y-3">
-            <div class="inline-flex items-center justify-center h-16 w-16 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl text-brand-emerald dark:text-emerald-450 mb-2">
-                <i data-lucide="sparkles" class="w-8 h-8"></i>
-            </div>
             <h1 class="text-3xl font-extrabold text-slate-850 dark:text-white tracking-tight">Selamat Datang di Portal Penerimaan Siswa Baru</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
                 Langkah pertama pendidikan terbaik ananda di {{ \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh') }} dimulai dari sini. Silakan daftarkan anak Anda untuk memulai proses seleksi masuk penerimaan siswa baru.
@@ -38,32 +35,67 @@
                     $brochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url');
                     $waUrl = $unit->getWhatsappUrl();
                     $waNumber = $unit->whatsapp_number ?: \App\Models\Setting::get('spmb_whatsapp_general', '081234567890');
+                    $unitLogoUrl = asset('storage/logo/' . $uCode . '.svg');
+                    $unitTheme = match (strtoupper($unit->code)) {
+                        'PAUD' => [
+                            'card' => 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600',
+                            'badge' => 'bg-green-500 text-white shadow-green-500/20',
+                            'title' => 'text-slate-800 dark:text-white',
+                            'description' => 'text-slate-600 dark:text-slate-200',
+                            'primaryButton' => 'bg-green-500 hover:bg-green-600',
+                            'secondaryButton' => 'bg-white/70 hover:bg-white text-green-800 border-white/70',
+                        ],
+                        'SD' => [
+                            'card' => 'bg-green-500 dark:bg-green-600 border-green-400 dark:border-green-500',
+                            'badge' => 'bg-green-800 text-white shadow-green-900/20',
+                            'title' => 'text-white',
+                            'description' => 'text-green-50',
+                            'primaryButton' => 'bg-green-900 hover:bg-green-800',
+                            'secondaryButton' => 'bg-white/15 hover:bg-white/25 text-white border-white/30',
+                        ],
+                        'SMP' => [
+                            'card' => 'bg-indigo-800 dark:bg-indigo-900 border-indigo-700 dark:border-indigo-800',
+                            'badge' => 'bg-orange-500 text-white shadow-orange-500/20',
+                            'title' => 'text-white',
+                            'description' => 'text-indigo-100',
+                            'primaryButton' => 'bg-orange-500 hover:bg-orange-600',
+                            'secondaryButton' => 'bg-white/15 hover:bg-white/25 text-white border-white/30',
+                        ],
+                        default => [
+                            'card' => 'bg-white dark:bg-slate-900 border-slate-150/80 dark:border-slate-800',
+                            'badge' => 'bg-emerald-600 text-white shadow-emerald-600/20',
+                            'title' => 'text-slate-850 dark:text-white',
+                            'description' => 'text-slate-400 dark:text-slate-500',
+                            'primaryButton' => 'bg-slate-900 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500',
+                            'secondaryButton' => 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200/60',
+                        ],
+                    };
                 @endphp
-                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-150/80 dark:border-slate-800 shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-lg transition-all duration-200">
+                <div class="{{ $unitTheme['card'] }} rounded-3xl p-6 border shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-lg transition-all duration-200">
                     <div class="space-y-3 w-full flex flex-col items-center">
-                        <div class="h-12 w-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-emerald-600/20">
-                            {{ strtoupper($unit->code) }}
+                        <div class="h-16 w-16 flex items-center justify-center font-black text-sm overflow-hidden">
+                            <img src="{{ $unitLogoUrl }}" alt="Logo {{ $unit->name }}" class="h-full w-full object-contain" onerror="this.onerror=null; this.replaceWith(document.createTextNode('{{ strtoupper($unit->code) }}'))">
                         </div>
                         <div class="space-y-1">
-                            <h3 class="font-extrabold text-slate-850 dark:text-white text-sm">{{ $unit->name }}</h3>
-                            <p class="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2">
+                            <h3 class="font-extrabold {{ $unitTheme['title'] }} text-sm">{{ $unit->name }}</h3>
+                            <p class="text-[11px] {{ $unitTheme['description'] }} line-clamp-2">
                                 {{ \App\Models\Setting::get('unit_' . $uCode . '_desc', 'Pilihan program pendidikan terbaik.') }}
                             </p>
                         </div>
                     </div>
 
                     <div class="w-full space-y-2 pt-2">
-                        <button onclick="startRegistrationWithUnit('{{ $unit->id }}', '{{ $firstGradeId }}')" class="w-full py-3 bg-slate-900 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition-all shadow-sm flex items-center justify-center gap-1.5">
+                        <button onclick="startRegistrationWithUnit('{{ $unit->id }}', '{{ $firstGradeId }}')" class="w-full py-3 {{ $unitTheme['primaryButton'] }} text-white rounded-xl text-xs font-black transition-all shadow-sm flex items-center justify-center gap-1.5">
                             <i data-lucide="user-plus" class="w-4 h-4"></i> Daftarkan Sekarang
                         </button>
 
                         <div class="grid grid-cols-2 gap-2 pt-1">
-                            <a href="{{ $waUrl }}" target="_blank" class="py-2 px-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 border border-emerald-200/60 dark:border-emerald-900/40" title="Hubungi WhatsApp Admin {{ $unit->name }}">
-                                <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-600"></i> Admin WA
+                            <a href="{{ $waUrl }}" target="_blank" class="py-2 px-2.5 {{ $unitTheme['secondaryButton'] }} rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 border" title="Hubungi WhatsApp Admin {{ $unit->name }}">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Admin WA
                             </a>
                             @if(!empty($brochureUrl))
-                                <a href="{{ $brochureUrl }}" target="_blank" download class="py-2 px-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 border border-slate-200/80 dark:border-slate-700" title="Unduh Brosur {{ $unit->name }}">
-                                    <i data-lucide="file-down" class="w-3.5 h-3.5 text-emerald-600"></i> Unduh Brosur
+                                <a href="{{ $brochureUrl }}" target="_blank" download class="py-2 px-2.5 {{ $unitTheme['secondaryButton'] }} rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1 border" title="Unduh Brosur {{ $unit->name }}">
+                                    <i data-lucide="file-down" class="w-3.5 h-3.5"></i> Unduh Brosur
                                 </a>
                             @else
                                 <span class="py-2 px-2.5 bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border border-slate-100 dark:border-slate-800 cursor-not-allowed" title="Brosur belum tersedia">

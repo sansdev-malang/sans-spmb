@@ -328,7 +328,7 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/70 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group sm:col-span-2 lg:col-span-1">
                 <div>
                     <div class="flex items-center justify-between mb-5">
-                        <div class="h-12 w-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                        <div class="h-16 w-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <i data-lucide="brain" class="w-6 h-6"></i>
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">05</span>
@@ -375,11 +375,13 @@
                     ['name' => 'Samsung', 'logo' => asset('storage/partnership/samsung.svg'), 'label' => 'Samsung'],
                     ['name' => 'Cambridge', 'logo' => asset('storage/partnership/cambridge.svg'), 'label' => 'Cambridge'],
                     ['name' => 'Bank Syariah Indonesia', 'logo' => asset('storage/partnership/bsi.svg'), 'label' => 'Bank Syariah Indonesia'],
+                    ['name' => 'Winpay', 'logo' => asset('storage/partnership/winpay.svg'), 'label' => 'Winpay'],
                     ['name' => 'Meteor Cell', 'logo' => asset('storage/partnership/meteorcell.svg'), 'label' => 'Meteor Cell'],
+                    ['name' => 'Google Workspace Education', 'logo' => asset('storage/partnership/google.svg'), 'label' => 'Google Workspace Education'],
                     ['name' => 'PT. Zigma Indonesia', 'logo' => asset('storage/partnership/zigma.svg'), 'label' => 'PT. Zigma Indonesia'],
                 ];
             @endphp
-
+    
             {{-- First Loop Set --}}
             @foreach($partners as $partner)
                 <div class="flex items-center gap-3.5 bg-slate-50/90 dark:bg-slate-950/70 px-6 py-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm whitespace-nowrap group hover:border-emerald-300 dark:hover:border-emerald-600 transition flex-shrink-0">
