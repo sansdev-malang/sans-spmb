@@ -171,12 +171,12 @@
                 <thead>
                     <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
-                        <th class="py-4 px-6">No. Invoice</th>
+                        <th class="py-4 px-6">No. Invoice (ID Ref)</th>
                         <th class="py-4 px-6">Calon Siswa</th>
                         <th class="py-4 px-6">Keterangan Biaya</th>
-                        <th class="py-4 px-6">Metode</th>
+                        <th class="py-4 px-6">Metode / Produk</th>
                         <th class="py-4 px-6">Nominal</th>
-                        <th class="py-4 px-6">Ref Gateway (Winpay)</th>
+                        <th class="py-4 px-6">ID Transaksi Winpay</th>
                         <th class="py-4 px-6">Waktu Transaksi</th>
                         <th class="py-4 px-6 text-center">Status</th>
                         <th class="py-4 px-6 text-center w-28">Aksi</th>
@@ -195,7 +195,7 @@
                                     </div>
                                     <div>
                                         <div class="font-mono text-xs font-bold text-slate-700 select-all tracking-tight">{{ $pay->invoice_number }}</div>
-                                        <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Merchant Ref di Winpay</div>
+                                        <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">ID Ref di Winpay</div>
                                     </div>
                                 </div>
                             </td>
@@ -259,36 +259,32 @@
                                 Rp {{ number_format($pay->amount, 0, ',', '.') }}
                             </td>
                             <td class="py-4 px-6">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="font-mono text-xs text-slate-500 font-semibold select-all" title="{{ $pay->reference_id ?? '-' }}">
-                                        {{ $pay->reference_id ? (substr($pay->reference_id, 0, 8) . '...' . substr($pay->reference_id, -4)) : '-' }}
-                                    </span>
-                                    @if($pay->reference_id)
-                                        <button onclick="navigator.clipboard.writeText('{{ $pay->reference_id }}'); toastr.success('Ref ID disalin ke clipboard')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Full Ref ID">
+                                @php
+                                    $winpayTrxId = $pay->reference_id 
+                                        ?: ($pay->payment_info['callback_payload']['originalReferenceNo'] 
+                                            ?? ($pay->payment_info['callback_payload']['referenceNo'] 
+                                                ?? ($pay->payment_info['callback_payload']['paymentRequestId'] 
+                                                    ?? ($pay->payment_info['trxId'] ?? null))));
+                                @endphp
+
+                                @if($winpayTrxId)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-mono text-xs font-bold text-slate-800 select-all" title="{{ $winpayTrxId }}">
+                                            {{ $winpayTrxId }}
+                                        </span>
+                                        <button onclick="navigator.clipboard.writeText('{{ $winpayTrxId }}'); toastr.success('ID Transaksi disalin')" class="text-slate-350 hover:text-slate-600 transition cursor-pointer" title="Salin ID Transaksi">
                                             <i data-lucide="copy" class="w-3 h-3"></i>
                                         </button>
-                                    @endif
-                                </div>
-                                <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">Gateway Reference</div>
-                                @php
-                                    $gatewayId = null;
-                                    if (is_array($pay->payment_info)) {
-                                        $gatewayId = $pay->payment_info['callback_payload']['paymentRequestId']
-                                            ?? ($pay->payment_info['callback_payload']['additionalInfo']['paymentSysId'] 
-                                                ?? ($pay->payment_info['callback_payload']['id_transaksi'] ?? null));
-                                    }
-                                @endphp
-                                @if($gatewayId)
-                                    <div class="mt-1.5 flex">
-                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-mono font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 select-all">
-                                            <i data-lucide="check-circle" class="w-2.5 h-2.5 text-emerald-500"></i>
-                                            Winpay ID: {{ $gatewayId }}
-                                        </span>
+                                    </div>
+                                    <div class="text-[9px] text-emerald-600 font-bold tracking-wide mt-0.5 flex items-center gap-1">
+                                        <i data-lucide="check" class="w-2.5 h-2.5"></i>
+                                        <span>ID Transaksi Winpay</span>
                                     </div>
                                 @else
-                                    <div class="mt-1.5 text-[9px] text-slate-400 italic flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
-                                        Menunggu callback...
+                                    <div class="text-slate-400 font-mono text-xs">-</div>
+                                    <div class="mt-1 text-[9px] text-slate-400 italic flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                        <span>Menunggu transaksi...</span>
                                     </div>
                                 @endif
                             </td>
