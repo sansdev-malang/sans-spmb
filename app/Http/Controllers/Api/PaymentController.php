@@ -398,19 +398,46 @@ class PaymentController extends Controller
         // =========================================================================================
         // [2] EKSTRAKSI & VALIDASI IDENTITAS TRANSAKSI & STATUS SNAP BI
         // =========================================================================================
-        $invoiceNo = $body['trxId'] 
-            ?? $body['partnerReferenceNo'] 
-            ?? ($body['additionalInfo']['invoiceNumber'] ?? null)
-            ?? ($body['referenceNo'] ?? null);
+        Log::info('Payment Webhook body received', [
+            'gateway' => $gatewayCode,
+            'path' => $requestUri,
+            'body' => $body
+        ]);
+
+        // Prioritaskan invoice number SPMB format INV-...
+        $invoiceNo = null;
+        $candidates = [
+            $body['partnerReferenceNo'] ?? null,
+            $body['additionalInfo']['invoiceNumber'] ?? null,
+            $body['additionalInfo']['partnerReferenceNo'] ?? null,
+            $body['trxId'] ?? null,
+            $body['referenceNo'] ?? null,
+            $body['externalId'] ?? null,
+        ];
+
+        foreach ($candidates as $cand) {
+            if ($cand && str_starts_with((string)$cand, 'INV-')) {
+                $invoiceNo = (string)$cand;
+                break;
+            }
+        }
 
         if (!$invoiceNo) {
+            $invoiceNo = $body['partnerReferenceNo'] 
+                ?? ($body['additionalInfo']['invoiceNumber'] ?? null)
+                ?? $body['trxId'] 
+                ?? ($body['referenceNo'] ?? null);
+        }
+
+        if (!$invoiceNo) {
+            Log::warning('Payment Webhook rejected: Missing transaction ID in payload', ['body' => $body]);
             return response()->json([
                 'responseCode' => '4002700',
                 'responseMessage' => 'Missing transaction ID'
             ], 400);
         }
 
-        Log::info('Payment Webhook verified', ['gateway' => $gatewayCode, 'invoice' => $invoiceNo]);
+        Log::info('Payment Webhook processing invoice', ['gateway' => $gatewayCode, 'resolved_invoice' => $invoiceNo]);
 
         $responseCode = (string)($body['responseCode'] ?? '');
         $rawStatus = $body['paymentStatus'] 
@@ -439,30 +466,48 @@ class PaymentController extends Controller
         // =========================================================================================
         DB::beginTransaction();
         try {
-            $payment = Payment::where('invoice_number', $invoiceNo)->lockForUpdate()->first();
+            // Cari transaksi berdasarkan invoice_number atau reference_id (ID Transaksi Winpay)
+            $partnerRef = $body['partnerReferenceNo'] ?? null;
+            $trxId = $body['trxId'] ?? null;
+            $refNo = $body['referenceNo'] ?? null;
 
-            if (!$payment) {
-                // Fallback pencarian melalui reference_id
-                $payment = Payment::where('reference_id', $invoiceNo)->lockForUpdate()->first();
-            }
+            $payment = Payment::where(function($q) use ($invoiceNo, $partnerRef, $trxId, $refNo) {
+                $q->where('invoice_number', $invoiceNo);
+                if ($partnerRef) $q->orWhere('invoice_number', $partnerRef);
+                if ($trxId) $q->orWhere('invoice_number', $trxId)->orWhere('reference_id', $trxId);
+                if ($refNo) $q->orWhere('reference_id', $refNo);
+            })->lockForUpdate()->first();
 
             if (!$payment) {
                 DB::rollBack();
-                Log::warning('Payment callback transaction not found', ['invoice' => $invoiceNo]);
+                Log::warning('Payment callback transaction not found in database', [
+                    'resolved_invoice' => $invoiceNo,
+                    'partnerReferenceNo' => $partnerRef,
+                    'trxId' => $trxId,
+                    'referenceNo' => $refNo,
+                ]);
                 return response()->json([
                     'responseCode' => '4042700',
                     'responseMessage' => 'Payment transaction not found'
                 ], 404);
             }
 
+            // Simpan reference_id dari Winpay jika belum tersimpan
+            if (empty($payment->reference_id) && !empty($refNo ?: $trxId)) {
+                $payment->update(['reference_id' => $refNo ?: $trxId]);
+            }
+
             // Idempotency: Jika invoice sudah sukses diproses sebelumnya, kembalikan 200 OK tanpa memproses ulang
             if ($payment->status === 'success') {
                 DB::rollBack();
-                Log::info('Payment callback idempotent response: already success', ['invoice' => $invoiceNo]);
+                Log::info('Payment callback idempotent response: already success', ['invoice' => $payment->invoice_number]);
+                $ackCode = !empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')
+                    ? (string)$body['responseCode']
+                    : '2002500';
                 return response()->json([
-                    'responseCode' => '2002500',
+                    'responseCode' => $ackCode,
                     'responseMessage' => 'Success'
-                ]);
+                ], 200, ['Content-Type' => 'application/json;charset=UTF-8']);
             }
 
             // =========================================================================================
@@ -650,9 +695,16 @@ class PaymentController extends Controller
             }
         }
 
+        $finalAckCode = !empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')
+            ? (string)$body['responseCode']
+            : '2002500';
+        $finalAckMessage = !empty($body['responseMessage']) ? (string)$body['responseMessage'] : 'Success';
+
         return response()->json([
-            'responseCode' => '2002500',
-            'responseMessage' => 'Success'
+            'responseCode' => $finalAckCode,
+            'responseMessage' => $finalAckMessage
+        ], 200, [
+            'Content-Type' => 'application/json;charset=UTF-8'
         ]);
     }
 }
