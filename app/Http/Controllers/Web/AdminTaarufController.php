@@ -109,6 +109,18 @@ class AdminTaarufController extends Controller
      */
     public function updateSchedule(Request $request, $id)
     {
+        $registration = Registration::with(['user', 'unit'])->findOrFail($id);
+
+        if (in_array($registration->registration_status, ['taaruf_completed', 'agreement_signed', 'completed'])) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Jadwal Ta'aruf ananda {$registration->candidate_name} tidak dapat diubah karena tahapan Ta'aruf sudah selesai."
+                ], 422);
+            }
+            return redirect()->back()->with('error', "Jadwal Ta'aruf ananda {$registration->candidate_name} tidak dapat diubah karena tahapan Ta'aruf sudah selesai.");
+        }
+
         $request->validate([
             'observation_date' => 'required|date',
             'observation_time' => 'required|string|max:100',
@@ -116,8 +128,6 @@ class AdminTaarufController extends Controller
             'observation_interviewer' => 'nullable|string|max:255',
             'observation_notes' => 'nullable|string|max:2000',
         ]);
-
-        $registration = Registration::with(['user', 'unit'])->findOrFail($id);
 
         $registration->update([
             'observation_date' => $request->observation_date,
@@ -165,6 +175,16 @@ class AdminTaarufController extends Controller
     public function deleteSchedule(Request $request, $id)
     {
         $registration = Registration::findOrFail($id);
+
+        if (in_array($registration->registration_status, ['taaruf_completed', 'agreement_signed', 'completed'])) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Jadwal Ta'aruf ananda {$registration->candidate_name} tidak dapat dibatalkan karena tahapan Ta'aruf sudah selesai."
+                ], 422);
+            }
+            return redirect()->back()->with('error', "Jadwal Ta'aruf ananda {$registration->candidate_name} tidak dapat dibatalkan karena tahapan Ta'aruf sudah selesai.");
+        }
 
         $registration->update([
             'observation_date' => null,

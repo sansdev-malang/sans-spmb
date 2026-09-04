@@ -262,27 +262,27 @@
                             <!-- 6. Actions -->
                             <td class="py-4 px-6 text-right">
                                 <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                                    <!-- Schedule Modal Trigger -->
-                                    <button type="button" 
-                                            onclick="openScheduleModalFromButton(this)" 
-                                            data-action-url="{{ route('admin.taaruf.schedule.update', $reg->id) }}"
-                                            data-candidate-name="{{ $reg->candidate_name }}"
-                                            data-unit-name="{{ $reg->unit?->name }}"
-                                            data-grade-name="{{ $reg->grade?->name }}"
-                                            data-observation-date="{{ $reg->observation_date ? $reg->observation_date->format('Y-m-d') : date('Y-m-d') }}"
-                                            data-observation-time="{{ $reg->observation_time ?? 'Sesi 1 (08:00 - 09:30 WIB)' }}"
-                                            data-observation-location="{{ $reg->observation_location ?: $defaultLocation }}"
-                                            data-observation-interviewer="{{ $reg->observation_interviewer }}"
-                                            data-observation-notes="{{ $reg->observation_notes }}"
-                                            data-is-scheduled="{{ $isScheduled ? '1' : '0' }}"
-                                            class="px-3 py-1.5 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm"
-                                            title="{{ $isScheduled ? 'Ubah Jadwal' : 'Atur Jadwal' }}">
-                                        <i data-lucide="{{ $isScheduled ? 'calendar-cog' : 'calendar-plus' }}" class="w-3.5 h-3.5"></i>
-                                        <span>{{ $isScheduled ? 'Edit' : 'Atur Jadwal' }}</span>
-                                    </button>
-
-                                    <!-- Complete Ta'aruf Action -->
                                     @if(!$isCompleted)
+                                        <!-- Schedule Modal Trigger -->
+                                        <button type="button" 
+                                                onclick="openScheduleModalFromButton(this)" 
+                                                data-action-url="{{ route('admin.taaruf.schedule.update', $reg->id) }}"
+                                                data-candidate-name="{{ $reg->candidate_name }}"
+                                                data-unit-name="{{ $reg->unit?->name }}"
+                                                data-grade-name="{{ $reg->grade?->name }}"
+                                                data-observation-date="{{ $reg->observation_date ? $reg->observation_date->format('Y-m-d') : date('Y-m-d') }}"
+                                                data-observation-time="{{ $reg->observation_time ?? 'Sesi 1 (08:00 - 09:30 WIB)' }}"
+                                                data-observation-location="{{ $reg->observation_location ?: $defaultLocation }}"
+                                                data-observation-interviewer="{{ $reg->observation_interviewer }}"
+                                                data-observation-notes="{{ $reg->observation_notes }}"
+                                                data-is-scheduled="{{ $isScheduled ? '1' : '0' }}"
+                                                class="px-3 py-1.5 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                                                title="{{ $isScheduled ? 'Ubah Jadwal' : 'Atur Jadwal' }}">
+                                            <i data-lucide="{{ $isScheduled ? 'calendar-cog' : 'calendar-plus' }}" class="w-3.5 h-3.5"></i>
+                                            <span>{{ $isScheduled ? 'Edit' : 'Atur Jadwal' }}</span>
+                                        </button>
+
+                                        <!-- Complete Ta'aruf Action -->
                                         <form action="{{ route('admin.taaruf.complete', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.');">
                                             @csrf
                                             <button type="submit" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Selesaikan Ta'aruf">
@@ -290,17 +290,22 @@
                                                 <span class="hidden sm:inline">Selesai</span>
                                             </button>
                                         </form>
-                                    @endif
 
-                                    <!-- Delete/Cancel Schedule -->
-                                    @if($isScheduled && !$isCompleted)
-                                        <form action="{{ route('admin.taaruf.schedule.delete', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('Batalkan jadwal Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 rounded-lg text-xs transition" title="Batalkan Jadwal">
-                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                            </button>
-                                        </form>
+                                        <!-- Delete/Cancel Schedule -->
+                                        @if($isScheduled)
+                                            <form action="{{ route('admin.taaruf.schedule.delete', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('Batalkan jadwal Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 rounded-lg text-xs transition" title="Batalkan Jadwal">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700/80 select-none">
+                                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                            <span>Selesai</span>
+                                        </span>
                                     @endif
                                 </div>
                             </td>
