@@ -38,7 +38,10 @@
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
                             value="{{ old('name', $user->name) }}">
                         @if($errors->has('name'))
-                            <p class="text-xs text-red-650 mt-1">⚠️ {{ $errors->first('name') }}</p>
+                            <p class="text-xs text-red-650 mt-1 flex items-center gap-1.5 font-medium">
+                                <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+                                <span>{{ $errors->first('name') }}</span>
+                            </p>
                         @endif
                     </div>
 
@@ -49,7 +52,10 @@
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
                             value="{{ old('email', $user->email) }}">
                         @if($errors->has('email'))
-                            <p class="text-xs text-red-650 mt-1">⚠️ {{ $errors->first('email') }}</p>
+                            <p class="text-xs text-red-650 mt-1 flex items-center gap-1.5 font-medium">
+                                <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+                                <span>{{ $errors->first('email') }}</span>
+                            </p>
                         @endif
                     </div>
                 </div>
@@ -80,11 +86,19 @@
                     <!-- Current Password -->
                     <div>
                         <label class="block text-xs font-bold text-slate-655 dark:text-slate-450 uppercase tracking-wider mb-2">Kata Sandi Saat Ini*</label>
-                        <input type="password" name="current_password" required
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
-                            placeholder="Masukkan kata sandi lama">
+                        <div class="relative">
+                            <input type="password" id="current_password" name="current_password" required
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 pr-11 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
+                                placeholder="Masukkan kata sandi lama">
+                            <button type="button" onclick="togglePasswordVisibility('current_password')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                <i id="current_password_icon" data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                         @if($errors->updatePassword->has('current_password'))
-                            <p class="text-xs text-red-650 mt-1">⚠️ {{ $errors->updatePassword->first('current_password') }}</p>
+                            <p class="text-xs text-red-650 mt-1 flex items-center gap-1.5 font-medium">
+                                <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+                                <span>{{ $errors->updatePassword->first('current_password') }}</span>
+                            </p>
                         @endif
                     </div>
 
@@ -92,22 +106,38 @@
                         <!-- New Password -->
                         <div>
                             <label class="block text-xs font-bold text-slate-655 dark:text-slate-450 uppercase tracking-wider mb-2">Kata Sandi Baru*</label>
-                            <input type="password" name="password" required
-                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
-                                placeholder="Min. 8 karakter">
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 pr-11 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
+                                    placeholder="Min. 8 karakter">
+                                <button type="button" onclick="togglePasswordVisibility('password')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                    <i id="password_icon" data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                             @if($errors->updatePassword->has('password'))
-                                <p class="text-xs text-red-650 mt-1">⚠️ {{ $errors->updatePassword->first('password') }}</p>
+                                <p class="text-xs text-red-650 mt-1 flex items-center gap-1.5 font-medium">
+                                    <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+                                    <span>{{ $errors->updatePassword->first('password') }}</span>
+                                </p>
                             @endif
                         </div>
 
                         <!-- Confirm New Password -->
                         <div>
                             <label class="block text-xs font-bold text-slate-655 dark:text-slate-450 uppercase tracking-wider mb-2">Konfirmasi Kata Sandi Baru*</label>
-                            <input type="password" name="password_confirmation" required
-                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
-                                placeholder="Masukkan ulang kata sandi baru">
+                            <div class="relative">
+                                <input type="password" id="password_confirmation" name="password_confirmation" required
+                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 pr-11 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm"
+                                    placeholder="Masukkan ulang kata sandi baru">
+                                <button type="button" onclick="togglePasswordVisibility('password_confirmation')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                    <i id="password_confirmation_icon" data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                             @if($errors->updatePassword->has('password_confirmation'))
-                                <p class="text-xs text-red-650 mt-1">⚠️ {{ $errors->updatePassword->first('password_confirmation') }}</p>
+                                <p class="text-xs text-red-650 mt-1 flex items-center gap-1.5 font-medium">
+                                    <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+                                    <span>{{ $errors->updatePassword->first('password_confirmation') }}</span>
+                                </p>
                             @endif
                         </div>
                     </div>
@@ -151,7 +181,10 @@
                                 class="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
                                 placeholder="Masukkan kata sandi Anda untuk konfirmasi">
                             @if($errors->userDeletion->has('password'))
-                                <p class="text-xs text-red-650 mt-1">⚠️ {{ $errors->userDeletion->first('password') }}</p>
+                                <p class="text-xs text-red-650 mt-1 flex items-center gap-1.5 font-medium">
+                                    <i data-lucide="triangle-alert" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0"></i>
+                                    <span>{{ $errors->userDeletion->first('password') }}</span>
+                                </p>
                             @endif
                         </div>
                         
@@ -193,6 +226,23 @@
 
 @push('scripts')
 <script>
+    function togglePasswordVisibility(fieldId) {
+        const input = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '_icon');
+        if (!input || !icon) return;
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
     function toggleDeleteForm() {
         const form = document.getElementById('deleteConfirmForm');
         const btn = document.getElementById('toggleDeleteBtn');
