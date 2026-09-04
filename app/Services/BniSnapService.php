@@ -153,7 +153,7 @@ class BniSnapService implements PaymentGatewayInterface
             'partnerServiceId' => ' ' . $this->merchantId, // leading space is sometimes required in SNAP
             'customerNo' => '12345678', // customer reference
             'virtualAccountNo' => $this->merchantId . rand(100000, 999999),
-            'virtualAccountName' => 'SPMB Candidate',
+            'virtualAccountName' => substr(preg_replace('/[^a-zA-Z0-9 _-]/', '', $customerName ?: 'SPMB Candidate'), 0, 40),
             'trxId' => $invoiceNo,
             'totalAmount' => [
                 'value' => number_format($amount, 2, '.', ''),

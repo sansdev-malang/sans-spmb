@@ -292,10 +292,23 @@ class PaymentController extends Controller
 
             // Step 2: Request payment transaction to Gateway
             try {
-                $studentName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Siswa SPMB'));
+                $candidateName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Siswa SPMB'));
+                $unitCode = $registration->unit?->code ?: ($registration->unit?->name ? strtoupper(substr($registration->unit->name, 0, 4)) : 'SPMB');
+
+                if ($paymentType === 'final_fee') {
+                    if (count($processedItems) === 1) {
+                        $feeTypeName = $processedItems[0]['name'] ?? 'Administrasi';
+                    } else {
+                        $feeTypeName = 'Administrasi';
+                    }
+                } else {
+                    $feeTypeName = $fee ? $fee->name : 'Formulir';
+                }
+
+                $studentPaymentName = trim("{$unitCode} - {$feeTypeName} - {$candidateName}");
                 $studentPhone = $registration->parent_phone ?? $registration->phone ?? null;
                 $gatewayService = \App\Services\PaymentGatewayFactory::make($gateway);
-                $response = $gatewayService->createPayment($totalAmount, $invoiceNo, $request->payment_method, $studentName, $studentPhone);
+                $response = $gatewayService->createPayment($totalAmount, $invoiceNo, $request->payment_method, $studentPaymentName, $studentPhone);
             } catch (\Throwable $e) {
                 $response = [
                     'success' => false,
