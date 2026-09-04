@@ -8,7 +8,8 @@
     @php
         $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
         $successPayment = $registration->payments()->where('status', 'success')->latest()->first();
-        $latestFailedPayment = $registration->payments()->where('status', 'failed')->latest()->first();
+        $latestPayment = $registration->payments()->latest()->first();
+        $latestFailedPayment = ($latestPayment && $latestPayment->status === 'failed') ? $latestPayment : null;
         $isPaymentPending = ($registration->payment_status === 'pending' && $activePayment && $activePayment->status === 'pending');
     @endphp
 
