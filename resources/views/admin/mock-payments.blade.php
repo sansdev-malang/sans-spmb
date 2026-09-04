@@ -171,13 +171,11 @@
                 <thead>
                     <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
-                        <th class="py-4 px-6">Waktu Transaksi</th>
-                        <th class="py-4 px-6">ID Transaksi</th>
-                        <th class="py-4 px-6">Metode / Produk</th>
-                        <th class="py-4 px-6">No. Invoice (ID Ref)</th>
-                        <th class="py-4 px-6">Biaya</th>
-                        <th class="py-4 px-6 text-center">Status</th>
+                        <th class="py-4 px-6">Transaksi & Waktu</th>
+                        <th class="py-4 px-6">Calon Siswa & Tagihan</th>
+                        <th class="py-4 px-6">Metode Pembayaran</th>
                         <th class="py-4 px-6">Nominal</th>
+                        <th class="py-4 px-6 text-center">Status</th>
                         <th class="py-4 px-6 text-center w-28">Aksi</th>
                     </tr>
                 </thead>
@@ -189,90 +187,45 @@
                                 {{ ($payments->currentPage() - 1) * $payments->perPage() + $loop->iteration }}
                             </td>
 
-                            <!-- 2. Waktu Transaksi -->
+                            <!-- 2. Transaksi & Waktu -->
                             <td class="py-4 px-6">
-                                <div class="flex items-center gap-1 text-slate-700 text-xs font-semibold">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                    <span>{{ $pay->created_at->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') }}</span>
-                                    <span class="text-[8px] bg-slate-100 text-slate-500 px-1 rounded font-bold">WIB</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-mono text-xs font-bold text-slate-800 select-all tracking-tight">{{ $pay->invoice_number }}</span>
+                                    <button onclick="navigator.clipboard.writeText('{{ $pay->invoice_number }}'); toastr.success('Nomor Invoice disalin')" class="text-slate-350 hover:text-slate-600 transition cursor-pointer" title="Salin Invoice">
+                                        <i data-lucide="copy" class="w-3 h-3"></i>
+                                    </button>
                                 </div>
-                                <div class="flex items-center gap-1 font-mono text-[9px] text-slate-400 mt-1 pl-4.5">
-                                    <span>{{ $pay->created_at->format('Y-m-d H:i:s') }}</span>
-                                    <span class="text-[7px] border border-slate-200 px-0.5 rounded font-bold uppercase">UTC (Winpay)</span>
-                                </div>
-                            </td>
-
-                            <!-- 3. ID Transaksi (Winpay) -->
-                            <td class="py-4 px-6">
-                                @php
-                                    $winpayTrxId = $pay->reference_id 
-                                        ?: ($pay->payment_info['callback_payload']['originalReferenceNo'] 
-                                            ?? ($pay->payment_info['callback_payload']['referenceNo'] 
-                                                ?? ($pay->payment_info['callback_payload']['paymentRequestId'] 
-                                                    ?? ($pay->payment_info['trxId'] ?? null))));
-                                @endphp
-
-                                @if($winpayTrxId)
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="font-mono text-xs font-bold text-slate-800 select-all" title="{{ $winpayTrxId }}">
-                                            {{ $winpayTrxId }}
+                                <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                    @php
+                                        $winpayTrxId = $pay->reference_id 
+                                            ?: ($pay->payment_info['callback_payload']['originalReferenceNo'] 
+                                                ?? ($pay->payment_info['callback_payload']['referenceNo'] 
+                                                    ?? ($pay->payment_info['callback_payload']['paymentRequestId'] 
+                                                        ?? ($pay->payment_info['trxId'] ?? null))));
+                                    @endphp
+                                    @if($winpayTrxId)
+                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-mono font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100" title="ID Transaksi Winpay">
+                                            <i data-lucide="check" class="w-2.5 h-2.5 text-emerald-600"></i>
+                                            Winpay: {{ $winpayTrxId }}
                                         </span>
-                                        <button onclick="navigator.clipboard.writeText('{{ $winpayTrxId }}'); toastr.success('ID Transaksi disalin')" class="text-slate-350 hover:text-slate-600 transition cursor-pointer" title="Salin ID Transaksi">
-                                            <i data-lucide="copy" class="w-3 h-3"></i>
-                                        </button>
-                                    </div>
-                                    <div class="text-[9px] text-emerald-600 font-bold tracking-wide mt-0.5 flex items-center gap-1">
-                                        <i data-lucide="check" class="w-2.5 h-2.5"></i>
-                                        <span>ID Transaksi Winpay</span>
-                                    </div>
-                                @else
-                                    <div class="text-slate-400 font-mono text-xs">-</div>
-                                    <div class="mt-1 text-[9px] text-slate-400 italic flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                        <span>Menunggu transaksi...</span>
-                                    </div>
-                                @endif
-                            </td>
-
-                            <!-- 4. Metode / Produk -->
-                            <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
-                                    <span>{{ $pay->payment_method }}</span>
-                                </div>
-                                @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
-                                    <div class="mt-1 flex items-center gap-1">
-                                        <span class="font-mono text-[10px] text-slate-500 font-bold select-all bg-slate-50 border border-slate-200/50 px-1.5 py-0.5 rounded">
-                                            {{ $pay->payment_info['virtualAccountNo'] }}
-                                        </span>
-                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 hover:text-slate-600 transition" title="Salin Nomor VA">
-                                            <i data-lucide="copy" class="w-2.5 h-2.5"></i>
-                                        </button>
-                                    </div>
-                                @endif
-                            </td>
-
-                            <!-- 5. No. Invoice (ID Ref) -->
-                            <td class="py-4 px-6">
-                                <div class="flex items-center gap-2">
-                                    <div class="p-1.5 bg-slate-50 rounded-lg text-slate-400 group-hover:bg-white group-hover:text-brand-emerald border border-transparent group-hover:border-slate-100 transition duration-200">
-                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-mono text-xs font-bold text-slate-700 select-all tracking-tight">{{ $pay->invoice_number }}</div>
-                                        <div class="text-[9px] text-slate-400 font-medium tracking-wide mt-0.5">ID Ref di Winpay</div>
-                                    </div>
+                                        <span class="text-slate-300">•</span>
+                                    @endif
+                                    <span class="text-[11px] text-slate-500 font-medium">
+                                        {{ $pay->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
+                                    </span>
                                 </div>
                             </td>
 
-                            <!-- 6. Biaya (Calon Siswa & Keterangan Biaya) -->
+                            <!-- 3. Calon Siswa & Tagihan -->
                             <td class="py-4 px-6">
-                                <div class="font-semibold text-slate-800">{{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}</div>
+                                <div class="font-bold text-slate-850 text-sm">
+                                    {{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}
+                                </div>
                                 @php
                                     $reg = $pay->registration;
                                     if ($pay->payment_type === 'registration_fee') {
                                         $fee = $reg ? $reg->getRegistrationFee() : null;
-                                        $feeTitle = $fee ? $fee->name : ('Formulir Pendaftaran ' . ($reg->unit->name ?? ''));
+                                        $feeTitle = $fee ? $fee->name : 'Formulir Pendaftaran';
                                     } else {
                                         $itemNames = [];
                                         if ($pay->items && $pay->items->isNotEmpty()) {
@@ -280,46 +233,68 @@
                                         } elseif (isset($pay->payment_info['selected_items']) && is_array($pay->payment_info['selected_items'])) {
                                             $itemNames = array_column($pay->payment_info['selected_items'], 'name');
                                         }
-                                        
-                                        if (!empty($itemNames)) {
-                                            $feeTitle = implode(', ', $itemNames);
-                                        } else {
-                                            $feeTitle = 'Biaya Administrasi Masuk';
-                                        }
+                                        $feeTitle = !empty($itemNames) ? implode(', ', $itemNames) : 'Pelunasan Biaya Administrasi';
                                     }
                                 @endphp
-                                <div class="text-[9px] text-slate-500 font-medium mt-0.5 flex items-center gap-1" title="{{ $feeTitle }}">
-                                    <span>{{ \Illuminate\Support\Str::limit($feeTitle, 35) }}</span>
+                                <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                    <span class="font-medium text-slate-700">{{ $feeTitle }}</span>
                                     @if($pay->registration && $pay->registration->unit)
-                                        <span>•</span>
-                                        <span class="text-slate-400">{{ $pay->registration->unit->name }}</span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="text-[10px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">
+                                            {{ $pay->registration->unit->name }}
+                                        </span>
                                     @endif
                                 </div>
                             </td>
 
-                            <!-- 7. Status -->
+                            <!-- 4. Metode Pembayaran -->
+                            <td class="py-4 px-6">
+                                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+                                    <span>{{ $pay->payment_method }}</span>
+                                </div>
+                                @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
+                                    <div class="mt-1 flex items-center gap-1">
+                                        <span class="font-mono text-[10px] text-slate-600 font-bold select-all bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded">
+                                            VA: {{ $pay->payment_info['virtualAccountNo'] }}
+                                        </span>
+                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 hover:text-slate-600 transition cursor-pointer" title="Salin Nomor VA">
+                                            <i data-lucide="copy" class="w-2.5 h-2.5"></i>
+                                        </button>
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- 5. Nominal -->
+                            <td class="py-4 px-6">
+                                <div class="font-extrabold text-slate-900 text-sm tracking-tight">
+                                    Rp {{ number_format($pay->amount, 0, ',', '.') }}
+                                </div>
+                                @if($pay->admin_fee > 0)
+                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5">
+                                        Termasuk admin Rp {{ number_format($pay->admin_fee, 0, ',', '.') }}
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- 6. Status -->
                             <td class="py-4 px-6 text-center">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
-                                    @if($pay->status === 'success') bg-green-50 text-green-700 border border-green-200
-                                    @elseif($pay->status === 'pending') bg-yellow-50 text-yellow-700 border border-yellow-200
-                                    @else bg-red-50 text-red-700 border border-red-200 @endif">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
+                                    @if($pay->status === 'success') bg-emerald-50 text-emerald-700 border border-emerald-200
+                                    @elseif($pay->status === 'pending') bg-amber-50 text-amber-700 border border-amber-200
+                                    @else bg-rose-50 text-rose-700 border border-rose-200 @endif">
                                     <span class="w-1.5 h-1.5 rounded-full 
-                                        @if($pay->status === 'success') bg-green-500
-                                        @elseif($pay->status === 'pending') bg-yellow-500
-                                        @else bg-red-500 @endif"></span>
+                                        @if($pay->status === 'success') bg-emerald-500
+                                        @elseif($pay->status === 'pending') bg-amber-500
+                                        @else bg-rose-500 @endif"></span>
                                     {{ $pay->status }}
                                 </span>
                             </td>
 
-                            <!-- 8. Nominal -->
-                            <td class="py-4 px-6 font-bold text-slate-850 text-xs">
-                                Rp {{ number_format($pay->amount, 0, ',', '.') }}
-                            </td>
-
-                            <!-- 9. Aksi -->
+                            <!-- 7. Aksi -->
                             <td class="py-4 px-6 text-center">
                                 @if($pay->status === 'success')
-                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200" title="Unduh Bukti Pembayaran Resmi">
+                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200 shadow-2xs" title="Unduh Bukti Pembayaran Resmi">
                                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                         <span>Bukti Bayar</span>
                                     </a>
@@ -330,7 +305,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="py-12 px-6 text-center text-slate-400">
+                            <td colspan="7" class="py-12 px-6 text-center text-slate-400">
                                 Belum ada riwayat transaksi pembayaran.
                             </td>
                         </tr>
