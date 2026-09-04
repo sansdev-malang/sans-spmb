@@ -124,8 +124,8 @@
 [
   {"key": "merchant_id", "label": "Merchant ID", "type": "text"},
   {"key": "client_key", "label": "Client Key", "type": "text"},
-  {"key": "client_secret", "label": "Client Secret", "type": "password"},
-  {"key": "private_key", "label": "Private Key (RSA)", "type": "textarea"}
+  {"key": "private_key", "label": "Private Key (RSA)", "type": "textarea"},
+  {"key": "public_key", "label": "Public Key (RSA)", "type": "textarea"}
 ]</pre>
     </div>
 

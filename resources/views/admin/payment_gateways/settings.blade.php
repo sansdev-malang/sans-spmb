@@ -85,21 +85,39 @@
                                     $val = $settings[$env][$key] ?? '';
                                     $inputType = $field['type'] ?? 'text';
                                 @endphp
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-start text-left">
-                                    <label class="md:pt-3 text-xs font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wide md:col-span-1">
-                                        {{ $field['label'] }}
-                                    </label>
-                                    <div class="md:col-span-3">
-                                        @if($inputType === 'textarea')
-                                            <textarea name="settings[{{ $env }}][{{ $key }}]" rows="5" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-mono" placeholder="Masukkan nilai {{ strtolower($field['label']) }}...">{{ $val }}</textarea>
-                                        @elseif($inputType === 'password')
-                                            <input type="password" name="settings[{{ $env }}][{{ $key }}]" value="{{ $val }}" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-mono" placeholder="Masukkan nilai {{ strtolower($field['label']) }}...">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-start text-left bg-slate-50/50 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-150/70 dark:border-slate-800/80">
+                                    <div class="md:col-span-1 space-y-1.5 md:pt-1">
+                                        <label class="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wide block">
+                                            {{ $field['label'] }}
+                                        </label>
+                                        @if(($field['origin'] ?? '') === 'merchant')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
+                                                <i data-lucide="key" class="w-3 h-3"></i> Dibuat Sendiri (SPMB)
+                                            </span>
                                         @else
-                                            <input type="text" name="settings[{{ $env }}][{{ $key }}]" value="{{ $val }}" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-mono" placeholder="Masukkan nilai {{ strtolower($field['label']) }}...">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400 border border-blue-300 dark:border-blue-800 shadow-2xs">
+                                                <i data-lucide="building" class="w-3 h-3"></i> Dari Winpay
+                                            </span>
                                         @endif
-                                        <span class="text-[9px] text-slate-400 mt-1 block uppercase tracking-wider">
-                                            Setting Key: {{ $gateway->code }}_{{ $env === 'simulator' && $gateway->code === 'winpay' ? '' : ($env === 'simulator' ? 'simulator_' : $env . '_') }}{{ $key }}
-                                        </span>
+                                    </div>
+                                    <div class="md:col-span-3">
+                                        @php
+                                            $placeholder = $field['placeholder'] ?? ('Masukkan nilai ' . strtolower($field['label']) . '...');
+                                        @endphp
+                                        @if($inputType === 'textarea')
+                                            <textarea name="settings[{{ $env }}][{{ $key }}]" rows="5" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-mono shadow-2xs" placeholder="{{ $placeholder }}">{{ $val }}</textarea>
+                                        @elseif($inputType === 'password')
+                                            <input type="password" name="settings[{{ $env }}][{{ $key }}]" value="{{ $val }}" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-mono shadow-2xs" placeholder="{{ $placeholder }}">
+                                        @else
+                                            <input type="text" name="settings[{{ $env }}][{{ $key }}]" value="{{ $val }}" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-mono shadow-2xs" placeholder="{{ $placeholder }}">
+                                        @endif
+
+                                        @if(!empty($field['description']))
+                                            <p class="text-[11px] text-slate-650 dark:text-slate-400 mt-1.5 font-medium leading-relaxed flex items-start gap-1.5">
+                                                <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                                                <span>{{ $field['description'] }}</span>
+                                            </p>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

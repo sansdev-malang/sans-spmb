@@ -44,7 +44,6 @@ class WinpayService implements PaymentGatewayInterface
 
     protected $merchantId;
     protected $clientKey;
-    protected $clientSecret;
     protected $privateKey;
     protected $publicKey;
     protected $baseUrl;
@@ -60,7 +59,6 @@ class WinpayService implements PaymentGatewayInterface
         if ($this->mode === 'production') {
             $this->merchantId = \App\Models\Setting::get('winpay_prod_merchant_id');
             $this->clientKey = \App\Models\Setting::get('winpay_prod_client_key');
-            $this->clientSecret = \App\Models\Setting::get('winpay_prod_client_secret');
             $this->privateKey = \App\Models\Setting::get('winpay_prod_private_key');
             $this->publicKey = \App\Models\Setting::get('winpay_prod_public_key');
         } 
@@ -70,7 +68,6 @@ class WinpayService implements PaymentGatewayInterface
         elseif ($this->mode === 'sandbox') {
             $this->merchantId = \App\Models\Setting::get('winpay_sandbox_merchant_id');
             $this->clientKey = \App\Models\Setting::get('winpay_sandbox_client_key');
-            $this->clientSecret = \App\Models\Setting::get('winpay_sandbox_client_secret');
             $this->privateKey = \App\Models\Setting::get('winpay_sandbox_private_key');
             $this->publicKey = \App\Models\Setting::get('winpay_sandbox_public_key');
         } 
@@ -80,7 +77,6 @@ class WinpayService implements PaymentGatewayInterface
         else {
             $this->merchantId = \App\Models\Setting::get('winpay_merchant_id');
             $this->clientKey = \App\Models\Setting::get('winpay_client_key');
-            $this->clientSecret = \App\Models\Setting::get('winpay_client_secret');
             $this->privateKey = \App\Models\Setting::get('winpay_private_key');
             $this->publicKey = \App\Models\Setting::get('winpay_public_key');
         }
@@ -91,9 +87,6 @@ class WinpayService implements PaymentGatewayInterface
         }
         if (empty($this->clientKey)) {
             $this->clientKey = env('WINPAY_CLIENT_KEY', 'MOCK_CLIENT_KEY');
-        }
-        if (empty($this->clientSecret)) {
-            $this->clientSecret = env('WINPAY_CLIENT_SECRET', 'MOCK_CLIENT_SECRET');
         }
         
         if (empty($this->privateKey)) {
@@ -128,8 +121,8 @@ class WinpayService implements PaymentGatewayInterface
     public function generateAsymmetricSignature($method, $endpoint, $bodyArray, $timestamp)
     {
         if (empty($this->privateKey)) {
-            Log::warning('Winpay Private Key is empty. Using fallback dummy signature.');
-            return base64_encode(hash_hmac('sha256', 'mock_string_to_sign', $this->clientSecret));
+            Log::warning('Winpay Private Key is empty. Cannot generate asymmetric signature.');
+            return '';
         }
 
         $privateKeyResource = openssl_pkey_get_private($this->privateKey);

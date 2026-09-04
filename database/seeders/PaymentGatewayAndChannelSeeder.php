@@ -20,11 +20,38 @@ class PaymentGatewayAndChannelSeeder extends Seeder
                 'code' => 'winpay',
                 'is_active' => true,
                 'settings_schema' => [
-                    ['key' => 'merchant_id', 'type' => 'text', 'label' => 'Merchant ID'],
-                    ['key' => 'client_key', 'type' => 'text', 'label' => 'Client Key'],
-                    ['key' => 'client_secret', 'type' => 'password', 'label' => 'Client Secret'],
-                    ['key' => 'private_key', 'type' => 'textarea', 'label' => 'Private Key (RSA)'],
-                    ['key' => 'public_key', 'type' => 'textarea', 'label' => 'Public Key (RSA)'],
+                    [
+                        'key' => 'merchant_id', 
+                        'type' => 'text', 
+                        'label' => 'Merchant ID', 
+                        'origin' => 'winpay',
+                        'description' => 'Didapatkan dari Winpay (ID akun merchant resmi yayasan/sekolah).',
+                        'placeholder' => 'Contoh: 123456789'
+                    ],
+                    [
+                        'key' => 'client_key', 
+                        'type' => 'text', 
+                        'label' => 'Client Key', 
+                        'origin' => 'winpay',
+                        'description' => 'Didapatkan dari Winpay (digunakan sebagai header X-PARTNER-ID).',
+                        'placeholder' => 'Contoh: 962489e9-xxxx-xxxx-xxxx-b07d44d64bf4'
+                    ],
+                    [
+                        'key' => 'private_key', 
+                        'type' => 'textarea', 
+                        'label' => 'Private Key (RSA)', 
+                        'origin' => 'merchant',
+                        'description' => 'Kunci privat RSA yang kita buat sendiri (server SPMB) untuk menandatangani signature request (X-SIGNATURE). Pasangan Public Key-nya didaftarkan ke pihak Winpay.',
+                        'placeholder' => "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA...\n-----END RSA PRIVATE KEY-----"
+                    ],
+                    [
+                        'key' => 'public_key', 
+                        'type' => 'textarea', 
+                        'label' => 'Public Key (RSA)', 
+                        'origin' => 'winpay',
+                        'description' => 'Didapatkan dari Winpay (Kunci publik RSA resmi dari Winpay untuk memverifikasi keaslian webhook/callback notifikasi pembayaran).',
+                        'placeholder' => "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...\n-----END PUBLIC KEY-----"
+                    ],
                 ],
             ],
         ];
