@@ -56,11 +56,11 @@
                 
                 <div class="shrink-0 self-start sm:self-center">
                     @if($registration->payment_status === 'paid')
-                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
                             <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Lunas
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1 bg-red-700 text-white font-black text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border border-red-500 shadow-xs whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1 bg-red-700 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full border border-red-500 shadow-xs whitespace-nowrap">
                             <i data-lucide="clock" class="w-3.5 h-3.5"></i> Belum Lunas
                         </span>
                     @endif
@@ -73,14 +73,14 @@
                     <!-- Top Info: Jenis Pembayaran & Pendaftar -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3.5 border-b border-slate-200/60 dark:border-slate-800">
                         <div>
-                            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Jenis Pembayaran</span>
+                            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Jenis Pembayaran</span>
                             <div class="text-sm font-extrabold text-slate-850 dark:text-white flex items-center gap-1.5">
                                 <i data-lucide="receipt" class="w-4 h-4 text-brand-emerald"></i>
                                 {{ $feeName }}
                             </div>
                         </div>
                         <div class="sm:text-right">
-                            <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Pendaftar & Unit</span>
+                            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider mb-0.5">Pendaftar & Unit</span>
                             <div class="text-xs font-bold text-slate-700 dark:text-slate-200">
                                 <span>{{ $registration->candidate_name }}</span>
                                 <span class="text-slate-300 dark:text-slate-700 font-normal mx-1.5">•</span>
@@ -114,7 +114,7 @@
                                     Kebijakan Cicilan Pembayaran
                                 @endif
                             </h4>
-                            <p class="text-[11px] text-emerald-750 dark:text-emerald-400 leading-relaxed">
+                            <p class="text-xs text-emerald-750 dark:text-emerald-400 leading-relaxed">
                                 @if($discountAmount > 0 && ($installmentMode ?? 'none') !== 'none')
                                     Alhamdulillah! Anda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}) dan diizinkan melakukan <strong>pembayaran bertahap (cicilan)</strong>.
                                 @elseif($discountAmount > 0)
@@ -166,7 +166,7 @@
                             <h4 class="font-extrabold text-xs text-amber-900 dark:text-amber-300">
                                 Pembuatan Tagihan Belum Berhasil
                             </h4>
-                            <p class="text-[11px] text-amber-750 dark:text-amber-400 leading-relaxed">
+                            <p class="text-xs text-amber-750 dark:text-amber-400 leading-relaxed">
                                 {{ $latestFailedPayment->payment_info['failure_reason'] ?? 'Pembuatan tagihan untuk metode pembayaran yang dipilih belum dapat diselesaikan oleh sistem perbankan. Silakan pilih kanal pembayaran lain (seperti QRIS atau E-Wallet) di bawah ini lalu klik Bayar Sekarang.' }}
                             </p>
                         </div>
@@ -183,7 +183,7 @@
                             <!-- Rincian Komponen Biaya Akhir (Read-Only Review) -->
                             <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 space-y-4 text-xs">
                                 <div class="flex items-center justify-between border-b border-slate-200/50 dark:border-slate-800 pb-3">
-                                    <h4 class="font-extrabold text-slate-850 dark:text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                    <h4 class="font-extrabold text-slate-850 dark:text-white uppercase tracking-wider text-xs flex items-center gap-1.5">
                                         <i data-lucide="list-checks" class="w-4 h-4 text-brand-emerald"></i> Rincian Komponen Biaya Transaksi
                                     </h4>
                                     @if(($installmentMode ?? 'none') === 'selective')
@@ -231,7 +231,7 @@
                                                     </span>
                                                 </div>
 
-                                                <div class="flex items-center justify-between text-[10px] text-slate-400">
+                                                <div class="flex items-center justify-between text-xs text-slate-400">
                                                     @if($isPartial)
                                                         <span class="text-blue-600 dark:text-blue-400 font-medium">
                                                             Cicilan Tahap Ini (Sisa setelah bayar: Rp {{ number_format($remainingAfter, 0, ',', '.') }})
@@ -281,7 +281,7 @@
                                     <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
                                 </div>
 
-                                <p class="text-[10px] text-slate-400 italic leading-relaxed mt-1 select-none">Note: Biaya transaksi dibebankan kepada wali murid sesuai instruksi yayasan.</p>
+                                <p class="text-xs text-slate-400 italic leading-relaxed mt-1 select-none">Note: Biaya transaksi dibebankan kepada wali murid sesuai instruksi yayasan.</p>
                             </div>
                         @else
                             <!-- Formulir Pendaftaran (Draft) -->
@@ -314,7 +314,7 @@
                                             @if($channel->getLogoUrl())
                                                 <img src="{{ $channel->getLogoUrl() }}" alt="{{ $channel->name }}" title="{{ $channel->name }}" class="max-h-6 sm:max-h-7 max-w-full object-contain">
                                             @else
-                                                <span class="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 text-center truncate leading-tight">
+                                                <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200 text-center truncate leading-tight">
                                                     {{ $channel->name }}
                                                 </span>
                                             @endif
@@ -395,7 +395,7 @@
                                 <span class="text-2xl font-black text-brand-emerald tracking-wider font-mono block mt-1 select-all">
                                     {{ $activePayment->payment_info['virtualAccountNo'] ?? $activePayment->payment_info['virtualAccount'] ?? '88990012345678' }}
                                 </span>
-                                <span class="text-[10px] text-slate-400 mt-2 block font-semibold">BANK PARTNER: {{ $activePayment->payment_method }}</span>
+                                <span class="text-xs text-slate-400 mt-2 block font-semibold">BANK PARTNER: {{ $activePayment->payment_method }}</span>
                             </div>
                         @endif
                         
@@ -466,7 +466,7 @@
                         @endphp
                         @if($gatewayMode === 'simulator')
                             <div class="border-t border-dashed border-slate-200 pt-6 mt-4 bg-sky-50/50 p-4 rounded-xl border border-sky-100 flex flex-col items-center justify-center gap-2">
-                                <span class="text-[10px] text-sky-800 font-extrabold uppercase tracking-widest bg-sky-100 px-2.5 py-1 rounded-full">Developer Simulator Utility</span>
+                                <span class="text-xs text-sky-800 font-extrabold uppercase tracking-widest bg-sky-100 px-2.5 py-1 rounded-full">Developer Simulator Utility</span>
                                 <p class="text-xs text-sky-700 text-center leading-relaxed max-w-md">
                                     @if(str_contains($feeGateway, 'bni'))
                                         Simulasikan callback pembayaran sukses BNI Simulator untuk memperbarui status transaksi ini langsung dari browser secara instan.

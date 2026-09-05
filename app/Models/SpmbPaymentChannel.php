@@ -58,8 +58,37 @@ class SpmbPaymentChannel extends Model
     public function getLogoUrl()
     {
         if ($this->logo) {
-            return asset('storage/' . $this->logo);
+            return '/storage/' . ltrim($this->logo, '/');
         }
+
+        $channelKey = strtolower($this->code . ' ' . $this->name);
+        $logoSlugs = [
+            'qris' => 'qris',
+            'bca' => 'bca',
+            'shopee' => 'shopee-pay',
+            'mandiri' => 'mandiri',
+            'dana' => 'dana',
+            'bsi' => 'bsi',
+            'bni' => 'bni',
+            'bri' => 'bri',
+            'indomaret' => 'indomaret',
+            'alfamart' => 'alfamart',
+        ];
+
+        foreach ($logoSlugs as $keyword => $slug) {
+            $path = 'vendor/idn-finlogos/' . $slug . '.svg';
+            if (str_contains($channelKey, $keyword) && file_exists(public_path($path))) {
+                $svg = file_get_contents(public_path($path));
+
+                if ($svg !== false) {
+                    if (!str_contains($svg, 'xmlns=')) {
+                        $svg = preg_replace('/<svg\b(?![^>]*\bxmlns=)/i', '<svg xmlns="http://www.w3.org/2000/svg"', $svg, 1);
+                    }
+                    return 'data:image/svg+xml;base64,' . base64_encode($svg);
+                }
+            }
+        }
+
         return null;
     }
 }
