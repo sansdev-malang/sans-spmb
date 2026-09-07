@@ -103,8 +103,11 @@
         .btn-custom-header:hover {
             background-color: {{ $primaryColor }}e0;
         }
-        .text-custom-header {
-            color: {{ $primaryColor }};
+        .nav-locked-item {
+            color: #94a3b8 !important;
+        }
+        html.dark .nav-locked-item {
+            color: #64748b !important;
         }
 
         /* Dark Mode Custom Styles */
@@ -219,48 +222,48 @@
                             $observationUnlocked = $currentReg && in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
                             $resultUnlocked = $currentReg && in_array($status, ['agreement_signed', 'completed']);
                         @endphp
-                        <div class="flex items-center gap-6 text-[10px] font-bold tracking-wider uppercase">
-                            <a href="{{ route('dashboard') }}" class="transition pb-1 {{ (Route::is('dashboard') || Route::is('dashboard.detail')) ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                        <div class="flex items-center gap-6 text-xs font-bold">
+                            <a href="{{ route('dashboard') }}" class="transition pb-1 {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
                                 Beranda
                             </a>
 
                             @if($formUnlocked)
-                                <a href="{{ route('dashboard.form', $currentReg->id) }}" class="transition pb-1 {{ Route::is('dashboard.form') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                <a href="{{ route('dashboard.form', $currentReg->id) }}" class="transition pb-1 {{ Route::is('dashboard.form') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
                                     Formulir
                                 </a>
                             @else
-                                <button onclick="showToast('{{ $currentReg ? 'Menu Formulir terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                    <i data-lucide="lock" class="w-3 h-3"></i> Formulir
+                                <button onclick="showToast('{{ $currentReg ? 'Menu Formulir terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="nav-locked-item hover:opacity-75 font-medium transition flex items-center gap-1 cursor-pointer select-none">
+                                    <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i> Formulir
                                 </button>
                             @endif
 
                             @if($verificationUnlocked)
-                                <a href="{{ route('dashboard.verification', $currentReg->id) }}" class="transition pb-1 {{ Route::is('dashboard.verification') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                <a href="{{ route('dashboard.verification', $currentReg->id) }}" class="transition pb-1 {{ Route::is('dashboard.verification') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
                                     Verifikasi Data
                                 </a>
                             @else
-                                <button onclick="showToast('{{ $currentReg ? 'Menu Verifikasi Data terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                    <i data-lucide="lock" class="w-3 h-3"></i> Verifikasi Data
+                                <button onclick="showToast('{{ $currentReg ? 'Menu Verifikasi Data terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="nav-locked-item hover:opacity-75 font-medium transition flex items-center gap-1 cursor-pointer select-none">
+                                    <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i> Verifikasi Data
                                 </button>
                             @endif
 
                             @if($observationUnlocked)
-                                <a href="{{ route('dashboard.observation', $currentReg->id) }}" class="transition pb-1 {{ Route::is('dashboard.observation') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
-                                    Ta'Aruf
+                                <a href="{{ route('dashboard.observation', $currentReg->id) }}" class="transition pb-1 {{ Route::is('dashboard.observation') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
+                                    Ta'aruf
                                 </a>
                             @else
-                                <button onclick="showToast('{{ $currentReg ? 'Menu Ta\'Aruf terkunci. Tunggu berkas pendaftaran Anda selesai diverifikasi oleh panitia.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                    <i data-lucide="lock" class="w-3 h-3"></i> Ta'Aruf
+                                <button onclick="showToast('{{ addslashes($currentReg ? 'Menu Ta\'aruf terkunci. Tunggu berkas pendaftaran Anda selesai diverifikasi oleh panitia.' : 'Silakan daftarkan anak Anda terlebih dahulu.') }}', 'error')" class="nav-locked-item hover:opacity-75 font-medium transition flex items-center gap-1 cursor-pointer select-none">
+                                    <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i> Ta'aruf
                                 </button>
                             @endif
 
                             @if($resultUnlocked)
-                                <a href="{{ route('dashboard.result', $currentReg->id) }}" class="transition pb-1 {{ (Route::is('dashboard.result') || (Route::is('dashboard.payment') && $status === 'agreement_signed')) ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary text-slate-500 dark:text-slate-400' }}">
+                                <a href="{{ route('dashboard.result', $currentReg->id) }}" class="transition pb-1 {{ (Route::is('dashboard.result') || (Route::is('dashboard.payment') && $status === 'agreement_signed')) ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
                                     Administrasi
                                 </a>
                             @else
-                                <button onclick="showToast('{{ $currentReg ? 'Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="text-slate-350 dark:text-slate-600 font-bold transition flex items-center gap-1">
-                                    <i data-lucide="lock" class="w-3 h-3"></i> Administrasi
+                                <button onclick="showToast('{{ $currentReg ? 'Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="nav-locked-item hover:opacity-75 font-medium transition flex items-center gap-1 cursor-pointer select-none">
+                                    <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i> Administrasi
                                 </button>
                             @endif
                         </div>
@@ -388,7 +391,7 @@
                                 <div class="h-6 w-6 rounded-full bg-custom-primary text-white flex items-center justify-center font-bold text-xs uppercase dark:bg-emerald-600">
                                     {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
                                 </div>
-                                <span class="font-bold text-slate-700 dark:text-slate-350 pr-1 max-w-[120px] truncate">{{ auth()->user()->name }}</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 pr-1 max-w-[120px] truncate">{{ auth()->user()->name }}</span>
                                 <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
                             </button>
                             <!-- Dropdown Box -->
@@ -398,16 +401,16 @@
                                 </div>
                                 @if($isLanding)
                                     @if(auth()->user()->isAdmin())
-                                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
+                                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
                                             <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
                                         </a>
                                     @else
-                                        <a href="{{ route('dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
+                                        <a href="{{ route('dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
                                             <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
                                         </a>
                                     @endif
                                 @endif
-                                <a href="{{ auth()->user()->isAdmin() ? route('admin.profile.edit') : route('profile.edit') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
+                                <a href="{{ auth()->user()->isAdmin() ? route('admin.profile.edit') : route('profile.edit') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
                                     <i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Edit Profile
                                 </a>
                                 <form method="POST" action="{{ route('logout') }}" hx-boost="false">
@@ -474,47 +477,47 @@
                         $resultUnlockedMob = $currentRegMob && in_array($statusMob, ['agreement_signed', 'completed']);
                     @endphp
                     <div class="space-y-1">
-                        <a href="{{ route('dashboard') }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ (Route::is('dashboard') || Route::is('dashboard.detail')) ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
+                        <a href="{{ route('dashboard') }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
                             <i data-lucide="home" class="w-4 h-4"></i> Beranda
                         </a>
                         @if($formUnlockedMob)
-                            <a href="{{ route('dashboard.form', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard.form') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
+                            <a href="{{ route('dashboard.form', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard.form') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
                                 <i data-lucide="file-text" class="w-4 h-4"></i> Formulir
                             </a>
                         @else
-                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Formulir terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold text-slate-350 dark:text-slate-600 rounded-xl transition">
-                                <span class="flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> Formulir</span>
-                                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Formulir terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold nav-locked-item hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-xl transition">
+                                <span class="flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 opacity-70"></i> Formulir</span>
+                                <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i>
                             </button>
                         @endif
                         @if($verificationUnlockedMob)
-                            <a href="{{ route('dashboard.verification', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard.verification') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
+                            <a href="{{ route('dashboard.verification', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard.verification') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
                                 <i data-lucide="shield-check" class="w-4 h-4"></i> Verifikasi Data
                             </a>
                         @else
-                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Verifikasi Data terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold text-slate-350 dark:text-slate-600 rounded-xl transition">
-                                <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4"></i> Verifikasi Data</span>
-                                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Verifikasi Data terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold nav-locked-item hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-xl transition">
+                                <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 opacity-70"></i> Verifikasi Data</span>
+                                <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i>
                             </button>
                         @endif
                         @if($observationUnlockedMob)
-                            <a href="{{ route('dashboard.observation', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard.observation') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
-                                <i data-lucide="calendar" class="w-4 h-4"></i> Ta'Aruf
+                            <a href="{{ route('dashboard.observation', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard.observation') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
+                                <i data-lucide="calendar" class="w-4 h-4"></i> Ta'aruf
                             </a>
                         @else
-                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Ta\'Aruf terkunci. Tunggu berkas pendaftaran Anda selesai diverifikasi oleh panitia.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold text-slate-350 dark:text-slate-600 rounded-xl transition">
-                                <span class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i> Ta'Aruf</span>
-                                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <button onclick="showToast('{{ addslashes($currentRegMob ? 'Menu Ta\'aruf terkunci. Tunggu berkas pendaftaran Anda selesai diverifikasi oleh panitia.' : 'Silakan daftarkan anak Anda terlebih dahulu.') }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold nav-locked-item hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-xl transition">
+                                <span class="flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 opacity-70"></i> Ta'aruf</span>
+                                <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i>
                             </button>
                         @endif
                         @if($resultUnlockedMob)
-                            <a href="{{ route('dashboard.result', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ (Route::is('dashboard.result') || Route::is('dashboard.payment')) ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
+                            <a href="{{ route('dashboard.result', $currentRegMob->id) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ (Route::is('dashboard.result') || Route::is('dashboard.payment')) ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
                                 <i data-lucide="award" class="w-4 h-4"></i> Administrasi
                             </a>
                         @else
-                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold text-slate-350 dark:text-slate-600 rounded-xl transition">
-                                <span class="flex items-center gap-2"><i data-lucide="award" class="w-4 h-4"></i> Administrasi</span>
-                                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold nav-locked-item hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-xl transition">
+                                <span class="flex items-center gap-2"><i data-lucide="award" class="w-4 h-4 opacity-70"></i> Administrasi</span>
+                                <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i>
                             </button>
                         @endif
                     </div>
@@ -597,18 +600,29 @@
         // Beautiful dynamic toast notification handler
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
-            if (!container) return;
+            if (!container || !message) return;
+
+            // Prevent duplicate toast with same message
+            const existingSpans = container.querySelectorAll('span');
+            for (let span of existingSpans) {
+                if (span.textContent.trim() === message.trim()) {
+                    return;
+                }
+            }
 
             const toast = document.createElement('div');
-            toast.className = `flex items-center gap-3 bg-white text-xs font-bold px-4 py-3 rounded-xl shadow-lg border border-slate-100 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm`;
+            toast.className = `flex items-center gap-3 bg-white dark:bg-slate-900 text-xs font-bold px-4 py-3.5 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-800 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm`;
             
-            let iconColor = type === 'success' ? 'text-emerald-600' : 'text-red-600';
-            let iconName = type === 'success' ? 'check-circle' : 'alert-circle';
+            const isSuccess = type === 'success';
+            const iconBg = isSuccess ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400';
+            const iconName = isSuccess ? 'check-circle-2' : 'alert-circle';
             
             toast.innerHTML = `
-                <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} flex-shrink-0"></i>
-                <span class="text-slate-700 flex-grow">${message}</span>
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-0.5">&times;</button>
+                <div class="w-8 h-8 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="${iconName}" class="w-4 h-4"></i>
+                </div>
+                <span class="text-slate-800 dark:text-slate-100 flex-grow font-semibold leading-snug">${message}</span>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 text-base leading-none">&times;</button>
             `;
             
             container.appendChild(toast);
@@ -626,12 +640,12 @@
                 setTimeout(() => {
                     toast.remove();
                 }, 300);
-            }, 4000);
+            }, 5000);
         }
 
         // Notification dropdown handler
         @auth
-        let isFetchingNotif = false;
+        var isFetchingNotif = typeof isFetchingNotif !== 'undefined' ? isFetchingNotif : false;
         function toggleNotifDropdown(event) {
             event.stopPropagation();
             const dropdown = document.getElementById('notifDropdown');
@@ -964,16 +978,26 @@
             
             @if(session('success'))
                 showToast("{{ session('success') }}", 'success');
-            @endif
-            
-            @if(session('error'))
+                try { sessionStorage.removeItem('pendingToast'); } catch(e) {}
+            @elseif(session('error'))
                 showToast("{{ session('error') }}", 'error');
-            @endif
-            
-            @if($errors->any())
+                try { sessionStorage.removeItem('pendingToast'); } catch(e) {}
+            @elseif($errors->any())
                 @foreach($errors->all() as $error)
                     showToast("{{ $error }}", 'error');
                 @endforeach
+                try { sessionStorage.removeItem('pendingToast'); } catch(e) {}
+            @else
+                try {
+                    const pendingToast = sessionStorage.getItem('pendingToast');
+                    if (pendingToast) {
+                        sessionStorage.removeItem('pendingToast');
+                        const parsed = JSON.parse(pendingToast);
+                        if (parsed && parsed.message) {
+                            showToast(parsed.message, parsed.type || 'success');
+                        }
+                    }
+                } catch(e) {}
             @endif
         });
     </script>

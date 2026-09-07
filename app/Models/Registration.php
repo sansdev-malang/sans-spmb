@@ -29,7 +29,7 @@ class Registration extends Model
     public function scopeScopedByAdmin($query)
     {
         if (auth()->check() && auth()->user()->spmb_unit_id) {
-            return $query->where('spmb_unit_id', auth()->user()->spmb_unit_id);
+            return $query->where($this->qualifyColumn('spmb_unit_id'), auth()->user()->spmb_unit_id);
         }
         return $query;
     }

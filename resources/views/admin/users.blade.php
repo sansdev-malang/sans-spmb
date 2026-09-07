@@ -377,18 +377,27 @@
                 <select name="role" id="add-role-select" onchange="toggleAddUnitSelect()" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
                     <option value="admin">Panitia / Admin</option>
                     <option value="candidate">Orang Tua / Calon Siswa</option>
-                    <option value="super_admin">Developer / IT (Super Admin)</option>
+                    @if(auth()->user()->isSuperAdmin())
+                        <option value="super_admin">Developer / IT (Super Admin)</option>
+                    @endif
                 </select>
             </div>
-            <div id="add-unit-select-wrapper" class="hidden">
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Tugas (Khusus Admin Unit)</label>
-                <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
-                    <option value="">Semua Unit (Global Admin)</option>
-                    @foreach($units as $unit)
-                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                    @endforeach
-                </select>
-            </div>
+            @if(auth()->user()->isSuperAdmin())
+                <div id="add-unit-select-wrapper" class="hidden">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Tugas (Khusus Admin Unit)</label>
+                    <select name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                        <option value="">Semua Unit (Global Admin)</option>
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @else
+                <div id="add-unit-select-wrapper" class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 font-semibold flex items-center gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600"></i>
+                    <span>Unit: <strong class="font-extrabold">{{ auth()->user()->spmbUnit->name ?? 'Unit Anda' }}</strong></span>
+                </div>
+            @endif
             <div class="flex justify-end gap-2 pt-4">
                 <button type="button" onclick="closeAddUserModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">Kembali</button>
                 <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md">Simpan User</button>
@@ -428,18 +437,22 @@
                 <select id="edit-role" name="role" onchange="toggleEditUnitSelect()" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
                     <option value="admin">Panitia / Admin</option>
                     <option value="candidate">Orang Tua / Calon Siswa</option>
-                    <option value="super_admin">Developer / IT (Super Admin)</option>
+                    @if(auth()->user()->isSuperAdmin())
+                        <option value="super_admin">Developer / IT (Super Admin)</option>
+                    @endif
                 </select>
             </div>
-            <div id="edit-unit-select-wrapper" class="hidden">
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Tugas (Khusus Admin Unit)</label>
-                <select id="edit-spmb-unit-id" name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
-                    <option value="">Semua Unit (Global Admin)</option>
-                    @foreach($units as $unit)
-                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                    @endforeach
-                </select>
-            </div>
+            @if(auth()->user()->isSuperAdmin())
+                <div id="edit-unit-select-wrapper" class="hidden">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Tugas (Khusus Admin Unit)</label>
+                    <select id="edit-spmb-unit-id" name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
+                        <option value="">Semua Unit (Global Admin)</option>
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
             <div class="flex justify-end gap-2 pt-4">
                 <button type="button" onclick="closeEditUserModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">Kembali</button>
                 <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md">Simpan Perubahan</button>
@@ -551,8 +564,10 @@
     }
 
     function toggleAddUnitSelect() {
-        const role = document.getElementById('add-role-select').value;
+        const roleEl = document.getElementById('add-role-select');
         const wrapper = document.getElementById('add-unit-select-wrapper');
+        if (!roleEl || !wrapper) return;
+        const role = roleEl.value;
         if (role === 'admin') {
             wrapper.classList.remove('hidden');
         } else {
@@ -561,8 +576,10 @@
     }
 
     function toggleEditUnitSelect() {
-        const role = document.getElementById('edit-role').value;
+        const roleEl = document.getElementById('edit-role');
         const wrapper = document.getElementById('edit-unit-select-wrapper');
+        if (!roleEl || !wrapper) return;
+        const role = roleEl.value;
         if (role === 'admin') {
             wrapper.classList.remove('hidden');
         } else {
@@ -576,7 +593,10 @@
         document.getElementById('edit-name').value = user.name;
         document.getElementById('edit-email').value = user.email;
         document.getElementById('edit-role').value = user.role;
-        document.getElementById('edit-spmb-unit-id').value = user.spmb_unit_id || '';
+        const editUnitEl = document.getElementById('edit-spmb-unit-id');
+        if (editUnitEl) {
+            editUnitEl.value = user.spmb_unit_id || '';
+        }
         toggleEditUnitSelect();
         document.getElementById('editUserForm').setAttribute('action', '/admin/users/' + user.id);
         document.getElementById('editUserModal').classList.remove('hidden');

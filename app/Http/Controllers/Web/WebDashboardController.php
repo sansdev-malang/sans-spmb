@@ -386,25 +386,57 @@ class WebDashboardController extends Controller
         }
 
         if (in_array($registration->registration_status, ['draft', 'failed'])) {
+            $isRevision = ($registration->registration_status === 'failed');
+
             $registration->update([
                 'registration_status' => 'submitted',
-                'committee_notes' => 'Formulir pendaftaran berhasil dikirim kembali. Berkas pendaftaran ananda sedang dalam proses verifikasi ulang oleh panitia SPMB.'
+                'committee_notes' => $isRevision 
+                    ? 'Formulir pendaftaran berhasil dikirim kembali. Berkas perbaikan ananda sedang dalam proses verifikasi ulang oleh panitia SPMB.'
+                    : 'Formulir & berkas pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.'
             ]);
 
-            // Trigger notification to all admins
+            // Trigger notification to relevant unit admins & super admins
             try {
-                $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                $admins = \App\Models\User::getAdminsForUnit($registration->spmb_unit_id);
+                $title = $isRevision ? 'Perbaikan Formulir Dikirim' : 'Formulir Pendaftaran Baru';
+                $message = $isRevision
+                    ? 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah mengirimkan perbaikan formulir & berkas untuk diverifikasi ulang.'
+                    : 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') baru saja mengirimkan formulir pendaftaran baru untuk diverifikasi.';
+
                 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
-                    'title' => 'Formulir Pendaftaran Dikirim',
-                    'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja mengirimkan formulir & berkas pendaftaran untuk diverifikasi.',
+                    'title' => $title,
+                    'message' => $message,
                     'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
-                    'type' => 'info',
+                    'type' => $isRevision ? 'warning' : 'info',
+                    'spmb_unit_id' => $registration->spmb_unit_id,
+                    'registration_id' => $registration->id,
                 ]));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send form submission notification', ['error' => $e->getMessage()]);
             }
 
-            return redirect()->route('dashboard.detail', $id)->with('success', 'Formulir pendaftaran berhasil dikirim kembali! Silakan menunggu verifikasi berkas dari panitia.');
+            $successMsg = $isRevision 
+                ? 'Formulir perbaikan berhasil dikirim kembali! Silakan menunggu verifikasi ulang berkas dari panitia.'
+                : 'Formulir pendaftaran berhasil dikirim! Silakan menunggu verifikasi berkas dari panitia.';
+
+            session()->flash('success', $successMsg);
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMsg,
+                    'redirect' => route('dashboard.detail', $id)
+                ]);
+            }
+
+            return redirect()->route('dashboard.detail', $id)->with('success', $successMsg);
+        }
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => route('dashboard.detail', $id)
+            ]);
         }
 
         return redirect()->route('dashboard.detail', $id);
@@ -729,14 +761,16 @@ class WebDashboardController extends Controller
             'committee_notes' => 'Pernyataan kesanggupan ditandatangani oleh: ' . $request->signature_name . '. Silakan lakukan pembayaran biaya administrasi seleksi akhir.'
         ]);
 
-        // Trigger notification to all admins
+        // Trigger notification to relevant unit admins & super admins
         try {
-            $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+            $admins = \App\Models\User::getAdminsForUnit($registration->spmb_unit_id);
             \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                 'title' => 'Surat Pernyataan Disetujui',
-                'message' => 'Surat pernyataan & rincian biaya masuk untuk calon siswa "' . $registration->candidate_name . '" telah ditandatangani oleh ' . $request->signature_name . '.',
+                'message' => 'Surat pernyataan & rincian biaya masuk untuk calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah ditandatangani oleh ' . $request->signature_name . '.',
                 'url' => route('admin.payments.data') . '?search=' . urlencode($registration->candidate_name),
                 'type' => 'success',
+                'spmb_unit_id' => $registration->spmb_unit_id,
+                'registration_id' => $registration->id,
             ]));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send agreement signature notification', ['error' => $e->getMessage()]);
@@ -916,29 +950,46 @@ class WebDashboardController extends Controller
         }
 
         if ($allCompleted && in_array($registration->registration_status, ['draft', 'failed'])) {
+            $isRevision = ($registration->registration_status === 'failed');
+
             $registration->update([
                 'registration_status' => 'submitted',
-                'committee_notes' => 'Formulir & berkas pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.'
+                'committee_notes' => $isRevision 
+                    ? 'Formulir pendaftaran berhasil dikirim kembali. Berkas perbaikan ananda sedang dalam proses verifikasi ulang oleh panitia SPMB.'
+                    : 'Formulir & berkas pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.'
             ]);
 
-            // Trigger notification to all admins
+            // Trigger notification to relevant unit admins & super admins
             try {
-                $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                $admins = \App\Models\User::getAdminsForUnit($registration->spmb_unit_id);
+                $title = $isRevision ? 'Perbaikan Formulir Dikirim' : 'Formulir Pendaftaran Baru';
+                $message = $isRevision
+                    ? 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah mengirimkan perbaikan formulir & berkas untuk diverifikasi ulang.'
+                    : 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') baru saja mengirimkan formulir pendaftaran baru untuk diverifikasi.';
+
                 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
-                    'title' => 'Formulir Pendaftaran Dikirim',
-                    'message' => 'Calon siswa "' . $registration->candidate_name . '" baru saja mengirimkan formulir & berkas pendaftaran untuk diverifikasi.',
+                    'title' => $title,
+                    'message' => $message,
                     'url' => route('admin.verification') . '?search=' . urlencode($registration->candidate_name),
-                    'type' => 'info',
+                    'type' => $isRevision ? 'warning' : 'info',
+                    'spmb_unit_id' => $registration->spmb_unit_id,
+                    'registration_id' => $registration->id,
                 ]));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send form submission notification', ['error' => $e->getMessage()]);
             }
         }
 
+        $stepSuccessMsg = $allCompleted 
+            ? ($isRevision ?? false ? 'Formulir perbaikan berhasil dikirim kembali! Silakan menunggu verifikasi ulang berkas dari panitia.' : 'Formulir pendaftaran berhasil dikirim! Silakan menunggu verifikasi berkas dari panitia.')
+            : 'Langkah "' . $step->title . '" berhasil disimpan.';
+
+        session()->flash('success', $stepSuccessMsg);
+
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Langkah "' . $step->title . '" berhasil disimpan.',
+                'message' => $stepSuccessMsg,
                 'allCompleted' => $allCompleted,
                 'redirect' => $allCompleted ? route('dashboard.detail', $id) : null
             ]);

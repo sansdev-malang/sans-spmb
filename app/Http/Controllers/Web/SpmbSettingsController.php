@@ -490,7 +490,14 @@ class SpmbSettingsController extends Controller
 
     public function customerService()
     {
-        $units = SpmbUnit::all();
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        
+        if (!$isSuperAdmin) {
+            $units = SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
+        } else {
+            $units = SpmbUnit::all();
+        }
+
         $settings = [
             'spmb_cs_whatsapp' => Setting::get('spmb_cs_whatsapp', '081234567890'),
             'spmb_cs_name' => Setting::get('spmb_cs_name', 'Customer Service SPMB'),
@@ -500,29 +507,37 @@ class SpmbSettingsController extends Controller
             'spmb_cs_message' => Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.'),
         ];
 
-        return view('admin.settings-spmb-cs', compact('units', 'settings'));
+        return view('admin.settings-spmb-cs', compact('units', 'settings', 'isSuperAdmin'));
     }
 
     public function saveCustomerService(Request $request)
     {
-        $request->validate([
-            'spmb_cs_whatsapp' => 'required|string|max:30',
-            'spmb_cs_name' => 'nullable|string|max:100',
-            'spmb_cs_hours' => 'nullable|string|max:100',
-            'spmb_cs_card_title' => 'nullable|string|max:255',
-            'spmb_cs_card_desc' => 'nullable|string|max:500',
-            'spmb_cs_message' => 'nullable|string|max:1000',
-        ]);
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
 
-        Setting::set('spmb_cs_whatsapp', $request->spmb_cs_whatsapp);
-        Setting::set('spmb_cs_name', $request->spmb_cs_name ?: 'Customer Service SPMB');
-        Setting::set('spmb_cs_hours', $request->spmb_cs_hours ?: 'Senin - Jumat, 08:00 - 15:00 WIB');
-        Setting::set('spmb_cs_card_title', $request->spmb_cs_card_title ?: 'Pusat Bantuan & Konsultasi SPMB');
-        Setting::set('spmb_cs_card_desc', $request->spmb_cs_card_desc ?: 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
-        Setting::set('spmb_cs_message', $request->spmb_cs_message ?: 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.');
+        if ($isSuperAdmin) {
+            $request->validate([
+                'spmb_cs_whatsapp' => 'required|string|max:30',
+                'spmb_cs_name' => 'nullable|string|max:100',
+                'spmb_cs_hours' => 'nullable|string|max:100',
+                'spmb_cs_card_title' => 'nullable|string|max:255',
+                'spmb_cs_card_desc' => 'nullable|string|max:500',
+                'spmb_cs_message' => 'nullable|string|max:1000',
+            ]);
+
+            Setting::set('spmb_cs_whatsapp', $request->spmb_cs_whatsapp);
+            Setting::set('spmb_cs_name', $request->spmb_cs_name ?: 'Customer Service SPMB');
+            Setting::set('spmb_cs_hours', $request->spmb_cs_hours ?: 'Senin - Jumat, 08:00 - 15:00 WIB');
+            Setting::set('spmb_cs_card_title', $request->spmb_cs_card_title ?: 'Pusat Bantuan & Konsultasi SPMB');
+            Setting::set('spmb_cs_card_desc', $request->spmb_cs_card_desc ?: 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
+            Setting::set('spmb_cs_message', $request->spmb_cs_message ?: 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.');
+        }
 
         if ($request->has('units') && is_array($request->units)) {
             foreach ($request->units as $unitId => $unitData) {
+                if (!$isSuperAdmin && $unitId != auth()->user()->spmb_unit_id) {
+                    continue;
+                }
+
                 $unit = SpmbUnit::find($unitId);
                 if ($unit) {
                     $unit->update([
@@ -533,12 +548,19 @@ class SpmbSettingsController extends Controller
             }
         }
 
-        return redirect()->route('admin.spmb-settings.cs')->with('success', 'Pengaturan Customer Service & Kontak Panitia berhasil disimpan.');
+        return redirect()->route('admin.spmb-settings.cs')->with('success', 'Pengaturan Kontak Panitia berhasil disimpan.');
     }
 
     public function brochures()
     {
-        $units = SpmbUnit::all();
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+
+        if (!$isSuperAdmin) {
+            $units = SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
+        } else {
+            $units = SpmbUnit::all();
+        }
+
         $brochures = [];
         foreach ($units as $unit) {
             $code = strtolower($unit->code);
@@ -552,12 +574,18 @@ class SpmbSettingsController extends Controller
             ];
         }
 
-        return view('admin.settings-spmb-brochures', compact('units', 'brochures'));
+        return view('admin.settings-spmb-brochures', compact('units', 'brochures', 'isSuperAdmin'));
     }
 
     public function saveBrochures(Request $request)
     {
-        $units = SpmbUnit::all();
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+
+        if (!$isSuperAdmin) {
+            $units = SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
+        } else {
+            $units = SpmbUnit::all();
+        }
         
         foreach ($units as $unit) {
             $code = strtolower($unit->code);

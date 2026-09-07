@@ -253,6 +253,36 @@
             border-left: 3px solid #10b981;
             padding-left: calc(12px - 3px);
         }
+
+        /* Keuangan category - Emerald/Gold accent */
+        .menu-category-keuangan {
+            --accent-color: #059669;
+        }
+        .menu-category-keuangan a:hover {
+            background: rgba(5, 150, 105, 0.1);
+            border-left: 3px solid #059669;
+            padding-left: calc(12px - 3px);
+        }
+
+        /* Laporan category - Indigo accent */
+        .menu-category-laporan {
+            --accent-color: #6366f1;
+        }
+        .menu-category-laporan a:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 3px solid #6366f1;
+            padding-left: calc(12px - 3px);
+        }
+
+        /* Komunikasi category - Teal accent */
+        .menu-category-komunikasi {
+            --accent-color: #0d9488;
+        }
+        .menu-category-komunikasi a:hover {
+            background: rgba(13, 148, 136, 0.1);
+            border-left: 3px solid #0d9488;
+            padding-left: calc(12px - 3px);
+        }
         
         /* Riwayat category - Blue accent */
         .menu-category-riwayat {
@@ -425,68 +455,134 @@
         <!-- Navigation Menus -->
         <nav class="flex-grow py-6 px-2 space-y-0.5 overflow-y-auto">
             <a href="{{ route('admin.dashboard') }}" 
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition {{ Route::is('admin.dashboard') ? 'active' : '' }}
-                {{ Route::is('admin.dashboard') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }} mb-4">
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition {{ Route::is('admin.dashboard') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }} mb-3">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span class="sidebar-text">Dashboard</span>
             </a>
  
             <!-- 1. Operasional Category -->
-            <div class="menu-category-operasional">
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header">Operasional</span>
+            <div class="menu-category-operasional mb-3">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header">Operasional SPMB</span>
                 
                 <a href="{{ route('admin.verification') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.verification') ? 'active' : '' }}
-                    {{ Route::is('admin.verification') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="check-square" class="w-4 h-4"></i> <span class="sidebar-text">Verifikasi Data</span>
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.verification') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="check-square" class="w-4 h-4"></i> <span class="sidebar-text">Verifikasi Data Pendaftaran</span>
                 </a>
 
                 <a href="{{ route('admin.taaruf') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.taaruf') ? 'active' : '' }}
-                    {{ Route::is('admin.taaruf') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="calendar-check" class="w-4 h-4"></i> <span class="sidebar-text">Jadwal Ta'aruf</span>
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.taaruf') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="calendar-check" class="w-4 h-4"></i> <span class="sidebar-text">Jadwal Observasi / Ta'aruf</span>
                 </a>
                 
                 <a href="{{ route('admin.candidates') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.candidates') ? 'active' : '' }}
-                    {{ Route::is('admin.candidates') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="users" class="w-4 h-4"></i> <span class="sidebar-text">Data Pendaftar</span>
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.candidates') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="users" class="w-4 h-4"></i> <span class="sidebar-text">Data Calon Siswa</span>
                 </a>
-                
-                <a href="{{ route('admin.payments.data') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.payments.data') ? 'active' : '' }}
-                    {{ Route::is('admin.payments.data') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="wallet" class="w-4 h-4"></i> <span class="sidebar-text">Data Pembayaran</span>
+
+                <a href="{{ route('admin.results') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.results') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="award" class="w-4 h-4"></i> <span class="sidebar-text">Pengumuman Kelulusan</span>
                 </a>
             </div>
 
-            <!-- 2. Riwayat & Log Category -->
-            <div class="menu-category-riwayat mt-4">
+            <!-- 2. Keuangan SPMB Category -->
+            <div class="menu-category-keuangan mb-3">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #059669;">Keuangan SPMB</span>
+                
+                <a href="{{ route('admin.payments.data') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.payments.data') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="wallet" class="w-4 h-4"></i> <span class="sidebar-text">Tagihan & DSP Siswa</span>
+                </a>
+
+                <a href="{{ route('admin.payments') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.payments') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="receipt" class="w-4 h-4"></i> <span class="sidebar-text">Riwayat Transaksi Masuk</span>
+                </a>
+
+                <a href="{{ route('admin.spmb-settings.fees') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.spmb-settings.fees') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="coins" class="w-4 h-4"></i> <span class="sidebar-text">Tarif & Komponen Biaya</span>
+                </a>
+
+                <a href="{{ route('admin.finance.reports') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.finance.reports*') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="line-chart" class="w-4 h-4"></i> <span class="sidebar-text">Laporan Keuangan & Piutang</span>
+                </a>
+            </div>
+
+            <!-- 3. Laporan & Statistik Category -->
+            <div class="menu-category-laporan mb-3">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #6366f1;">Laporan & Statistik</span>
+                
+                <a href="{{ route('admin.reports.registrations') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.reports.registrations') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span class="sidebar-text">Rekap Pendaftaran & Kuota</span>
+                </a>
+
+                <a href="{{ route('admin.reports.demographics') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.reports.demographics') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="pie-chart" class="w-4 h-4"></i> <span class="sidebar-text">Demografi & Asal Sekolah</span>
+                </a>
+            </div>
+
+            {{-- 
+            <!-- 4. Komunikasi & Integrasi Category (Disembunyikan sementara) -->
+            <div class="menu-category-komunikasi mb-3">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #0d9488;">Komunikasi & Integrasi</span>
+                
+                <a href="{{ route('admin.broadcasts') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.broadcasts') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="message-square" class="w-4 h-4"></i> <span class="sidebar-text">Broadcast WhatsApp</span>
+                </a>
+
+                <a href="{{ route('admin.handover') }}" 
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.handover*') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    <i data-lucide="share-2" class="w-4 h-4"></i> <span class="sidebar-text">Handover Siswa ke Unit</span>
+                </a>
+            </div>
+            --}}
+
+            <!-- 5. Riwayat & Log Category -->
+            <div class="menu-category-riwayat mb-3">
                 <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #3b82f6;">Riwayat & Log</span>
                 
                 <a href="{{ route('admin.history') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.history') ? 'active' : '' }}
-                    {{ Route::is('admin.history') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                    {{ Route::is('admin.history') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
                     <i data-lucide="history" class="w-4 h-4"></i> <span class="sidebar-text">Log Pendaftaran</span>
                 </a>
-                
-                <a href="{{ route('admin.payments') }}" 
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.payments') ? 'active' : '' }}
-                    {{ Route::is('admin.payments') ? 'bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="receipt" class="w-4 h-4"></i> <span class="sidebar-text">Log Pembayaran</span>
-                </a>
+
+                @if(auth()->user()->isSuperAdmin())
+                    <a href="{{ route('admin.activity-logs') }}" 
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                        {{ Route::is('admin.activity-logs') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                        <i data-lucide="clipboard-list" class="w-4 h-4"></i> <span class="sidebar-text">Log Aktivitas Admin</span>
+                    </a>
+
+                    <a href="{{ route('admin.logs') }}" 
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
+                        {{ Route::is('admin.logs') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
+                        <i data-lucide="scroll-text" class="w-4 h-4"></i> <span class="sidebar-text">Log Sistem</span>
+                    </a>
+                @endif
             </div>
 
-            <!-- 3. Pengaturan SPMB (Dropdown) -->
+            <!-- 6. Pengaturan SPMB (Dropdown) -->
             @php
-                $isSpmbActive = Request::is('admin/spmb-settings/registration*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades*') || Request::is('admin/spmb-settings/fees*') || Request::is('admin/spmb-settings/form*') || Request::is('admin/spmb-settings/instructions*') || Request::is('admin/spmb-settings/agreements*') || Request::is('admin/spmb-settings/qrcode*') || Request::is('admin/spmb-settings/customer-service*') || Request::is('admin/spmb-settings/brochures*');
+                $isSpmbActive = Request::is('admin/spmb-settings/registration*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades*') || Request::is('admin/spmb-settings/form*') || Request::is('admin/spmb-settings/instructions*') || Request::is('admin/spmb-settings/agreements*') || Request::is('admin/spmb-settings/qrcode*') || Request::is('admin/spmb-settings/customer-service*') || Request::is('admin/spmb-settings/brochures*');
             @endphp
-            <div class="menu-category-konfigurasi mt-4 space-y-1">
+            <div class="menu-category-konfigurasi mb-2 space-y-1">
                 <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #a855f7;">Konfigurasi</span>
                 <button type="button" onclick="toggleSpmbDropdown()" 
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition duration-200 group {{ $isSpmbActive ? 'active bg-slate-800 text-white shadow-sm font-bold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
@@ -507,17 +603,12 @@
                         <a href="{{ route('admin.spmb-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                             <i data-lucide="git-branch" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Jalur & Gelombang</span>
                         </a>
-                    @endif
-                    <a href="{{ route('admin.spmb-settings.fees') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.fees') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                        <i data-lucide="coins" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Tarif & Biaya</span>
-                    </a>
-                    @if(auth()->user()->isSuperAdmin())
                         <a href="{{ route('admin.spmb-settings.form') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.form') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                             <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Setting Formulir</span>
                         </a>
                     @endif
                     <a href="{{ route('admin.spmb-settings.instructions') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.instructions') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Instruksi Daftar</span>
+                        <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Instruksi Daftar</span>
                     </a>
                     <a href="{{ route('admin.spmb-settings.agreements') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.agreements') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                         <i data-lucide="file-signature" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Surat Pernyataan</span>
@@ -534,27 +625,29 @@
                 </div>
             </div>
 
-            <!-- 4. Pengaturan Teknis (Dropdown) -->
-            @if(auth()->user()->isSuperAdmin())
-                @php
-                    $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/payment-channels*') || Request::is('admin/activity-logs*') || Request::is('admin/logs*') || Request::is('admin/ui-settings*') || Request::is('admin/users*') || Request::is('admin/settings*');
-                @endphp
-                <div class="menu-category-konfigurasi mt-4 space-y-1">
-                    <button type="button" onclick="toggleTechDropdown()" 
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition duration-200 group {{ $isTechActive ? 'active bg-slate-800 text-white shadow-sm font-bold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
-                        <span class="flex items-center gap-3">
-                            <i data-lucide="settings" class="w-4 h-4 text-slate-400 group-hover:text-white"></i>
-                            <span class="sidebar-text">Pengaturan Teknis</span>
-                        </span>
-                        <i data-lucide="chevron-down" id="techDropdownArrow" class="w-4 h-4 text-slate-400 group-hover:text-white sidebar-text transition-transform duration-300 {{ $isTechActive ? 'rotate-180 text-brand-yellow' : '' }}"></i>
-                    </button>
-                    <div id="techSubmenu" class="ml-4 pl-3.5 border-l border-slate-800/80 space-y-0.5 my-1.5 {{ $isTechActive ? '' : 'hidden' }}">
+            <!-- 7. Pengaturan Teknis (Dropdown) -->
+            @php
+                $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/payment-channels*') || Request::is('admin/ui-settings*') || Request::is('admin/users*') || Request::is('admin/settings*');
+            @endphp
+            <div class="menu-category-konfigurasi mb-2 space-y-1">
+                <button type="button" onclick="toggleTechDropdown()" 
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition duration-200 group {{ $isTechActive ? 'active bg-slate-800 text-white shadow-sm font-bold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
+                    <span class="flex items-center gap-3">
+                        <i data-lucide="settings" class="w-4 h-4 text-slate-400 group-hover:text-white"></i>
+                        <span class="sidebar-text">Pengaturan Teknis</span>
+                    </span>
+                    <i data-lucide="chevron-down" id="techDropdownArrow" class="w-4 h-4 text-slate-400 group-hover:text-white sidebar-text transition-transform duration-300 {{ $isTechActive ? 'rotate-180 text-brand-yellow' : '' }}"></i>
+                </button>
+                <div id="techSubmenu" class="ml-4 pl-3.5 border-l border-slate-800/80 space-y-0.5 my-1.5 {{ $isTechActive ? '' : 'hidden' }}">
+                    @if(auth()->user()->isSuperAdmin())
                         <a href="{{ route('admin.ui-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.ui-settings') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                             <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Tampilan Portal</span>
                         </a>
-                        <a href="{{ route('admin.users') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.users') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="users-round" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Manajemen User</span>
-                        </a>
+                    @endif
+                    <a href="{{ route('admin.users') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.users') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="users-round" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Manajemen User</span>
+                    </a>
+                    @if(auth()->user()->isSuperAdmin())
                         <a href="{{ route('admin.api-integrations') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.api-integrations') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                             <i data-lucide="blocks" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Integrasi API</span>
                         </a>
@@ -572,15 +665,9 @@
                         <a href="{{ route('admin.settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.settings') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                             <i data-lucide="percent" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Biaya Admin</span>
                         </a>
-                        <a href="{{ route('admin.activity-logs') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.activity-logs') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Log Aktivitas</span>
-                        </a>
-                        <a href="{{ route('admin.logs') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.logs') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Log Sistem</span>
-                        </a>
-                    </div>
+                    @endif
                 </div>
-            @endif
+            </div>
         </nav>
 
         <!-- User profile section bottom -->
@@ -866,7 +953,7 @@
         
 
         // Notification dropdown handler
-        let isFetchingNotif = false;
+        var isFetchingNotif = typeof isFetchingNotif !== 'undefined' ? isFetchingNotif : false;
         function toggleNotifDropdown(event) {
             event.stopPropagation();
             const dropdown = document.getElementById('notifDropdown');

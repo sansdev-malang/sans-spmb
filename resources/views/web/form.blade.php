@@ -5,7 +5,19 @@
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
     @php
-        $userAllRegs = auth()->check() ? auth()->user()->registrations()->with(['unit', 'grade', 'classProgram'])->where('registration_status', '!=', 'draft')->orWhereHas('payments', function($q) { $q->where('payment_type', 'registration_fee')->where('status', 'success'); })->latest()->get() : collect();
+        $userAllRegs = auth()->check() 
+            ? auth()->user()->registrations()
+                ->with(['unit', 'grade', 'classProgram'])
+                ->where(function($q) {
+                    $q->where('registration_status', '!=', 'draft')
+                      ->orWhereHas('payments', function($pq) {
+                          $pq->where('payment_type', 'registration_fee')
+                             ->where('status', 'success');
+                      });
+                })
+                ->latest()
+                ->get() 
+            : collect();
         $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
     @endphp
 
@@ -164,18 +176,49 @@
             </div>
             <!-- Checking if all steps are completed but registration is still draft or failed -->
             @if (in_array($registration->registration_status, ['draft', 'failed']) && $allStepsCompleted)
-                <div class="bg-emerald-50 border border-brand-emerald/30 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h3 class="font-extrabold text-sm text-slate-800">{{ $registration->registration_status === 'failed' ? 'Formulir Selesai Diperbaiki!' : 'Semua Data Selesai Diisi!' }}</h3>
-                        <p class="text-xs text-slate-500 mt-1">{{ $registration->registration_status === 'failed' ? 'Silakan kirimkan kembali pendaftaran Anda untuk verifikasi ulang berkas.' : 'Data Anda sudah tersimpan sebagai draf. Silakan kirimkan pendaftaran Anda.' }}</p>
+                @if ($registration->registration_status === 'failed')
+                    <div class="bg-amber-500/10 dark:bg-amber-950/30 border border-amber-400/50 dark:border-amber-700/60 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-start gap-3.5">
+                            <div class="h-10 w-10 rounded-2xl bg-amber-500/20 text-amber-500 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-sm text-slate-800 dark:text-amber-200">Perlu Perbaikan Formulir & Berkas</h3>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                                    @if($registration->committee_notes && !str_contains($registration->committee_notes, 'berhasil'))
+                                        <span class="font-bold text-amber-700 dark:text-amber-300">Catatan Panitia:</span> {{ $registration->committee_notes }}
+                                    @else
+                                        Panitia SPMB meminta perbaikan pada berkas atau data pendaftaran Anda. Silakan ubah bagian data yang ditandai merah di bawah, lalu kirim ulang formulir.
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                        <form action="{{ route('dashboard.form.submit', $registration->id) }}" method="POST" class="flex-shrink-0 w-full md:w-auto form-final-submit" data-action-type="revision">
+                            @csrf
+                            <button type="submit" class="w-full md:w-auto bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer">
+                                <i data-lucide="send" class="w-4 h-4"></i> Kirim Ulang Pendaftaran
+                            </button>
+                        </form>
                     </div>
-                    <form action="{{ route('dashboard.form.submit', $registration->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
-                            <i data-lucide="send" class="w-4 h-4"></i> {{ $registration->registration_status === 'failed' ? 'Kirim Ulang Pendaftaran' : 'Kirim Pendaftaran Sekarang' }}
-                        </button>
-                    </form>
-                </div>
+                @else
+                    <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-brand-emerald/30 dark:border-emerald-800/60 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex items-start gap-3.5">
+                            <div class="h-10 w-10 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-sm text-slate-800 dark:text-white">Semua Data Selesai Diisi!</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-300 mt-1">Data Anda sudah tersimpan lengkap sebagai draf. Silakan kirimkan pendaftaran Anda untuk diverifikasi panitia.</p>
+                            </div>
+                        </div>
+                        <form action="{{ route('dashboard.form.submit', $registration->id) }}" method="POST" class="flex-shrink-0 w-full md:w-auto form-final-submit" data-action-type="new">
+                            @csrf
+                            <button type="submit" class="w-full md:w-auto bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer">
+                                <i data-lucide="send" class="w-4 h-4"></i> Kirim Pendaftaran Sekarang
+                            </button>
+                        </form>
+                    </div>
+                @endif
             @endif
 
             <!-- Checking if the form is locked (submitted or verified) -->
@@ -238,30 +281,30 @@
                         $isCurrentActive = (!$step->is_completed && $registration->registration_status === 'draft');
                         $isAccordionItem = $step->is_completed && !$hasInvalidFields && !$stepHasErrors;
                     @endphp
-                    <div class="border rounded-2xl transition-all duration-200 overflow-hidden {{ $hasInvalidFields ? 'border-red-400 bg-red-50/5 ring-2 ring-red-200' : ($isCurrentActive ? 'border-brand-emerald bg-white ring-4 ring-emerald-500/10 shadow-sm' : 'border-slate-200/80 bg-white hover:border-slate-300 shadow-xs') }}">
+                    <div class="border rounded-2xl transition-all duration-200 overflow-hidden {{ $hasInvalidFields ? 'border-red-400 dark:border-red-600 bg-red-50/5 dark:bg-red-950/20 ring-2 ring-red-200 dark:ring-red-900/40' : ($isCurrentActive ? 'border-brand-emerald bg-white dark:bg-slate-900 ring-4 ring-emerald-500/10 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs') }}">
                         
                         @if ($isAccordionItem)
                             <!-- Accordion Header for Completed Step -->
-                            <div onclick="toggleStepAccordion({{ $step->id }})" class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none group transition bg-white hover:bg-slate-50/70">
+                            <div onclick="toggleStepAccordion({{ $step->id }})" class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none group transition bg-white dark:bg-slate-900 hover:bg-slate-50/70 dark:hover:bg-slate-800/60">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <div class="h-8 w-8 rounded-xl bg-emerald-100 text-brand-emerald flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
-                                        <i data-lucide="check" class="w-4 h-4 text-brand-emerald"></i>
+                                    <div class="h-8 w-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+                                        <i data-lucide="check" class="w-4 h-4 text-brand-emerald dark:text-emerald-400"></i>
                                     </div>
-                                    <span class="font-extrabold text-sm text-slate-800 tracking-tight truncate group-hover:text-brand-emerald transition-colors">
+                                    <span class="font-extrabold text-sm text-slate-800 dark:text-white tracking-tight truncate group-hover:text-brand-emerald transition-colors">
                                         {{ $step->title }}
                                     </span>
                                 </div>
                                 
                                 <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                                    <span class="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1 shadow-xs">
+                                    <span class="text-[11px] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1 shadow-xs">
                                         Tersimpan
                                     </span>
                                     @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
-                                        <button type="button" onclick="event.stopPropagation(); openStepEdit({{ $step->id }});" class="text-xs text-brand-emerald font-bold hover:underline px-2 py-1 rounded-lg hover:bg-emerald-50 transition">
+                                        <button type="button" onclick="event.stopPropagation(); openStepEdit({{ $step->id }});" class="text-xs text-brand-emerald dark:text-emerald-400 font-bold hover:underline px-2 py-1 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition">
                                             Ubah Data
                                         </button>
                                     @endif
-                                    <div id="chevron-box-{{ $step->id }}" class="text-slate-400 group-hover:text-slate-600 transition-transform duration-200 p-1">
+                                    <div id="chevron-box-{{ $step->id }}" class="text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform duration-200 p-1">
                                         <i data-lucide="chevron-down" class="w-4 h-4"></i>
                                     </div>
                                 </div>
@@ -269,7 +312,7 @@
                         @else
                             <!-- Active Step Header / Error Header -->
                             <div class="p-5 pb-0 flex justify-between items-center mb-4">
-                                <span class="font-extrabold text-slate-800 flex items-center gap-2.5 text-sm sm:text-base">
+                                <span class="font-extrabold text-slate-800 dark:text-white flex items-center gap-2.5 text-sm sm:text-base">
                                     <span class="h-7 w-7 rounded-xl bg-brand-emerald text-white text-xs flex items-center justify-center font-black shadow-xs">{{ $index + 1 }}</span>
                                     {{ $step->title }}
                                 </span>
@@ -285,7 +328,7 @@
 
                         <!-- Form Block -->
                         @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
-                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-sm p-5 {{ $isAccordionItem ? 'pt-3 border-t border-slate-100 hidden' : '' }}">
+                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="form-step-ajax space-y-4 text-sm p-5 {{ $isAccordionItem ? 'pt-3 border-t border-slate-100 dark:border-slate-800 hidden' : '' }}" data-step-title="{{ $step->title }}" data-is-last="{{ $index === $steps->count() - 1 ? '1' : '0' }}">
                                 @csrf
 
                                 @if($stepHasErrors)
@@ -413,7 +456,7 @@
 
                                                         <!-- Empty / Prompt State -->
                                                         <div id="prompt-{{ $uniqueId }}" class="{{ $hasExisting ? 'hidden' : 'block' }} pointer-events-none">
-                                                            <div class="w-12 h-12 mx-auto mb-2 rounded-2xl {{ $hasFieldError ? 'bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400' : 'bg-emerald-50 dark:bg-emerald-950/50 text-brand-emerald dark:text-emerald-400' }} flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
+                                                            <div class="w-12 h-12 mx-auto mb-2 rounded-2xl {{ $hasFieldError ? 'bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400' }} flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
                                                                 <i data-lucide="{{ $hasFieldError ? 'alert-triangle' : 'cloud-upload' }}" class="w-6 h-6"></i>
                                                             </div>
                                                             <p class="text-xs font-bold {{ $hasFieldError ? 'text-red-700 dark:text-red-300' : 'text-slate-700 dark:text-slate-200' }}">
@@ -490,16 +533,25 @@
                                         </div>
                                     @endforeach
                                 </div>
-                                <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                                <div class="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
                                     @if ($step->is_completed)
-                                        <button type="button" onclick="cancelStepEdit({{ $step->id }})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-xs transition">
+                                        <button type="button" onclick="cancelStepEdit({{ $step->id }})" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg font-bold text-xs transition cursor-pointer">
                                             Batal
                                         </button>
                                     @else
                                         <div></div>
                                     @endif
-                                    <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-lg font-bold text-xs shadow-sm">
-                                        {{ ($index === $steps->count() - 1) ? 'Kirim Pendaftaran' : 'Simpan & Lanjut' }}
+                                    <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-lg font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                        @if ($step->is_completed || $registration->registration_status === 'failed')
+                                            <i data-lucide="check" class="w-4 h-4"></i>
+                                            <span>Simpan Perubahan</span>
+                                        @elseif ($index === $steps->count() - 1)
+                                            <i data-lucide="send" class="w-4 h-4"></i>
+                                            <span>Simpan & Kirim Pendaftaran</span>
+                                        @else
+                                            <span>Simpan & Lanjut</span>
+                                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                        @endif
                                     </button>
                                 </div>
                             </form>
@@ -560,28 +612,34 @@
         </div>
     </div>
 </div>
-    <!-- Upload Progress Modal Overlay -->
+    <!-- Upload & Submission Progress Modal Overlay -->
     <div id="uploadProgressModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-4 transition-all duration-300">
         <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 text-center space-y-5 animate-scale-in">
             
             <!-- Animated Graphic -->
             <div class="relative w-20 h-20 mx-auto">
-                <div id="uploadPingAnim" class="absolute inset-0 rounded-full bg-brand-emerald/20 animate-ping"></div>
-                <div id="uploadIconCircle" class="relative w-20 h-20 rounded-full bg-gradient-to-tr from-brand-emerald to-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                    <i id="uploadModalIcon" data-lucide="cloud-upload" class="w-10 h-10 animate-bounce"></i>
+                <div id="uploadPingAnim" class="absolute inset-0 rounded-full bg-emerald-500/20 dark:bg-emerald-400/20 animate-ping"></div>
+                <div id="uploadIconCircle" class="relative w-20 h-20 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xl shadow-emerald-600/30" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;">
+                    <div id="modalIconContainer" class="flex items-center justify-center text-white w-full h-full" style="color: #ffffff !important;">
+                        <svg class="w-10 h-10 text-white animate-bounce" style="stroke: #ffffff; color: #ffffff;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+                            <path d="M12 12v9"/>
+                            <path d="m16 16-4-4-4 4"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
 
             <div>
-                <h3 id="uploadModalTitle" class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white">Mengunggah Dokumen Lampiran...</h3>
-                <p id="uploadModalSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Harap tidak menutup atau merefresh halaman saat proses upload berlangsung.</p>
+                <h3 id="uploadModalTitle" class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white">Mengirimkan Pendaftaran...</h3>
+                <p id="uploadModalSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Harap tidak menutup atau merefresh halaman saat proses berlangsung.</p>
             </div>
 
             <!-- Progress Bar Section -->
             <div class="space-y-2 bg-slate-50 dark:bg-slate-850 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800">
                 <div class="flex justify-between items-center text-xs font-bold">
                     <span id="uploadModalStatus" class="text-brand-emerald flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Mengunggah berkas...
+                        <span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Memproses data...
                     </span>
                     <span id="uploadModalPercent" class="text-slate-800 dark:text-white font-mono text-sm font-black">0%</span>
                 </div>
@@ -599,6 +657,103 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Helper functions for modal & formatting
+            function formatBytes(bytes, decimals = 2) {
+                if (!bytes || bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const dm = decimals < 0 ? 0 : decimals;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+            }
+
+            const progressModal = document.getElementById('uploadProgressModal');
+            const progressBar = document.getElementById('uploadModalBar');
+            const progressPercent = document.getElementById('uploadModalPercent');
+            const progressBytes = document.getElementById('uploadModalBytes');
+            const progressStatus = document.getElementById('uploadModalStatus');
+            const progressTitle = document.getElementById('uploadModalTitle');
+            const progressSubtitle = document.getElementById('uploadModalSubtitle');
+            const progressDetail = document.getElementById('uploadFileNameDetail');
+            const uploadPingAnim = document.getElementById('uploadPingAnim');
+            const modalIconContainer = document.getElementById('modalIconContainer');
+
+            function showProgressModal({ title, subtitle, statusText, detailText, bytesText = '', iconType = 'upload' }) {
+                if (progressTitle) progressTitle.innerText = title;
+                if (progressSubtitle) progressSubtitle.innerText = subtitle;
+                if (progressStatus) progressStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> ' + statusText;
+                if (progressDetail) progressDetail.innerText = detailText;
+                if (progressBytes) progressBytes.innerText = bytesText;
+                if (progressBar) progressBar.style.width = '0%';
+                if (progressPercent) progressPercent.innerText = '0%';
+
+                if (modalIconContainer) {
+                    if (iconType === 'send') {
+                        modalIconContainer.innerHTML = `
+                            <svg class="w-10 h-10 text-white animate-bounce" style="stroke: #ffffff; color: #ffffff;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>`;
+                    } else if (iconType === 'save') {
+                        modalIconContainer.innerHTML = `
+                            <svg class="w-10 h-10 text-white animate-bounce" style="stroke: #ffffff; color: #ffffff;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>`;
+                    } else {
+                        modalIconContainer.innerHTML = `
+                            <svg class="w-10 h-10 text-white animate-bounce" style="stroke: #ffffff; color: #ffffff;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+                                <path d="M12 12v9"/>
+                                <path d="m16 16-4-4-4 4"/>
+                            </svg>`;
+                    }
+                }
+
+                if (uploadPingAnim) uploadPingAnim.classList.remove('hidden');
+                if (progressModal) progressModal.classList.remove('hidden');
+            }
+
+            function updateProgress(percentVal, statusText = null, detailText = null, bytesText = null) {
+                if (progressBar) progressBar.style.width = percentVal + '%';
+                if (progressPercent) progressPercent.innerText = percentVal + '%';
+                if (statusText && progressStatus) progressStatus.innerHTML = statusText;
+                if (detailText && progressDetail) progressDetail.innerText = detailText;
+                if (bytesText && progressBytes) progressBytes.innerText = bytesText;
+            }
+
+            function completeProgress(successTitle, successStatus, redirectUrl, toastMsg = null) {
+                updateProgress(100);
+                if (progressTitle) progressTitle.innerText = successTitle;
+                if (progressStatus) progressStatus.innerHTML = '✅ ' + successStatus;
+                if (uploadPingAnim) uploadPingAnim.classList.add('hidden');
+                if (modalIconContainer) {
+                    modalIconContainer.innerHTML = `
+                        <svg class="w-10 h-10 text-white" style="stroke: #ffffff; color: #ffffff;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>`;
+                }
+
+                if (toastMsg) {
+                    try {
+                        sessionStorage.setItem('pendingToast', JSON.stringify({ message: toastMsg, type: 'success' }));
+                    } catch(e) {}
+                }
+
+                setTimeout(() => {
+                    if (redirectUrl) {
+                        window.location.href = redirectUrl;
+                    } else {
+                        window.location.reload();
+                    }
+                }, 700);
+            }
+
+            function hideProgressModal() {
+                if (progressModal) progressModal.classList.add('hidden');
+            }
+
             // 1. Drag & Drop and File Selection Handlers
             const dropzoneBoxes = document.querySelectorAll('.dropzone-box');
             
@@ -647,15 +802,6 @@
                     }
                 });
             });
-
-            function formatBytes(bytes, decimals = 2) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const dm = decimals < 0 ? 0 : decimals;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-            }
 
             function handleFileSelection(input, file, uniqueId) {
                 // Size validation: max 2MB
@@ -746,20 +892,90 @@
                 }
             };
 
-            // 2. AJAX Form Submission with Real-time Upload Progress Percentage & Client-Side Validation
-            const formsWithFiles = document.querySelectorAll('form[enctype="multipart/form-data"]');
-            const progressModal = document.getElementById('uploadProgressModal');
-            const progressBar = document.getElementById('uploadModalBar');
-            const progressPercent = document.getElementById('uploadModalPercent');
-            const progressBytes = document.getElementById('uploadModalBytes');
-            const progressStatus = document.getElementById('uploadModalStatus');
-            const progressTitle = document.getElementById('uploadModalTitle');
-            const uploadIcon = document.getElementById('uploadModalIcon');
-            const uploadPingAnim = document.getElementById('uploadPingAnim');
-
-            formsWithFiles.forEach(form => {
+            // 2. Final Registration Submit Handler (from Banner "Kirim Pendaftaran Sekarang" / "Kirim Ulang Pendaftaran")
+            const finalSubmitForms = document.querySelectorAll('.form-final-submit, form[action*="/form/submit"]');
+            finalSubmitForms.forEach(form => {
                 form.addEventListener('submit', function(e) {
-                    // 1. Client-Side Validation for Required File Inputs
+                    e.preventDefault();
+
+                    const isRevision = form.getAttribute('data-action-type') === 'revision';
+                    const defaultMsg = isRevision ? 'Formulir perbaikan berhasil dikirim kembali!' : 'Formulir pendaftaran berhasil dikirim!';
+
+                    showProgressModal({
+                        title: isRevision ? 'Mengirimkan Perbaikan Pendaftaran...' : 'Mengirimkan Pendaftaran...',
+                        subtitle: 'Data & berkas pendaftaran Anda sedang dikirimkan ke Panitia SPMB.',
+                        statusText: 'Mengirimkan formulir pendaftaran...',
+                        detailText: 'Sinkronisasi berkas & data',
+                        bytesText: '100% Siap',
+                        iconType: 'send'
+                    });
+
+                    // Simulated smooth progress while network request runs
+                    let currentProg = 20;
+                    updateProgress(currentProg, '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Mengirimkan formulir...');
+                    
+                    const progInterval = setInterval(() => {
+                        if (currentProg < 88) {
+                            currentProg += Math.floor(Math.random() * 12) + 6;
+                            if (currentProg > 88) currentProg = 88;
+                            updateProgress(currentProg, '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Memproses pengiriman ke panitia...');
+                        }
+                    }, 140);
+
+                    const formData = new FormData(form);
+                    const xhr = new XMLHttpRequest();
+
+                    xhr.addEventListener('load', function() {
+                        clearInterval(progInterval);
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            let redirectUrl = null;
+                            let resMsg = defaultMsg;
+                            try {
+                                const res = JSON.parse(xhr.responseText);
+                                redirectUrl = res.redirect;
+                                if (res.message) resMsg = res.message;
+                            } catch (e) {}
+
+                            completeProgress(
+                                isRevision ? 'Perbaikan Berhasil Dikirim!' : 'Pendaftaran Berhasil Dikirim!',
+                                'Data pendaftaran tersimpan & sedang ditinjau panitia',
+                                redirectUrl,
+                                resMsg
+                            );
+                        } else {
+                            hideProgressModal();
+                            try {
+                                const errRes = JSON.parse(xhr.responseText);
+                                if (errRes.message) {
+                                    alert('Gagal: ' + errRes.message);
+                                } else {
+                                    alert('Gagal mengirimkan formulir pendaftaran. Silakan coba kembali.');
+                                }
+                            } catch(e) {
+                                alert('Gagal mengirimkan formulir pendaftaran.');
+                            }
+                        }
+                    });
+
+                    xhr.addEventListener('error', function() {
+                        clearInterval(progInterval);
+                        hideProgressModal();
+                        alert('Koneksi terputus saat mengirimkan pendaftaran. Silakan periksa jaringan internet Anda.');
+                    });
+
+                    xhr.open(form.method || 'POST', form.action, true);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.setRequestHeader('Accept', 'application/json');
+                    xhr.send(formData);
+                });
+            });
+
+            // 3. Step Forms Submission with Upload Progress & Smooth Transition
+            const stepForms = document.querySelectorAll('form.form-step-ajax, form[id^="form-step-"], form[enctype="multipart/form-data"]');
+
+            stepForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    // Client-Side Validation for Required File Inputs
                     let missingRequiredFile = false;
                     let firstMissingEl = null;
 
@@ -810,93 +1026,124 @@
                         return false;
                     }
 
+                    e.preventDefault();
+
                     let hasSelectedNewFiles = false;
+                    let newFileCount = 0;
+                    let totalFileSize = 0;
                     fileInputs.forEach(fi => {
                         if (fi.files && fi.files.length > 0) {
                             hasSelectedNewFiles = true;
+                            newFileCount += fi.files.length;
+                            totalFileSize += fi.files[0].size;
                         }
                     });
 
-                    // If uploading files, show upload progress modal and track percentage
+                    const isLastStep = form.getAttribute('data-is-last') === '1';
+                    const stepTitle = form.getAttribute('data-step-title') || 'Formulir';
+                    const defaultMsg = 'Langkah "' + stepTitle + '" berhasil disimpan.';
+
                     if (hasSelectedNewFiles) {
-                        e.preventDefault();
+                        showProgressModal({
+                            title: 'Mengunggah Dokumen Lampiran...',
+                            subtitle: 'Harap tidak menutup atau merefresh halaman saat proses upload berlangsung.',
+                            statusText: 'Mengunggah berkas lampiran...',
+                            detailText: newFileCount + ' Berkas Baru Dipilih',
+                            bytesText: '0 KB / ' + formatBytes(totalFileSize),
+                            iconType: 'upload'
+                        });
+                    } else {
+                        showProgressModal({
+                            title: isLastStep ? 'Simpan & Kirim Pendaftaran...' : 'Menyimpan ' + stepTitle + '...',
+                            subtitle: 'Data isian formulir Anda sedang dikirim dan disimpan ke server.',
+                            statusText: 'Menyimpan data formulir...',
+                            detailText: 'Menyimpan isian data',
+                            bytesText: 'Data Formulir',
+                            iconType: isLastStep ? 'send' : 'save'
+                        });
+                    }
 
-                        const formData = new FormData(form);
-                        const xhr = new XMLHttpRequest();
+                    const formData = new FormData(form);
+                    const xhr = new XMLHttpRequest();
+                    let progInterval = null;
 
-                        // Reset Modal State
-                        progressBar.style.width = '0%';
-                        progressPercent.innerText = '0%';
-                        progressBytes.innerText = '0 MB / 0 MB';
-                        progressStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Mengunggah berkas lampiran...';
-                        progressTitle.innerText = 'Mengunggah Dokumen Lampiran...';
-                        progressModal.classList.remove('hidden');
-                        if (uploadPingAnim) uploadPingAnim.classList.remove('hidden');
-
-                        // Real-time Upload Progress Event
+                    if (hasSelectedNewFiles) {
+                        // Real upload progress tracking
                         xhr.upload.addEventListener('progress', function(event) {
                             if (event.lengthComputable) {
                                 const percentComplete = Math.round((event.loaded / event.total) * 100);
-                                progressBar.style.width = percentComplete + '%';
-                                progressPercent.innerText = percentComplete + '%';
-                                progressBytes.innerText = formatBytes(event.loaded) + ' / ' + formatBytes(event.total);
-
-                                if (percentComplete >= 100) {
-                                    progressStatus.innerHTML = '⚡ Menyimpan berkas ke server...';
-                                }
+                                updateProgress(
+                                    percentComplete,
+                                    percentComplete >= 100 
+                                        ? '⚡ Menyimpan berkas ke server...' 
+                                        : '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Mengunggah berkas lampiran...',
+                                    newFileCount + ' Berkas Sedang Diunggah',
+                                    formatBytes(event.loaded) + ' / ' + formatBytes(event.total)
+                                );
                             }
                         });
-
-                        xhr.addEventListener('load', function() {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                progressBar.style.width = '100%';
-                                progressPercent.innerText = '100%';
-                                progressStatus.innerHTML = '✅ Berhasil disimpan!';
-                                progressTitle.innerText = 'Upload Berkas Selesai!';
-                                if (uploadPingAnim) uploadPingAnim.classList.add('hidden');
-
-                                setTimeout(() => {
-                                    try {
-                                        const res = JSON.parse(xhr.responseText);
-                                        if (res.redirect) {
-                                            window.location.href = res.redirect;
-                                        } else {
-                                            window.location.reload();
-                                        }
-                                    } catch (err) {
-                                        window.location.reload();
-                                    }
-                                }, 600);
-                            } else {
-                                progressModal.classList.add('hidden');
-                                try {
-                                    const errRes = JSON.parse(xhr.responseText);
-                                    if (errRes.errors) {
-                                        const firstKey = Object.keys(errRes.errors)[0];
-                                        alert('Gagal menyimpan: ' + errRes.errors[firstKey][0]);
-                                    } else {
-                                        alert('Gagal mengunggah berkas. Silakan coba kembali.');
-                                    }
-                                } catch (e) {
-                                    alert('Terjadi kesalahan saat mengunggah berkas.');
-                                }
+                    } else {
+                        // Simulated progress animation for instant feel
+                        let currentProg = 25;
+                        updateProgress(currentProg, '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Mengirim data ke server...');
+                        progInterval = setInterval(() => {
+                            if (currentProg < 88) {
+                                currentProg += Math.floor(Math.random() * 15) + 8;
+                                if (currentProg > 88) currentProg = 88;
+                                updateProgress(currentProg, '<span class="w-2 h-2 rounded-full bg-brand-emerald animate-ping"></span> Menyimpan data...');
                             }
-                        });
-
-                        xhr.addEventListener('error', function() {
-                            progressModal.classList.add('hidden');
-                            alert('Koneksi terputus saat mengunggah berkas. Periksa internet Anda dan coba lagi.');
-                        });
-
-                        xhr.open(form.method || 'POST', form.action, true);
-                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                        xhr.setRequestHeader('Accept', 'application/json');
-                        xhr.send(formData);
+                        }, 120);
                     }
+
+                    xhr.addEventListener('load', function() {
+                        if (progInterval) clearInterval(progInterval);
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            let redirectUrl = null;
+                            let resMsg = defaultMsg;
+                            try {
+                                const res = JSON.parse(xhr.responseText);
+                                redirectUrl = res.redirect;
+                                if (res.message) resMsg = res.message;
+                            } catch (e) {}
+
+                            completeProgress(
+                                hasSelectedNewFiles ? 'Upload Berkas Selesai!' : (isLastStep ? 'Pendaftaran Berhasil Dikirim!' : 'Data Berhasil Disimpan!'),
+                                'Perubahan telah berhasil disimpan',
+                                redirectUrl,
+                                resMsg
+                            );
+                        } else {
+                            hideProgressModal();
+                            try {
+                                const errRes = JSON.parse(xhr.responseText);
+                                if (errRes.errors) {
+                                    const firstKey = Object.keys(errRes.errors)[0];
+                                    alert('Gagal menyimpan: ' + errRes.errors[firstKey][0]);
+                                } else if (errRes.message) {
+                                    alert('Gagal: ' + errRes.message);
+                                } else {
+                                    alert('Gagal menyimpan data formulir. Silakan coba kembali.');
+                                }
+                            } catch (e) {
+                                alert('Terjadi kesalahan saat menyimpan formulir.');
+                            }
+                        }
+                    });
+
+                    xhr.addEventListener('error', function() {
+                        if (progInterval) clearInterval(progInterval);
+                        hideProgressModal();
+                        alert('Koneksi terputus saat menyimpan formulir. Periksa internet Anda dan coba lagi.');
+                    });
+
+                    xhr.open(form.method || 'POST', form.action, true);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.setRequestHeader('Accept', 'application/json');
+                    xhr.send(formData);
                 });
             });
 
-            // 3. Highlight Invalid Fields on Verification Return
+            // 4. Highlight Invalid Fields on Verification Return
             const invalidFields = @json($registration->invalid_fields ?? []);
             if (invalidFields && invalidFields.length > 0) {
                 invalidFields.forEach(field => {

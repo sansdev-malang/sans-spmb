@@ -680,7 +680,7 @@ class PaymentController extends Controller
         foreach ($notificationsToDispatch as $nData) {
             try {
                 $reg = $nData['registration'];
-                $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+                $admins = \App\Models\User::getAdminsForUnit($reg->spmb_unit_id ?? null);
 
                 if ($nData['type'] === 'dsp_full') {
                     \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
@@ -688,6 +688,8 @@ class PaymentController extends Controller
                         'message' => 'Pembayaran Uang Pangkal (DSP) calon siswa "' . $reg->candidate_name . '" telah lunas (Total: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ').',
                         'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
                         'type' => 'success',
+                        'spmb_unit_id' => $reg->spmb_unit_id,
+                        'registration_id' => $reg->id,
                     ]));
 
                     if ($reg->user) {
@@ -696,6 +698,8 @@ class PaymentController extends Controller
                             'message' => 'Alhamdulillah, Uang Pangkal (DSP) untuk ananda "' . $reg->candidate_name . '" telah lunas diverifikasi. Selamat bergabung di Sekolah Anak Saleh!',
                             'url' => route('dashboard.result', $reg->id),
                             'type' => 'success',
+                            'spmb_unit_id' => $reg->spmb_unit_id,
+                            'registration_id' => $reg->id,
                         ]));
                     }
                 } elseif ($nData['type'] === 'dsp_partial') {
@@ -704,6 +708,8 @@ class PaymentController extends Controller
                         'message' => 'Diterima pembayaran DSP sebagian untuk calon siswa "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' (Masuk: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ' / ' . number_format($nData['totalRequired'], 0, ',', '.') . ').',
                         'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
                         'type' => 'info',
+                        'spmb_unit_id' => $reg->spmb_unit_id,
+                        'registration_id' => $reg->id,
                     ]));
 
                     if ($reg->user) {
@@ -712,6 +718,8 @@ class PaymentController extends Controller
                             'message' => 'Pembayaran DSP sebagian untuk ananda "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' telah diverifikasi. Silakan selesaikan sisa tanggungan pembiayaan Anda.',
                             'url' => route('dashboard.result', $reg->id),
                             'type' => 'info',
+                            'spmb_unit_id' => $reg->spmb_unit_id,
+                            'registration_id' => $reg->id,
                         ]));
                     }
                 } elseif ($nData['type'] === 'form_fee') {
@@ -720,6 +728,8 @@ class PaymentController extends Controller
                         'message' => 'Pembayaran formulir untuk calon siswa "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' telah lunas.',
                         'url' => route('admin.payments') . '?search=' . urlencode($reg->candidate_name),
                         'type' => 'success',
+                        'spmb_unit_id' => $reg->spmb_unit_id,
+                        'registration_id' => $reg->id,
                     ]));
 
                     if ($reg->user) {
@@ -728,6 +738,8 @@ class PaymentController extends Controller
                             'message' => 'Alhamdulillah, pembayaran formulir pendaftaran untuk ananda "' . $reg->candidate_name . '" telah sukses diverifikasi. Silakan isi dan lengkapi formulir pendaftaran Anda.',
                             'url' => route('dashboard.form', $reg->id),
                             'type' => 'success',
+                            'spmb_unit_id' => $reg->spmb_unit_id,
+                            'registration_id' => $reg->id,
                         ]));
                     }
                 }

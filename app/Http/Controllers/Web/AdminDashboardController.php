@@ -16,14 +16,20 @@ class AdminDashboardController extends Controller
                 ?? \App\Models\SpmbPeriod::value('id');
         });
 
+        // Base query for candidate verification (excluding draft)
         $query = Registration::scopedByAdmin()
             ->with(['user', 'activePayment', 'period', 'wave', 'type'])
             ->where('spmb_period_id', $selectedPeriodId)
             ->where('registration_status', '!=', 'draft');
 
-        // Filter by status if requested
-        if ($request->has('status') && in_array($request->status, ['submitted', 'verified', 'taaruf_completed', 'agreement_signed', 'completed', 'failed'])) {
-            $query->where('registration_status', $request->status);
+        // Stats calculation for tabs (scoped by period and optional unit)
+        $baseStats = Registration::scopedByAdmin()
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->where('registration_status', '!=', 'draft');
+
+        if ($request->filled('unit_id')) {
+            $baseStats->where('spmb_unit_id', $request->unit_id);
+            $query->where('spmb_unit_id', $request->unit_id);
         }
 
         // Search by Name, WhatsApp, or NIK
@@ -36,9 +42,9 @@ class AdminDashboardController extends Controller
             });
         }
 
-        // Filter by Unit/Jenjang
-        if ($request->filled('unit_id')) {
-            $query->where('spmb_unit_id', $request->unit_id);
+        // Filter by status if requested
+        if ($request->filled('status') && in_array($request->status, ['submitted', 'verified', 'taaruf_completed', 'agreement_signed', 'completed', 'failed'])) {
+            $query->where('registration_status', $request->status);
         }
 
         // Per page limit
@@ -49,16 +55,17 @@ class AdminDashboardController extends Controller
 
         $registrations = $query->latest()->paginate($perPage)->withQueryString();
 
-        // Stats calculation (scoped by period)
-        $stats = [
-            'total' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->count(),
-            'submitted' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'submitted')->count(),
-            'verified' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'verified')->count(),
-            'failed' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'failed')->count(),
-            'paid' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('payment_status', 'paid')->count(),
+        $tabCounts = [
+            'all' => (clone $baseStats)->count(),
+            'submitted' => (clone $baseStats)->where('registration_status', 'submitted')->count(),
+            'verified' => (clone $baseStats)->where('registration_status', 'verified')->count(),
+            'taaruf_completed' => (clone $baseStats)->where('registration_status', 'taaruf_completed')->count(),
+            'agreement_signed' => (clone $baseStats)->where('registration_status', 'agreement_signed')->count(),
+            'completed' => (clone $baseStats)->where('registration_status', 'completed')->count(),
+            'failed' => (clone $baseStats)->where('registration_status', 'failed')->count(),
         ];
 
-        return view('admin.verification', compact('registrations', 'stats'));
+        return view('admin.verification', compact('registrations', 'tabCounts'));
     }
 
     public function dashboard()
@@ -75,21 +82,123 @@ class AdminDashboardController extends Controller
         $submittedCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'submitted')->count();
         $verifiedCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->whereIn('registration_status', ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])->count();
         
-        $paidTransactions = \App\Models\Payment::scopedByAdmin()
+        // Financial & Payment Metrics (Scoped by Academic Period & Admin Unit)
+        $successPaymentsQuery = \App\Models\Payment::scopedByAdmin()
             ->where('status', 'success')
             ->whereHas('registration', function($q) use ($selectedPeriodId) {
                 $q->where('spmb_period_id', $selectedPeriodId);
-            })->count();
+            });
 
-        $totalRevenue = \App\Models\Payment::scopedByAdmin()
-            ->where('status', 'success')
+        $paidTransactions = (clone $successPaymentsQuery)->count();
+        $totalGrossRevenue = (clone $successPaymentsQuery)->sum('amount');
+        $totalAdminFee = (clone $successPaymentsQuery)->sum('admin_fee');
+        $totalNetRevenue = (clone $successPaymentsQuery)->selectRaw('SUM(COALESCE(base_amount, amount - COALESCE(admin_fee, 0))) as total_net')->value('total_net') ?? 0;
+        $totalRevenue = $totalNetRevenue; // Net revenue received by school
+
+        // Form Registration Fee Breakdown
+        $formFeeNet = (clone $successPaymentsQuery)
+            ->where('payment_type', 'registration_fee')
+            ->selectRaw('SUM(COALESCE(base_amount, amount - COALESCE(admin_fee, 0))) as total_net')
+            ->value('total_net') ?? 0;
+        $formFeeAdmin = (clone $successPaymentsQuery)
+            ->where('payment_type', 'registration_fee')
+            ->sum('admin_fee') ?? 0;
+        $formFeeGross = (clone $successPaymentsQuery)
+            ->where('payment_type', 'registration_fee')
+            ->sum('amount') ?? 0;
+        $formFeeTrxCount = (clone $successPaymentsQuery)
+            ->where('payment_type', 'registration_fee')
+            ->count();
+
+        // DSP / Final Fee / Uang Masuk Breakdown
+        $dspFeeNet = (clone $successPaymentsQuery)
+            ->where('payment_type', '!=', 'registration_fee')
+            ->selectRaw('SUM(COALESCE(base_amount, amount - COALESCE(admin_fee, 0))) as total_net')
+            ->value('total_net') ?? 0;
+        $dspFeeAdmin = (clone $successPaymentsQuery)
+            ->where('payment_type', '!=', 'registration_fee')
+            ->sum('admin_fee') ?? 0;
+        $dspFeeGross = (clone $successPaymentsQuery)
+            ->where('payment_type', '!=', 'registration_fee')
+            ->sum('amount') ?? 0;
+        $dspFeeTrxCount = (clone $successPaymentsQuery)
+            ->where('payment_type', '!=', 'registration_fee')
+            ->count();
+
+        // Total Outstanding / Piutang DSP (Tagihan Masuk dari calon siswa tahap penetapan/daftar ulang)
+        $billingQuery = Registration::scopedByAdmin()
+            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
+        
+        $billingCandidates = $billingQuery->get();
+        $totalDSPGrossBilled = $billingCandidates->sum(fn($c) => $c->getGrossFee());
+        $totalDSPDiscount = $billingCandidates->sum(fn($c) => $c->total_discount);
+        $totalDSPNetBilled = $billingCandidates->sum(fn($c) => $c->net_fee);
+        $totalDSPPaid = $billingCandidates->sum(fn($c) => $c->total_paid_final_fee);
+        $totalDSPRemaining = $billingCandidates->sum(fn($c) => $c->remaining_balance);
+
+        // Payment Channels Breakdown
+        $allSuccessPayments = (clone $successPaymentsQuery)->get();
+        $channelStats = [];
+        foreach ($allSuccessPayments as $p) {
+            $ch = $p->channel_display_name ?: ($p->payment_method ?: 'Lainnya');
+            if (!isset($channelStats[$ch])) {
+                $channelStats[$ch] = [
+                    'channel' => $ch,
+                    'count' => 0,
+                    'net' => 0,
+                    'admin_fee' => 0,
+                    'gross' => 0,
+                ];
+            }
+            $channelStats[$ch]['count']++;
+            $channelStats[$ch]['net'] += ($p->base_amount ?: ($p->amount - ($p->admin_fee ?: 0)));
+            $channelStats[$ch]['admin_fee'] += ($p->admin_fee ?: 0);
+            $channelStats[$ch]['gross'] += $p->amount;
+        }
+        uasort($channelStats, fn($a, $b) => $b['count'] <=> $a['count']);
+
+        // Recent Payments (Latest 6 transactions)
+        $recentPayments = \App\Models\Payment::scopedByAdmin()
+            ->with(['registration.unit', 'registration.user'])
             ->whereHas('registration', function($q) use ($selectedPeriodId) {
                 $q->where('spmb_period_id', $selectedPeriodId);
-            })->sum('amount');
+            })
+            ->latest()
+            ->limit(6)
+            ->get();
+
+        // Unit Financial Summary (For Super Admin)
+        $unitFinanceSummary = [];
+        if ($isSuperAdmin) {
+            $units = \App\Models\SpmbUnit::where('is_active', true)->get();
+            foreach ($units as $u) {
+                $uPayments = \App\Models\Payment::where('status', 'success')
+                    ->whereHas('registration', function($q) use ($selectedPeriodId, $u) {
+                        $q->where('spmb_period_id', $selectedPeriodId)->where('spmb_unit_id', $u->id);
+                    })->get();
+                
+                $uNet = $uPayments->sum(fn($p) => $p->base_amount ?: ($p->amount - ($p->admin_fee ?: 0)));
+                $uFee = $uPayments->sum('admin_fee');
+                $uGross = $uPayments->sum('amount');
+                $uPaidTrx = $uPayments->count();
+                $uRegCount = Registration::where('spmb_period_id', $selectedPeriodId)->where('spmb_unit_id', $u->id)->count();
+
+                $unitFinanceSummary[] = [
+                    'unit' => $u,
+                    'reg_count' => $uRegCount,
+                    'paid_trx' => $uPaidTrx,
+                    'net_revenue' => $uNet,
+                    'admin_fee' => $uFee,
+                    'gross_revenue' => $uGross,
+                ];
+            }
+        }
 
         // Charts stats (by grade / level name)
         $levelStats = Registration::scopedByAdmin()
-            ->where('spmb_period_id', $selectedPeriodId)
+            ->where('registrations.spmb_period_id', $selectedPeriodId)
             ->leftJoin('spmb_grades', 'registrations.spmb_grade_id', '=', 'spmb_grades.id')
             ->selectRaw('COALESCE(spmb_grades.name, registrations.admission_level, "Lainnya") as level_name, count(registrations.id) as count')
             ->groupBy('level_name')
@@ -205,6 +314,25 @@ class AdminDashboardController extends Controller
             'verifiedCandidates',
             'paidTransactions',
             'totalRevenue',
+            'totalNetRevenue',
+            'totalAdminFee',
+            'totalGrossRevenue',
+            'formFeeNet',
+            'formFeeAdmin',
+            'formFeeGross',
+            'formFeeTrxCount',
+            'dspFeeNet',
+            'dspFeeAdmin',
+            'dspFeeGross',
+            'dspFeeTrxCount',
+            'totalDSPGrossBilled',
+            'totalDSPDiscount',
+            'totalDSPNetBilled',
+            'totalDSPPaid',
+            'totalDSPRemaining',
+            'channelStats',
+            'recentPayments',
+            'unitFinanceSummary',
             'levelStats',
             'pipelineStages',
             'paymentStats',
@@ -241,6 +369,8 @@ class AdminDashboardController extends Controller
                 'message' => 'Alhamdulillah, berkas pendaftaran ananda "' . $registration->candidate_name . '" telah diverifikasi. Silakan persiapkan diri untuk mengikuti Observasi/Ta\'Aruf.',
                 'url' => route('dashboard.verification', $registration->id),
                 'type' => 'success',
+                'spmb_unit_id' => $registration->spmb_unit_id,
+                'registration_id' => $registration->id,
             ]));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send candidate verification notification', ['error' => $e->getMessage()]);
@@ -284,6 +414,8 @@ class AdminDashboardController extends Controller
                 'message' => 'Terdapat berkas pendaftaran ananda "' . $registration->candidate_name . '" yang perlu diperbaiki: ' . $reason,
                 'url' => route('dashboard.form', $registration->id),
                 'type' => 'warning',
+                'spmb_unit_id' => $registration->spmb_unit_id,
+                'registration_id' => $registration->id,
             ]));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send candidate rejection notification', ['error' => $e->getMessage()]);
@@ -310,6 +442,8 @@ class AdminDashboardController extends Controller
                 'message' => 'Observasi/Ta\'aruf ananda "' . $registration->candidate_name . '" telah selesai dilaksanakan. Silakan isi Surat Pernyataan Kesanggupan Biaya.',
                 'url' => route('dashboard.observation', $registration->id),
                 'type' => 'success',
+                'spmb_unit_id' => $registration->spmb_unit_id,
+                'registration_id' => $registration->id,
             ]));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to send candidate taaruf completion notification', ['error' => $e->getMessage()]);

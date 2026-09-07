@@ -41,6 +41,8 @@ class SpmbNotification extends Notification
             'message' => $this->data['message'] ?? '',
             'url' => $this->data['url'] ?? '#',
             'type' => $this->data['type'] ?? 'info', // success, info, warning, danger
+            'spmb_unit_id' => $this->data['spmb_unit_id'] ?? null,
+            'registration_id' => $this->data['registration_id'] ?? null,
         ];
     }
 }

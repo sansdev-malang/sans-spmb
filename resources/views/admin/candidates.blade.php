@@ -4,7 +4,7 @@
 @section('page_title', 'Data Pendaftar (Aktif)')
 
 @section('content')
-<div id="candidates-container" class="space-y-6" hx-boost="true" hx-target="#candidates-container" hx-select="#candidates-container">
+<div class="space-y-6">
     <!-- Header Summary Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -174,13 +174,9 @@
     </div>
 
     <!-- Candidate List Table -->
-    <div id="candidates-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+    <div id="candidates-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#candidates-card" hx-select="#candidates-card">
          <!-- Search & Filter Form -->
         <form id="candidateFilterForm" action="{{ route('admin.candidates') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
-            @if(request('stage') && request('stage') !== 'all')
-                <input type="hidden" name="stage" value="{{ request('stage') }}">
-            @endif
-
             @php
                 $currentStage = request('stage', 'all');
                 if (empty($currentStage)) $currentStage = 'all';
@@ -250,6 +246,9 @@
                 <div class="flex flex-wrap items-center gap-2.5 w-full 2xl:w-auto">
                     <!-- Search Input Container -->
                     <div class="relative w-full sm:w-72 flex items-center">
+                        @if(request('stage') && request('stage') !== 'all')
+                            <input type="hidden" name="stage" value="{{ request('stage') }}" hidden class="hidden">
+                        @endif
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
@@ -318,8 +317,8 @@
             </div>
 
             <!-- Slide-down Advanced Filters Panel -->
-            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('gender') || request('wave_id') || request('type_id') || request('class_program_id') || request('doc_status')) ? '' : 'hidden' }} border-t border-slate-100 pt-4 space-y-4 transition-all duration-300">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('gender') || request('wave_id') || request('type_id') || request('class_program_id')) ? '' : 'hidden' }} border-t border-slate-100 pt-4 space-y-4 transition-all duration-300">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Date Range: Start -->
                     <div class="space-y-1">
                         <label class="text-xs font-extrabold uppercase text-slate-400 block">Tgl Mulai Daftar</label>
@@ -371,15 +370,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <!-- Filter: Document Status -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Status Berkas (KK/Akte)</label>
-                        <select name="doc_status" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">Semua Status</option>
-                            <option value="complete" {{ request('doc_status') === 'complete' ? 'selected' : '' }}>Lengkap</option>
-                            <option value="incomplete" {{ request('doc_status') === 'incomplete' ? 'selected' : '' }}>Belum Lengkap</option>
-                        </select>
-                    </div>
                 </div>
                 <!-- Action Buttons in Advanced Filter -->
                 <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
@@ -401,7 +391,6 @@
                 form.querySelector('select[name=wave_id]').value = '';
                 form.querySelector('select[name=type_id]').value = '';
                 form.querySelector('select[name=class_program_id]').value = '';
-                form.querySelector('select[name=doc_status]').value = '';
                 htmx.trigger(form, 'submit');
             }
         </script>
@@ -412,7 +401,7 @@
                     <tr class="border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">ID Pendaftaran</th>
-                        <th class="py-4 px-6">Nama Lengkap / Kontak</th>
+                        <th class="py-4 px-6">Nama Lengkap</th>
                         <th class="py-4 px-6">Tingkat</th>
                         <th class="py-4 px-6">Tahapan Pendaftaran</th>
                         <th class="py-4 px-6">Tanggal Pendaftaran</th>
@@ -500,8 +489,7 @@
                                 SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800">{{ $cand->candidate_name }}</div>
-                                <div class="text-xs text-slate-400">WA: {{ $cand->parent_phone ?: '-' }}</div>
+                                <div class="font-bold text-slate-800 dark:text-white">{{ $cand->candidate_name }}</div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-brand-emerald">
                                 {{ $cand->admission_level }}

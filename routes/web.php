@@ -19,6 +19,11 @@ use App\Http\Controllers\Web\SpmbAgreementsController;
 use App\Http\Controllers\Web\PaymentGatewayController;
 use App\Http\Controllers\Web\PaymentChannelController;
 use App\Http\Controllers\Web\AdminTaarufController;
+use App\Http\Controllers\Web\AdminFinanceReportController;
+use App\Http\Controllers\Web\AdminReportAnalyticsController;
+use App\Http\Controllers\Web\AdminResultController;
+use App\Http\Controllers\Web\AdminBroadcastController;
+use App\Http\Controllers\Web\AdminHandoverController;
 
 /*
 |--------------------------------------------------------------------------
@@ -101,12 +106,32 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/taaruf/{id}/schedule', [AdminTaarufController::class, 'updateSchedule'])->name('admin.taaruf.schedule.update');
         Route::delete('/admin/taaruf/{id}/schedule', [AdminTaarufController::class, 'deleteSchedule'])->name('admin.taaruf.schedule.delete');
         Route::post('/admin/taaruf/{id}/complete', [AdminTaarufController::class, 'completeTaaruf'])->name('admin.taaruf.complete');
+        Route::post('/admin/taaruf/{id}/revert', [AdminTaarufController::class, 'revertTaaruf'])->name('admin.taaruf.revert');
         Route::post('/admin/taaruf/units/{unitId}/settings', [AdminTaarufController::class, 'updateUnitSettings'])->name('admin.taaruf.units.settings');
+
+        // Admin Admission Results & Graduation Management
+        Route::get('/admin/results', [AdminResultController::class, 'index'])->name('admin.results');
+        Route::post('/admin/results/{id}/status', [AdminResultController::class, 'updateStatus'])->name('admin.results.status');
 
         // Admin Billing & Payment Transaction Pages
         Route::get('/admin/payments/data', [AdminPaymentController::class, 'data'])->name('admin.payments.data');
         Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
         Route::get('/admin/payments/receipt/{id}', [WebDashboardController::class, 'downloadReceipt'])->name('admin.payments.receipt');
+
+        // Admin Finance Reports & Receivables Breakdown
+        Route::get('/admin/finance/reports', [AdminFinanceReportController::class, 'index'])->name('admin.finance.reports');
+        Route::get('/admin/finance/reports/export', [AdminFinanceReportController::class, 'export'])->name('admin.finance.reports.export');
+
+        // Admin Reports & Analytics (Registrations & Demographics)
+        Route::get('/admin/reports/registrations', [AdminReportAnalyticsController::class, 'registrations'])->name('admin.reports.registrations');
+        Route::get('/admin/reports/demographics', [AdminReportAnalyticsController::class, 'demographics'])->name('admin.reports.demographics');
+
+        // Admin Broadcast & Reminders (WhatsApp)
+        Route::get('/admin/broadcasts', [AdminBroadcastController::class, 'index'])->name('admin.broadcasts');
+
+        // Admin Handover to Unit Apps (SANS PAUD/SD/SMP)
+        Route::get('/admin/handover', [AdminHandoverController::class, 'index'])->name('admin.handover');
+        Route::get('/admin/handover/export', [AdminHandoverController::class, 'export'])->name('admin.handover.export');
 
         // Setting Biaya (Accessible to both Super Admin and Unit Admin)
         Route::get('/admin/spmb-settings/fees', [SpmbFeesController::class, 'index'])->name('admin.spmb-settings.fees');

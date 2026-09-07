@@ -152,6 +152,8 @@ class AdminTaarufController extends Controller
                     'message' => "Jadwal sesi Ta'aruf ananda {$registration->candidate_name} dijadwalkan pada {$formattedDate} pukul {$request->observation_time} di {$request->observation_location}.",
                     'url' => route('dashboard.observation', $registration->id),
                     'type' => 'info',
+                    'spmb_unit_id' => $registration->spmb_unit_id,
+                    'registration_id' => $registration->id,
                 ]));
             }
         } catch (\Exception $e) {
@@ -232,6 +234,8 @@ class AdminTaarufController extends Controller
                     'message' => "Alhamdulillah, ananda {$registration->candidate_name} telah menyelesaikan tahapan Ta'aruf. Silakan lanjutkan pengisian Surat Pernyataan Kesanggupan.",
                     'url' => route('dashboard.observation', $registration->id),
                     'type' => 'success',
+                    'spmb_unit_id' => $registration->spmb_unit_id,
+                    'registration_id' => $registration->id,
                 ]));
             }
         } catch (\Exception $e) {
@@ -239,6 +243,30 @@ class AdminTaarufController extends Controller
         }
 
         return redirect()->back()->with('success', "Tahap Ta'aruf ananda {$registration->candidate_name} berhasil diselesaikan. Status pendaftar kini beralih ke tahap Surat Pernyataan Kesanggupan.");
+    }
+
+    /**
+     * Revert / Cancel Ta'aruf completion for a candidate (back to verified).
+     */
+    public function revertTaaruf(Request $request, $id)
+    {
+        $registration = Registration::findOrFail($id);
+
+        if (in_array($registration->registration_status, ['agreement_signed', 'completed'])) {
+            return redirect()->back()->with('error', "Status Ta'aruf ananda {$registration->candidate_name} tidak dapat dikembalikan karena orang tua telah menandatangani Surat Pernyataan Kesanggupan.");
+        }
+
+        $registration->update([
+            'registration_status' => 'verified',
+            'committee_notes' => 'Berkas pendaftaran telah diverifikasi. Silakan menunggu jadwal observasi / ta\'aruf.',
+        ]);
+
+        SpmbActivityLog::log(
+            'REVERT_TAARUF',
+            "Membatalkan penyelesaian Ta'aruf ananda {$registration->candidate_name} (ID: {$registration->id}) dan mengembalikan ke tahap penjadwalan/observasi."
+        );
+
+        return redirect()->back()->with('success', "Status ananda {$registration->candidate_name} berhasil dikembalikan ke tahap Observasi / Ta'aruf.");
     }
 
     /**

@@ -1,5 +1,17 @@
 @php
-    $userAllRegs = auth()->check() ? auth()->user()->registrations()->with(['unit', 'grade', 'classProgram'])->where('registration_status', '!=', 'draft')->orWhereHas('payments', function($q) { $q->where('payment_type', 'registration_fee')->where('status', 'success'); })->latest()->get() : collect();
+    $userAllRegs = auth()->check() 
+        ? auth()->user()->registrations()
+            ->with(['unit', 'grade', 'classProgram'])
+            ->where(function($q) {
+                $q->where('registration_status', '!=', 'draft')
+                  ->orWhereHas('payments', function($pq) {
+                      $pq->where('payment_type', 'registration_fee')
+                         ->where('status', 'success');
+                  });
+            })
+            ->latest()
+            ->get() 
+        : collect();
     $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
 @endphp
 

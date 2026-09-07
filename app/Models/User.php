@@ -29,6 +29,25 @@ class User extends Authenticatable
         return $this->role === 'super_admin';
     }
 
+    public function isUnitAdmin(): bool
+    {
+        return $this->role === 'admin' && !empty($this->spmb_unit_id);
+    }
+
+    /**
+     * Get relevant admins for a specific unit (Super Admins + Unit Admin of that unit)
+     */
+    public static function getAdminsForUnit($unitId = null)
+    {
+        return static::where('role', 'super_admin')
+            ->orWhere(function($q) use ($unitId) {
+                $q->where('role', 'admin');
+                if ($unitId) {
+                    $q->where('spmb_unit_id', $unitId);
+                }
+            })->get();
+    }
+
     public function spmbUnit()
     {
         return $this->belongsTo(SpmbUnit::class, 'spmb_unit_id');

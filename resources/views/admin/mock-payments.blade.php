@@ -6,10 +6,10 @@
 @section('content')
 <div class="space-y-6">
     <!-- Header Summary Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800">Riwayat Transaksi Pembayaran (Log)</h1>
-            <p class="text-xs text-slate-500 mt-1">Log riwayat transaksi pembayaran pendaftaran calon siswa terintegrasi Winpay SNAP API secara real-time.</p>
+            <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Riwayat Transaksi Pembayaran (Log)</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Log riwayat transaksi pembayaran pendaftaran calon siswa terintegrasi Winpay SNAP API secara real-time.</p>
         </div>
         <div class="flex gap-2 items-center">
             <button type="button" onclick="showFeatureComingSoon('Ekspor Log Pembayaran (CSV)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
@@ -21,27 +21,27 @@
     </div>
 
     <!-- Payments List Table -->
-    <div id="mock-payments-card" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden" hx-boost="true" hx-target="#mock-payments-card" hx-select="#mock-payments-card">
+    <div id="mock-payments-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#mock-payments-card" hx-select="#mock-payments-card">
         
         <!-- Search & Filter Form -->
-        <form action="{{ route('admin.payments') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
-            @if(request('unit_id'))
-                <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
-            @endif
+        <form action="{{ route('admin.payments') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 space-y-4">
             <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <!-- Search Input Container -->
                     <div class="relative w-full md:w-80 flex items-center">
+                        @if(request('unit_id'))
+                            <input type="hidden" name="unit_id" value="{{ request('unit_id') }}" hidden class="hidden">
+                        @endif
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice, Winpay ID (215584), VA, atau nama siswa..." 
-                               class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                               class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
                         
                         <!-- Clear (X) Button -->
                         @if(request('search'))
                             <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; this.form.submit();" 
-                                    class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition"
+                                    class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
                                     title="Hapus Pencarian">
                                 <i data-lucide="x" class="w-3.5 h-3.5"></i>
                             </button>
@@ -54,7 +54,7 @@
                     </div>
                     
                     <!-- Filter Status -->
-                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="">Semua Status</option>
                         <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success</option>
                         <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
@@ -62,7 +62,7 @@
                     </select>
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -71,7 +71,7 @@
 
                     <!-- Advanced Filter Toggle Button -->
                     <button type="button" onclick="document.getElementById('adv-filters').classList.toggle('hidden')" 
-                            class="flex items-center gap-1.5 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-600 transition">
+                            class="flex items-center gap-1.5 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-slate-600 dark:text-slate-300 transition">
                         <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
                         Filter Lanjutan
                     </button>
@@ -79,24 +79,24 @@
             </div>
 
             <!-- Slide-down Advanced Filters Panel -->
-            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id')) ? '' : 'hidden' }} border-t border-slate-100 pt-4 space-y-4 transition-all duration-300">
+            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id')) ? '' : 'hidden' }} border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4 transition-all duration-300">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <!-- Date Range: Start -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Mulai</label>
                         <input type="date" name="start_date" value="{{ request('start_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                     </div>
                     <!-- Date Range: End -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Selesai</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                     </div>
                     <!-- Filter: Metode Pembayaran -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Metode</label>
-                        <select name="method" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="method" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Metode</option>
                             @foreach(\App\Models\SpmbPaymentChannel::where('is_active', true)->get() as $channel)
                                 <option value="{{ $channel->code }}" {{ request('method') === $channel->code ? 'selected' : '' }}>{{ $channel->name }}</option>
@@ -106,7 +106,7 @@
                     <!-- Filter: Jenis Biaya -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Jenis Biaya</label>
-                        <select name="category_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="category_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jenis</option>
                             @foreach(\App\Models\SpmbFeeCategory::all() as $cat)
                                 <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -116,7 +116,7 @@
                     <!-- Filter: Nama Biaya -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Nama Biaya</label>
-                        <select name="fee_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="fee_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Nama Biaya</option>
                             @foreach(\App\Models\SpmbFee::all() as $fee)
                                 <option value="{{ $fee->id }}" {{ request('fee_id') == $fee->id ? 'selected' : '' }}>{{ $fee->name }}</option>
@@ -125,8 +125,8 @@
                     </div>
                 </div>
                 <!-- Action Buttons in Advanced Filter -->
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="resetAdvancedFilters(this.form)" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-4 py-2 rounded-xl transition">
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="resetAdvancedFilters(this.form)" class="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-4 py-2 rounded-xl transition">
                         Reset Filter
                     </button>
                     <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
@@ -149,17 +149,17 @@
 
         @if(auth()->user()->isSuperAdmin())
             <!-- Unit Tabs -->
-            <div class="px-6 pt-4 bg-slate-50/50 border-b border-slate-100 flex flex-wrap gap-2 text-xs font-bold">
+            <div class="px-6 pt-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 text-[10px] font-bold">
                 <!-- Semua Unit Tab -->
                 <a href="{{ route(Route::currentRouteName(), request()->except(['page', 'unit_id'])) }}" 
-                   class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ !request()->filled('unit_id') ? 'border-brand-emerald text-brand-emerald bg-white shadow-sm' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
+                   class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ !request()->filled('unit_id') ? 'border-brand-emerald text-brand-emerald bg-white dark:bg-slate-800 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' }}">
                     Semua Unit
                 </a>
                 
                 <!-- Dynamic Unit Tabs -->
                 @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
                     <a href="{{ route(Route::currentRouteName(), array_merge(request()->except(['page']), ['unit_id' => $unit->id])) }}" 
-                       class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ request('unit_id') == $unit->id ? 'border-brand-emerald text-brand-emerald bg-white shadow-sm' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
+                       class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ request('unit_id') == $unit->id ? 'border-brand-emerald text-brand-emerald bg-white dark:bg-slate-800 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' }}">
                         {{ strtoupper($unit->name) }}
                     </a>
                 @endforeach
@@ -169,7 +169,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
+                    <tr class="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">Transaksi & Waktu</th>
                         <th class="py-4 px-6">Calon Siswa & Tagihan</th>
@@ -179,23 +179,23 @@
                         <th class="py-4 px-6 text-center w-28">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-sm divide-y divide-slate-100">
+                <tbody class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($payments as $pay)
-                        <tr class="hover:bg-slate-50/55 transition group">
+                        <tr class="hover:bg-slate-50/55 dark:hover:bg-slate-800/40 transition group">
                             <!-- 1. No -->
-                            <td class="py-4 px-6 text-center text-slate-400 font-bold text-xs">
+                            <td class="py-4 px-6 text-center text-slate-400 dark:text-slate-500 font-bold text-xs">
                                 {{ ($payments->currentPage() - 1) * $payments->perPage() + $loop->iteration }}
                             </td>
 
                             <!-- 2. Transaksi & Waktu -->
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="font-mono text-xs font-bold text-slate-800 select-all tracking-tight">{{ $pay->invoice_number }}</span>
-                                    <button onclick="navigator.clipboard.writeText('{{ $pay->invoice_number }}'); toastr.success('Nomor Invoice disalin')" class="text-slate-350 hover:text-slate-600 transition cursor-pointer" title="Salin Invoice">
+                                    <span class="font-mono text-xs font-bold text-slate-800 dark:text-slate-100 select-all tracking-tight">{{ $pay->invoice_number }}</span>
+                                    <button onclick="navigator.clipboard.writeText('{{ $pay->invoice_number }}'); toastr.success('Nomor Invoice disalin')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin Invoice">
                                         <i data-lucide="copy" class="w-3 h-3"></i>
                                     </button>
                                 </div>
-                                <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                                     @php
                                         $winpayTrxId = $pay->reference_id 
                                             ?: ($pay->payment_info['callback_payload']['originalReferenceNo'] 
@@ -204,13 +204,13 @@
                                                         ?? ($pay->payment_info['trxId'] ?? null))));
                                     @endphp
                                     @if($winpayTrxId)
-                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-mono font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100" title="ID Transaksi Winpay">
-                                            <i data-lucide="check" class="w-2.5 h-2.5 text-emerald-600"></i>
+                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-800" title="ID Transaksi Winpay">
+                                            <i data-lucide="check" class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400"></i>
                                             Winpay: {{ $winpayTrxId }}
                                         </span>
-                                        <span class="text-slate-300">•</span>
+                                        <span class="text-slate-300 dark:text-slate-600">•</span>
                                     @endif
-                                    <span class="text-[11px] text-slate-500 font-medium">
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                                         {{ $pay->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
                                     </span>
                                 </div>
@@ -218,7 +218,7 @@
 
                             <!-- 3. Calon Siswa & Tagihan -->
                             <td class="py-4 px-6">
-                                <div class="font-bold text-slate-850 text-sm">
+                                <div class="font-bold text-slate-850 dark:text-white text-sm">
                                     {{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}
                                 </div>
                                 @php
@@ -236,17 +236,19 @@
                                         $feeTitle = !empty($itemNames) ? implode(', ', $itemNames) : 'Pelunasan Biaya Administrasi';
                                     }
                                 @endphp
-                                <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                                    <span class="font-medium text-slate-700">{{ $feeTitle }}</span>
-                                    @php
-                                        $unitShort = $pay->registration?->unit?->code 
-                                            ?: trim(str_replace(['Anak Saleh', 'Sekolah ', 'Terpadu '], '', $pay->registration?->unit?->name ?? ''));
-                                    @endphp
-                                    @if($unitShort)
-                                        <span class="text-slate-300">•</span>
-                                        <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded uppercase tracking-wide">
-                                            {{ $unitShort }}
-                                        </span>
+                                <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                    <span class="font-medium text-slate-700 dark:text-slate-300">{{ $feeTitle }}</span>
+                                    @if(auth()->user()->isSuperAdmin())
+                                        @php
+                                            $unitShort = $pay->registration?->unit?->code 
+                                                ?: trim(str_replace(['Anak Saleh', 'Sekolah ', 'Terpadu '], '', $pay->registration?->unit?->name ?? ''));
+                                        @endphp
+                                        @if($unitShort)
+                                            <span class="text-slate-300 dark:text-slate-600">•</span>
+                                            <span class="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded uppercase tracking-wide border border-transparent dark:border-slate-700">
+                                                {{ $unitShort }}
+                                            </span>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -259,9 +261,9 @@
                                         ->first();
                                     $paymentLogo = $paymentChannel?->getLogoUrl();
                                 @endphp
-                                <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                <div class="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
                                     @if($paymentLogo)
-                                        <span class="w-12 h-12 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center p-1 shadow-2xs flex-shrink-0">
+                                        <span class="w-12 h-12 rounded-lg bg-white border border-slate-200/80 dark:border-slate-700 flex items-center justify-center p-1 shadow-2xs flex-shrink-0">
                                             <img src="{{ $paymentLogo }}" alt="Logo {{ $pay->payment_method }}" class="max-w-full max-h-full object-contain">
                                         </span>
                                     @else
@@ -271,10 +273,10 @@
                                 </div>
                                 @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))
                                     <div class="mt-1 flex items-center gap-1">
-                                        <span class="font-mono text-[10px] text-slate-600 font-bold select-all bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded">
+                                        <span class="font-mono text-[10px] text-slate-600 dark:text-slate-300 font-bold select-all bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 px-1.5 py-0.5 rounded">
                                             VA: {{ $pay->payment_info['virtualAccountNo'] }}
                                         </span>
-                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 hover:text-slate-600 transition cursor-pointer" title="Salin Nomor VA">
+                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin Nomor VA">
                                             <i data-lucide="copy" class="w-2.5 h-2.5"></i>
                                         </button>
                                     </div>
@@ -283,11 +285,11 @@
 
                             <!-- 5. Nominal -->
                             <td class="py-4 px-6">
-                                <div class="font-extrabold text-slate-900 text-sm tracking-tight">
+                                <div class="font-extrabold text-slate-900 dark:text-white text-sm tracking-tight">
                                     Rp {{ number_format($pay->amount, 0, ',', '.') }}
                                 </div>
                                 @if($pay->admin_fee > 0)
-                                    <div class="text-[9px] text-slate-400 font-medium mt-0.5">
+                                    <div class="text-[9px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
                                         Termasuk admin Rp {{ number_format($pay->admin_fee, 0, ',', '.') }}
                                     </div>
                                 @endif
@@ -296,9 +298,9 @@
                             <!-- 6. Status -->
                             <td class="py-4 px-6 text-center">
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
-                                    @if($pay->status === 'success') bg-emerald-50 text-emerald-700 border border-emerald-200
-                                    @elseif($pay->status === 'pending') bg-amber-50 text-amber-700 border border-amber-200
-                                    @else bg-rose-50 text-rose-700 border border-rose-200 @endif">
+                                    @if($pay->status === 'success') bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800
+                                    @elseif($pay->status === 'pending') bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800
+                                    @else bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800 @endif">
                                     <span class="w-1.5 h-1.5 rounded-full 
                                         @if($pay->status === 'success') bg-emerald-500
                                         @elseif($pay->status === 'pending') bg-amber-500
@@ -310,18 +312,18 @@
                             <!-- 7. Aksi -->
                             <td class="py-4 px-6 text-center">
                                 @if($pay->status === 'success')
-                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition duration-200 shadow-2xs" title="Unduh Bukti Pembayaran Resmi">
+                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-900/60 transition duration-200 shadow-2xs" title="Unduh Bukti Pembayaran Resmi">
                                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                         <span>Bukti Bayar</span>
                                     </a>
                                 @else
-                                    <span class="text-slate-400 text-xs font-medium">-</span>
+                                    <span class="text-slate-400 dark:text-slate-600 text-xs font-medium">-</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-12 px-6 text-center text-slate-400">
+                            <td colspan="7" class="py-12 px-6 text-center text-slate-400 dark:text-slate-500">
                                 Belum ada riwayat transaksi pembayaran.
                             </td>
                         </tr>
@@ -331,10 +333,11 @@
         </div>
         
         @if($payments->hasPages())
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100">
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
                 {{ $payments->links() }}
             </div>
         @endif
     </div>
 </div>
 @endsection
+

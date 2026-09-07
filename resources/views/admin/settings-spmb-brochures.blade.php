@@ -9,8 +9,20 @@
     <!-- Top Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-850 dark:text-white">Brosur & Dokumen SPMB</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola file brosur cetak dan berkas lampiran persyaratan yang dapat diunduh oleh calon orang tua murid pada masing-masing unit sekolah.</p>
+            <h1 class="text-2xl font-extrabold text-slate-850 dark:text-white">
+                @if($isSuperAdmin)
+                    Brosur & Dokumen SPMB
+                @else
+                    Brosur & Dokumen SPMB — {{ $units->first()?->name }}
+                @endif
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                @if($isSuperAdmin)
+                    Kelola file brosur cetak dan berkas lampiran persyaratan yang dapat diunduh oleh calon orang tua murid pada masing-masing unit sekolah.
+                @else
+                    Kelola file brosur cetak dan berkas lampiran persyaratan yang dapat diunduh oleh calon orang tua murid untuk unit {{ $units->first()?->name }}.
+                @endif
+            </p>
         </div>
     </div>
 
@@ -24,7 +36,7 @@
     <form action="{{ route('admin.spmb-settings.brochures.save') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 {{ $isSuperAdmin ? 'md:grid-cols-3' : 'max-w-2xl' }} gap-6">
             @foreach($units as $u)
                 @php
                     $b = $brochures[$u->id];
@@ -136,9 +148,14 @@
             @endforeach
         </div>
 
-        <div class="flex justify-end pt-4">
+        <div class="flex {{ $isSuperAdmin ? 'justify-end' : 'justify-start max-w-2xl' }} pt-4">
             <button type="submit" class="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-extrabold transition shadow-md shadow-emerald-600/20 flex items-center gap-2">
-                <i data-lucide="save" class="w-4 h-4"></i> Simpan Seluruh Brosur & Dokumen
+                <i data-lucide="save" class="w-4 h-4"></i>
+                @if($isSuperAdmin)
+                    Simpan Seluruh Brosur & Dokumen
+                @else
+                    Simpan Brosur & Dokumen {{ $units->first()?->name }}
+                @endif
             </button>
         </div>
 

@@ -95,14 +95,17 @@ class UserController extends Controller
         if (!$isSuperAdmin) {
             $myUnitId = auth()->user()->spmb_unit_id;
             $unregisteredQuery->where(function($q) use ($myUnitId) {
-                $q->doesntHave('registrations')
+                $q->where('spmb_unit_id', $myUnitId)
                   ->orWhereHas('registrations', function($rq) use ($myUnitId) {
                       $rq->where('spmb_unit_id', $myUnitId);
                   });
             });
         } elseif ($request->filled('unit_id')) {
-            $unregisteredQuery->whereHas('registrations', function($rq) use ($unitId) {
-                $rq->where('spmb_unit_id', $unitId);
+            $unregisteredQuery->where(function($q) use ($unitId) {
+                $q->where('spmb_unit_id', $unitId)
+                  ->orWhereHas('registrations', function($rq) use ($unitId) {
+                      $rq->where('spmb_unit_id', $unitId);
+                  });
             });
         }
 
@@ -125,6 +128,34 @@ class UserController extends Controller
         $units = $isSuperAdmin ? \App\Models\SpmbUnit::all() : \App\Models\SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
 
         return view('admin.users', compact('admins', 'candidates', 'unregistered', 'units', 'adminsCount', 'candidatesCount', 'unregisteredCount'));
+    }
+
+    /**
+     * Determine if current admin can manage the given user.
+     */
+    protected function canManageUser(User $user): bool
+    {
+        $admin = auth()->user();
+        if ($admin->isSuperAdmin()) {
+            return true;
+        }
+
+        // Unit admin cannot manage super admins
+        if ($user->role === 'super_admin') {
+            return false;
+        }
+
+        // Direct unit matching on user model
+        if ($user->spmb_unit_id && (int) $user->spmb_unit_id === (int) $admin->spmb_unit_id) {
+            return true;
+        }
+
+        // Candidate user whose child/registration belongs to admin's unit
+        if ($user->registrations()->where('spmb_unit_id', $admin->spmb_unit_id)->exists()) {
+            return true;
+        }
+
+        return false;
     }
 
     public function store(Request $request)
@@ -167,10 +198,8 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $isSuperAdmin = auth()->user()->isSuperAdmin();
 
-        if (!$isSuperAdmin) {
-            if ($user->spmb_unit_id !== auth()->user()->spmb_unit_id || $user->role === 'super_admin') {
-                abort(403, 'Unauthorized action.');
-            }
+        if (!$this->canManageUser($user)) {
+            abort(403, 'Unauthorized action: Anda tidak memiliki akses untuk mengelola user ini.');
         }
 
         $allowedRoles = $isSuperAdmin ? 'admin,candidate,super_admin' : 'admin,candidate';
@@ -196,12 +225,24 @@ class UserController extends Controller
 
         $unitId = $isSuperAdmin ? $request->spmb_unit_id : auth()->user()->spmb_unit_id;
 
-        $user->update([
+        $updateData = [
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
-            'spmb_unit_id' => ($request->role === 'admin' || $request->role === 'candidate') ? $unitId : null,
-        ]);
+        ];
+
+        if ($isSuperAdmin) {
+            $updateData['spmb_unit_id'] = ($request->role === 'admin' || $request->role === 'candidate') ? $unitId : null;
+        } else {
+            // If changing role to admin, ensure unit_id is bound to current admin's unit
+            if ($request->role === 'admin') {
+                $updateData['spmb_unit_id'] = auth()->user()->spmb_unit_id;
+            } elseif ($request->role === 'candidate') {
+                $updateData['spmb_unit_id'] = $user->spmb_unit_id ?: auth()->user()->spmb_unit_id;
+            }
+        }
+
+        $user->update($updateData);
 
         SpmbActivityLog::log('UPDATE_USER', "Memperbarui informasi user: {$user->name} ({$user->email})");
 
@@ -211,12 +252,9 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        $isSuperAdmin = auth()->user()->isSuperAdmin();
 
-        if (!$isSuperAdmin) {
-            if ($user->spmb_unit_id !== auth()->user()->spmb_unit_id || $user->role === 'super_admin') {
-                abort(403, 'Unauthorized action.');
-            }
+        if (!$this->canManageUser($user)) {
+            abort(403, 'Unauthorized action: Anda tidak memiliki akses untuk menghapus user ini.');
         }
 
         // Prevent self destruction
@@ -238,12 +276,9 @@ class UserController extends Controller
     public function resetPassword(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $isSuperAdmin = auth()->user()->isSuperAdmin();
 
-        if (!$isSuperAdmin) {
-            if ($user->spmb_unit_id !== auth()->user()->spmb_unit_id || $user->role === 'super_admin') {
-                abort(403, 'Unauthorized action.');
-            }
+        if (!$this->canManageUser($user)) {
+            abort(403, 'Unauthorized action: Anda tidak memiliki akses untuk mereset password user ini.');
         }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -316,14 +351,16 @@ class UserController extends Controller
             'payment_status' => 'unpaid',
         ]);
 
-        // Trigger notification to all admins
+        // Trigger notification to relevant unit admins & super admins
         try {
-            $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin'])->get();
+            $admins = \App\Models\User::getAdminsForUnit($unit->id);
             \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                 'title' => 'Pendaftaran Akun Baru',
-                'message' => 'Wali murid "' . $user->name . '" (' . $user->email . ') baru saja mendaftarkan akun baru.',
-                'url' => route('admin.users') . '?search=' . urlencode($user->email),
+                'message' => 'Wali murid "' . $user->name . '" (' . $user->email . ') baru saja mendaftar di ' . ($unit->name ?? 'SPMB') . '.',
+                'url' => route('admin.candidates') . '?search=' . urlencode($user->name),
                 'type' => 'info',
+                'spmb_unit_id' => $unit->id,
+                'registration_id' => $registration->id,
             ]));
         } catch (\Exception $e) {
             // Ignore or log error

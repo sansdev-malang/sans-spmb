@@ -1,72 +1,70 @@
 @extends('layouts.admin')
 
-@section('title', 'Verifikasi Data Calon Siswa - Portal SPMB')
-@section('page_title', 'Verifikasi Data')
+@section('title', 'Verifikasi Data Pendaftaran - Portal SPMB')
+@section('page_title', 'Verifikasi Data Pendaftaran')
 
 @section('content')
 <div class="space-y-8">
     
     <!-- Header Summary Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800">Verifikasi Data Calon Siswa</h1>
-            <p class="text-xs text-slate-500 mt-1">Kelola review berkas, status pembayaran, dan validasi data calon siswa dari satu tempat.</p>
-        </div>
-    </div>
-
-
-
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-        <!-- Stat Item -->
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
-            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
-            <span class="text-2xl font-black text-slate-800 dark:text-white block mt-1">{{ $stats['total'] }}</span>
-        </div>
-        <!-- Stat Item -->
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-yellow-500">
-            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Perlu Review</span>
-            <span class="text-2xl font-black text-yellow-600 block mt-1">{{ $stats['submitted'] }}</span>
-        </div>
-        <!-- Stat Item -->
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-green-500">
-            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Terverifikasi</span>
-            <span class="text-2xl font-black text-green-600 block mt-1">{{ $stats['verified'] }}</span>
-        </div>
-        <!-- Stat Item -->
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-red-500">
-            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Ditolak / Gagal</span>
-            <span class="text-2xl font-black text-red-600 block mt-1">{{ $stats['failed'] }}</span>
-        </div>
-        <!-- Stat Item -->
-        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 border-l-4 border-l-emerald-500">
-            <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Lunas Biaya</span>
-            <span class="text-2xl font-black text-brand-emerald dark:text-emerald-400 block mt-1">{{ $stats['paid'] }}</span>
+            <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Verifikasi Data Pendaftaran</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola review formulir, status berkas, dan validasi data calon siswa dari satu tempat.</p>
         </div>
     </div>
 
     <!-- Candidate List Table -->
     <div id="candidate-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#candidate-card" hx-select="#candidate-card">
         <div class="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Daftar Pendaftaran Calon Siswa</span>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Daftar Pendaftaran Calon Siswa</span>
             
-            <!-- Quick Filter Links -->
-            <div class="flex flex-wrap gap-2 text-xs font-bold">
-                <a href="{{ route('admin.verification', request()->except(['status', 'page'])) }}" class="px-2.5 py-1 rounded-full {{ !request()->has('status') ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">Semua</a>
-                @foreach(['submitted' => 'Perlu Review', 'verified' => 'Terverifikasi', 'taaruf_completed' => 'Ta\'aruf Selesai', 'agreement_signed' => 'Persetujuan', 'completed' => 'Lulus', 'failed' => 'Ditolak'] as $statusVal => $statusLabel)
-                    <a href="{{ route('admin.verification', array_merge(request()->except(['page']), ['status' => $statusVal])) }}" class="px-2.5 py-1 rounded-full {{ request()->status === $statusVal ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-350' }}">{{ $statusLabel }}</a>
+            <!-- Quick Filter Tabs with Counter Badges -->
+            <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+                <!-- Tab: Semua -->
+                <a href="{{ route('admin.verification', request()->except(['status', 'page'])) }}" 
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 {{ !request()->filled('status') ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80' }}">
+                    <span>Semua</span>
+                    <span class="px-1.5 py-0.2 rounded-md text-[10px] font-extrabold {{ !request()->filled('status') ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' }}">
+                        {{ $tabCounts['all'] ?? 0 }}
+                    </span>
+                </a>
+
+                @php
+                    $tabDefinitions = [
+                        'submitted' => ['label' => 'Perlu Review', 'badge_inactive' => 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'],
+                        'verified' => ['label' => 'Terverifikasi', 'badge_inactive' => 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'],
+                        'taaruf_completed' => ['label' => 'Ta\'aruf Selesai', 'badge_inactive' => 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400'],
+                        'agreement_signed' => ['label' => 'Persetujuan', 'badge_inactive' => 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400'],
+                        'completed' => ['label' => 'Lulus', 'badge_inactive' => 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400'],
+                        'failed' => ['label' => 'Ditolak', 'badge_inactive' => 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400'],
+                    ];
+                @endphp
+
+                @foreach($tabDefinitions as $statusVal => $meta)
+                    @php
+                        $isActive = request('status') === $statusVal;
+                        $count = $tabCounts[$statusVal] ?? 0;
+                    @endphp
+                    <a href="{{ route('admin.verification', array_merge(request()->except(['page']), ['status' => $statusVal])) }}" 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 {{ $isActive ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/80' }}">
+                        <span>{{ $meta['label'] }}</span>
+                        <span class="px-1.5 py-0.2 rounded-md text-[10px] font-extrabold {{ $isActive ? 'bg-white/20 text-white' : ($count > 0 ? $meta['badge_inactive'] : 'bg-slate-100 dark:bg-slate-700 text-slate-400') }}">
+                            {{ $count }}
+                        </span>
+                    </a>
                 @endforeach
             </div>
         </div>
 
         <!-- Search & Filter Form -->
         <form action="{{ route('admin.verification') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
-            @if(request('status'))
-                <input type="hidden" name="status" value="{{ request('status') }}">
-            @endif
             <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <!-- Search Input Container -->
                 <div class="relative w-full md:w-80 flex items-center">
+                    @if(request('status'))
+                        <input type="hidden" name="status" value="{{ request('status') }}" hidden class="hidden">
+                    @endif
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                         <i data-lucide="search" class="w-4 h-4"></i>
                     </span>
@@ -113,11 +111,10 @@
                 <thead>
                     <tr class="border-b border-slate-100 dark:border-slate-800 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-950/20">
                         <th class="py-4 px-6 text-center w-12">No.</th>
-                        <th class="py-4 px-6">ID / No. Reg</th>
+                        <th class="py-4 px-6">No. Registrasi</th>
                         <th class="py-4 px-6">Calon Siswa</th>
                         <th class="py-4 px-6">Tingkat</th>
                         <th class="py-4 px-6">Berkas Upload</th>
-                        <th class="py-4 px-6 text-center">Status Bayar</th>
                         <th class="py-4 px-6 text-center">Status Berkas</th>
                         <th class="py-4 px-6 text-right">Aksi Verifikasi</th>
                     </tr>
@@ -193,7 +190,21 @@
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->candidate_name ?? 'Draft' }}</div>
-                                <div class="text-xs text-slate-400">Ortu: {{ $reg->user->name }} ({{ $reg->parent_phone ?? '-' }})</div>
+                                @php
+                                    $parentContact = $reg->parent_phone 
+                                        ?: ($reg->getFieldValue('father_phone') 
+                                        ?: ($reg->getFieldValue('mother_phone') 
+                                        ?: ($reg->getFieldValue('guardian_phone') ?: null)));
+                                @endphp
+                                <div class="text-xs text-slate-400 flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                                    <span>Ortu: {{ $reg->user->name }}</span>
+                                    @if($parentContact)
+                                        <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                            <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>
+                                            <span>{{ $parentContact }}</span>
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-slate-600 dark:text-slate-400">
                                 {{ $reg->admission_level ?? '-' }}
@@ -222,21 +233,14 @@
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-                                    @if($reg->payment_status === 'paid') bg-green-50 text-green-700 border border-green-200
-                                    @elseif($reg->payment_status === 'pending') bg-yellow-50 text-yellow-700 border border-yellow-200
+                                    @if(in_array($reg->registration_status, ['verified', 'completed'])) bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800
+                                    @elseif($reg->registration_status === 'submitted') bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800
+                                    @elseif($reg->registration_status === 'taaruf_completed') bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-400 dark:border-indigo-800
+                                    @elseif($reg->registration_status === 'agreement_signed') bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/50 dark:text-purple-400 dark:border-purple-800
+                                    @elseif($reg->registration_status === 'failed') bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-400 dark:border-rose-800
+                                    @elseif($reg->registration_status === 'draft') bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700
                                     @else bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 @endif">
-                                    {{ $reg->payment_status }}
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-center">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-                                    @if(in_array($reg->registration_status, ['verified', 'completed'])) bg-green-50 text-green-700 border border-green-200
-                                    @elseif($reg->registration_status === 'submitted') bg-blue-50 text-blue-700 border border-blue-200
-                                    @elseif($reg->registration_status === 'taaruf_completed') bg-indigo-50 text-indigo-700 border border-indigo-200
-                                    @elseif($reg->registration_status === 'agreement_signed') bg-purple-50 text-purple-700 border border-purple-200
-                                    @elseif($reg->registration_status === 'failed') bg-red-50 text-red-700 border border-red-200
-                                    @else bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 @endif">
-                                    {{ str_replace('_', ' ', $reg->registration_status) }}
+                                    {{ $reg->registration_status === 'draft' ? 'Draft Formulir' : str_replace('_', ' ', $reg->registration_status) }}
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
@@ -244,7 +248,7 @@
                                     @if ($reg->registration_status === 'submitted')
                                         <!-- Verifikasi Modal Trigger -->
                                         <button type="button" 
-                                            onclick="openCandidateDetailModal({{ json_encode($candJson) }}, true, {{ $reg->id }})" 
+                                             onclick="openCandidateDetailModal({{ json_encode($candJson) }}, true, {{ $reg->id }})" 
                                             class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5">
                                             <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-yellow"></i> Verifikasi Data
                                         </button>
@@ -277,8 +281,24 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-8 px-6 text-center text-slate-400">
-                                Tidak ada data pendaftaran yang sesuai filter ini.
+                            <td colspan="7" class="py-16 px-6 text-center">
+                                <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
+                                    <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3 shadow-2xs">
+                                        <i data-lucide="clipboard-check" class="w-8 h-8 text-slate-400 dark:text-slate-400"></i>
+                                    </div>
+                                    <h4 class="text-sm font-extrabold text-slate-700 dark:text-slate-200 mb-1">
+                                        Belum Ada Antrean Verifikasi
+                                    </h4>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+                                        Saat ini belum ada formulir pendaftaran yang masuk untuk diverifikasi, atau tidak ada data yang cocok dengan kriteria filter aktif.
+                                    </p>
+                                    @if(request()->has('search') || request()->has('status') || request()->has('unit_id'))
+                                        <a href="{{ route('admin.verification') }}" class="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition">
+                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                            <span>Reset Filter</span>
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforelse

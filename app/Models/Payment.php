@@ -42,7 +42,14 @@ class Payment extends Model
      */
     public function getCategoryNamesAttribute()
     {
-        $info = is_array($this->payment_info) ? $this->payment_info : (json_decode($this->payment_info, true) ?: []);
+        $info = $this->payment_info;
+        if (is_string($info)) {
+            $info = json_decode($info, true);
+        }
+        if (!is_array($info)) {
+            $info = [];
+        }
+
         $categoryNames = [];
 
         if ($this->payment_type === 'registration_fee') {
@@ -113,7 +120,13 @@ class Payment extends Model
      */
     public function getChannelDisplayNameAttribute()
     {
-        $info = is_array($this->payment_info) ? $this->payment_info : [];
+        $info = $this->payment_info;
+        if (is_string($info)) {
+            $info = json_decode($info, true);
+        }
+        if (!is_array($info)) {
+            $info = [];
+        }
 
         // 1. Check direct bank name in payment_info (Virtual Accounts)
         if (!empty($info['bankName'])) {
@@ -124,22 +137,34 @@ class Payment extends Model
             return $b;
         }
 
-        // 2. Check channel in additionalInfo
+        // 2. Check payment_method column directly
+        if (!empty($this->payment_method)) {
+            $m = strtoupper($this->payment_method);
+            if (in_array($m, ['MANDIRI', 'BRI', 'BNI', 'BCA', 'BSI', 'PERMATA', 'CIMB'])) {
+                return 'VA ' . $m;
+            }
+            if ($m === 'QRIS') {
+                return 'QRIS';
+            }
+            return $m;
+        }
+
+        // 3. Check channel in additionalInfo
         if (!empty($info['additionalInfo']['channel'])) {
             return strtoupper($info['additionalInfo']['channel']);
         }
 
-        // 3. Check QRIS
+        // 4. Check QRIS
         if (!empty($info['qrisUrl']) || !empty($info['qrContent']) || (strtolower($this->payment_gateway_code ?? '') === 'qris')) {
             return 'QRIS';
         }
 
-        // 4. Check e-wallet
+        // 5. Check e-wallet
         if (!empty($info['ewalletChannel'])) {
             return strtoupper($info['ewalletChannel']);
         }
 
-        // 5. Fallback to gateway code (e.g. WINPAY, BNI)
+        // 6. Fallback to gateway code (e.g. WINPAY, BNI)
         return strtoupper($this->payment_gateway_code ?? 'Winpay');
     }
 }

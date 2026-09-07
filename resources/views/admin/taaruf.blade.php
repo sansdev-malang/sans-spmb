@@ -279,7 +279,7 @@
                                         </button>
 
                                         <!-- Complete Ta'aruf Action -->
-                                        <form action="{{ route('admin.taaruf.complete', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.');">
+                                        <form action="{{ route('admin.taaruf.complete', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('{{ !$isScheduled ? ('PERINGATAN: Jadwal Ta\'aruf ananda ' . addslashes($reg->candidate_name) . ' belum diatur. Apakah Anda yakin ingin langsung menyelesaikan tahapan Ta\'aruf?') : ('Selesaikan sesi Ta\'aruf ananda ' . addslashes($reg->candidate_name) . '? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.') }}');">
                                             @csrf
                                             <button type="submit" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Selesaikan Ta'aruf">
                                                 <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
@@ -298,10 +298,22 @@
                                             </form>
                                         @endif
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700/80 select-none">
-                                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
-                                            <span>Selesai</span>
-                                        </span>
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700/80 select-none">
+                                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                                <span>Selesai</span>
+                                            </span>
+
+                                            @if($reg->registration_status === 'taaruf_completed')
+                                                <form action="{{ route('admin.taaruf.revert', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('Batalkan penyelesaian Ta\'aruf ananda {{ addslashes($reg->candidate_name) }} dan kembalikan ke tahap penjadwalan / observasi?');">
+                                                    @csrf
+                                                    <button type="submit" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1 shadow-xs" title="Batal Selesaikan / Kembalikan ke Jadwal">
+                                                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                                                        <span>Kembalikan</span>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
                             </td>

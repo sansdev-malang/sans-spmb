@@ -151,7 +151,7 @@
                                     <div class="pt-4 flex justify-center border-t border-slate-100 dark:border-slate-800">
                                         <form action="{{ route('dashboard.cancel-payment', $activePayment->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan transaksi pembayaran ini?')">
                                             @csrf
-                                            <button type="submit" class="border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-650 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                            <button type="submit" class="border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                                                 <i data-lucide="x-circle" class="w-4.5 h-4.5"></i> Batalkan & Pilih Metode Lain
                                             </button>
                                         </form>
@@ -424,7 +424,7 @@
                                 <div class="pt-4 flex justify-center border-t border-slate-100 dark:border-slate-800">
                                     <form action="{{ route('dashboard.cancel-payment', $activePayment->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan transaksi pembayaran ini?')">
                                         @csrf
-                                        <button type="submit" class="border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-650 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                        <button type="submit" class="border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                                             <i data-lucide="x-circle" class="w-4.5 h-4.5"></i> Batalkan & Pilih Metode Lain
                                         </button>
                                     </form>
@@ -546,7 +546,7 @@
                         @endif
 
                         <div class="pt-4">
-                            <a href="{{ route('dashboard.form', $registration->id) }}" class="bg-red-650 hover:bg-red-750 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
+                            <a href="{{ route('dashboard.form', $registration->id) }}" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition inline-flex items-center gap-1.5 cursor-pointer">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i> Perbaiki Formulir Pendaftaran
                             </a>
                         </div>

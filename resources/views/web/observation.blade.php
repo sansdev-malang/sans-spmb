@@ -117,7 +117,19 @@
 
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
     @php
-        $userAllRegs = auth()->check() ? auth()->user()->registrations()->with(['unit', 'grade', 'classProgram'])->where('registration_status', '!=', 'draft')->orWhereHas('payments', function($q) { $q->where('payment_type', 'registration_fee')->where('status', 'success'); })->latest()->get() : collect();
+        $userAllRegs = auth()->check() 
+            ? auth()->user()->registrations()
+                ->with(['unit', 'grade', 'classProgram'])
+                ->where(function($q) {
+                    $q->where('registration_status', '!=', 'draft')
+                      ->orWhereHas('payments', function($pq) {
+                          $pq->where('payment_type', 'registration_fee')
+                             ->where('status', 'success');
+                      });
+                })
+                ->latest()
+                ->get() 
+            : collect();
         $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
     @endphp
 
@@ -431,11 +443,12 @@
                             <div id="agreement-scrollbox" class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-xs text-slate-650 dark:text-slate-350 space-y-3.5 max-h-[500px] overflow-y-auto leading-relaxed">
                                 @if($agreementTemplate)
                                     <div class="flex flex-col items-end mb-5 select-none">
-                                        <div class="border border-brand-emerald/20 bg-brand-emerald/5 dark:border-emerald-950/40 dark:bg-emerald-950/10 p-2.5 rounded-xl flex flex-col items-center text-center max-w-[280px]">
-                                            <span class="bg-brand-emerald/10 text-brand-emerald dark:bg-emerald-950/30 dark:text-emerald-400 px-2.5 py-0.5 rounded-lg font-bold text-[8px] uppercase tracking-wider border border-brand-emerald/15">
-                                                Untuk Kalangan Sendiri
+                                        <div class="bg-amber-50/90 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/80 p-2.5 sm:p-3 rounded-2xl flex flex-col items-center text-center max-w-[290px] shadow-sm">
+                                            <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white dark:bg-amber-600 px-2.5 py-0.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-xs">
+                                                <i data-lucide="shield-alert" class="w-3 h-3 flex-shrink-0"></i>
+                                                UNTUK KALANGAN SENDIRI
                                             </span>
-                                            <span class="text-[8px] text-slate-450 dark:text-slate-400 font-semibold mt-1.5 leading-normal">
+                                            <span class="text-[9px] text-amber-900 dark:text-amber-200 font-bold mt-1.5 leading-snug">
                                                 Dilarang memfoto, mengcopy, dan menyebarluaskan dokumen ini
                                             </span>
                                         </div>
@@ -453,7 +466,18 @@
                                         </div>
                                     </div>
                                 @else
-                                    <p class="font-bold text-center text-slate-800 dark:text-white">SURAT PERNYATAAN KESANGGUPAN MEMATUHI PERATURAN & BIAYA PENDIDIKAN</p>
+                                    <div class="flex flex-col items-end mb-5 select-none">
+                                        <div class="bg-amber-50/90 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/80 p-2.5 sm:p-3 rounded-2xl flex flex-col items-center text-center max-w-[290px] shadow-sm">
+                                            <span class="inline-flex items-center gap-1.5 bg-amber-500 text-white dark:bg-amber-600 px-2.5 py-0.5 rounded-lg font-black text-[9px] uppercase tracking-wider shadow-xs">
+                                                <i data-lucide="shield-alert" class="w-3 h-3 flex-shrink-0"></i>
+                                                UNTUK KALANGAN SENDIRI
+                                            </span>
+                                            <span class="text-[9px] text-amber-900 dark:text-amber-200 font-bold mt-1.5 leading-snug">
+                                                Dilarang memfoto, mengcopy, dan menyebarluaskan dokumen ini
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p class="font-bold text-center text-slate-800 dark:text-white uppercase tracking-wide border-b border-slate-200 dark:border-slate-800 pb-2 mb-3">SURAT PERNYATAAN KESANGGUPAN MEMATUHI PERATURAN & BIAYA PENDIDIKAN</p>
                                     <p>Saya yang bertanda tangan di bawah ini selaku Orang Tua / Wali murid dari calon siswa:</p>
                                     <div class="pl-4 space-y-1 font-semibold">
                                         <p>Nama Calon Siswa : {{ $registration->candidate_name }}</p>
