@@ -8,9 +8,6 @@
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex items-center gap-3">
-            <div class="h-12 w-12 bg-emerald-50 dark:bg-emerald-950/20 text-brand-emerald rounded-2xl flex items-center justify-center shadow-inner">
-                <i data-lucide="power" class="w-6 h-6"></i>
-            </div>
             <div>
                 <h1 class="text-xl font-extrabold text-slate-800">Aktivasi & Periode SPMB</h1>
                 <p class="text-xs text-slate-500 mt-1">Pusat kontrol terpadu untuk mengaktifkan atau menonaktifkan periode, gelombang, jenjang unit, tingkatan kelas, dan komponen pendaftaran lainnya secara instan.</p>
@@ -158,7 +155,7 @@
         <!-- TAB 2: Struktur Akademik -->
         <div id="activationTabContent-struktur_akademik" class="activation-tab-content space-y-4 {{ $activeTab === 'struktur_akademik' ? '' : 'hidden' }}">
             <div class="space-y-1">
-                <h2 class="text-xs font-black uppercase tracking-widest text-slate-405 flex items-center gap-2">
+                <h2 class="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                     <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i> Konfigurasi Jenjang & Struktur Akademik
                 </h2>
                 <p class="text-[10px] text-slate-400">Aktifkan unit sekolah, tingkatan kelas per jenjang, serta layanan non-formal tambahan.</p>
@@ -346,7 +343,7 @@
                         @forelse($gw->paymentChannels as $chan)
                             <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-8 w-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-150 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm overflow-hidden select-none flex-shrink-0">
+                                    <div class="h-8 w-8 rounded-lg bg-white dark:bg-slate-950/70 border border-slate-150 dark:border-slate-600 flex items-center justify-center p-1 shadow-sm overflow-hidden select-none flex-shrink-0">
                                         @if($chan->getLogoUrl())
                                             <img src="{{ $chan->getLogoUrl() }}" alt="{{ $chan->name }}" class="max-h-full max-w-full object-contain">
                                         @else

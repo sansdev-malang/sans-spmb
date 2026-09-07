@@ -3,19 +3,14 @@
 @section('title', 'Jadwal Ta\'aruf & Observasi')
 
 @section('content')
-<div class="p-6 space-y-6">
+<div class="space-y-6">
 
     <!-- Header & Unit Settings Trigger -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2.5">
-                <div class="h-9 w-9 rounded-xl bg-brand-emerald/10 dark:bg-emerald-950/50 text-brand-emerald flex items-center justify-center font-bold">
-                    <i data-lucide="calendar-check" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight">Jadwal Ta'aruf & Observasi</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Kelola jadwal tatap muka, wawancara kesiapan belajar, dan observasi pendaftar.</p>
-                </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+            <div class="min-w-0">
+                <h1 class="text-xl font-extrabold text-slate-800 dark:text-white truncate">Jadwal Ta'aruf & Observasi</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola jadwal tatap muka, wawancara kesiapan belajar, dan observasi pendaftar.</p>
             </div>
         </div>
 
@@ -23,7 +18,7 @@
             <div class="flex items-center gap-2">
                 <button type="button" 
                         onclick="openUnitSettingsModal()" 
-                        class="px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
+                        class="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold shadow-sm transition flex items-center gap-2">
                     <i data-lucide="settings-2" class="w-4 h-4 text-brand-emerald"></i>
                     <span>Ketentuan Unit: {{ $currentUnit->name }}</span>
                 </button>
@@ -33,7 +28,7 @@
 
     <!-- Unit Tabs Navigation (If multiple units available) -->
     @if(count($units) > 1)
-        <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+        <div class="flex items-center gap-2 overflow-x-auto">
             @foreach($units as $u)
                 @php
                     $isActiveUnit = ($currentUnit && $currentUnit->id == $u->id);

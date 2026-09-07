@@ -4,26 +4,23 @@
 @section('page_title', 'Master Unit & Tingkatan')
 
 @section('content')
-<div id="spmb-units-container" hx-boost="true" hx-target="#spmb-units-container" hx-select="#spmb-units-container" class="p-8">
+<div id="spmb-units-container" hx-boost="true" hx-target="#spmb-units-container" hx-select="#spmb-units-container" class="w-full space-y-6">
     
     <!-- Top Header -->
-    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-800">Master Unit & Tingkatan</h1>
+            <h1 class="text-xl font-extrabold text-slate-800">Master Unit & Tingkatan</h1>
             <p class="text-xs text-slate-500 mt-1">Kelola data master unit sekolah dan tingkatan kelas untuk penerimaan siswa baru.</p>
         </div>
     </div>
 
 
 
-    <!-- Main Card Container -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-        
-        @php
-            $activeTab = request()->get('tab', 'unit');
-        @endphp
-        <!-- Tab Navigation -->
-        <div class="border-b border-slate-100 p-4 flex gap-2 overflow-x-auto">
+    @php
+        $activeTab = request()->get('tab', 'unit');
+    @endphp
+    <!-- Tab Navigation -->
+    <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
             <button id="tabBtn-unit" onclick="switchTab('unit')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'unit' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="building-2" class="w-4 h-4"></i> Unit Sekolah
             </button>
@@ -33,7 +30,10 @@
             <button id="tabBtn-extra" onclick="switchTab('extra')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'extra' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="sparkles" class="w-4 h-4"></i> Layanan Non-Formal
             </button>
-        </div>
+    </div>
+
+    <!-- Main Card Container -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
 
         <!-- Tab: Unit -->
         <div id="tabContent-unit" class="tab-content p-8 space-y-6 {{ $activeTab === 'unit' ? '' : 'hidden' }}">
@@ -59,7 +59,7 @@
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-sm divide-y divide-slate-100">
+                    <tbody class="text-xs divide-y divide-slate-100">
                         @forelse($units as $unit)
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $unit->name }}</td>
@@ -135,7 +135,7 @@
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-sm divide-y divide-slate-100">
+                    <tbody class="text-xs divide-y divide-slate-100">
                         @forelse($grades as $grade)
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $grade->name }}</td>

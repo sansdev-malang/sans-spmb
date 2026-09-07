@@ -53,14 +53,14 @@
                         @endif
 
                         <!-- Integrated Search Button -->
-                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-[10px] font-bold shadow-sm transition">
+                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition">
                             Cari
                         </button>
                     </div>
                     
                     @if(auth()->user()->isSuperAdmin())
                         <!-- Filter Level / Unit -->
-                        <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jenjang</option>
                             @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
                                 <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
@@ -81,7 +81,7 @@
                     </select>
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -189,7 +189,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
+                    <tr class="border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">ID Pendaftaran</th>
                         <th class="py-4 px-6">Nama Lengkap / Kontak</th>
@@ -281,7 +281,7 @@
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800">{{ $cand->candidate_name }}</div>
-                                <div class="text-[10px] text-slate-400">WA: {{ $cand->parent_phone ?: '-' }}</div>
+                                <div class="text-xs text-slate-400">WA: {{ $cand->parent_phone ?: '-' }}</div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-brand-emerald">
                                 {{ $cand->admission_level }}
@@ -294,7 +294,7 @@
                                 </div>
                             </td>
                             <td class="py-4 px-6">
-                                <span class="px-2 py-1.5 rounded-xl text-[10px] font-extrabold border {{ $currentStageColor }}">
+                                <span class="px-2 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
                                     {{ $currentStageText }}
                                 </span>
                             </td>
@@ -610,7 +610,7 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 id="modal-header-cand-name" class="font-extrabold text-base text-white">Detail Calon Siswa</h3>
-                        <span id="det-status-chip" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-white/20 text-white border border-white/20">SUBMITTED</span>
+                        <span id="det-status-chip" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-white/20 text-white border border-white/20">SUBMITTED</span>
                     </div>
                     <p id="det-id-label" class="text-xs text-emerald-200 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
                 </div>
@@ -638,27 +638,27 @@
         </div>
 
         <!-- Modal Body (Scrollable Tab Panes with Consistent Height) -->
-        <div id="modalDetailBody" class="p-6 overflow-y-auto flex-1 min-h-0 text-xs text-slate-700 dark:text-slate-300 space-y-6">
+        <div id="modalDetailBody" class="px-6 py-4 overflow-y-auto flex-1 min-h-0 text-xs text-slate-700 dark:text-slate-300 space-y-6">
             
             <!-- TAB PANE 1: BIODATA & ORANG TUA -->
             <div id="tab-pane-biodata" class="cand-tab-pane space-y-6">
                 <!-- Grid: SPMB Admission Stats -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                     <div>
-                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Periode</span>
+                        <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Periode</span>
                         <span id="det-period" class="font-bold text-slate-700 dark:text-slate-200 text-xs">2024-2025</span>
                     </div>
                     <div>
-                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Gelombang</span>
+                        <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Gelombang</span>
                         <span id="det-wave" class="font-bold text-slate-700 dark:text-slate-200 text-xs">Gelombang 1</span>
                     </div>
                     <div>
-                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Jalur Masuk</span>
+                        <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Jalur Masuk</span>
                         <span id="det-type" class="font-bold text-slate-700 dark:text-slate-200 text-xs">Reguler</span>
                     </div>
                     <div>
-                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Status Berkas</span>
-                        <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">SUBMITTED</span>
+                        <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Status Berkas</span>
+                        <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-xs font-extrabold uppercase bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">SUBMITTED</span>
                     </div>
                 </div>
 
@@ -669,43 +669,43 @@
                     </h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nama Lengkap</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Nama Lengkap</span>
                             <span id="det-name" class="font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nama Panggilan</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Nama Panggilan</span>
                             <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">NIK Siswa</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">NIK Siswa</span>
                             <span id="det-nik" class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nomor Kartu Keluarga (KK)</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Nomor Kartu Keluarga (KK)</span>
                             <span id="det-family-card-no" class="font-mono text-slate-800 dark:text-slate-100 font-bold text-brand-emerald dark:text-emerald-400 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Jenis Kelamin</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Jenis Kelamin</span>
                             <span id="det-gender" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
                             <span id="det-birth" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Agama</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Agama</span>
                             <span id="det-religion" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Asal Sekolah</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Asal Sekolah</span>
                             <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Program Kelas</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Program Kelas</span>
                             <span id="det-program" class="font-bold text-brand-emerald dark:text-emerald-400 text-xs">-</span>
                         </div>
                         <div class="sm:col-span-2 md:col-span-3 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
                             <span id="det-extras" class="font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                     </div>
@@ -718,31 +718,31 @@
                     </h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
                         <div class="sm:col-span-2">
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Alamat Jalan</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Alamat Jalan</span>
                             <span id="det-address" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Nomor Rumah</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Nomor Rumah</span>
                             <span id="det-house-no" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">RT / RW</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">RT / RW</span>
                             <span id="det-rt-rw" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Kelurahan / Desa</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Kelurahan / Desa</span>
                             <span id="det-kelurahan" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Kecamatan</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Kecamatan</span>
                             <span id="det-kecamatan" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Kabupaten / Kota</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Kabupaten / Kota</span>
                             <span id="det-city" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Provinsi</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Provinsi</span>
                             <span id="det-province" class="font-semibold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                     </div>
@@ -758,20 +758,20 @@
                         <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                             <span class="text-[11px] font-extrabold text-brand-emerald dark:text-emerald-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-700 pb-2">Data Ayah Kandung</span>
                             <div class="grid grid-cols-2 gap-3.5 text-xs">
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Nama:</span> <span id="det-father-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">NIK:</span> <span id="det-father-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">No. HP:</span> <span id="det-father-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Alamat:</span> <span id="det-father-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">Nama:</span> <span id="det-father-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">NIK:</span> <span id="det-father-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">No. HP:</span> <span id="det-father-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">Alamat:</span> <span id="det-father-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
                             </div>
                         </div>
                         <!-- Ibu -->
                         <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                             <span class="text-[11px] font-extrabold text-brand-emerald dark:text-emerald-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-700 pb-2">Data Ibu Kandung</span>
                             <div class="grid grid-cols-2 gap-3.5 text-xs">
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Nama:</span> <span id="det-mother-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">NIK:</span> <span id="det-mother-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">No. HP:</span> <span id="det-mother-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
-                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Alamat:</span> <span id="det-mother-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">Nama:</span> <span id="det-mother-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">NIK:</span> <span id="det-mother-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">No. HP:</span> <span id="det-mother-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                                <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">Alamat:</span> <span id="det-mother-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
                             </div>
                         </div>
                     </div>
@@ -779,10 +779,10 @@
                     <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 mt-4">
                         <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-700 pb-2">Data Wali (Jika Ada)</span>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 text-xs">
-                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Nama Wali:</span> <span id="det-guardian-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
-                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">NIK Wali:</span> <span id="det-guardian-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
-                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">No. HP:</span> <span id="det-guardian-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
-                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Alamat:</span> <span id="det-guardian-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">Nama Wali:</span> <span id="det-guardian-name" class="font-semibold text-slate-800 dark:text-slate-100">-</span></div>
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">NIK Wali:</span> <span id="det-guardian-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">No. HP:</span> <span id="det-guardian-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
+                            <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-xs">Alamat:</span> <span id="det-guardian-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
                         </div>
                     </div>
                 </div>
@@ -790,12 +790,14 @@
 
             <!-- TAB PANE 2: BERKAS & DOKUMEN -->
             <div id="tab-pane-documents" class="cand-tab-pane hidden space-y-4">
-                <div class="p-4.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
-                    <div>
-                        <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">Data Berkas & Dokumen Pendaftaran</h4>
-                        <p class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Seluruh dokumen pendukung yang diunggah oleh wali murid saat melengkapi formulir.</p>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-emerald-50/80 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
+                    <div class="space-y-1">
+                        <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">Data Berkas & Dokumen Pendaftaran</h4>
+                        <p class="text-[11px] leading-relaxed text-emerald-700 dark:text-emerald-400">
+                            Seluruh dokumen pendukung yang diunggah oleh wali murid saat melengkapi formulir.
+                        </p>
                     </div>
-                    <span class="px-3 py-1 bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 rounded-xl font-extrabold text-xs border border-emerald-200 dark:border-slate-700 shadow-sm">
+                    <span class="inline-flex items-center justify-center px-3 py-1.5 bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 rounded-xl font-extrabold text-[10px] border border-emerald-200 dark:border-slate-700 shadow-sm whitespace-nowrap">
                         Total 6 Berkas
                     </span>
                 </div>
@@ -809,7 +811,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Pas Foto Murid</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Formal Siswa</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Formal Siswa</span>
                             </div>
                         </div>
                         <a id="det-photo-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -825,7 +827,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Akta Kelahiran</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Scan Asli</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Scan Asli</span>
                             </div>
                         </div>
                         <a id="det-cert-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -841,7 +843,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Kartu Keluarga</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Scan Asli</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Scan Asli</span>
                             </div>
                         </div>
                         <a id="det-card-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -857,7 +859,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Ijazah Terakhir</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Dokumen Kelulusan</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Dokumen Kelulusan</span>
                             </div>
                         </div>
                         <a id="det-diploma-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -873,7 +875,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">NISN / Kartu Pelajar</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Identitas Siswa</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Identitas Siswa</span>
                             </div>
                         </div>
                         <a id="det-nisn-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -889,7 +891,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Assesmen Khusus</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Kebutuhan Khusus</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Kebutuhan Khusus</span>
                             </div>
                         </div>
                         <a id="det-special-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -902,17 +904,16 @@
             <!-- TAB PANE 3: DATA & RIWAYAT PEMBAYARAN -->
             <div id="tab-pane-payments" class="cand-tab-pane hidden space-y-6">
                 <!-- Banner: Kelola Kebijakan Biaya di Data Pembayaran -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
-                    <div class="flex items-center gap-3">
-                        <div class="h-9 w-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                        </div>
-                        <div>
-                            <span class="text-xs font-extrabold text-emerald-950 dark:text-emerald-200 block">Pengaturan Keringanan (Diskon) & Kebijakan Cicilan</span>
-                            <span class="text-[11px] text-emerald-700 dark:text-emerald-400">Pemberian potongan biaya dan persetujuan cicilan dapat dikonfigurasi melalui menu Data Pembayaran.</span>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-emerald-50/80 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-extrabold text-emerald-900 dark:text-emerald-200 block uppercase tracking-wider">Pengaturan Keringanan (Diskon) &amp; Kebijakan Cicilan</span>
+                            <span class="text-[11px] leading-relaxed text-emerald-700 dark:text-emerald-400">
+                                Pemberian potongan biaya dan persetujuan cicilan dapat dikonfigurasi melalui menu Data Pembayaran.
+                            </span>
                         </div>
                     </div>
-                    <a id="det-pay-manage-link" href="{{ route('admin.payments.data') }}" class="px-4 py-2 bg-brand-emerald hover-emerald text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
+                    <a id="det-pay-manage-link" href="{{ route('admin.payments.data') }}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand-emerald hover-emerald text-white rounded-xl text-[10px] font-extrabold transition shadow-sm whitespace-nowrap">
                         <span>Buka Data Pembayaran</span>
                         <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                     </a>
@@ -921,25 +922,25 @@
                 <div class="p-5 bg-gradient-to-r from-slate-900 via-slate-850 to-emerald-950 text-white rounded-2xl border border-emerald-800/40 shadow-sm relative overflow-hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
                         <div>
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block mb-1">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400 block mb-1">
                                 Status Pelunasan Administrasi Masuk
                             </span>
                             <div class="flex items-center gap-2.5">
                                 <h3 id="pay-status-headline" class="text-base font-black text-white">Belum Ada Pembayaran</h3>
-                                <span id="pay-status-pill" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                <span id="pay-status-pill" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
                                     Belum Bayar
                                 </span>
                             </div>
                         </div>
                         <div class="text-left sm:text-right">
-                            <span class="text-[10px] text-slate-400 block">Total Bersih Tagihan:</span>
+                            <span class="text-xs text-slate-400 block">Total Bersih Tagihan:</span>
                             <span id="pay-total-net-display" class="text-lg font-black text-emerald-300 font-mono">Rp 0</span>
                         </div>
                     </div>
 
                     <!-- Progress Bar -->
                     <div class="mt-4 space-y-1.5 relative z-10">
-                        <div class="flex justify-between text-[11px] font-bold">
+                        <div class="flex justify-between text-xs font-bold">
                             <span class="text-slate-300">Progres Pembayaran:</span>
                             <span id="pay-progress-percent" class="text-emerald-300 font-mono">0%</span>
                         </div>
@@ -952,35 +953,36 @@
                 <!-- 3 Metric Cards Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                     <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
-                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Total Tagihan Awal</span>
+                        <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Total Tagihan Awal</span>
                         <div class="flex items-baseline gap-1 mt-1">
                             <span id="pay-gross-amount" class="text-sm font-bold font-mono text-slate-800 dark:text-slate-100">Rp 0</span>
                         </div>
-                        <span id="pay-discount-sub" class="text-[10px] text-rose-500 font-medium block mt-0.5">Diskon: Rp 0</span>
+                        <span id="pay-discount-sub" class="text-xs text-rose-500 font-medium block mt-0.5">Diskon: Rp 0</span>
                     </div>
                     <div class="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/50">
-                        <span class="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase block">Sudah Dibayar (Masuk)</span>
+                        <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase block">Sudah Dibayar (Masuk)</span>
                         <div class="flex items-baseline gap-1 mt-1">
                             <span id="pay-paid-amount" class="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">Rp 0</span>
                         </div>
-                        <span id="pay-success-count-sub" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block mt-0.5">0 Transaksi Berhasil</span>
+                        <span id="pay-success-count-sub" class="text-xs text-emerald-600 dark:text-emerald-400 font-medium block mt-0.5">0 Transaksi Berhasil</span>
                     </div>
                     <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
-                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Sisa Tagihan (Tanggungan)</span>
+                        <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Sisa Tagihan (Tanggungan)</span>
                         <div class="flex items-baseline gap-1 mt-1">
                             <span id="pay-remaining-amount" class="text-sm font-bold font-mono text-slate-800 dark:text-slate-100">Rp 0</span>
                         </div>
-                        <span id="pay-remaining-status-sub" class="text-[10px] text-slate-400 dark:text-slate-400 font-medium block mt-0.5">Wajib Dilunasi</span>
+                        <span id="pay-remaining-status-sub" class="text-xs text-slate-400 dark:text-slate-400 font-medium block mt-0.5">Wajib Dilunasi</span>
                     </div>
                 </div>
 
                 <!-- (Card Utama) TRANSAKSI PEMBAYARAN -->
-                <div class="space-y-4 bg-white dark:bg-slate-800/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+                <div class="space-y-4 bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
                         <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                            <i data-lucide="receipt" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> TRANSAKSI PEMBAYARAN
+                            <i data-lucide="receipt" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                            <span>Transaksi Pembayaran</span>
                         </h4>
-                        <span id="pay-installment-policy-pill" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                        <span id="pay-installment-policy-pill" class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
                             Kebijakan: Non-Cicil
                         </span>
                     </div>
@@ -997,7 +999,7 @@
         <!-- Modal Footer -->
         <div class="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center flex-shrink-0">
             <div>
-                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase block">Tanggal Masuk Formulir</span>
+                <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase block">Tanggal Masuk Formulir</span>
                 <span id="det-created" class="text-xs font-semibold text-slate-600 dark:text-slate-300">20 Aug 2026, 03:00 WIB</span>
             </div>
             <div class="flex items-center gap-2">
@@ -1333,41 +1335,40 @@
                     let itemsHtml = '';
 
                     cat.items.forEach(item => {
+                        const itemAmount = Number(item.amount || 0);
                         let statusBadge = '';
                         if (item.is_paid) {
-                            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Lunas</span>';
+                            statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60"><i data-lucide="check" class="w-3 h-3"></i> Lunas</span>';
                         } else if (item.status === 'pending') {
-                            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Menunggu</span>';
+                            statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60"><i data-lucide="clock" class="w-3 h-3"></i> Menunggu</span>';
                         } else {
-                            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">Belum Dibayar</span>';
+                            statusBadge = '<span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">Belum Dibayar</span>';
                         }
 
                         itemsHtml += `
-                            <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2.5 shadow-2xs">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/80 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-200">
+                                <div class="flex items-start justify-between gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                                    <span class="font-extrabold text-[11px] text-slate-800 dark:text-slate-100 leading-snug">
                                         ${item.name}
                                     </span>
-                                    <div>
-                                        ${statusBadge}
-                                    </div>
+                                    ${statusBadge}
                                 </div>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
-                                    <div>
-                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">No. Invoice</span>
-                                        <span class="font-mono font-bold ${item.invoice_no !== '-' ? 'text-brand-emerald dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}">${item.invoice_no}</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 pt-2.5 text-[11px]">
+                                    <div class="space-y-1">
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase tracking-wide">No. Invoice</span>
+                                        <span class="font-mono font-bold ${item.invoice_no !== '-' ? 'text-brand-emerald dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}">${item.invoice_no || '-'}</span>
                                     </div>
-                                    <div>
-                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">Metode Pembayaran</span>
-                                        <span class="font-bold text-slate-700 dark:text-slate-200">${item.payment_method}</span>
+                                    <div class="space-y-1">
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase tracking-wide">Metode</span>
+                                        <span class="font-bold text-slate-700 dark:text-slate-200">${item.payment_method || '-'}</span>
                                     </div>
-                                    <div>
-                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">Nominal</span>
-                                        <span class="font-mono font-extrabold text-slate-900 dark:text-white">Rp ${item.amount.toLocaleString('id-ID')}</span>
+                                    <div class="space-y-1">
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase tracking-wide">Nominal</span>
+                                        <span class="font-mono font-extrabold text-slate-900 dark:text-white">Rp ${itemAmount.toLocaleString('id-ID')}</span>
                                     </div>
-                                    <div>
-                                        <span class="text-slate-400 font-bold block text-[10px] uppercase">Waktu Pembayaran</span>
-                                        <span class="text-slate-600 dark:text-slate-300 font-medium">${item.paid_time}</span>
+                                    <div class="space-y-1">
+                                        <span class="text-slate-400 font-bold block text-[10px] uppercase tracking-wide">Waktu</span>
+                                        <span class="text-slate-600 dark:text-slate-300 font-medium">${item.paid_time || '-'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1375,15 +1376,13 @@
                     });
 
                     const catCard = `
-                        <div class="p-4.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 space-y-3 shadow-2xs">
-                            <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-2.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-emerald/10 dark:bg-emerald-950/70 text-brand-emerald dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
-                                        ${cat.category_name}
-                                    </span>
-                                </div>
-                                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                                    ${cat.items.length} Komponen Biaya
+                        <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/50 space-y-3 shadow-sm">
+                            <div class="flex items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-700/80 pb-2.5">
+                                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-[0.12em] bg-brand-emerald/10 dark:bg-emerald-950/70 text-brand-emerald dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                                    ${cat.category_name}
+                                </span>
+                                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                    ${cat.items.length} Komponen
                                 </span>
                             </div>
                             <div class="space-y-2.5">
@@ -1397,14 +1396,14 @@
 
                 if (!cand.has_agreed_statement) {
                     const noticeHtml = `
-                        <div class="p-4 rounded-2xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 flex items-start gap-3">
+                        <div class="p-4 rounded-2xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 flex items-start gap-3 shadow-sm">
                             <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 mt-0.5">
                                 <i data-lucide="info" class="w-4 h-4"></i>
                             </div>
-                            <div class="text-xs space-y-0.5">
-                                <div class="font-extrabold text-amber-900 dark:text-amber-200">Surat Pernyataan Belum Disetujui</div>
+                            <div class="space-y-1.5">
+                                <div class="font-extrabold text-[11px] text-amber-900 dark:text-amber-200 uppercase tracking-wide">Surat Pernyataan Belum Disetujui</div>
                                 <p class="text-amber-700/90 dark:text-amber-400/90 leading-relaxed text-[11px]">
-                                    Tagihan <strong>Biaya Administrasi</strong> dan <strong>Biaya Tambahan</strong> akan otomatis aktif dan diterbitkan setelah orang tua/wali calon siswa menandatangani / menyetujui Surat Pernyataan Kesanggupan Tata Tertib & Biaya Pendidikan.
+                                    Tagihan <strong>Biaya Administrasi</strong> dan <strong>Biaya Tambahan</strong> akan otomatis aktif dan diterbitkan setelah orang tua/wali menandatangani atau menyetujui Surat Pernyataan Kesanggupan Tata Tertib &amp; Biaya Pendidikan.
                                 </p>
                             </div>
                         </div>
@@ -1534,11 +1533,11 @@
             if (headlineEl) headlineEl.innerText = 'Tagihan Lunas Sepenuhnya (100%)';
             if (statusPill) {
                 statusPill.innerText = '100% LUNAS';
-                statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                statusPill.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
             }
             if (remStatusSub) {
                 remStatusSub.innerText = 'Tidak Ada Sisa Tanggungan';
-                remStatusSub.className = 'text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5';
+                remStatusSub.className = 'text-xs text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5';
             }
             if (tabPaymentsBadge) {
                 tabPaymentsBadge.innerText = '100%';
@@ -1548,11 +1547,11 @@
             if (headlineEl) headlineEl.innerText = 'Pembayaran Bertahap (' + percent + '%)';
             if (statusPill) {
                 statusPill.innerText = percent + '% TERBAYAR';
-                statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30';
+                statusPill.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30';
             }
             if (remStatusSub) {
                 remStatusSub.innerText = 'Sisa: Rp ' + remaining.toLocaleString('id-ID');
-                remStatusSub.className = 'text-[10px] text-amber-600 dark:text-amber-400 font-bold block mt-0.5';
+                remStatusSub.className = 'text-xs text-amber-600 dark:text-amber-400 font-bold block mt-0.5';
             }
             if (tabPaymentsBadge) {
                 tabPaymentsBadge.innerText = percent + '%';
@@ -1562,11 +1561,11 @@
             if (headlineEl) headlineEl.innerText = 'Belum Ada Pembayaran Masuk';
             if (statusPill) {
                 statusPill.innerText = '0% (BELUM BAYAR)';
-                statusPill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30';
+                statusPill.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30';
             }
             if (remStatusSub) {
                 remStatusSub.innerText = 'Wajib Dilunasi';
-                remStatusSub.className = 'text-[10px] text-slate-400 dark:text-slate-400 font-medium block mt-0.5';
+                remStatusSub.className = 'text-xs text-slate-400 dark:text-slate-400 font-medium block mt-0.5';
             }
             if (tabPaymentsBadge) {
                 tabPaymentsBadge.innerText = '0%';

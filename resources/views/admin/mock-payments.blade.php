@@ -48,13 +48,13 @@
                         @endif
 
                         <!-- Integrated Search Button -->
-                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-[10px] font-bold shadow-sm transition">
+                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition">
                             Cari
                         </button>
                     </div>
                     
                     <!-- Filter Status -->
-                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="">Semua Status</option>
                         <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success</option>
                         <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
@@ -62,7 +62,7 @@
                     </select>
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -149,7 +149,7 @@
 
         @if(auth()->user()->isSuperAdmin())
             <!-- Unit Tabs -->
-            <div class="px-6 pt-4 bg-slate-50/50 border-b border-slate-100 flex flex-wrap gap-2 text-[10px] font-bold">
+            <div class="px-6 pt-4 bg-slate-50/50 border-b border-slate-100 flex flex-wrap gap-2 text-xs font-bold">
                 <!-- Semua Unit Tab -->
                 <a href="{{ route(Route::currentRouteName(), request()->except(['page', 'unit_id'])) }}" 
                    class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ !request()->filled('unit_id') ? 'border-brand-emerald text-brand-emerald bg-white shadow-sm' : 'border-transparent text-slate-500 hover:text-slate-800' }}">
@@ -253,8 +253,20 @@
 
                             <!-- 4. Metode Pembayaran -->
                             <td class="py-4 px-6">
+                                @php
+                                    $paymentChannel = \App\Models\SpmbPaymentChannel::where('code', $pay->payment_method)
+                                        ->orWhere('name', $pay->payment_method)
+                                        ->first();
+                                    $paymentLogo = $paymentChannel?->getLogoUrl();
+                                @endphp
                                 <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+                                    @if($paymentLogo)
+                                        <span class="w-12 h-12 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center p-1 shadow-2xs flex-shrink-0">
+                                            <img src="{{ $paymentLogo }}" alt="Logo {{ $pay->payment_method }}" class="max-w-full max-h-full object-contain">
+                                        </span>
+                                    @else
+                                        <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+                                    @endif
                                     <span>{{ $pay->payment_method }}</span>
                                 </div>
                                 @if(is_array($pay->payment_info) && isset($pay->payment_info['virtualAccountNo']))

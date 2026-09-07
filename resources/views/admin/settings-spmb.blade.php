@@ -58,9 +58,15 @@
                                 <td class="py-4 px-6 text-center text-xs font-semibold {{ $period->registrations_count > 0 ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                     {{ $period->registrations_count > 0 ? 'Ya (' . $period->registrations_count . ' Siswa)' : 'Tidak' }}
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button onclick="openModal('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.update', $period->id) }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
-                                    <button onclick="deleteItem('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.delete', $period->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" onclick="openModal('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.update', $period->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Periode">
+                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                        </button>
+                                        <button type="button" onclick="deleteItem('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.delete', $period->id) }}')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Periode">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -106,9 +112,15 @@
                                 <td class="py-4 px-6 text-center text-xs font-semibold {{ $wave->registrations_count > 0 ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                     {{ $wave->registrations_count > 0 ? 'Ya (' . $wave->registrations_count . ' Siswa)' : 'Tidak' }}
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button onclick="openModal('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.update', $wave->id) }}', '1', '{{ addslashes($wave->description) }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
-                                    <button onclick="deleteItem('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.delete', $wave->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" onclick="openModal('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.update', $wave->id) }}', '1', '{{ addslashes($wave->description) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Gelombang">
+                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                        </button>
+                                        <button type="button" onclick="deleteItem('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.delete', $wave->id) }}')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Gelombang">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -154,9 +166,15 @@
                                 <td class="py-4 px-6 text-center text-xs font-semibold {{ $type->registrations_count > 0 ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                     {{ $type->registrations_count > 0 ? 'Ya (' . $type->registrations_count . ' Siswa)' : 'Tidak' }}
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button onclick="openModal('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.update', $type->id) }}', '1', '{{ addslashes($type->description) }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
-                                    <button onclick="deleteItem('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.delete', $type->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" onclick="openModal('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.update', $type->id) }}', '1', '{{ addslashes($type->description) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Jenis Pendaftaran">
+                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                        </button>
+                                        <button type="button" onclick="deleteItem('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.delete', $type->id) }}')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Jenis Pendaftaran">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -210,9 +228,15 @@
                                 <td class="py-4 px-6 text-center text-xs font-semibold {{ $program->registrations_count > 0 ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                     {{ $program->registrations_count > 0 ? 'Ya (' . $program->registrations_count . ' Siswa)' : 'Tidak' }}
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button onclick="openModal('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.update', $program->id) }}', '{{ $program->is_active }}', '{{ addslashes($program->description) }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
-                                    <button onclick="deleteItem('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.delete', $program->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" onclick="openModal('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.update', $program->id) }}', '{{ $program->is_active }}', '{{ addslashes($program->description) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Program Kelas">
+                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                        </button>
+                                        <button type="button" onclick="deleteItem('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.delete', $program->id) }}')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Program Kelas">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
