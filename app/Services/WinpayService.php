@@ -124,6 +124,62 @@ class WinpayService implements PaymentGatewayInterface
     }
 
     /**
+     * Parse and extract valid OpenSSL Private Key resource
+     */
+    protected function getPrivateKeyResource($key)
+    {
+        if (empty($key)) return null;
+
+        $key = trim($key);
+        $res = @openssl_pkey_get_private($key);
+        if ($res) return $res;
+
+        $clean = preg_replace('/-----BEGIN[^-]+-----/', '', $key);
+        $clean = preg_replace('/-----END[^-]+-----/', '', $clean);
+        $clean = str_replace(["\r", "\n", ' ', "\t"], '', $clean);
+
+        if (!empty($clean)) {
+            $pemRsa = "-----BEGIN RSA PRIVATE KEY-----\n" . chunk_split($clean, 64, "\n") . "-----END RSA PRIVATE KEY-----";
+            $res = @openssl_pkey_get_private($pemRsa);
+            if ($res) return $res;
+
+            $pemPrivate = "-----BEGIN PRIVATE KEY-----\n" . chunk_split($clean, 64, "\n") . "-----END PRIVATE KEY-----";
+            $res = @openssl_pkey_get_private($pemPrivate);
+            if ($res) return $res;
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse and extract valid OpenSSL Public Key resource
+     */
+    protected function getPublicKeyResource($key)
+    {
+        if (empty($key)) return null;
+
+        $key = trim($key);
+        $res = @openssl_pkey_get_public($key);
+        if ($res) return $res;
+
+        $clean = preg_replace('/-----BEGIN[^-]+-----/', '', $key);
+        $clean = preg_replace('/-----END[^-]+-----/', '', $clean);
+        $clean = str_replace(["\r", "\n", ' ', "\t"], '', $clean);
+
+        if (!empty($clean)) {
+            $pemPublic = "-----BEGIN PUBLIC KEY-----\n" . chunk_split($clean, 64, "\n") . "-----END PUBLIC KEY-----";
+            $res = @openssl_pkey_get_public($pemPublic);
+            if ($res) return $res;
+
+            $pemRsa = "-----BEGIN RSA PUBLIC KEY-----\n" . chunk_split($clean, 64, "\n") . "-----END RSA PUBLIC KEY-----";
+            $res = @openssl_pkey_get_public($pemRsa);
+            if ($res) return $res;
+        }
+
+        return null;
+    }
+
+    /**
      * Format RSA Private Key ke string PEM valid jika belum memiliki header
      */
     protected function formatPrivateKey($key)
@@ -159,11 +215,7 @@ class WinpayService implements PaymentGatewayInterface
             return '';
         }
 
-        $formattedKey = $this->formatPrivateKey($this->privateKey);
-        $privateKeyResource = openssl_pkey_get_private($formattedKey);
-        if (!$privateKeyResource) {
-            $privateKeyResource = openssl_pkey_get_private($this->privateKey);
-        }
+        $privateKeyResource = $this->getPrivateKeyResource($this->privateKey);
 
         if (!$privateKeyResource) {
             Log::error('Invalid Winpay Private Key format. Unable to parse with OpenSSL.');
@@ -484,11 +536,7 @@ class WinpayService implements PaymentGatewayInterface
             return false; // Security: FAIL-CLOSED! Never allow unverified webhook in live environments.
         }
 
-        $formattedPublicKey = $this->formatPublicKey($this->publicKey);
-        $publicKeyResource = openssl_pkey_get_public($formattedPublicKey);
-        if (!$publicKeyResource) {
-            $publicKeyResource = openssl_pkey_get_public($this->publicKey);
-        }
+        $publicKeyResource = $this->getPublicKeyResource($this->publicKey);
 
         if (!$publicKeyResource) {
             Log::error('Winpay Callback rejected: Invalid Winpay Public Key PEM format.');
@@ -501,14 +549,42 @@ class WinpayService implements PaymentGatewayInterface
             return false;
         }
 
-        // Kumpulkan kandidat path endpoint yang mungkin ditandatangani oleh Winpay
-        $endpointCandidates = ['/api/payments/callback', 'api/payments/callback'];
+        // Kumpulkan semua kandidat path endpoint yang mungkin ditandatangani oleh Winpay SNAP BI
+        $endpointCandidates = [
+            '/api/payments/callback',
+            'api/payments/callback',
+            '/v1.0/transfer-va/payment',
+            'v1.0/transfer-va/payment',
+            '/v1.0/qr/qr-mpm-notify',
+            'v1.0/qr/qr-mpm-notify',
+            '/v1.0/debit/notify',
+            'v1.0/debit/notify',
+            '/v1.0/debit/payment-host-to-host',
+            'v1.0/debit/payment-host-to-host',
+            '/api/payments/callback/v1.0/transfer-va/payment',
+            'api/payments/callback/v1.0/transfer-va/payment',
+            '/api/payments/callback/v1.0/qr/qr-mpm-notify',
+            'api/payments/callback/v1.0/qr/qr-mpm-notify',
+            '/api/payments/callback/v1.0/debit/notify',
+            'api/payments/callback/v1.0/debit/notify',
+            '/api/payments/callback/winpay',
+            'api/payments/callback/winpay',
+        ];
+
         if (!empty($requestUri)) {
             $parsedPath = parse_url($requestUri, PHP_URL_PATH);
             if ($parsedPath) {
                 $endpointCandidates[] = $parsedPath;
                 $endpointCandidates[] = ltrim($parsedPath, '/');
+                $endpointCandidates[] = '/' . ltrim($parsedPath, '/');
+
+                // Ekstrak suffix SNAP BI jika ada (misal dari /api/payments/callback/v1.0/transfer-va/payment -> /v1.0/transfer-va/payment)
+                if (preg_match('#(/v1\.0/.*)#', $parsedPath, $matches)) {
+                    $endpointCandidates[] = $matches[1];
+                    $endpointCandidates[] = ltrim($matches[1], '/');
+                }
             }
+            $endpointCandidates[] = $requestUri;
         }
         $endpointCandidates = array_unique(array_filter($endpointCandidates));
 
@@ -523,12 +599,14 @@ class WinpayService implements PaymentGatewayInterface
             $decoded = json_decode($rawContent, true);
             if ($decoded !== null) {
                 $bodyCandidates[] = json_encode($decoded, JSON_UNESCAPED_SLASHES);
+                $bodyCandidates[] = json_encode($decoded);
             }
         }
 
         // 2. Encoded body array (fallback)
         if (!empty($body)) {
             $bodyCandidates[] = json_encode($body, JSON_UNESCAPED_SLASHES);
+            $bodyCandidates[] = json_encode($body);
         }
 
         $bodyCandidates = array_unique(array_filter($bodyCandidates));

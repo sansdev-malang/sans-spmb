@@ -480,16 +480,26 @@ class PaymentController extends Controller
         $origRefNo = $body['originalReferenceNo'] ?? null;
         $trxId = $body['trxId'] ?? null;
         $refNo = $body['referenceNo'] ?? null;
+        $paymentReqId = $body['paymentRequestId'] ?? ($body['virtualAccountData']['paymentRequestId'] ?? null);
+        $vaNo = $body['virtualAccountNo'] ?? ($body['virtualAccountData']['virtualAccountNo'] ?? null);
 
-        // Siapkan struktur ACK standar SNAP BI Winpay
-        $ackResponseCode = '2002500';
+        // Siapkan struktur ACK standar SNAP BI Winpay sesuai spesifikasi kanal
+        $isVaCallback = !empty($vaNo) || !empty($trxId) || str_contains($requestUri, 'transfer-va') || !empty($body['virtualAccountData']);
+        $isQrisCallback = str_contains($requestUri, 'qr') || !empty($body['qrContent']) || !empty($body['qrUrl']) || !empty($body['qrData']);
+        $isEwalletCallback = !empty($origPartnerRef) || !empty($body['additionalInfo']['contractId']) || str_contains($requestUri, 'debit');
+
         if (!empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')) {
             $ackResponseCode = (string)$body['responseCode'];
-        } elseif (!empty($origPartnerRef) || !empty($body['additionalInfo']['contractId']) || !empty($body['additionalInfo']['channel'])) {
+        } elseif ($isVaCallback) {
+            // Standar Winpay SNAP BI untuk Virtual Account Payment Notification ACK adalah 2002700
+            $ackResponseCode = '2002700';
+        } elseif ($isQrisCallback) {
+            // Standar Winpay SNAP BI untuk QRIS Notification ACK adalah 2005400
+            $ackResponseCode = '2005400';
+        } elseif ($isEwalletCallback) {
             // Standar Winpay SNAP BI untuk E-Wallet & Direct Debit Notification ACK adalah 2005600
             $ackResponseCode = '2005600';
-        } elseif (!empty($trxId) || !empty($body['virtualAccountNo'])) {
-            // Standar Winpay SNAP BI untuk Virtual Account Payment Notification ACK adalah 2002700
+        } else {
             $ackResponseCode = '2002700';
         }
 
@@ -497,6 +507,20 @@ class PaymentController extends Controller
             'responseCode' => $ackResponseCode,
             'responseMessage' => 'Successful'
         ];
+
+        // Format objek virtualAccountData sesuai standar SNAP BI Winpay jika kanal berupa VA
+        if ($isVaCallback) {
+            $ackPayload['virtualAccountData'] = [
+                'partnerServiceId' => $body['partnerServiceId'] ?? ($body['virtualAccountData']['partnerServiceId'] ?? ''),
+                'customerNo' => $body['customerNo'] ?? ($body['virtualAccountData']['customerNo'] ?? ''),
+                'virtualAccountNo' => $vaNo ?: ($body['virtualAccountData']['virtualAccountNo'] ?? ''),
+                'virtualAccountName' => $body['virtualAccountName'] ?? ($body['virtualAccountData']['virtualAccountName'] ?? ''),
+                'trxId' => $trxId ?: ($body['virtualAccountData']['trxId'] ?? $invoiceNo),
+            ];
+            if (!empty($paymentReqId)) {
+                $ackPayload['virtualAccountData']['paymentRequestId'] = $paymentReqId;
+            }
+        }
 
         if (!empty($origPartnerRef)) {
             $ackPayload['originalPartnerReferenceNo'] = $origPartnerRef;
@@ -513,13 +537,14 @@ class PaymentController extends Controller
         // =========================================================================================
         DB::beginTransaction();
         try {
-            $payment = Payment::where(function($q) use ($invoiceNo, $origPartnerRef, $partnerRef, $origRefNo, $trxId, $refNo) {
+            $payment = Payment::where(function($q) use ($invoiceNo, $origPartnerRef, $partnerRef, $origRefNo, $trxId, $refNo, $paymentReqId) {
                 $q->where('invoice_number', $invoiceNo);
                 if ($origPartnerRef) $q->orWhere('invoice_number', $origPartnerRef);
                 if ($partnerRef) $q->orWhere('invoice_number', $partnerRef);
                 if ($origRefNo) $q->orWhere('invoice_number', $origRefNo)->orWhere('reference_id', $origRefNo);
                 if ($trxId) $q->orWhere('invoice_number', $trxId)->orWhere('reference_id', $trxId);
                 if ($refNo) $q->orWhere('reference_id', $refNo);
+                if ($paymentReqId) $q->orWhere('reference_id', $paymentReqId);
             })->lockForUpdate()->first();
 
             if (!$payment) {
@@ -539,7 +564,7 @@ class PaymentController extends Controller
             }
 
             // Simpan reference_id dari Winpay jika belum tersimpan
-            $resolvedWinpayRef = $origRefNo ?: ($refNo ?: $trxId);
+            $resolvedWinpayRef = $origRefNo ?: ($refNo ?: ($paymentReqId ?: $trxId));
             if (empty($payment->reference_id) && !empty($resolvedWinpayRef)) {
                 $payment->update(['reference_id' => $resolvedWinpayRef]);
             }

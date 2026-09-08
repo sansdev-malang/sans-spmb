@@ -18,6 +18,14 @@ Route::post('/payments/callback/winpay', fn (Request $request, PaymentController
 Route::post('/payments/callback/bni', fn (Request $request, PaymentController $c) => $c->callback($request, 'bni'));
 Route::post('/payments/callback/v1.0/transfer-va/payment', [PaymentController::class, 'callback']);
 Route::post('/payments/callback/v1.0/qr/qr-mpm-notify', [PaymentController::class, 'callback']);
+Route::post('/payments/callback/v1.0/debit/notify', [PaymentController::class, 'callback']);
+Route::post('/payments/callback/v1.0/debit/payment-host-to-host', [PaymentController::class, 'callback']);
+
+// Standalone SNAP BI Root Callback Routes
+Route::post('/v1.0/transfer-va/payment', [PaymentController::class, 'callback']);
+Route::post('/v1.0/qr/qr-mpm-notify', [PaymentController::class, 'callback']);
+Route::post('/v1.0/debit/notify', [PaymentController::class, 'callback']);
+Route::post('/v1.0/debit/payment-host-to-host', [PaymentController::class, 'callback']);
 
 // Protected Routes (Requires Token)
 Route::middleware('auth:sanctum')->group(function () {
