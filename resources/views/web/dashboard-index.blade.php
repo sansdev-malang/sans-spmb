@@ -401,10 +401,10 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                             <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
-                            Jalur
+                            Jalur Masuk
                         </label>
                         <select id="typeSelect" name="spmb_type_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
-                            <option value="">Pilih Jalur...</option>
+                            <option value="">Pilih Jalur Masuk...</option>
                             @foreach($types as $type)
                                 <option value="{{ $type->id }}" data-name="{{ $type->name }}">{{ $type->name }}</option>
                             @endforeach
