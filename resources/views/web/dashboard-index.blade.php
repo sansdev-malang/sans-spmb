@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Pilih Pendaftaran Siswa - Portal SPMB')
+@section('title', 'Pilih Pendaftaran Murid - Portal SPMB')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 pt-4 pb-12 sm:px-6 lg:px-8 space-y-6">
@@ -19,9 +19,9 @@
     <!-- WELCOME BANNER & ONBOARDING CARD GRID (ALWAYS SHOWN) -->
     <div class="max-w-4xl mx-auto pt-2 pb-6 space-y-6 text-center">
         <div class="space-y-3">
-            <h1 class="text-3xl font-extrabold text-slate-850 dark:text-white tracking-tight">Selamat Datang di Portal Penerimaan Siswa Baru</h1>
+            <h1 class="text-3xl font-extrabold text-slate-850 dark:text-white tracking-tight">Selamat Datang di Portal Penerimaan Murid Baru</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
-                Langkah pertama pendidikan terbaik ananda di {{ \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh') }} dimulai dari sini. Silakan daftarkan anak Anda untuk memulai proses seleksi masuk penerimaan siswa baru.
+                Langkah pertama pendidikan terbaik ananda di {{ \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh') }} dimulai dari sini. Silakan daftarkan anak Anda untuk memulai proses seleksi masuk penerimaan murid baru.
             </p>
         </div>
 
@@ -112,7 +112,7 @@
             } elseif (!str_starts_with($cleanCsPhone, '62')) {
                 $cleanCsPhone = '62' . $cleanCsPhone;
             }
-            $csMsg = \App\Models\Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.');
+            $csMsg = \App\Models\Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran murid baru.');
             $csTitle = \App\Models\Setting::get('spmb_cs_card_title', 'Pusat Bantuan & Konsultasi SPMB');
             $csDesc = \App\Models\Setting::get('spmb_cs_card_desc', 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
             $csWaUrl = "https://wa.me/{$cleanCsPhone}?text=" . urlencode($csMsg);
@@ -138,7 +138,7 @@
         <div class="pt-8 border-t border-slate-200/60 dark:border-slate-800 space-y-6">
             <div class="text-center max-w-xl mx-auto space-y-1">
                 <h2 class="text-2xl font-extrabold text-slate-850 dark:text-white tracking-tight">Pendaftaran Ananda Anda</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Kelola tahapan pendaftaran atau selesaikan administrasi siswa di bawah ini.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Kelola tahapan pendaftaran atau selesaikan administrasi murid di bawah ini.</p>
             </div>
 
             <div class="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto pt-2">
@@ -360,8 +360,8 @@
                     <i data-lucide="user-plus" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-extrabold text-slate-850 dark:text-white tracking-tight">Daftarkan Anak Baru</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Isi formulir untuk memulai pendaftaran calon siswa</p>
+                    <h2 class="text-base font-extrabold text-slate-850 dark:text-white tracking-tight">Mulai Pendaftaran Ananda</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Pilih unit sekolah dan jalur masuk untuk memulai proses seleksi</p>
                 </div>
             </div>
             <button type="button" onclick="closeRegistrationModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -374,14 +374,16 @@
             
             <!-- Body -->
             <div class="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+                <!-- Baris 1: Nama Calon Murid -->
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <i data-lucide="user" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
-                        Nama Calon Siswa (Sesuai Akte)
+                        Nama Calon Murid (Sesuai Akte)
                     </label>
                     <input type="text" name="candidate_name" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Masukkan nama lengkap anak Anda">
                 </div>
                 
+                <!-- Baris 2: Unit Sekolah & Jalur -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -392,10 +394,29 @@
                         <input type="text" id="unitNameDisplay" readonly class="w-full bg-slate-100 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 dark:text-slate-400 text-sm font-semibold select-none cursor-not-allowed">
                         <select id="unitSelect" style="display: none;">
                             @foreach($units as $unit)
-                                <option value="{{ $unit->id }}" data-name="{{ $unit->name }}">{{ $unit->name }}</option>
+                                <option value="{{ $unit->id }}" data-name="{{ $unit->name }}" data-code="{{ $unit->code }}">{{ $unit->name }}</option>
                             @endforeach
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                            Jalur
+                        </label>
+                        <select id="typeSelect" name="spmb_type_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                            <option value="">Pilih Jalur...</option>
+                            @foreach($types as $type)
+                                <option value="{{ $type->id }}" data-name="{{ $type->name }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Baris 3: Tingkatan/Kelas, Gelombang, & Tahun -->
+                @php
+                    $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+                @endphp
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                             <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
@@ -404,24 +425,6 @@
                         <select id="gradeSelect" name="spmb_grade_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                             <option value="">Pilih Tingkatan...</option>
                             <!-- Options akan diisi via javascript -->
-                        </select>
-                    </div>
-                </div>
-
-                @php
-                    $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
-                @endphp
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
-                            Jalur
-                        </label>
-                        <select name="spmb_type_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
-                            <option value="">Pilih Jalur...</option>
-                            @foreach($types as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
                         </select>
                     </div>
                     <div>
@@ -464,8 +467,10 @@
 
 @push('scripts')
 <script>
-    // Data Grades untuk dependent dropdown
+    // Master data untuk dynamic dependency
     const gradesData = @json($grades);
+    const unitsData = @json($units);
+    const typesData = @json($types);
 
     function openRegistrationModal() {
         const modal = document.getElementById('newRegistrationModal');
@@ -486,10 +491,70 @@
         modalBody.classList.add('scale-95');
     }
 
+    // Fungsi pembaruan dropdown Tingkatan / Kelas berdasarkan Unit & Jalur
+    function updateGradeOptions(targetGradeId = null) {
+        const hiddenInput = document.getElementById('hiddenUnitInput');
+        const unitId = hiddenInput ? hiddenInput.value : '';
+        const typeSelect = document.getElementById('typeSelect');
+        const gradeSelect = document.getElementById('gradeSelect');
+        
+        if (!gradeSelect) return;
+        
+        gradeSelect.innerHTML = '<option value="">Pilih Tingkatan...</option>';
+        
+        if (!unitId) {
+            gradeSelect.disabled = true;
+            return;
+        }
+
+        const unit = unitsData.find(u => u.id == unitId);
+        const unitCode = unit ? (unit.code || '').toUpperCase() : '';
+
+        const selectedTypeId = typeSelect ? typeSelect.value : '';
+        const selectedType = typesData.find(t => t.id == selectedTypeId);
+        const typeName = selectedType ? (selectedType.name || '').toLowerCase() : '';
+
+        // Deteksi apakah jalur yang dipilih adalah Mutasi / Pindahan
+        const isMutasi = typeName.includes('mutasi') || typeName.includes('pindah');
+
+        // Filter tingkatan aktif untuk unit sekolah yang dipilih
+        let availableGrades = gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+
+        // Jika BUKAN jalur mutasi, batasi hanya kelas awal untuk SD & SMP
+        if (!isMutasi) {
+            if (unitCode === 'SD') {
+                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 1') || g.name.trim() === '1');
+            } else if (unitCode === 'SMP') {
+                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 7') || g.name.trim() === '7');
+            }
+            // PAUD tetap menampilkan seluruh jenjang (KB, TK A, TK B)
+        }
+
+        if (availableGrades.length > 0) {
+            availableGrades.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.name;
+                gradeSelect.appendChild(opt);
+            });
+            gradeSelect.disabled = false;
+
+            // Auto-select tingkatan
+            if (targetGradeId && availableGrades.some(g => g.id == targetGradeId)) {
+                gradeSelect.value = targetGradeId;
+            } else if (availableGrades.length === 1) {
+                gradeSelect.value = availableGrades[0].id;
+            }
+        } else {
+            gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan aktif</option>';
+            gradeSelect.disabled = true;
+        }
+    }
+
     function startRegistrationWithUnit(unitId, gradeId) {
         openRegistrationModal();
         
-        // Update hidden input and display text
+        // Update hidden input dan tampilan unit
         const hiddenInput = document.getElementById('hiddenUnitInput');
         hiddenInput.value = unitId;
         
@@ -499,39 +564,32 @@
         const selectedOption = unitSelect.options[unitSelect.selectedIndex];
         document.getElementById('unitNameDisplay').value = selectedOption ? selectedOption.getAttribute('data-name') : '';
         
-        // Trigger select change to update grades dropdown
-        unitSelect.dispatchEvent(new Event('change'));
-        
-        setTimeout(() => {
-            const gradeSelect = document.getElementById('gradeSelect');
-            if (gradeSelect && gradeId) {
-                gradeSelect.value = gradeId;
-            }
-        }, 100);
-    }
-    
-    document.getElementById('unitSelect').addEventListener('change', function() {
-        const unitId = this.value;
-        const gradeSelect = document.getElementById('gradeSelect');
-        
-        // Reset grade options
-        gradeSelect.innerHTML = '<option value="">Pilih Tingkatan...</option>';
-        gradeSelect.disabled = true;
-        
-        if (unitId) {
-            // Filter grades based on unit
-            const filteredGrades = gradesData.filter(g => g.spmb_unit_id == unitId);
-            
-            if (filteredGrades.length > 0) {
-                filteredGrades.forEach(g => {
-                    const option = document.createElement('option');
-                    option.value = g.id;
-                    option.textContent = g.name;
-                    gradeSelect.appendChild(option);
-                });
-                gradeSelect.disabled = false;
+        // Defaultkan ke jalur pertama jika belum terpilih
+        const typeSelect = document.getElementById('typeSelect');
+        if (typeSelect && (!typeSelect.value || typeSelect.value === '')) {
+            if (typeSelect.options.length > 1) {
+                typeSelect.selectedIndex = 1; // Pilih opsi pertama setelah placeholder
             }
         }
-    });
+        
+        // Perbarui opsi tingkatan / kelas
+        updateGradeOptions(gradeId);
+    }
+    
+    // Listener saat jalur diubah
+    const typeSelectElem = document.getElementById('typeSelect');
+    if (typeSelectElem) {
+        typeSelectElem.addEventListener('change', function() {
+            updateGradeOptions();
+        });
+    }
+
+    // Listener saat unit diubah (jika ada trigger eksternal)
+    const unitSelectElem = document.getElementById('unitSelect');
+    if (unitSelectElem) {
+        unitSelectElem.addEventListener('change', function() {
+            updateGradeOptions();
+        });
+    }
 </script>
 @endpush

@@ -54,7 +54,14 @@ class SpmbUnitAndGradeSeeder extends Seeder
             ['spmb_unit_code' => 'PAUD', 'name' => 'TK A', 'is_active' => 1],
             ['spmb_unit_code' => 'PAUD', 'name' => 'TK B', 'is_active' => 1],
             ['spmb_unit_code' => 'SD', 'name' => 'Kelas 1', 'is_active' => 1],
+            ['spmb_unit_code' => 'SD', 'name' => 'Kelas 2', 'is_active' => 1],
+            ['spmb_unit_code' => 'SD', 'name' => 'Kelas 3', 'is_active' => 1],
+            ['spmb_unit_code' => 'SD', 'name' => 'Kelas 4', 'is_active' => 1],
+            ['spmb_unit_code' => 'SD', 'name' => 'Kelas 5', 'is_active' => 1],
+            ['spmb_unit_code' => 'SD', 'name' => 'Kelas 6', 'is_active' => 1],
             ['spmb_unit_code' => 'SMP', 'name' => 'Kelas 7', 'is_active' => 1],
+            ['spmb_unit_code' => 'SMP', 'name' => 'Kelas 8', 'is_active' => 1],
+            ['spmb_unit_code' => 'SMP', 'name' => 'Kelas 9', 'is_active' => 1],
         ];
 
         foreach ($grades as $grade) {
