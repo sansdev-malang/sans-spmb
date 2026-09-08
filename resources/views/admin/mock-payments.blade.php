@@ -54,7 +54,7 @@
                     </div>
                     
                     <!-- Filter Status -->
-                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="">Semua Status</option>
                         <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success</option>
                         <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
@@ -62,11 +62,11 @@
                     </select>
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
+                        <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
+                        <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
+                        <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
                     </select>
 
                     <!-- Advanced Filter Toggle Button -->
@@ -149,7 +149,7 @@
 
         @if(auth()->user()->isSuperAdmin())
             <!-- Unit Tabs -->
-            <div class="px-6 pt-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 text-[10px] font-bold">
+            <div class="px-6 pt-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 text-xs font-bold">
                 <!-- Semua Unit Tab -->
                 <a href="{{ route(Route::currentRouteName(), request()->except(['page', 'unit_id'])) }}" 
                    class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ !request()->filled('unit_id') ? 'border-brand-emerald text-brand-emerald bg-white dark:bg-slate-800 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' }}">

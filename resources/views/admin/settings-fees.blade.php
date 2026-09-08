@@ -50,7 +50,7 @@
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-sm divide-y divide-slate-100">
+                    <tbody class="text-xs divide-y divide-slate-100">
                         @forelse($categories as $cat)
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $cat->name }}</td>
@@ -66,13 +66,24 @@
                                 <td class="py-4 px-6 text-center text-xs font-semibold {{ $cat->is_used ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                     {{ $cat->is_used ? 'Ya' : 'Tidak' }}
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button onclick="openFeeModal('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.update', $cat->id) }}', '', 'winpay', '', '', [{{ implode(',', $cat->units->pluck('id')->toArray()) }}])" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button type="button" onclick="openFeeModal('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.update', $cat->id) }}', '', 'winpay', '', '', [{{ implode(',', $cat->units->pluck('id')->toArray()) }}])" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
+                                            <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+                                            <span>Edit</span>
+                                        </button>
                                     @if(!$cat->is_used)
-                                        <button onclick="deleteFeeItem('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.delete', $cat->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                        <button type="button" onclick="deleteFeeItem('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.delete', $cat->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            <span>Hapus</span>
+                                        </button>
                                     @else
-                                        <span class="text-xs text-slate-350 cursor-not-allowed font-bold" title="Kategori sedang digunakan">Hapus</span>
+                                        <span class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-400 cursor-not-allowed" title="Kategori sedang digunakan">
+                                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                            <span>Hapus</span>
+                                        </span>
                                     @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -110,7 +121,7 @@
                                 <th class="py-4 px-6 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm divide-y divide-slate-100">
+                        <tbody class="text-xs divide-y divide-slate-100">
                             @forelse($fees->where('spmb_fee_category_id', $cat->id) as $fee)
                                 <tr class="hover:bg-slate-50/30 transition">
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $fee->name }}</td>
@@ -142,9 +153,17 @@
                                     <td class="py-4 px-6 text-center text-xs font-semibold {{ $fee->is_used ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
                                         {{ $fee->is_used ? 'Ya (Terpakai)' : 'Tidak' }}
                                     </td>
-                                    <td class="py-4 px-6 text-right space-x-2">
-                                        <button onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}')" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
-                                        <button onclick="deleteFeeItem('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                    <td class="py-4 px-6 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button type="button" onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
+                                                <i data-lucide="edit" class="w-3.5 h-3.5"></i>
+                                                <span>Edit</span>
+                                            </button>
+                                            <button type="button" onclick="deleteFeeItem('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Hapus</span>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

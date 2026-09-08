@@ -9,12 +9,9 @@
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                    <i data-lucide="award" class="w-5 h-5"></i>
-                </div>
                 <div>
                     <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Hasil Seleksi & Pengumuman Kelulusan</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Penetapan status kelulusan calon siswa pasca observasi Ta'aruf dan penerbitan Surat Keputusan Diterima.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Penetapan status kelulusan calon siswa pasca observasi Ta'aruf dan penerbitan Surat Keputusan Diterima.</p>
                 </div>
             </div>
         </div>
@@ -88,7 +85,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="h-9 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition">
+            <button type="submit" class="h-9 px-4 bg-brand-emerald hover:bg-brand-dark text-white rounded-xl text-xs font-bold transition">
                 Cari
             </button>
 

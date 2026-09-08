@@ -7,15 +7,10 @@
 <div class="space-y-6">
     <!-- Header Card -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                    <i data-lucide="line-chart" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Laporan & Rekapitulasi Keuangan SPMB</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Ringkasan arus kas masuk, realisasi pembayaran DSP, diskon, dan sisa piutang pendaftaran.</p>
-                </div>
+        <div class="flex items-center gap-2.5">
+            <div>
+                <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Laporan & Rekapitulasi Keuangan SPMB</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Ringkasan arus kas masuk, realisasi pembayaran DSP, diskon, dan sisa piutang pendaftaran.</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
@@ -41,12 +36,14 @@
 
             <div class="flex items-center gap-2">
                 <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Gelombang:</label>
-                <select name="wave_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
-                    <option value="">Semua Gelombang</option>
-                    @foreach($waves as $w)
-                        <option value="{{ $w->id }}" {{ request('wave_id') == $w->id ? 'selected' : '' }}>{{ $w->name }}</option>
-                    @endforeach
-                </select>
+                <div class="relative">
+                    <select name="wave_id" onchange="this.form.submit()" class="appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
+                        <option value="">Semua Gelombang</option>
+                        @foreach($waves as $w)
+                            <option value="{{ $w->id }}" {{ request('wave_id') == $w->id ? 'selected' : '' }}>{{ $w->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
             @if(request()->anyFilled(['unit_id', 'wave_id']))

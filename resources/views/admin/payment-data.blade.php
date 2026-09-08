@@ -212,7 +212,7 @@
                 </div>
 
                 <!-- Right: Status Filter Pills -->
-                <div class="flex items-center gap-2 overflow-x-auto w-full 2xl:w-auto pb-1 2xl:pb-0 select-none">
+                <div class="flex items-center gap-1.5 overflow-x-auto w-full 2xl:w-auto pb-1 2xl:pb-0 select-none">
                     @foreach($statusPills as $sKey => $sData)
                         @php 
                             $isActive = ($currentStatus === $sKey); 
@@ -221,9 +221,9 @@
                                 : route('admin.payments.data', array_merge(request()->except(['page']), ['status' => $sKey]));
                         @endphp
                                 <a href="{{ $pillUrl }}" 
-                                    class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full text-[12px] font-extrabold border transition-all duration-200 whitespace-nowrap shadow-sm leading-none {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
+                                    class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap cursor-pointer {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
                             <span>{{ $sData['label'] }}</span>
-                            <span class="min-w-[1.7rem] px-1.5 py-0.5 rounded-full text-[10px] font-black text-center leading-none {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
+                            <span class="h-5 min-w-5 px-1 rounded-md inline-flex items-center justify-center text-[10px] leading-none font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
                                 {{ $sData['count'] }}
                             </span>
                         </a>

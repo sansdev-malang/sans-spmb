@@ -185,7 +185,7 @@
                     'all' => [
                         'label' => 'Semua',
                         'count' => $stageCounts['all'] ?? $stats['total'] ?? 0,
-                        'active_class' => 'bg-brand-emerald text-white border-brand-emerald shadow-sm ring-2 ring-emerald-600/20',
+                        'active_class' => 'bg-brand-emerald text-white border-brand-emerald shadow-sm',
                         'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300',
                         'badge_active' => 'bg-white/20 text-white',
                         'badge_inactive' => 'bg-slate-100 text-slate-600'
@@ -193,7 +193,7 @@
                     'draft' => [
                         'label' => 'Formulir',
                         'count' => $stageCounts['draft'] ?? 0,
-                        'active_class' => 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-600/20',
+                        'active_class' => 'bg-blue-600 text-white border-blue-600 shadow-sm',
                         'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
                         'badge_active' => 'bg-white/20 text-white',
                         'badge_inactive' => 'bg-blue-50 text-blue-700'
@@ -201,7 +201,7 @@
                     'submitted' => [
                         'label' => 'Verifikasi',
                         'count' => $stageCounts['submitted'] ?? 0,
-                        'active_class' => 'bg-purple-600 text-white border-purple-600 shadow-sm ring-2 ring-purple-600/20',
+                        'active_class' => 'bg-purple-600 text-white border-purple-600 shadow-sm',
                         'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200',
                         'badge_active' => 'bg-white/20 text-white',
                         'badge_inactive' => 'bg-purple-50 text-purple-700'
@@ -209,7 +209,7 @@
                     'verified' => [
                         'label' => "Ta'aruf",
                         'count' => $stageCounts['verified'] ?? 0,
-                        'active_class' => 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-600/20',
+                        'active_class' => 'bg-indigo-600 text-white border-indigo-600 shadow-sm',
                         'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200',
                         'badge_active' => 'bg-white/20 text-white',
                         'badge_inactive' => 'bg-indigo-50 text-indigo-700'
@@ -217,7 +217,7 @@
                     'taaruf_completed' => [
                         'label' => 'Persetujuan',
                         'count' => $stageCounts['taaruf_completed'] ?? 0,
-                        'active_class' => 'bg-amber-600 text-white border-amber-600 shadow-sm ring-2 ring-amber-600/20',
+                        'active_class' => 'bg-amber-600 text-white border-amber-600 shadow-sm',
                         'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200',
                         'badge_active' => 'bg-white/20 text-white',
                         'badge_inactive' => 'bg-amber-50 text-amber-700'
@@ -225,7 +225,7 @@
                     'agreement_signed' => [
                         'label' => 'Administrasi',
                         'count' => $stageCounts['agreement_signed'] ?? 0,
-                        'active_class' => 'bg-pink-600 text-white border-pink-600 shadow-sm ring-2 ring-pink-600/20',
+                        'active_class' => 'bg-pink-600 text-white border-pink-600 shadow-sm',
                         'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-pink-50 hover:text-pink-700 hover:border-pink-200',
                         'badge_active' => 'bg-white/20 text-white',
                         'badge_inactive' => 'bg-pink-50 text-pink-700'
@@ -233,7 +233,7 @@
                     'completed' => [
                         'label' => 'Selesai',
                         'count' => $stageCounts['completed'] ?? 0,
-                        'active_class' => 'bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-600/20',
+                        'active_class' => 'bg-emerald-600 text-white border-emerald-600 shadow-sm',
                         'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200',
                         'badge_active' => 'bg-white/20 text-white',
                         'badge_inactive' => 'bg-emerald-50 text-emerald-700'
@@ -272,7 +272,7 @@
                     
                     @if(auth()->user()->isSuperAdmin())
                         <!-- Filter Level / Unit -->
-                        <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jenjang</option>
                             @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
                                 <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
@@ -281,7 +281,7 @@
                     @endif
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -308,7 +308,7 @@
                         <a href="{{ $pillUrl }}" 
                            class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap cursor-pointer {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
                             <span>{{ $sData['label'] }}</span>
-                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
+                            <span class="h-5 min-w-5 px-1 rounded-md inline-flex items-center justify-center text-[10px] leading-none font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
                                 {{ $sData['count'] }}
                             </span>
                         </a>
