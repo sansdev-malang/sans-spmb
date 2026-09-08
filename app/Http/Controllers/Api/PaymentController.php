@@ -482,7 +482,7 @@ class PaymentController extends Controller
             $isFailed = true;
         } elseif ($responseCode && (str_starts_with($responseCode, '40') || str_starts_with($responseCode, '50'))) {
             $isFailed = true;
-        } elseif (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005400', '2005600', '2000000'])) {
+        } elseif (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005100', '2005200', '2005400', '2005600', '2000000'])) {
             $isSuccess = true;
         } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['SUCCESS', 'SUCCESSFUL', 'PAID', 'SETTLED', '00', '0000', 'BERHASIL'])) {
             $isSuccess = true;
@@ -495,8 +495,8 @@ class PaymentController extends Controller
         if (!empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')) {
             $ackResponseCode = (string)$body['responseCode'];
         } elseif ($isQrisCallback) {
-            // Standar Winpay SNAP BI untuk QRIS Notification ACK adalah 2005400 (Service Code 54)
-            $ackResponseCode = '2005400';
+            // Standar Winpay SNAP BI untuk QRIS MPM Notification ACK adalah 2005200 (Service Code 52)
+            $ackResponseCode = '2005200';
         } elseif ($isVaCallback) {
             // Standar Winpay SNAP BI untuk Virtual Account Payment Callback Notification ACK adalah 2002500 (Service Code 25)
             $ackResponseCode = '2002500';
@@ -529,15 +529,17 @@ class PaymentController extends Controller
             }
         }
 
-        // Sertakan echo reference numbers jika ada dalam request webhook
-        if (!empty($origPartnerRef)) {
-            $ackPayload['originalPartnerReferenceNo'] = $origPartnerRef;
-        }
-        if (!empty($origRefNo)) {
-            $ackPayload['originalReferenceNo'] = $origRefNo;
-        }
-        if (!empty($partnerRef)) {
-            $ackPayload['partnerReferenceNo'] = $partnerRef;
+        // Sertakan echo reference numbers jika ada dalam request webhook (untuk VA / E-wallet)
+        if (!$isQrisCallback) {
+            if (!empty($origPartnerRef)) {
+                $ackPayload['originalPartnerReferenceNo'] = $origPartnerRef;
+            }
+            if (!empty($origRefNo)) {
+                $ackPayload['originalReferenceNo'] = $origRefNo;
+            }
+            if (!empty($partnerRef)) {
+                $ackPayload['partnerReferenceNo'] = $partnerRef;
+            }
         }
 
         // =========================================================================================
