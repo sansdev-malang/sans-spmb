@@ -19,9 +19,9 @@
             <span class="inline-flex items-center justify-center h-14 w-14 bg-green-50 text-green-600 rounded-full border border-green-100 shadow-sm">
                 <i data-lucide="check" class="w-6 h-6"></i>
             </span>
-            <h2 class="text-lg font-extrabold text-slate-800">Pembayaran Formulir Lunas</h2>
+            <h2 class="text-lg font-extrabold text-slate-800">Pembayaran {{ $feeName }} Lunas</h2>
             <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                Pembayaran biaya formulir pendaftaran Anda telah berhasil terkonfirmasi. Silakan isi dan lengkapi data calon siswa Anda pada menu <strong>Formulir</strong>.
+                Pembayaran {{ strtolower($feeName) }} Anda telah berhasil terkonfirmasi. Silakan isi dan lengkapi data calon murid Anda pada menu <strong>Formulir</strong>.
             </p>
             <div class="pt-4 flex flex-col sm:flex-row justify-center items-center gap-3">
                 <a href="{{ route('dashboard.form', $registration->id) }}" class="w-full sm:w-auto bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition text-center">
@@ -42,15 +42,15 @@
                     @if($registration->registration_status === 'draft')
                         <h2 class="font-extrabold text-base sm:text-lg flex items-center gap-2">
                             <i data-lucide="file-text" class="w-5 h-5 text-brand-yellow shrink-0"></i>
-                            <span>Biaya Formulir Pendaftaran</span>
+                            <span>{{ $feeName }}</span>
                         </h2>
-                        <p class="text-xs text-brand-yellow/90 font-medium mt-1 leading-relaxed">Selesaikan pembayaran biaya pendaftaran untuk membuka akses pengisian formulir pendaftaran.</p>
+                        <p class="text-xs text-brand-yellow/90 font-medium mt-1 leading-relaxed">Selesaikan pembayaran {{ strtolower($feeName) }} untuk membuka akses pengisian formulir pendaftaran.</p>
                     @else
                         <h2 class="font-extrabold text-base sm:text-lg flex items-center gap-2">
                             <i data-lucide="credit-card" class="w-5 h-5 text-brand-yellow shrink-0"></i>
-                            <span>Biaya Seleksi & Administrasi</span>
+                            <span>{{ $feeName }}</span>
                         </h2>
-                        <p class="text-xs text-brand-yellow/90 font-medium mt-1 leading-relaxed">Selesaikan pembayaran biaya seleksi administrasi untuk menjadwalkan tes observasi.</p>
+                        <p class="text-xs text-brand-yellow/90 font-medium mt-1 leading-relaxed">Selesaikan pembayaran administrasi akhir untuk menyelesaikan proses pendaftaran ananda.</p>
                     @endif
                 </div>
                 
@@ -140,9 +140,9 @@
                                 Alhamdulillah! Pembayaran biaya administrasi akhir Anda telah lunas terkonfirmasi oleh sistem. Selamat bergabung di Sekolah Anak Saleh! Silakan cek menu <strong>Final Result</strong> untuk mengunduh Surat Keterangan Penerimaan.
                             </p>
                         @else
-                            <h3 class="font-extrabold text-green-800 text-sm">Pembayaran Formulir Lunas</h3>
+                            <h3 class="font-extrabold text-green-800 text-sm">Pembayaran {{ $feeName }} Lunas</h3>
                             <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                                Terima kasih! Pembayaran biaya pendaftaran formulir Anda telah lunas terkonfirmasi oleh sistem. Silakan isi dan lengkapi formulir pendaftaran Anda di menu <strong>Formulir</strong>.
+                                Terima kasih! Pembayaran {{ strtolower($feeName) }} Anda telah lunas terkonfirmasi oleh sistem. Silakan isi dan lengkapi formulir pendaftaran Anda di menu <strong>Formulir</strong>.
                             </p>
                         @endif
                         
@@ -287,7 +287,7 @@
                             <!-- Formulir Pendaftaran (Draft) -->
                             <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs">
                                 <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                    <span>Biaya Formulir Pendaftaran</span>
+                                    <span>{{ $feeName }}</span>
                                     <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
                                 </div>
                                 <input type="hidden" class="item-amount-input" value="{{ $feeAmount }}" data-max="{{ $feeAmount }}" data-min="{{ $feeAmount }}">
