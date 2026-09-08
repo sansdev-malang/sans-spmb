@@ -109,8 +109,8 @@ try {
     echo "2. Response Status Code: " . $response->getStatusCode() . "\n";
     echo "3. Response Body:\n" . json_encode($respData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
     
-    $isAckCorrect = ($respData['responseCode'] ?? '') === '2002700' && isset($respData['virtualAccountData']);
-    echo "\n4. Verifikasi Response Format SNAP BI: " . ($isAckCorrect ? "BERHASIL (2002700 + virtualAccountData)" : "GAGAL") . "\n";
+    $isAckCorrect = ($respData['responseCode'] ?? '') === '2002500' && isset($respData['virtualAccountData']);
+    echo "\n4. Verifikasi Response Format SNAP BI: " . ($isAckCorrect ? "BERHASIL (2002500 + virtualAccountData)" : "GAGAL") . "\n";
 
     DB::rollBack();
 } catch (\Throwable $e) {

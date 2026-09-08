@@ -491,8 +491,8 @@ class PaymentController extends Controller
         if (!empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')) {
             $ackResponseCode = (string)$body['responseCode'];
         } elseif ($isVaCallback) {
-            // Standar Winpay SNAP BI untuk Virtual Account Payment Notification ACK adalah 2002700
-            $ackResponseCode = '2002700';
+            // Standar Winpay SNAP BI untuk Virtual Account Payment Callback Notification ACK adalah 2002500 (Service Code 25)
+            $ackResponseCode = '2002500';
         } elseif ($isQrisCallback) {
             // Standar Winpay SNAP BI untuk QRIS Notification ACK adalah 2005400
             $ackResponseCode = '2005400';
@@ -500,7 +500,7 @@ class PaymentController extends Controller
             // Standar Winpay SNAP BI untuk E-Wallet & Direct Debit Notification ACK adalah 2005600
             $ackResponseCode = '2005600';
         } else {
-            $ackResponseCode = '2002700';
+            $ackResponseCode = '2002500';
         }
 
         $ackPayload = [
@@ -513,12 +513,15 @@ class PaymentController extends Controller
             $ackPayload['virtualAccountData'] = [
                 'partnerServiceId' => $body['partnerServiceId'] ?? ($body['virtualAccountData']['partnerServiceId'] ?? ''),
                 'customerNo' => $body['customerNo'] ?? ($body['virtualAccountData']['customerNo'] ?? ''),
-                'virtualAccountNo' => $vaNo ?: ($body['virtualAccountData']['virtualAccountNo'] ?? ''),
+                'virtualAccountNo' => $body['virtualAccountNo'] ?? ($body['virtualAccountData']['virtualAccountNo'] ?? ($vaNo ?: '')),
                 'virtualAccountName' => $body['virtualAccountName'] ?? ($body['virtualAccountData']['virtualAccountName'] ?? ''),
                 'trxId' => $trxId ?: ($body['virtualAccountData']['trxId'] ?? $invoiceNo),
             ];
             if (!empty($paymentReqId)) {
                 $ackPayload['virtualAccountData']['paymentRequestId'] = $paymentReqId;
+            }
+            if (!empty($body['paidAmount'])) {
+                $ackPayload['virtualAccountData']['paidAmount'] = $body['paidAmount'];
             }
         }
 
