@@ -461,10 +461,10 @@ class PaymentController extends Controller
         $paymentReqId = $body['paymentRequestId'] ?? ($body['virtualAccountData']['paymentRequestId'] ?? null);
         $vaNo = $body['virtualAccountNo'] ?? ($body['virtualAccountData']['virtualAccountNo'] ?? null);
 
-        // Siapkan deteksi kanal webhook standar SNAP BI
-        $isVaCallback = !empty($vaNo) || !empty($trxId) || str_contains($requestUri, 'transfer-va') || !empty($body['virtualAccountData']);
+        // Siapkan deteksi kanal webhook standar SNAP BI (Prioritaskan URL path sebagai indikator utama)
         $isQrisCallback = str_contains($requestUri, 'qr') || !empty($body['qrContent']) || !empty($body['qrUrl']) || !empty($body['qrData']);
-        $isEwalletCallback = !empty($origPartnerRef) || !empty($body['additionalInfo']['contractId']) || str_contains($requestUri, 'debit');
+        $isVaCallback = (str_contains($requestUri, 'transfer-va') || !empty($vaNo) || !empty($body['virtualAccountData'])) && !$isQrisCallback;
+        $isEwalletCallback = (str_contains($requestUri, 'debit') || !empty($body['additionalInfo']['contractId'])) && !$isQrisCallback && !$isVaCallback;
 
         $responseCode = (string)($body['responseCode'] ?? '');
         $rawStatus = $body['paymentStatus'] 
@@ -482,25 +482,26 @@ class PaymentController extends Controller
             $isFailed = true;
         } elseif ($responseCode && (str_starts_with($responseCode, '40') || str_starts_with($responseCode, '50'))) {
             $isFailed = true;
-        } elseif (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005400', '2000000'])) {
+        } elseif (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005400', '2005600', '2000000'])) {
             $isSuccess = true;
         } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['SUCCESS', 'SUCCESSFUL', 'PAID', 'SETTLED', '00', '0000', 'BERHASIL'])) {
             $isSuccess = true;
-        } elseif ($isVaCallback || !empty($body['paidAmount']) || str_contains($requestUri, 'transfer-va') || str_contains($requestUri, 'qr') || str_contains($requestUri, 'notify')) {
+        } elseif ($isVaCallback || $isQrisCallback || $isEwalletCallback || !empty($body['paidAmount']) || str_contains($requestUri, 'transfer-va') || str_contains($requestUri, 'qr') || str_contains($requestUri, 'notify')) {
             // Pada standar SNAP BI, webhook transfer-va/payment atau qr-mpm-notify yang dipanggil Payment Gateway secara definitif menandakan pembayaran sukses
             $isSuccess = true;
         }
 
+        // Tentukan ACK responseCode sesuai Service Code spesifikasi SNAP BI
         if (!empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')) {
             $ackResponseCode = (string)$body['responseCode'];
+        } elseif ($isQrisCallback) {
+            // Standar Winpay SNAP BI untuk QRIS Notification ACK adalah 2005400 (Service Code 54)
+            $ackResponseCode = '2005400';
         } elseif ($isVaCallback) {
             // Standar Winpay SNAP BI untuk Virtual Account Payment Callback Notification ACK adalah 2002500 (Service Code 25)
             $ackResponseCode = '2002500';
-        } elseif ($isQrisCallback) {
-            // Standar Winpay SNAP BI untuk QRIS Notification ACK adalah 2005400
-            $ackResponseCode = '2005400';
         } elseif ($isEwalletCallback) {
-            // Standar Winpay SNAP BI untuk E-Wallet & Direct Debit Notification ACK adalah 2005600
+            // Standar Winpay SNAP BI untuk E-Wallet & Direct Debit Notification ACK adalah 2005600 (Service Code 56)
             $ackResponseCode = '2005600';
         } else {
             $ackResponseCode = '2002500';
@@ -511,7 +512,7 @@ class PaymentController extends Controller
             'responseMessage' => 'Successful'
         ];
 
-        // Format objek virtualAccountData sesuai standar SNAP BI Winpay jika kanal berupa VA
+        // Format objek virtualAccountData HANYA jika benar-benar kanal Virtual Account (TIDAK BOLEH dikirim untuk QRIS)
         if ($isVaCallback) {
             $ackPayload['virtualAccountData'] = [
                 'partnerServiceId' => $body['partnerServiceId'] ?? ($body['virtualAccountData']['partnerServiceId'] ?? ''),
@@ -528,6 +529,7 @@ class PaymentController extends Controller
             }
         }
 
+        // Sertakan echo reference numbers jika ada dalam request webhook
         if (!empty($origPartnerRef)) {
             $ackPayload['originalPartnerReferenceNo'] = $origPartnerRef;
         }
