@@ -356,7 +356,14 @@
                             <span class="text-lg font-black text-slate-800">{{ $activePayment->payment_method }}</span>
                         </div>
 
-                        @if (str_contains(strtoupper($activePayment->payment_method), 'QRIS'))
+                        @php
+                            $methodUpper = strtoupper($activePayment->payment_method ?? '');
+                            $isQrisMethod = str_contains($methodUpper, 'QRIS');
+                            $isEwalletMethod = (!empty($activePayment->payment_info['webRedirectUrl']) || !empty($activePayment->payment_info['paymentUrl']) || in_array($methodUpper, ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'GOPAY', 'LINKAJA', 'SPEEDCASH']));
+                            $isRetailMethod = in_array($methodUpper, ['ALFAMART', 'INDOMARET', 'ALFA', 'INDO', 'FASTPAY']);
+                        @endphp
+
+                        @if ($isQrisMethod)
                             <!-- QRIS Display -->
                             <div class="flex flex-col items-center justify-center gap-3">
                                 <div class="bg-white p-3 border border-slate-200 rounded-xl shadow-inner flex items-center justify-center">
@@ -377,20 +384,29 @@
                                     </a>
                                 @endif
                             </div>
-                        @elseif (!empty($activePayment->payment_info['webRedirectUrl']) || !empty($activePayment->payment_info['paymentUrl']))
+                        @elseif ($isEwalletMethod)
                             <!-- E-Wallet Display -->
-                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center space-y-4">
+                            <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center space-y-4">
                                 <span class="text-xs text-slate-400 font-semibold uppercase block">Pembayaran Dompet Digital (E-Wallet)</span>
                                 <div class="flex flex-col items-center justify-center gap-3">
-                                    <p class="text-xs text-slate-600 font-medium max-w-sm">Klik tombol di bawah ini untuk melanjutkan pembayaran melalui aplikasi atau web {{ $activePayment->payment_method }}:</p>
+                                    <p class="text-xs text-slate-600 dark:text-slate-300 font-medium max-w-sm">Klik tombol di bawah ini untuk melanjutkan pembayaran melalui aplikasi atau web {{ $activePayment->payment_method }}:</p>
                                     <a href="{{ $activePayment->payment_info['webRedirectUrl'] ?? $activePayment->payment_info['paymentUrl'] }}" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2">
                                         <i data-lucide="external-link" class="w-4 h-4"></i> Buka Pembayaran {{ $activePayment->payment_method }}
                                     </a>
                                 </div>
                             </div>
+                        @elseif ($isRetailMethod)
+                            <!-- Retail / Minimarket Display -->
+                            <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 text-center">
+                                <span class="text-xs text-slate-400 font-semibold uppercase block">Kode Pembayaran Gerai {{ $activePayment->payment_method }}</span>
+                                <span class="text-2xl font-black text-brand-emerald tracking-wider font-mono block mt-1 select-all">
+                                    {{ $activePayment->payment_info['virtualAccountNo'] ?? $activePayment->payment_info['virtualAccount'] ?? '88990012345678' }}
+                                </span>
+                                <span class="text-xs text-slate-400 mt-2 block font-semibold">Tunjukkan kode bayar ini ke kasir {{ $activePayment->payment_method }}</span>
+                            </div>
                         @else
                             <!-- VA Number display -->
-                            <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-center">
+                            <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 text-center">
                                 <span class="text-xs text-slate-400 font-semibold uppercase block">Nomor Virtual Account (VA)</span>
                                 <span class="text-2xl font-black text-brand-emerald tracking-wider font-mono block mt-1 select-all">
                                     {{ $activePayment->payment_info['virtualAccountNo'] ?? $activePayment->payment_info['virtualAccount'] ?? '88990012345678' }}
@@ -405,14 +421,44 @@
                             <span class="font-mono font-bold text-slate-800 dark:text-slate-200 select-all">{{ $activePayment->invoice_number }}</span>
                         </div>
 
-                        <div class="bg-slate-50 p-4 rounded-xl text-xs text-slate-500 leading-relaxed space-y-1">
-                            <p><strong>Instruksi Pembayaran:</strong></p>
-                            <ol class="list-decimal pl-4 space-y-1">
-                                <li>Salin nomor Virtual Account / Scan QRIS di atas.</li>
-                                <li>Buka aplikasi Mobile Banking atau kunjungi ATM terdekat.</li>
-                                <li>Pilih Transfer / Pembayaran Virtual Account, masukkan nomor VA, dan konfirmasi nominal pembayaran.</li>
-                                <li>Status di dashboard akan berubah otomatis setelah pembayaran sukses.</li>
-                            </ol>
+                        <!-- Dynamic Tailored Payment Instructions -->
+                        <div class="bg-slate-50 dark:bg-slate-950/40 p-4 sm:p-5 rounded-xl text-xs text-slate-600 dark:text-slate-400 leading-relaxed space-y-2 border border-slate-200/60 dark:border-slate-800">
+                            <p class="font-extrabold text-slate-850 dark:text-slate-200 flex items-center gap-1.5">
+                                <i data-lucide="info" class="w-4 h-4 text-brand-emerald shrink-0"></i>
+                                <span>Instruksi Pembayaran {{ $activePayment->payment_method }}:</span>
+                            </p>
+
+                            @if($isQrisMethod)
+                                <ol class="list-decimal pl-4 space-y-1.5">
+                                    <li>Buka aplikasi <strong>Mobile Banking</strong> (BCA, Mandiri, BRI, BNI, dll.) atau <strong>E-Wallet</strong> (GoPay, OVO, Dana, ShopeePay) pada ponsel Anda.</li>
+                                    <li>Pilih menu <strong>Scan / QRIS</strong>, lalu arahkan kamera ke kode QR di atas (atau unduh gambar QR untuk diunggah dari galeri).</li>
+                                    <li>Pastikan nama merchant tertera <strong>YAYASAN PENDIDIKAN ANAK SALEH</strong> dengan total tagihan <strong>Rp {{ number_format($activePayment->amount, 0, ',', '.') }}</strong>.</li>
+                                    <li>Konfirmasi pembayaran dan masukkan PIN transaksi Anda.</li>
+                                    <li>Status di portal SPMB akan otomatis berubah menjadi <strong>Lunas</strong> dalam beberapa detik.</li>
+                                </ol>
+                            @elseif($isEwalletMethod)
+                                <ol class="list-decimal pl-4 space-y-1.5">
+                                    <li>Klik tombol <strong>"Buka Pembayaran {{ $activePayment->payment_method }}"</strong> di atas.</li>
+                                    <li>Aplikasi atau situs resmi <strong>{{ $activePayment->payment_method }}</strong> akan terbuka secara otomatis.</li>
+                                    <li>Periksa rincian tagihan Anda dan konfirmasi pembayaran dengan memasukkan PIN.</li>
+                                    <li>Setelah transaksi berhasil, kembali ke portal SPMB dan status pembayaran akan otomatis terverifikasi lunas.</li>
+                                </ol>
+                            @elseif($isRetailMethod)
+                                <ol class="list-decimal pl-4 space-y-1.5">
+                                    <li>Catat atau simpan <strong>Kode Pembayaran</strong> di atas.</li>
+                                    <li>Kunjungi gerai <strong>{{ $activePayment->payment_method }}</strong> terdekat dan sampaikan ke kasir bahwa Anda ingin melakukan pembayaran tagihan SPMB / Winpay.</li>
+                                    <li>Tunjukkan kode pembayaran dan bayar sesuai nominal tagihan <strong>Rp {{ number_format($activePayment->amount, 0, ',', '.') }}</strong>.</li>
+                                    <li>Simpan struk dari kasir sebagai bukti pembayaran yang sah. Sistem kami akan otomatis memverifikasi tagihan Anda.</li>
+                                </ol>
+                            @else
+                                <ol class="list-decimal pl-4 space-y-1.5">
+                                    <li>Salin <strong>Nomor Virtual Account</strong> di atas.</li>
+                                    <li>Buka aplikasi <strong>Mobile Banking</strong>, Internet Banking, atau kunjungi <strong>ATM {{ $activePayment->payment_method }}</strong> / Bank Lain terdekat.</li>
+                                    <li>Pilih menu <strong>Transfer / Pembayaran Virtual Account</strong> (atau Transfer Antar Bank jika dari rekening bank berbeda).</li>
+                                    <li>Masukkan nomor Virtual Account dan pastikan nama penerima serta nominal <strong>Rp {{ number_format($activePayment->amount, 0, ',', '.') }}</strong> telah sesuai.</li>
+                                    <li>Konfirmasi dan masukkan PIN Anda. Status pendaftaran akan langsung berubah menjadi <strong>Lunas</strong>.</li>
+                                </ol>
+                            @endif
                         </div>
 
                         <!-- Ganti Metode Pembayaran / Batal Button -->
