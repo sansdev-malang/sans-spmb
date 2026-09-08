@@ -112,6 +112,20 @@ try {
     $isAckCorrect = ($respData['responseCode'] ?? '') === '2002500' && isset($respData['virtualAccountData']);
     echo "\n4. Verifikasi Response Format SNAP BI: " . ($isAckCorrect ? "BERHASIL (2002500 + virtualAccountData)" : "GAGAL") . "\n";
 
+    $payment->refresh();
+    $reg->refresh();
+
+    echo "5. Verifikasi Status di Database SPMB:\n";
+    echo "   - Payment Status: {$payment->status} (Expected: success)\n";
+    echo "   - Registration Payment Status: {$reg->payment_status} (Expected: paid)\n";
+    echo "   - Settled At: " . ($payment->payment_info['settled_at'] ?? 'None') . "\n";
+
+    if ($payment->status === 'success' && $reg->payment_status === 'paid') {
+        echo "   ✓ DATABASE SPMB BERHASIL TERUPDATE MENJADI LUNAS!\n";
+    } else {
+        echo "   ✗ DATABASE SPMB GAGAL TERUPDATE!\n";
+    }
+
     DB::rollBack();
 } catch (\Throwable $e) {
     DB::rollBack();

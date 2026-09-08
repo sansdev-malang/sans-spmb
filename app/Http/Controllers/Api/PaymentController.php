@@ -453,6 +453,19 @@ class PaymentController extends Controller
 
         Log::info('Payment Webhook processing invoice', ['gateway' => $gatewayCode, 'resolved_invoice' => $invoiceNo]);
 
+        $origPartnerRef = $body['originalPartnerReferenceNo'] ?? null;
+        $partnerRef = $body['partnerReferenceNo'] ?? null;
+        $origRefNo = $body['originalReferenceNo'] ?? null;
+        $trxId = $body['trxId'] ?? null;
+        $refNo = $body['referenceNo'] ?? null;
+        $paymentReqId = $body['paymentRequestId'] ?? ($body['virtualAccountData']['paymentRequestId'] ?? null);
+        $vaNo = $body['virtualAccountNo'] ?? ($body['virtualAccountData']['virtualAccountNo'] ?? null);
+
+        // Siapkan deteksi kanal webhook standar SNAP BI
+        $isVaCallback = !empty($vaNo) || !empty($trxId) || str_contains($requestUri, 'transfer-va') || !empty($body['virtualAccountData']);
+        $isQrisCallback = str_contains($requestUri, 'qr') || !empty($body['qrContent']) || !empty($body['qrUrl']) || !empty($body['qrData']);
+        $isEwalletCallback = !empty($origPartnerRef) || !empty($body['additionalInfo']['contractId']) || str_contains($requestUri, 'debit');
+
         $responseCode = (string)($body['responseCode'] ?? '');
         $rawStatus = $body['paymentStatus'] 
             ?? $body['latestTransactionStatus'] 
@@ -464,29 +477,19 @@ class PaymentController extends Controller
         $isSuccess = false;
         $isFailed = false;
 
-        // Evaluasi status pembayaran berdasarkan responseCode & status resmi SNAP BI (misal '00' = SUCCESS)
-        if (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005400', '2000000'])) {
-            $isSuccess = true;
-        } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['SUCCESS', 'SUCCESSFUL', 'PAID', 'SETTLED', '00', '0000', 'BERHASIL'])) {
-            $isSuccess = true;
-        } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['FAILED', 'EXPIRED', 'CANCELLED', 'REJECTED', 'GAGAL'])) {
+        // Evaluasi status pembayaran
+        if (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['FAILED', 'EXPIRED', 'CANCELLED', 'REJECTED', 'GAGAL'])) {
             $isFailed = true;
         } elseif ($responseCode && (str_starts_with($responseCode, '40') || str_starts_with($responseCode, '50'))) {
             $isFailed = true;
+        } elseif (str_starts_with($responseCode, '200') || in_array($responseCode, ['2002500', '2002600', '2002700', '2005400', '2000000'])) {
+            $isSuccess = true;
+        } elseif (is_string($rawStatus) && in_array(strtoupper($rawStatus), ['SUCCESS', 'SUCCESSFUL', 'PAID', 'SETTLED', '00', '0000', 'BERHASIL'])) {
+            $isSuccess = true;
+        } elseif ($isVaCallback || !empty($body['paidAmount']) || str_contains($requestUri, 'transfer-va') || str_contains($requestUri, 'qr') || str_contains($requestUri, 'notify')) {
+            // Pada standar SNAP BI, webhook transfer-va/payment atau qr-mpm-notify yang dipanggil Payment Gateway secara definitif menandakan pembayaran sukses
+            $isSuccess = true;
         }
-
-        $origPartnerRef = $body['originalPartnerReferenceNo'] ?? null;
-        $partnerRef = $body['partnerReferenceNo'] ?? null;
-        $origRefNo = $body['originalReferenceNo'] ?? null;
-        $trxId = $body['trxId'] ?? null;
-        $refNo = $body['referenceNo'] ?? null;
-        $paymentReqId = $body['paymentRequestId'] ?? ($body['virtualAccountData']['paymentRequestId'] ?? null);
-        $vaNo = $body['virtualAccountNo'] ?? ($body['virtualAccountData']['virtualAccountNo'] ?? null);
-
-        // Siapkan struktur ACK standar SNAP BI Winpay sesuai spesifikasi kanal
-        $isVaCallback = !empty($vaNo) || !empty($trxId) || str_contains($requestUri, 'transfer-va') || !empty($body['virtualAccountData']);
-        $isQrisCallback = str_contains($requestUri, 'qr') || !empty($body['qrContent']) || !empty($body['qrUrl']) || !empty($body['qrData']);
-        $isEwalletCallback = !empty($origPartnerRef) || !empty($body['additionalInfo']['contractId']) || str_contains($requestUri, 'debit');
 
         if (!empty($body['responseCode']) && str_starts_with((string)$body['responseCode'], '200')) {
             $ackResponseCode = (string)$body['responseCode'];
