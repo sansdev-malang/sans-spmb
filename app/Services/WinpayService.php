@@ -644,70 +644,128 @@ class WinpayService implements PaymentGatewayInterface
     }
 
     /**
-     * Delete / Cancel Virtual Account di Winpay (Standar SNAP BI DELETE /v1.0/transfer-va/delete-va)
+     * Delete / Cancel Transaksi di Payment Gateway Winpay (Standar SNAP BI)
+     * - QRIS: POST /v1.0/qr/qr-mpm-cancel (Service Code: 77)
+     * - Virtual Account (VA) & Retail: DELETE /v1.0/transfer-va/delete-va (Service Code: 31)
+     * - E-Wallet: Sesi dibatalkan secara lokal/otomatis kedaluwarsa
      *
-     * @param string $invoiceNo Nomor referensi invoice (Merchant Ref)
+     * @param string $invoiceNo Nomor referensi invoice (Merchant Ref / partnerReferenceNo / trxId)
      * @param array $paymentInfo Data payment_info transaksi yang tersimpan
      * @return array ['success' => bool, 'message' => string, 'data' => array|null]
      */
     public function cancelPayment($invoiceNo, $paymentInfo = [])
     {
-        // Pada mode simulator lokal, langsung return success
+        // 1. Pada mode simulator lokal, langsung return success
         if ($this->mode === 'simulator') {
             Log::info('Winpay cancelPayment bypassed (Simulator mode)', ['invoice' => $invoiceNo]);
             return [
                 'success' => true,
-                'message' => 'Virtual Account berhasil dinonaktifkan (Simulator)',
+                'message' => 'Transaksi pembayaran berhasil dibatalkan (Simulator)',
                 'data' => null
             ];
         }
 
-        $endpoint = '/v1.0/transfer-va/delete-va';
+        // 2. Identifikasi tipe kanal pembayaran
+        $channel = strtoupper(trim(
+            $paymentInfo['channel'] 
+            ?? ($paymentInfo['bankName'] 
+            ?? ($paymentInfo['additionalInfo']['channel'] 
+            ?? ($paymentInfo['payment_method'] ?? '')))
+        ));
+
+        $isQris = ($channel === 'QRIS') 
+            || !empty($paymentInfo['qrUrl']) 
+            || !empty($paymentInfo['qrContent'])
+            || (isset($paymentInfo['payment_method']) && strtoupper($paymentInfo['payment_method']) === 'QRIS');
+
+        $isEwallet = in_array($channel, ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC', 'GOPAY', 'LINKAJA'])
+            || !empty($paymentInfo['webRedirectUrl'])
+            || !empty($paymentInfo['appRedirectUrl']);
+
+        // 3. Tangani E-Wallet
+        if ($isEwallet) {
+            Log::info('Winpay cancelPayment for E-Wallet processed', ['invoice' => $invoiceNo, 'channel' => $channel]);
+            return [
+                'success' => true,
+                'message' => "Sesi pembayaran {$channel} berhasil dibatalkan.",
+                'data' => null
+            ];
+        }
+
         $timezone = new \DateTimeZone('Asia/Jakarta');
         $now = new \DateTime('now', $timezone);
         $timestamp = $now->format('Y-m-d\TH:i:sP');
 
-        $vaNo = trim($paymentInfo['virtualAccountNo'] ?? ($paymentInfo['virtualAccount'] ?? ''));
-        $customerNo = $paymentInfo['customerNo'] ?? '';
-        $partnerServiceId = $paymentInfo['partnerServiceId'] ?? '';
-        $channel = $paymentInfo['bankName'] ?? ($paymentInfo['additionalInfo']['channel'] ?? 'MANDIRI');
+        $contractId = $paymentInfo['referenceId'] 
+            ?? ($paymentInfo['contractId'] 
+            ?? ($paymentInfo['additionalInfo']['contractId'] 
+            ?? ''));
 
-        // Susun payload SNAP BI Delete VA resmi
-        $body = [
-            'partnerServiceId' => $partnerServiceId ?: (strlen($vaNo) > 8 ? substr($vaNo, 0, 7) : ' 888981'),
-            'customerNo' => $customerNo ?: (strlen($vaNo) > 8 ? substr($vaNo, 7) : ''),
-            'virtualAccountNo' => $vaNo,
-            'trxId' => $invoiceNo,
-            'additionalInfo' => [
-                'channel' => strtoupper($channel)
-            ]
-        ];
+        // 4. Tangani Pembatalan QRIS (POST /v1.0/qr/qr-mpm-cancel)
+        if ($isQris) {
+            $endpoint = '/v1.0/qr/qr-mpm-cancel';
+            $httpMethod = 'POST';
 
-        $signature = $this->generateAsymmetricSignature('DELETE', $endpoint, $body, $timestamp);
+            $body = [
+                'originalPartnerReferenceNo' => $invoiceNo,
+                'reason' => 'Dibatalkan oleh pendaftar / Ganti channel pembayaran',
+                'additionalInfo' => array_filter([
+                    'contractId' => (string) $contractId
+                ])
+            ];
+        } else {
+            // 5. Tangani Pembatalan Virtual Account (VA) & Retail (DELETE /v1.0/transfer-va/delete-va)
+            $endpoint = '/v1.0/transfer-va/delete-va';
+            $httpMethod = 'DELETE';
+
+            $vaNo = trim(
+                $paymentInfo['virtualAccountNo'] 
+                ?? ($paymentInfo['virtualAccount'] 
+                ?? ($paymentInfo['vaNo'] 
+                ?? ($paymentInfo['payCode'] ?? '')))
+            );
+
+            $body = [
+                'virtualAccountNo' => $vaNo,
+                'trxId' => $invoiceNo,
+                'additionalInfo' => array_filter([
+                    'contractId' => (string) $contractId,
+                    'channel' => $channel ?: 'MANDIRI'
+                ])
+            ];
+        }
+
+        // Generate SNAP Asymmetric Digital Signature (SHA256withRSA)
+        $signature = $this->generateAsymmetricSignature($httpMethod, $endpoint, $body, $timestamp);
 
         try {
-            $response = Http::timeout(20)->withHeaders([
+            $request = Http::timeout(20)->withHeaders([
                 'X-SIGNATURE' => $signature,
                 'X-TIMESTAMP' => $timestamp,
                 'X-PARTNER-ID' => $this->clientKey,
                 'X-EXTERNAL-ID' => $invoiceNo,
                 'CHANNEL-ID' => 'WEB',
                 'Content-Type' => 'application/json',
-            ])->delete($this->baseUrl . $endpoint, $body);
+            ]);
+
+            $response = ($httpMethod === 'POST')
+                ? $request->post($this->baseUrl . $endpoint, $body)
+                : $request->delete($this->baseUrl . $endpoint, $body);
 
             if ($response->successful()) {
-                Log::info('Winpay DELETE VA SUCCESS', [
+                Log::info("Winpay {$httpMethod} {$endpoint} SUCCESS", [
                     'invoice' => $invoiceNo,
+                    'request' => $body,
                     'response' => $response->json()
                 ]);
                 return [
                     'success' => true,
-                    'message' => $response->json('responseMessage') ?? 'Virtual Account berhasil dinonaktifkan di Winpay.',
+                    'message' => $response->json('responseMessage') ?? 'Tagihan berhasil dibatalkan di Winpay.',
                     'data' => $response->json()
                 ];
             }
 
-            Log::warning('Winpay DELETE VA non-success response', [
+            Log::warning("Winpay {$httpMethod} {$endpoint} non-success response", [
                 'invoice' => $invoiceNo,
                 'status' => $response->status(),
                 'response' => $response->body()
@@ -715,11 +773,11 @@ class WinpayService implements PaymentGatewayInterface
 
             return [
                 'success' => false,
-                'message' => $response->json('responseMessage') ?? 'Gagal menonaktifkan VA di Winpay.',
+                'message' => $response->json('responseMessage') ?? 'Gagal membatalkan tagihan di Winpay.',
                 'data' => $response->json()
             ];
         } catch (\Throwable $e) {
-            Log::error('Winpay DELETE VA exception', [
+            Log::error("Winpay {$httpMethod} {$endpoint} exception", [
                 'invoice' => $invoiceNo,
                 'error' => $e->getMessage()
             ]);
