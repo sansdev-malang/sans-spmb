@@ -484,8 +484,17 @@
                                                     Batalkan Pembayaran
                                                 </h3>
                                                 <div class="mt-2">
-                                                    <p class="text-xs text-slate-500 leading-relaxed">
-                                                        Apakah Anda yakin ingin membatalkan transaksi pembayaran aktif ini? Nomor Virtual Account atau kode QRIS yang sudah dibuat tidak akan dapat digunakan lagi, dan Anda harus memilih metode pembayaran baru.
+                                                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                        Apakah Anda yakin ingin membatalkan transaksi pembayaran aktif ini?
+                                                        @if($isQrisMethod)
+                                                            Kode <strong>QRIS</strong> yang sudah dibuat tidak akan dapat digunakan lagi, dan Anda dapat memilih metode pembayaran baru.
+                                                        @elseif($isEwalletMethod)
+                                                            Sesi pembayaran <strong>{{ $activePayment->payment_method }}</strong> yang sedang berjalan akan dibatalkan, dan Anda dapat memilih metode pembayaran baru.
+                                                        @elseif($isRetailMethod)
+                                                            Kode pembayaran gerai <strong>{{ $activePayment->payment_method }}</strong> yang sudah dibuat tidak akan dapat digunakan lagi, dan Anda dapat memilih metode pembayaran baru.
+                                                        @else
+                                                            Nomor <strong>Virtual Account (VA)</strong> yang sudah dibuat tidak akan dapat digunakan lagi, dan Anda dapat memilih metode pembayaran baru.
+                                                        @endif
                                                     </p>
                                                 </div>
                                             </div>
