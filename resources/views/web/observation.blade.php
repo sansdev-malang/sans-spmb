@@ -12,65 +12,71 @@
         margin-bottom: 0.5rem !important;
         counter-reset: list-0 !important;
     }
+    .agreement-body ol ol {
+        counter-reset: list-1 !important;
+        padding-left: 0.5rem !important;
+        margin-top: 0.35rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    .agreement-body ol ol ol {
+        counter-reset: list-2 !important;
+        padding-left: 0.5rem !important;
+    }
     .agreement-body ul {
-        list-style-type: disc !important;
-        padding-left: 1.5rem !important;
+        list-style-type: none !important;
+        padding-left: 0.5rem !important;
         margin-top: 0.5rem !important;
         margin-bottom: 0.5rem !important;
     }
     .agreement-body li {
         list-style-type: none !important;
         position: relative !important;
-        padding-left: 1.5rem !important;
-        margin-bottom: 0.4rem !important;
+        padding-left: 1.75rem !important;
+        margin-bottom: 0.45rem !important;
         line-height: 1.65 !important;
         color: #334155 !important;
     }
-    .agreement-body li:not([class*="ql-indent"]) {
+
+    /* Top-level list items (Level 0) -> 1., 2., 3. */
+    .agreement-body > ol > li,
+    .agreement-body ol:not(ol ol) > li:not([class*="ql-indent"]):not(ol ol li) {
         counter-increment: list-0 !important;
-        counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+        counter-reset: list-1 !important;
     }
-    .agreement-body li:not([class*="ql-indent"])::before {
+    .agreement-body > ol > li::before,
+    .agreement-body ol:not(ol ol) > li:not([class*="ql-indent"]):not(ol ol li)::before {
         content: counter(list-0, decimal) ". " !important;
         position: absolute !important;
         left: 0 !important;
         font-weight: bold !important;
         color: #334155 !important;
     }
-    .dark .agreement-body li {
-        color: #cbd5e1 !important;
-    }
-    .dark .agreement-body li:not([class*="ql-indent"])::before {
-        color: #cbd5e1 !important;
-    }
-    /* Render lower-alpha prefixes for ql-indent-1 level list items */
+
+    /* Nested level-1 list items (<ol><ol> > <li> OR Quill .ql-indent-1) -> a., b., c., d. */
+    .agreement-body ol ol > li:not(ol ol ol li):not([class*="ql-indent"]),
     .agreement-body li.ql-indent-1 {
-        list-style-type: none !important;
-        position: relative !important;
-        padding-left: 1.5rem !important;
-        margin-left: 1.5rem !important;
         counter-increment: list-1 !important;
-        counter-reset: list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+        counter-reset: list-2 !important;
+        padding-left: 1.75rem !important;
+        margin-left: 1.25rem !important;
     }
+    .agreement-body ol ol > li:not(ol ol ol li):not([class*="ql-indent"])::before,
     .agreement-body li.ql-indent-1::before {
         content: counter(list-1, lower-alpha) ". " !important;
         position: absolute !important;
         left: 0 !important;
-        font-weight: normal !important;
+        font-weight: 600 !important;
         color: #475569 !important;
     }
-    .dark .agreement-body li.ql-indent-1::before {
-        color: #94a3b8 !important;
-    }
-    /* Render level-2 nested list items further to the right */
+
+    /* Nested level-2 list items (<ol><ol><ol> > <li> OR Quill .ql-indent-2) -> (1), (2), (3) */
+    .agreement-body ol ol ol > li:not([class*="ql-indent"]),
     .agreement-body li.ql-indent-2 {
-        list-style-type: none !important;
-        position: relative !important;
-        padding-left: 1.5rem !important;
-        margin-left: 3rem !important;
         counter-increment: list-2 !important;
-        counter-reset: list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+        padding-left: 1.75rem !important;
+        margin-left: 2.5rem !important;
     }
+    .agreement-body ol ol ol > li:not([class*="ql-indent"])::before,
     .agreement-body li.ql-indent-2::before {
         content: "(" counter(list-2, decimal) ") " !important;
         position: absolute !important;
@@ -78,6 +84,29 @@
         font-weight: normal !important;
         color: #475569 !important;
     }
+
+    /* Bullet items inside ul */
+    .agreement-body ul > li::before {
+        content: "•" !important;
+        position: absolute !important;
+        left: 0.25rem !important;
+        font-weight: bold !important;
+        color: #059669 !important;
+        font-size: 1.2em !important;
+    }
+
+    .dark .agreement-body li {
+        color: #cbd5e1 !important;
+    }
+    .dark .agreement-body > ol > li::before,
+    .dark .agreement-body ol:not(ol ol) > li:not([class*="ql-indent"]):not(ol ol li)::before {
+        color: #f1f5f9 !important;
+    }
+    .dark .agreement-body ol ol > li:not(ol ol ol li):not([class*="ql-indent"])::before,
+    .dark .agreement-body li.ql-indent-1::before {
+        color: #cbd5e1 !important;
+    }
+    .dark .agreement-body ol ol ol > li:not([class*="ql-indent"])::before,
     .dark .agreement-body li.ql-indent-2::before {
         color: #94a3b8 !important;
     }
