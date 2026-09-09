@@ -505,6 +505,13 @@
                                 <span class="px-2 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
                                     {{ $currentStageText }}
                                 </span>
+                                @if($cand->is_dispensation)
+                                    <div class="mt-1">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" title="Dispensasi: {{ $cand->dispensation_reason }}">
+                                            <i data-lucide="award" class="w-3 h-3"></i> Dispensasi
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="py-4 px-6 text-slate-500 text-xs font-semibold">
                                 {{ $cand->created_at->format('d M Y, H:i') }} WIB
@@ -571,6 +578,8 @@
                                         'created_at_label' => $cand->created_at->format('d M Y, H:i') . ' WIB',
                                         'status' => strtoupper($cand->registration_status),
                                         'payment_status' => strtoupper($cand->payment_status),
+                                        'is_dispensation' => (bool) $cand->is_dispensation,
+                                        'dispensation_reason' => $cand->dispensation_reason ?? null,
                                         'period' => $cand->period->year ?? '-',
                                         'wave' => $cand->wave->name ?? '-',
                                         'type' => $cand->type->name ?? '-',

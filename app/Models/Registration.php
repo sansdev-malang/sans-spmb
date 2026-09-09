@@ -20,6 +20,8 @@ class Registration extends Model
         'installment_approved_at' => 'datetime',
         'discount_amount' => 'float',
         'min_installment_amount' => 'float',
+        'is_dispensation' => 'boolean',
+        'dispensation_approved_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -169,6 +171,11 @@ class Registration extends Model
     public function installmentApprover()
     {
         return $this->belongsTo(User::class, 'installment_approved_by');
+    }
+
+    public function dispensationApprover()
+    {
+        return $this->belongsTo(User::class, 'dispensation_approved_by');
     }
 
     /**

@@ -298,4 +298,118 @@ class AdminCandidateController extends Controller
 
         return view('admin.history', compact('candidates'));
     }
+
+    /**
+     * Set candidate admission status directly to completed via dispensation override.
+     */
+    public function manualAccept(Request $request, $id)
+    {
+        $registration = Registration::scopedByAdmin()->findOrFail($id);
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:100',
+        ]);
+
+        $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;
+        $reasonLabels = [
+            'anak_guru' => 'Anak Guru / Karyawan',
+            'kebijakan_yayasan' => 'Kebijakan Khusus Yayasan',
+            'beasiswa_prestasi' => 'Beasiswa Prestasi / Tahfidz',
+            'dispensasi_direktur' => 'Dispensasi Khusus Direktur',
+            'keringanan_cicilan' => 'Keringanan Pembayaran Cicilan',
+        ];
+        $reasonText = $reasonLabels[$validated['reason']] ?? $validated['reason'];
+
+        $registration->update([
+            'registration_status' => 'completed',
+            'is_dispensation' => true,
+            'dispensation_reason' => $reasonText,
+            'dispensation_approved_by' => auth()->id(),
+            'dispensation_approved_at' => now(),
+            'committee_notes' => 'Alhamdulillah, ananda resmi DITERIMA di Sekolah Anak Saleh melalui persetujuan kebijakan/dispensasi khusus Yayasan (' . $reasonText . ').',
+        ]);
+
+        \App\Models\SpmbActivityLog::log(
+            'MANUAL_ADMISSION_DISPENSATION',
+            "Menetapkan status Diterima (Dispensasi) untuk calon siswa {$candidateName} dengan alasan: {$reasonText}"
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Calon siswa {$candidateName} berhasil ditetapkan DITERIMA melalui dispensasi khusus ({$reasonText}).",
+                'data' => [
+                    'id' => $registration->id,
+                    'registration_status' => $registration->registration_status,
+                    'is_dispensation' => (bool)$registration->is_dispensation,
+                    'dispensation_reason' => $registration->dispensation_reason,
+                    'remaining_balance' => (float) $registration->remaining_final_fee,
+                ]
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Calon siswa {$candidateName} berhasil ditetapkan DITERIMA melalui dispensasi khusus ({$reasonText}).");
+    }
+
+    /**
+     * Revert dispensation acceptance status.
+     */
+    public function revertManualAccept(Request $request, $id)
+    {
+        $registration = Registration::scopedByAdmin()->findOrFail($id);
+
+        if (!$registration->is_dispensation) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Calon siswa ini tidak diterima melalui jalur dispensasi manual.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Calon siswa ini tidak diterima melalui jalur dispensasi manual.');
+        }
+
+        $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;
+        $totalPaid = $registration->total_paid_final_fee;
+        $totalRequired = $registration->net_fee;
+
+        // If candidate already paid full, they remain naturally completed
+        if ($totalPaid >= $totalRequired && $totalRequired > 0) {
+            $registration->update([
+                'is_dispensation' => false,
+                'dispensation_reason' => null,
+                'dispensation_approved_by' => null,
+                'dispensation_approved_at' => null,
+            ]);
+        } else {
+            // Revert back to agreement_signed if agreement was signed, else taaruf_completed
+            $newStatus = !empty($registration->signed_at) ? 'agreement_signed' : 'taaruf_completed';
+            $registration->update([
+                'registration_status' => $newStatus,
+                'is_dispensation' => false,
+                'dispensation_reason' => null,
+                'dispensation_approved_by' => null,
+                'dispensation_approved_at' => null,
+                'committee_notes' => null,
+            ]);
+        }
+
+        \App\Models\SpmbActivityLog::log(
+            'REVERT_MANUAL_ADMISSION_DISPENSATION',
+            "Membatalkan status dispensasi penerimaan untuk calon siswa {$candidateName}"
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Dispensasi penerimaan calon siswa {$candidateName} berhasil dibatalkan.",
+                'data' => [
+                    'id' => $registration->id,
+                    'registration_status' => $registration->registration_status,
+                    'is_dispensation' => false,
+                ]
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Dispensasi penerimaan calon siswa {$candidateName} berhasil dibatalkan.");
+    }
 }

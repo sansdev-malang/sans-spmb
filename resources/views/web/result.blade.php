@@ -200,7 +200,7 @@
                     <table class="w-full text-left text-xs border-collapse block sm:table">
                         <thead class="hidden sm:table-header-group">
                             <tr class="bg-slate-50 dark:bg-slate-950 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                                @if($registration->registration_status !== 'completed')
+                                @if($registration->registration_status !== 'completed' || ($remainingBalance ?? 0) > 0)
                                     <th class="p-4 text-center w-12 select-none">Pilih</th>
                                 @endif
                                 <th class="p-4">Komponen Pembiayaan</th>
@@ -258,10 +258,9 @@
                                         $itemRemaining = max(0, $itemNet - $itemPaid);
                                         $isItemLunas = ($itemRemaining <= 0);
                                         $canCicil = (!$isItemLunas) && (!empty($item['is_installment_allowed']) || ($installmentMode ?? 'none') === 'all');
-                                        $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
                                     @endphp
                                     <tr class="block sm:table-row bg-slate-50/50 dark:bg-slate-950/30 sm:bg-transparent border border-slate-200/80 dark:border-slate-800 sm:border-0 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none text-slate-650 dark:text-slate-350 {{ $isItemLunas ? 'bg-slate-50/30 dark:bg-slate-950/10' : '' }}">
-                                        @if($registration->registration_status !== 'completed')
+                                        @if($registration->registration_status !== 'completed' || ($remainingBalance ?? 0) > 0)
                                             <td class="float-left sm:float-none p-0 sm:p-4 text-center align-top sm:pt-4.5 mr-2.5 sm:mr-0 mt-0.5 sm:mt-0">
                                                 @if($isItemLunas)
                                                     <span class="inline-flex items-center justify-center text-green-600 dark:text-green-400">
@@ -293,7 +292,7 @@
                                                                 🏷️ Diskon Rp {{ number_format($itemDiscount, 0, ',', '.') }}
                                                             </span>
                                                         @endif
-                                                        @if(!$isItemLunas && $registration->registration_status !== 'completed')
+                                                        @if(!$isItemLunas)
                                                             @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
                                                                 <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
                                                                     🔓 Boleh Dicicil
@@ -308,7 +307,7 @@
 
                                                     <!-- Mobile Status Badge in Card Top-Right -->
                                                     <div class="sm:hidden shrink-0">
-                                                        @if($isItemLunas || $registration->registration_status === 'completed')
+                                                        @if($isItemLunas)
                                                             <span class="text-[9px] bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-green-300/40">Lunas</span>
                                                         @elseif($itemPaid > 0)
                                                             <span class="text-[9px] bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-blue-300/40">Dicicil</span>
@@ -316,7 +315,7 @@
                                                             <span class="text-[9px] bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-amber-300/40">Tanggungan</span>
                                                         @endif
                                                     </div>
-                                                </div>
+                                                </div>        </div>
 
                                                 @if($itemDiscount > 0)
                                                     <div class="text-[10px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1 mt-0.5">
@@ -459,7 +458,7 @@
                                             </div>
                                         </td>
                                         <td class="hidden sm:table-cell p-4 text-center align-top pt-4.5">
-                                            @if($isItemLunas || $registration->registration_status === 'completed')
+                                            @if($isItemLunas)
                                                 <div class="flex flex-col items-center justify-center gap-1.5">
                                                     <span class="text-[9px] bg-green-50 dark:bg-green-950/20 text-green-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Lunas</span>
                                                 </div>
@@ -487,7 +486,7 @@
 
                             {{-- Baris Sisa Tanggungan Keseluruhan --}}
                             <tr class="block sm:table-row bg-slate-100/80 dark:bg-slate-900 sm:bg-slate-50/50 sm:dark:bg-slate-950/30 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase border border-slate-200 dark:border-slate-800 sm:border-0 sm:border-t rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
-                                @if($registration->registration_status !== 'completed')
+                                @if($registration->registration_status !== 'completed' || ($remainingBalance ?? 0) > 0)
                                     <td class="hidden sm:table-cell"></td>
                                 @endif
                                 <td class="block sm:table-cell p-0 sm:p-4 font-extrabold">Total Tanggungan</td>
@@ -498,7 +497,7 @@
                             </tr>
 
                             {{-- Baris Total Pembayaran Transaksi Ini --}}
-                            @if($registration->registration_status !== 'completed' && (isset($remainingBalance) && $remainingBalance > 0))
+                            @if(isset($remainingBalance) && $remainingBalance > 0)
                                 <tr class="block sm:table-row bg-emerald-50 dark:bg-emerald-950/40 sm:bg-emerald-50/50 sm:dark:bg-emerald-950/20 text-xs font-black text-slate-900 dark:text-white uppercase border border-emerald-300/70 dark:border-emerald-800 sm:border-0 sm:border-t sm:border-emerald-100 sm:dark:border-emerald-900/40 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
                                     <td class="hidden sm:table-cell"></td>
                                     <td class="block sm:table-cell p-0 sm:p-4 text-brand-emerald dark:text-emerald-400">Total Bayar Sekarang</td>
@@ -528,9 +527,35 @@
                         <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Alhamdulillah, Dinyatakan RESMI DITERIMA</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                             Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah resmi terdaftar dan diterima menjadi bagian dari keluarga besar Sekolah Anak Saleh.
+                            @if($registration->is_dispensation)
+                                <span class="block mt-1 text-xs font-bold text-purple-700 dark:text-purple-300">
+                                    ★ Penerimaan melalui persetujuan kebijakan: {{ $registration->dispensation_reason }}
+                                </span>
+                            @endif
                         </p>
                     </div>
                 </div>
+
+                @if(isset($remainingBalance) && $remainingBalance > 0)
+                    <!-- INSTRUCTIONS BOX FOR REMAINING INSTALLMENTS -->
+                    <div class="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
+                        <h5 class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+                            <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i> Prosedur Pelunasan Sisa Angsuran
+                        </h5>
+                        <div class="instructions-body text-slate-600 dark:text-slate-400">
+                            <p>Ananda telah resmi diterima di Sekolah Anak Saleh. Anda dapat melanjutkan pembayaran angsuran untuk sisa biaya administrasi masuk di atas secara fleksibel sebelum tahun ajaran baru dimulai.</p>
+                        </div>
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="pt-2 flex flex-col sm:flex-row justify-center items-center gap-4">
+                        <a href="{{ route('dashboard.payment', $registration->id) }}" id="payment-btn" data-base-url="{{ route('dashboard.payment', $registration->id) }}" class="w-full sm:w-auto bg-brand-emerald hover-emerald text-white px-8 py-3.5 rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
+                            <span class="btn-label-text flex items-center gap-2">
+                                <i data-lucide="credit-card" class="w-4.5 h-4.5 text-brand-yellow animate-pulse"></i> Bayar Sisa Angsuran
+                            </span>
+                        </a>
+                    </div>
+                @endif
             @else
                 <!-- INSTRUCTIONS BOX -->
                 <div class="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
