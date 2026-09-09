@@ -307,7 +307,7 @@ class AdminCandidateController extends Controller
         $registration = Registration::scopedByAdmin()->findOrFail($id);
 
         $validated = $request->validate([
-            'reason' => 'required|string|max:150',
+            'reason' => 'required|string|max:500',
         ]);
 
         $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;
