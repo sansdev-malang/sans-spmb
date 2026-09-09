@@ -412,18 +412,24 @@
 
         /* Fix Quill Editor Ordered List Nested Counter Resets */
         .ql-editor ol {
-            counter-reset: list-0 list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+            counter-reset: list-0 0 list-1 0 list-2 0 list-3 0 list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0 !important;
         }
         .ql-editor ol ol {
-            counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+            counter-reset: list-1 0 list-2 0 list-3 0 list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0 !important;
         }
         .ql-editor ol ol ol {
-            counter-reset: list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
+            counter-reset: list-2 0 list-3 0 list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0 !important;
         }
+
+        /* Disable all counter-resets on LI elements so counter-set can mutate parent OL counters */
+        .ql-editor ol li {
+            counter-reset: none !important;
+        }
+
+        /* Top-level ordered list items (Level 0: 1., 2., 3...) */
         .ql-editor ol > li:not([class*="ql-indent"]):not([data-list="bullet"]) {
-            counter-increment: list-0 !important;
+            counter-increment: list-0 1 !important;
             counter-set: list-1 0 list-2 0 list-3 0 list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0 !important;
-            counter-reset: list-1 list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
         }
         .ql-editor ol > li:not([class*="ql-indent"]):not([data-list="bullet"]):before {
             content: counter(list-0, decimal) ". " !important;
@@ -431,9 +437,8 @@
         }
         .ql-editor ol > li.ql-indent-1:not([data-list="bullet"]),
         .ql-editor ol ol > li:not([class*="ql-indent"]):not([data-list="bullet"]) {
-            counter-increment: list-1 !important;
+            counter-increment: list-1 1 !important;
             counter-set: list-2 0 list-3 0 list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0 !important;
-            counter-reset: list-2 list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
         }
         .ql-editor ol > li.ql-indent-1:not([data-list="bullet"]):before,
         .ql-editor ol ol > li:not([class*="ql-indent"]):not([data-list="bullet"]):before {
@@ -442,9 +447,8 @@
         }
         .ql-editor ol > li.ql-indent-2:not([data-list="bullet"]),
         .ql-editor ol ol ol > li:not([class*="ql-indent"]):not([data-list="bullet"]) {
-            counter-increment: list-2 !important;
+            counter-increment: list-2 1 !important;
             counter-set: list-3 0 list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0 !important;
-            counter-reset: list-3 list-4 list-5 list-6 list-7 list-8 list-9 !important;
         }
         .ql-editor ol > li.ql-indent-2:not([data-list="bullet"]):before,
         .ql-editor ol ol ol > li:not([class*="ql-indent"]):not([data-list="bullet"]):before {
@@ -452,9 +456,8 @@
             font-weight: normal;
         }
         .ql-editor ol > li.ql-indent-3:not([data-list="bullet"]) {
-            counter-increment: list-3 !important;
+            counter-increment: list-3 1 !important;
             counter-set: list-4 0 list-5 0 list-6 0 list-7 0 list-8 0 list-9 0 !important;
-            counter-reset: list-4 list-5 list-6 list-7 list-8 list-9 !important;
         }
         .ql-editor ol > li.ql-indent-3:not([data-list="bullet"]):before {
             content: "(" counter(list-3, lower-alpha) ") " !important;
