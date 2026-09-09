@@ -4,23 +4,6 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
-    @php
-        $userAllRegs = auth()->check() 
-            ? auth()->user()->registrations()
-                ->with(['unit', 'grade', 'classProgram'])
-                ->where(function($q) {
-                    $q->where('registration_status', '!=', 'draft')
-                      ->orWhereHas('payments', function($pq) {
-                          $pq->where('payment_type', 'registration_fee')
-                             ->where('status', 'success');
-                      });
-                })
-                ->latest()
-                ->get() 
-            : collect();
-        $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
-    @endphp
-
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden">
         <!-- Form Card Header -->
         <div class="bg-brand-emerald text-white p-5 sm:p-6 space-y-3 sm:space-y-4">
@@ -40,15 +23,15 @@
                             <i data-lucide="alert-circle" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Perlu Revisi
                         </span>
                     @else
-                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
-                            <i data-lucide="edit-3" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Belum Lengkap
+                        <span class="inline-flex items-center gap-1 bg-brand-yellow text-brand-emerald font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-yellow-300 shadow-xs whitespace-nowrap">
+                            <i data-lucide="edit-3" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Pengisian
                         </span>
                     @endif
                 </div>
             </div>
 
             <!-- Full-width subtitle -->
-            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Silakan isi seluruh tahapan pendaftaran secara bertahap hingga formulir siap dikirim.</p>
+            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Lengkapi biodata calon siswa, data orang tua, dan unggah dokumen persyaratan.</p>
 
             <!-- Integrated Candidate Context Info -->
             <div class="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/15 shadow-sm space-y-3.5">
@@ -78,66 +61,48 @@
                 </div>
 
                 <!-- Bottom Row: Structured List / Grid of Metadata -->
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 flex-1">
-                        <!-- 1. Unit Sekolah -->
-                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
-                                <i data-lucide="school" class="w-4 h-4"></i>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="text-[10px] text-white/60 font-semibold block leading-none">Unit Sekolah</span>
-                                <span class="font-bold text-emerald-300 truncate block text-xs mt-1">{{ $registration->unit?->name ?? '-' }}</span>
-                            </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
+                    <!-- 1. Unit Sekolah -->
+                    <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                            <i data-lucide="school" class="w-4 h-4"></i>
                         </div>
-
-                        <!-- 2. Tingkat & Kategori Murid -->
-                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
-                                <i data-lucide="graduation-cap" class="w-4 h-4"></i>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <span class="text-[10px] text-white/60 font-semibold block leading-none">Kelas & Kategori</span>
-                                <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->grade?->name ?? '-' }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
-                            </div>
-                        </div>
-
-                        <!-- 3. Jalur & Gelombang -->
-                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
-                                <i data-lucide="layers" class="w-4 h-4"></i>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center justify-between gap-1.5">
-                                    <span class="text-[10px] text-white/60 font-semibold block leading-none">Jalur & Gelombang</span>
-                                    @if($registration->period?->year)
-                                        <span class="text-[9px] font-extrabold text-emerald-200 bg-white/15 px-1.5 py-0.5 rounded border border-white/20 leading-none shrink-0 shadow-2xs">
-                                            TP {{ $registration->period->year }}
-                                        </span>
-                                    @endif
-                                </div>
-                                <span class="font-bold text-white/95 truncate block text-xs mt-1">
-                                    {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
-                                </span>
-                            </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[10px] text-white/60 font-semibold block leading-none">Unit Sekolah</span>
+                            <span class="font-bold text-emerald-300 truncate block text-xs mt-1">{{ $registration->unit?->name ?? '-' }}</span>
                         </div>
                     </div>
 
-                    <!-- Switcher Ananda (if multiple children registered) -->
-                    @if($otherRegs->isNotEmpty())
-                        <div class="flex items-center gap-1.5 flex-wrap border-t lg:border-t-0 lg:border-l lg:pl-3 pt-2 lg:pt-0 border-white/10 shrink-0">
-                            <span class="text-[10px] font-bold text-white/60 lg:hidden uppercase tracking-wider block w-full mb-0.5">Beralih Ananda:</span>
-                            @foreach($otherRegs as $other)
-                                <a href="{{ route('dashboard.form', $other->id) }}" 
-                                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
-                                   title="Beralih ke formulir {{ $other->candidate_name }}">
-                                    <span>👦 {{ $other->candidate_name }}</span>
-                                    <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/80 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
-                                    <i data-lucide="arrow-right" class="w-3 h-3 text-emerald-300"></i>
-                                </a>
-                            @endforeach
+                    <!-- 2. Tingkat & Kategori Murid -->
+                    <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                            <i data-lucide="graduation-cap" class="w-4 h-4"></i>
                         </div>
-                    @endif
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[10px] text-white/60 font-semibold block leading-none">Kelas & Kategori</span>
+                            <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->grade?->name ?? '-' }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Jalur & Gelombang -->
+                    <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                            <i data-lucide="layers" class="w-4 h-4"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-1.5">
+                                <span class="text-[10px] text-white/60 font-semibold block leading-none">Jalur & Gelombang</span>
+                                @if($registration->period?->year)
+                                    <span class="text-[9px] font-extrabold text-emerald-200 bg-white/15 px-1.5 py-0.5 rounded border border-white/20 leading-none shrink-0 shadow-2xs">
+                                        TP {{ $registration->period->year }}
+                                    </span>
+                                @endif
+                            </div>
+                            <span class="font-bold text-white/95 truncate block text-xs mt-1">
+                                {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
