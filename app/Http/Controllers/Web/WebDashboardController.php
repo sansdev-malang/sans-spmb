@@ -126,29 +126,37 @@ class WebDashboardController extends Controller
 
         switch ($stage) {
             case 'payment':
+                if ($formPaid && !in_array($status, ['draft', 'agreement_signed', 'completed'])) {
+                    session(['active_candidate_id' => $registration->id]);
+                    return redirect()->route('dashboard')->with('error', 'Tidak ada tagihan pembayaran aktif untuk ' . ($registration->candidate_name ?? 'calon siswa') . '.');
+                }
                 return null;
 
             case 'form':
                 if (!$formPaid) {
-                    return redirect()->route('dashboard.payment', $registration->id)->with('error', 'Silakan lakukan pembayaran biaya pendaftaran terlebih dahulu untuk membuka formulir.');
+                    session(['active_candidate_id' => $registration->id]);
+                    return redirect()->route('dashboard')->with('error', 'Menu Formulir untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.');
                 }
                 return null;
 
             case 'verification':
                 if ($status === 'draft') {
-                    return redirect()->route('dashboard.form', $registration->id)->with('error', 'Silakan lengkapi dan kirim formulir pendaftaran terlebih dahulu.');
+                    session(['active_candidate_id' => $registration->id]);
+                    return redirect()->route('dashboard')->with('error', 'Menu Verifikasi Data untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.');
                 }
                 return null;
 
             case 'observation':
-                if (in_array($status, ['draft', 'submitted'])) {
-                    return redirect()->route('dashboard.verification', $registration->id)->with('error', 'Pendaftaran Anda belum terverifikasi oleh Panitia.');
+                if (!in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
+                    session(['active_candidate_id' => $registration->id]);
+                    return redirect()->route('dashboard')->with('error', 'Menu Ta\'aruf untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Berkas pendaftaran belum selesai diverifikasi oleh panitia.');
                 }
                 return null;
 
             case 'result':
                 if (!in_array($status, ['agreement_signed', 'completed'])) {
-                    return redirect()->route('dashboard.detail', $registration->id)->with('error', 'Tahapan seleksi final belum dibuka.');
+                    session(['active_candidate_id' => $registration->id]);
+                    return redirect()->route('dashboard')->with('error', 'Menu Administrasi untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Selesaikan tahapan sebelumnya terlebih dahulu.');
                 }
                 return null;
         }
@@ -226,12 +234,21 @@ class WebDashboardController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
+        if ($request->has('id')) {
+            $requestedReg = Registration::where('id', $request->query('id'))->where('user_id', $user->id)->first();
+            if ($requestedReg && $requestedReg->registration_status !== 'completed') {
+                session(['active_candidate_id' => $requestedReg->id]);
+                return redirect()->route('dashboard')->with('error', 'Menu Status Akhir untuk ' . ($requestedReg->candidate_name ?? 'calon siswa') . ' masih terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.');
+            }
+        }
+
         if ($registrations->isEmpty()) {
             return redirect()->route('dashboard')->with('error', 'Menu Status Akhir terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.');
         }
 
         $selectedId = $request->query('id', $registrations->first()?->id);
         $selectedRegistration = $registrations->firstWhere('id', (int)$selectedId) ?? $registrations->first();
+        session(['active_candidate_id' => $selectedRegistration->id]);
 
         return view('web.history', compact('user', 'registrations', 'selectedRegistration'));
     }
@@ -331,6 +348,7 @@ class WebDashboardController extends Controller
     public function detail($id)
     {
         $registration = $this->getRegistration($id);
+        session(['active_candidate_id' => $registration->id]);
         
         $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
         $status = $registration->registration_status;
@@ -422,6 +440,7 @@ class WebDashboardController extends Controller
         $registration = $this->getRegistration($id);
         $gate = $this->checkAccessGate($registration, 'form');
         if ($gate) return $gate;
+        session(['active_candidate_id' => $registration->id]);
 
         $formDetails = $this->getFormDetails($registration);
         $steps = $formDetails['steps'];
@@ -504,6 +523,7 @@ class WebDashboardController extends Controller
         $registration = $this->getRegistration($id);
         $gate = $this->checkAccessGate($registration, 'payment');
         if ($gate) return $gate;
+        session(['active_candidate_id' => $registration->id]);
 
         // Determine active payment based on phase
         if (in_array($registration->registration_status, ['agreement_signed', 'completed'])) {
@@ -751,6 +771,7 @@ class WebDashboardController extends Controller
         $registration = $this->getRegistration($id);
         $gate = $this->checkAccessGate($registration, 'verification');
         if ($gate) return $gate;
+        session(['active_candidate_id' => $registration->id]);
         
         $committeeMessage = $this->getCommitteeMessage($registration);
         
@@ -762,6 +783,7 @@ class WebDashboardController extends Controller
         $registration = $this->getRegistration($id);
         $gate = $this->checkAccessGate($registration, 'observation');
         if ($gate) return $gate;
+        session(['active_candidate_id' => $registration->id]);
         
         // Fetch dynamic agreement letter template for the candidate's unit
         $agreementTemplate = \App\Models\SpmbAgreementTemplate::where('spmb_unit_id', $registration->spmb_unit_id)->first();
@@ -852,6 +874,7 @@ class WebDashboardController extends Controller
         $registration = $this->getRegistration($id);
         $gate = $this->checkAccessGate($registration, 'result');
         if ($gate) return $gate;
+        session(['active_candidate_id' => $registration->id]);
         
         $feeDetails = $this->getFinalFeeDetails($registration);
         
