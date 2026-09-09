@@ -19,7 +19,7 @@
             @foreach($units as $unit)
                 @php 
                     $uCode = strtolower($unit->code);
-                    $firstGrade = \App\Models\SpmbGrade::where('spmb_unit_id', $unit->id)->where('is_active', true)->orderBy('id')->first();
+                    $firstGrade = $unit->grades->first();
                     $firstGradeId = $firstGrade?->id ?? '';
                     $brochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url');
                     $waUrl = $unit->getWhatsappUrl();
@@ -133,7 +133,7 @@
             <div class="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto pt-2">
                 @foreach($registrations as $reg)
                     @php
-                        $isPaid = $reg->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
+                        $isPaid = $reg->payments->where('payment_type', 'registration_fee')->where('status', 'success')->isNotEmpty();
                         $status = $reg->registration_status;
                         $regNum = $reg->registration_number ?: ('REG-' . str_pad($reg->id, 4, '0', STR_PAD_LEFT));
                     @endphp

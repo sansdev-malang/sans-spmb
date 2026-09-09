@@ -174,26 +174,9 @@
         html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
         }
-
-        /* YouTube-style dynamic top progress loading bar */
-        #top-loading-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            background-color: {{ $primaryColor }};
-            z-index: 99999;
-            width: 0;
-            opacity: 0;
-            transition: width 0.4s ease, opacity 0.2s ease;
-            box-shadow: 0 0 10px {{ $primaryColor }}, 0 0 5px {{ $primaryColor }};
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200">
-    <!-- YouTube-style dynamic top progress loading bar -->
-    <div id="top-loading-bar"></div>
-
     <!-- Header Navigation - Floating Premium (Fixed Seamless Overlay) -->
     @php
         $isLanding = (request()->is('/') || request()->routeIs('home') || request()->routeIs('unit.detail') || request()->is('unit/*'));
@@ -938,60 +921,8 @@
             }
         });
 
-        // Top Loading Progress Bar Controller
-        let loadingBarTimeout = null;
-        let loadingBarSafetyTimeout = null;
-
-        function startTopLoadingBar() {
-            const bar = document.getElementById('top-loading-bar');
-            if (!bar) return;
-
-            clearTimeout(loadingBarTimeout);
-            clearTimeout(loadingBarSafetyTimeout);
-
-            bar.style.transition = 'width 0.4s ease, opacity 0.2s ease';
-            bar.style.opacity = '1';
-            bar.style.width = '35%';
-
-            loadingBarTimeout = setTimeout(() => {
-                if (bar.style.opacity === '1') {
-                    bar.style.width = '75%';
-                }
-            }, 300);
-
-            // Safety timeout: automatically finish and hide if page transition doesn't happen within 3.5 seconds
-            loadingBarSafetyTimeout = setTimeout(() => {
-                finishTopLoadingBar();
-            }, 3500);
-        }
-
-        function finishTopLoadingBar() {
-            const bar = document.getElementById('top-loading-bar');
-            if (!bar) return;
-
-            clearTimeout(loadingBarTimeout);
-            clearTimeout(loadingBarSafetyTimeout);
-
-            bar.style.transition = 'width 0.2s ease, opacity 0.3s ease';
-            bar.style.width = '100%';
-            setTimeout(() => {
-                bar.style.opacity = '0';
-                setTimeout(() => {
-                    bar.style.width = '0%';
-                }, 300);
-            }, 150);
-        }
-
-        // Always finish bar smoothly on page load / bfcache restore
-        window.addEventListener('DOMContentLoaded', finishTopLoadingBar);
-        window.addEventListener('load', finishTopLoadingBar);
-        window.addEventListener('pageshow', finishTopLoadingBar);
-
-        // Show loading bar & spinner on native form submits
+        // Disable submit button on native form submits to prevent double-submitting
         document.addEventListener('submit', function(e) {
-            startTopLoadingBar();
-            
-            // Disable submit button to prevent double-submitting
             const submitBtn = e.target.querySelector('button[type="submit"]');
             if (submitBtn) {
                 setTimeout(() => {
@@ -1002,44 +933,8 @@
             }
         });
 
-        // Show loading bar on menu/link clicks (instant transition feedback)
-        document.addEventListener('click', function(e) {
-            const link = e.target.closest('a');
-            if (!link) return;
-            
-            const href = link.getAttribute('href');
-            const target = link.getAttribute('target');
-            
-            // Skip empty/javascript/anchor/external-tab/download links
-            if (!href || href.startsWith('javascript:') || href === '#' || target === '_blank' || link.hasAttribute('download') || href.includes('/receipt') || href.includes('/download')) {
-                return;
-            }
-
-            // Check URL
-            try {
-                const url = new URL(href, window.location.href);
-                // Skip if clicking same exact URL (prevent stuck bar when clicking already active page or anchor)
-                if (url.origin === window.location.origin && 
-                    url.pathname === window.location.pathname && 
-                    url.search === window.location.search) {
-                    return;
-                }
-                // Skip non-internal links
-                if (url.origin !== window.location.origin) {
-                    return;
-                }
-            } catch (err) {
-                if (href.startsWith('#')) {
-                    return;
-                }
-            }
-            
-            startTopLoadingBar();
-        });
-
         // Initialize Lucide Icons & Auto Session Toasts
         document.addEventListener("DOMContentLoaded", function() {
-            finishTopLoadingBar();
             if (window.lucide) {
                 lucide.createIcons();
             }

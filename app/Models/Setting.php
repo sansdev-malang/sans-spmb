@@ -8,13 +8,26 @@ class Setting extends Model
 {
     protected $guarded = [];
 
+    protected static $runtimeCache = null;
+
     /**
      * Get a setting by key.
      */
     public static function get($key, $default = null)
     {
-        $setting = self::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
+        if (static::$runtimeCache === null) {
+            try {
+                static::$runtimeCache = self::pluck('value', 'key')->toArray();
+            } catch (\Throwable $e) {
+                static::$runtimeCache = [];
+            }
+        }
+
+        if (array_key_exists($key, static::$runtimeCache)) {
+            return static::$runtimeCache[$key] !== null ? static::$runtimeCache[$key] : $default;
+        }
+
+        return $default;
     }
 
     /**
@@ -22,6 +35,10 @@ class Setting extends Model
      */
     public static function set($key, $value)
     {
+        if (static::$runtimeCache !== null) {
+            static::$runtimeCache[$key] = $value;
+        }
+
         return self::updateOrCreate(
             ['key' => $key],
             ['value' => $value]

@@ -169,30 +169,20 @@ class WebDashboardController extends Controller
         if ($request->has('candidate_id')) {
             session(['active_candidate_id' => (int)$request->query('candidate_id')]);
         }
-        // 1. Clean up empty placeholder registrations (incomplete auto-drafts)
+
+        // 1. Clean up empty placeholder registrations or stale unpaid drafts in a single fast query
         Registration::where('user_id', auth()->id())
+            ->where('registration_status', 'draft')
+            ->whereDoesntHave('payments', function($pq) {
+                $pq->where('payment_type', 'registration_fee')
+                   ->where('status', 'success');
+            })
             ->where(function($q) {
                 $q->whereNull('candidate_name')
                   ->orWhere('candidate_name', '');
             })->delete();
 
-        // 2. Clean up any draft registrations that do NOT have a successful registration_fee payment
-        // This ensures abandoned checkouts are cleaned up and don't clutter the dashboard.
-        $drafts = Registration::where('user_id', auth()->id())
-            ->where('registration_status', 'draft')
-            ->get();
-
-        foreach ($drafts as $draft) {
-            $hasPayment = $draft->payments()
-                ->where('payment_type', 'registration_fee')
-                ->where('status', 'success')
-                ->exists();
-            if (!$hasPayment) {
-                $draft->delete();
-            }
-        }
-
-        // 3. Only query registrations that are successfully paid or submitted/verified
+        // 2. Query active registrations with all required relationships
         $registrations = Registration::with(['unit', 'grade', 'period', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->where('user_id', auth()->id())
             ->where(function($q) {
@@ -205,7 +195,10 @@ class WebDashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
             
-        $units = SpmbUnit::where('is_active', true)->get();
+        $units = SpmbUnit::with(['grades' => function($q) {
+            $q->where('is_active', true)->orderBy('id', 'asc');
+        }])->where('is_active', true)->get();
+
         $grades = SpmbGrade::where('is_active', true)->get();
         $waves = \App\Models\SpmbWave::where('is_active', true)->get();
         $types = \App\Models\SpmbType::where('is_active', true)->get();
