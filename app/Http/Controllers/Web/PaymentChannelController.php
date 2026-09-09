@@ -72,6 +72,7 @@ class PaymentChannelController extends Controller
             'type' => 'required|string|max:50',
             'fee_type' => 'required|in:flat,percent',
             'fee_value' => 'required|numeric|min:0',
+            'applicable_for' => 'required|in:all,registration_fee,final_fee',
             'payment_gateway_id' => 'required|exists:payment_gateways,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -89,6 +90,7 @@ class PaymentChannelController extends Controller
             'type' => strtolower($request->type),
             'fee_type' => $request->fee_type,
             'fee_value' => $request->fee_value,
+            'applicable_for' => $request->applicable_for ?? 'all',
             'logo' => $logoPath,
             'payment_gateway_id' => $request->payment_gateway_id,
             'is_active' => $request->has('is_active')
@@ -114,6 +116,7 @@ class PaymentChannelController extends Controller
             'type' => 'required|string|max:50',
             'fee_type' => 'required|in:flat,percent',
             'fee_value' => 'required|numeric|min:0',
+            'applicable_for' => 'required|in:all,registration_fee,final_fee',
             'payment_gateway_id' => 'required|exists:payment_gateways,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -126,6 +129,7 @@ class PaymentChannelController extends Controller
             'type' => strtolower($request->type),
             'fee_type' => $request->fee_type,
             'fee_value' => $request->fee_value,
+            'applicable_for' => $request->applicable_for ?? 'all',
             'payment_gateway_id' => $request->payment_gateway_id,
             'is_active' => $request->has('is_active')
         ];
@@ -222,6 +226,8 @@ class PaymentChannelController extends Controller
                     $feeValue = 4500.00;
                 }
 
+                $applicableFor = ($type === 'qris') ? 'registration_fee' : 'all';
+
                 $existing = SpmbPaymentChannel::where('code', $ext['code'])
                     ->where('payment_gateway_id', $winpayGateway->id)
                     ->first();
@@ -240,6 +246,7 @@ class PaymentChannelController extends Controller
                         'type' => $type,
                         'fee_type' => $feeType,
                         'fee_value' => $feeValue,
+                        'applicable_for' => $applicableFor,
                         'is_active' => true
                     ]);
                 }

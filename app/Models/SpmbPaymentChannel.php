@@ -12,6 +12,7 @@ class SpmbPaymentChannel extends Model
         'type',
         'fee_type',
         'fee_value',
+        'applicable_for',
         'logo',
         'is_active',
         'payment_gateway_id'
@@ -25,6 +26,30 @@ class SpmbPaymentChannel extends Model
     public function gateway()
     {
         return $this->belongsTo(PaymentGateway::class, 'payment_gateway_id');
+    }
+
+    /**
+     * Scope query to filter channels applicable for a given payment type.
+     * $paymentType can be 'registration_fee' or 'final_fee'
+     */
+    public function scopeForPaymentType($query, string $paymentType)
+    {
+        return $query->where(function($q) use ($paymentType) {
+            $q->where('applicable_for', 'all')
+              ->orWhere('applicable_for', $paymentType);
+        });
+    }
+
+    /**
+     * Get human-readable label for applicable_for scope.
+     */
+    public function getApplicableForLabelAttribute(): string
+    {
+        return match($this->applicable_for) {
+            'registration_fee' => 'Hanya Pendaftaran Awal',
+            'final_fee' => 'Hanya Administrasi Akhir',
+            default => 'Semua Transaksi'
+        };
     }
 
     /**

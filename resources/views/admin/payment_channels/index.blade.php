@@ -113,7 +113,8 @@
                         <th class="py-4 px-6">Nama Channel</th>
                         <th class="py-4 px-6">Kode Pembayaran</th>
                         <th class="py-4 px-6">Tipe Channel</th>
-                        <th class="py-4 px-6">Biaya Transaksi (Admin)</th>
+                        <th class="py-4 px-6">Biaya Transaksi</th>
+                        <th class="py-4 px-6">Berlaku Untuk</th>
                         <th class="py-4 px-6 text-center">Status Aktif</th>
                         <th class="py-4 px-6 text-right">Aksi</th>
                     </tr>
@@ -164,6 +165,21 @@
                                         <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i>
                                         Rp {{ number_format($channel->fee_value, 0, ',', '.') }}
                                         <span class="text-[9px] font-bold text-emerald-500/80 ml-0.5 uppercase tracking-tight">(Flat)</span>
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-4 px-6">
+                                @if(($channel->applicable_for ?? 'all') === 'registration_fee')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/40">
+                                        🏷️ Pendaftaran Saja
+                                    </span>
+                                @elseif(($channel->applicable_for ?? 'all') === 'final_fee')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/40">
+                                        🎓 Administrasi Saja
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                                        ✓ Semua Transaksi
                                     </span>
                                 @endif
                             </td>
@@ -250,6 +266,15 @@
                 </select>
             </div>
 
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Berlaku Untuk Jenis Transaksi</label>
+                <select name="applicable_for" id="create_applicable_for" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                    <option value="all">Semua Jenis Transaksi</option>
+                    <option value="registration_fee">Hanya Biaya Pendaftaran (Awal/Enrollment)</option>
+                    <option value="final_fee">Hanya Biaya Administrasi (Akhir/Daftar Ulang)</option>
+                </select>
+            </div>
+
             <!-- Fee Configuration Fields -->
             <div class="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200/70 dark:border-slate-800/80 space-y-3">
                 <div class="text-[11px] font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
@@ -333,6 +358,15 @@
                     <option value="qris">QRIS</option>
                     <option value="ewallet">E-Wallet</option>
                     <option value="retail">Modern Retail</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Berlaku Untuk Jenis Transaksi</label>
+                <select name="applicable_for" id="edit_applicable_for" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
+                    <option value="all">Semua Jenis Transaksi</option>
+                    <option value="registration_fee">Hanya Biaya Pendaftaran (Awal/Enrollment)</option>
+                    <option value="final_fee">Hanya Biaya Administrasi (Akhir/Daftar Ulang)</option>
                 </select>
             </div>
 
@@ -423,12 +457,16 @@
         const channelTypeEl = document.getElementById(mode + '_type');
         const feeTypeEl = document.getElementById(mode + '_fee_type');
         const feeValEl = document.getElementById(mode + '_fee_value');
+        const appForEl = document.getElementById(mode + '_applicable_for');
         if (!channelTypeEl || !feeTypeEl || !feeValEl) return;
 
         const val = channelTypeEl.value;
         if (val === 'qris') {
             feeTypeEl.value = 'percent';
             feeValEl.value = '0.70';
+            if (appForEl && mode === 'create') {
+                appForEl.value = 'registration_fee';
+            }
         } else if (val === 'ewallet') {
             feeTypeEl.value = 'percent';
             feeValEl.value = '2.00';
@@ -467,6 +505,7 @@
         document.getElementById('edit_name').value = channel.name;
         document.getElementById('edit_code').value = channel.code;
         document.getElementById('edit_type').value = channel.type;
+        document.getElementById('edit_applicable_for').value = channel.applicable_for || 'all';
         document.getElementById('edit_fee_type').value = channel.fee_type || 'flat';
         document.getElementById('edit_fee_value').value = channel.fee_value ?? 4500;
         document.getElementById('edit_is_active').checked = !!channel.is_active;

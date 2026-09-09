@@ -231,18 +231,25 @@
                                                     </span>
                                                 </div>
 
-                                                <div class="flex items-center justify-between text-xs text-slate-400">
-                                                    @if($isPartial)
+                                                @php
+                                                    $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
+                                                @endphp
+
+                                                @if($isPartial)
+                                                    <div class="flex items-center justify-between text-xs text-slate-400 pt-0.5">
                                                         <span class="text-blue-600 dark:text-blue-400 font-medium">
                                                             Cicilan Tahap Ini (Sisa setelah bayar: Rp {{ number_format($remainingAfter, 0, ',', '.') }})
                                                         </span>
-                                                    @else
+                                                        <span>Total Komponen: Rp {{ number_format($itemNet, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @elseif(($itemPaid ?? 0) > 0)
+                                                    <div class="flex items-center justify-between text-xs text-slate-400 pt-0.5">
                                                         <span class="text-emerald-600 dark:text-emerald-400 font-medium">
-                                                            Pelunasan Komponen
+                                                            Pelunasan Sisa Cicilan
                                                         </span>
-                                                    @endif
-                                                    <span>Total Komponen: Rp {{ number_format($itemNet, 0, ',', '.') }}</span>
-                                                </div>
+                                                        <span>Total Komponen: Rp {{ number_format($itemNet, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @endforeach
                                     @endif
@@ -253,51 +260,49 @@
                                 @endphp
 
                                 @if(isset($discountAmount) && $discountAmount > 0)
-                                    <div class="flex justify-between items-center text-rose-600 dark:text-rose-400 border-t border-slate-200/40 dark:border-slate-800 pt-2">
+                                    <div class="flex justify-between items-center text-rose-600 dark:text-rose-400 border-t border-slate-200/40 dark:border-slate-800 pt-2 px-3.5">
                                         <span>Potongan Keringanan (Diskon)</span>
-                                        <span class="font-bold">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
+                                        <span class="font-extrabold text-xs font-mono">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
                                     </div>
                                 @endif
 
                                 @if($isInstallmentActive && isset($totalPaid) && $totalPaid > 0)
-                                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5">
+                                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5 px-3.5">
                                         <span>Telah Dibayar Sebelumnya</span>
-                                        <span class="font-bold">Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
+                                        <span class="font-extrabold text-xs font-mono">Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
                                     </div>
-                                    <div class="flex justify-between items-center text-slate-800 dark:text-white font-extrabold">
+                                    <div class="flex justify-between items-center text-slate-800 dark:text-white font-extrabold px-3.5">
                                         <span>Sisa Tanggungan</span>
-                                        <span class="font-mono text-emerald-600 dark:text-emerald-400">Rp {{ number_format($remainingBalance, 0, ',', '.') }}</span>
+                                        <span class="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($remainingBalance, 0, ',', '.') }}</span>
                                     </div>
                                 @endif
 
                                 <!-- Dynamic Admin Fee row -->
-                                <div id="adminFeeRow" class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-2">
-                                    <span>Biaya Transaksi (Admin)</span>
-                                    <span id="displayAdminFee" class="font-bold text-slate-800 dark:text-slate-200">Rp 0</span>
+                                <div id="adminFeeRow" class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-2 px-3.5">
+                                    <span>Biaya Transaksi</span>
+                                    <span id="displayAdminFee" class="font-extrabold text-xs text-slate-850 dark:text-slate-200 font-mono">Rp 0</span>
                                 </div>
 
-                                <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase">
+                                <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase px-3.5">
                                     <span>Total Pembayaran Transaksi Ini</span>
-                                    <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
+                                    <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
                                 </div>
-
-                                <p class="text-xs text-slate-400 italic leading-relaxed mt-1 select-none">Note: Biaya transaksi dibebankan kepada wali murid sesuai instruksi yayasan.</p>
                             </div>
                         @else
                             <!-- Formulir Pendaftaran (Draft) -->
                             <div class="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs">
                                 <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                                     <span>{{ $feeName }}</span>
-                                    <span class="font-bold text-slate-800 dark:text-slate-200">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
+                                    <span class="font-extrabold text-xs text-slate-850 dark:text-slate-200 font-mono">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
                                 </div>
                                 <input type="hidden" class="item-amount-input" value="{{ $feeAmount }}" data-max="{{ $feeAmount }}" data-min="{{ $feeAmount }}">
                                 <div class="flex justify-between items-center text-slate-650 dark:text-slate-400 border-t border-slate-200/40 dark:border-slate-800 pt-2">
-                                    <span>Biaya Transaksi (Admin)</span>
-                                    <span id="displayAdminFee" class="font-bold text-slate-800 dark:text-slate-200">Rp 0</span>
+                                    <span>Biaya Transaksi</span>
+                                    <span id="displayAdminFee" class="font-extrabold text-xs text-slate-850 dark:text-slate-200 font-mono">Rp 0</span>
                                 </div>
                                 <div class="border-t border-slate-200/50 dark:border-slate-800 pt-3 flex justify-between items-center text-xs font-black text-slate-800 dark:text-white uppercase">
                                     <span>Total Pembayaran</span>
-                                    <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
+                                    <span id="displayGrandTotal" class="text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono">Rp {{ number_format($feeAmount, 0, ',', '.') }}</span>
                                 </div>
                             </div>
                         @endif

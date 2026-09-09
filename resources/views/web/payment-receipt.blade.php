@@ -141,10 +141,10 @@
                         }
                     }
 
-                    $isItemInstallment = count($itemHistory) > 1;
+                    $itemRemainingAfterThis = max(0, $itemNet - $cumulativePaidUpToThis);
+                    $isItemInstallment = ($itemNet > 0) && ($cItem['amount'] < $itemNet || count($itemHistory) > 1 || $itemRemainingAfterThis > 0);
                     $itemInstIndex = array_search($payment->id, $itemHistory);
                     $itemInstNo = ($itemInstIndex !== false) ? ($itemInstIndex + 1) : 1;
-                    $itemRemainingAfterThis = max(0, $itemNet - $cumulativePaidUpToThis);
 
                     if ($isItemInstallment) {
                         $hasAnyInstallmentItem = true;
@@ -156,7 +156,10 @@
                         'amount' => $cItem['amount'],
                         'is_installment' => $isItemInstallment,
                         'installment_no' => $itemInstNo,
+                        'item_gross' => $itemGross,
+                        'item_discount' => $itemDiscount,
                         'item_net' => $itemNet,
+                        'cumulative_paid' => $cumulativePaidUpToThis,
                         'item_remaining' => $itemRemainingAfterThis,
                     ];
                 }
@@ -281,7 +284,7 @@
 
                 <!-- Admin Fee -->
                 <div class="flex justify-between items-center text-xs text-slate-600">
-                    <span>Biaya Administrasi Transaksi</span>
+                    <span>Biaya Transaksi</span>
                     <span class="font-bold text-slate-800">
                         Rp {{ number_format($payment->admin_fee, 0, ',', '.') }}
                     </span>
@@ -295,26 +298,53 @@
                     </span>
                 </div>
                 @if($payment->payment_type === 'final_fee' && $hasAnyInstallmentItem)
-                    @foreach($annotatedItems as $aItem)
-                        @if($aItem['is_installment'])
-                            <div class="pt-2 border-t border-dashed border-slate-200 flex justify-between items-center text-xs">
-                                <span class="text-slate-500 font-medium">
-                                    @if($aItem['item_remaining'] > 0)
-                                        Sisa Tagihan {{ $aItem['name'] }} Belum Lunas
-                                    @else
-                                        Status Pelunasan {{ $aItem['name'] }}
-                                    @endif
-                                </span>
-                                <span class="font-bold {{ $aItem['item_remaining'] > 0 ? 'text-amber-600' : 'text-emerald-600' }}">
-                                    @if($aItem['item_remaining'] > 0)
-                                        Rp {{ number_format($aItem['item_remaining'], 0, ',', '.') }}
-                                    @else
-                                        LUNAS SEPENUHNYA (100%)
-                                    @endif
-                                </span>
-                            </div>
-                        @endif
-                    @endforeach
+                    <div class="mt-4 p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2 text-xs">
+                        <div class="font-extrabold text-[10px] text-slate-700 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200/60 pb-1.5 flex items-center justify-between">
+                            <span>Informasi Rincian Cicilan Komponen Biaya</span>
+                            <span class="text-blue-600 font-bold font-mono">Angsuran Ke-{{ $primaryItemInstallmentNo }}</span>
+                        </div>
+                        @foreach($annotatedItems as $aItem)
+                            @if($aItem['is_installment'])
+                                <div class="space-y-1 pt-1 text-slate-600 dark:text-slate-400">
+                                    <div class="flex justify-between items-center">
+                                        <span>Komponen Biaya</span>
+                                        <span class="font-bold text-slate-850 dark:text-white">{{ $aItem['name'] }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Tarif Pokok Komponen</span>
+                                        <span class="font-bold text-slate-850 dark:text-white font-mono">
+                                            Rp {{ number_format($aItem['item_net'], 0, ',', '.') }}
+                                            @if($aItem['item_discount'] > 0)
+                                                <span class="text-[10px] text-rose-600 font-normal">(Diskon: Rp {{ number_format($aItem['item_discount'], 0, ',', '.') }})</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Tahapan Pembayaran</span>
+                                        <span class="font-bold text-blue-600">Cicilan Ke-{{ $aItem['installment_no'] }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Nominal Setoran Cicilan Ini</span>
+                                        <span class="font-bold text-slate-850 dark:text-white font-mono">Rp {{ number_format($aItem['amount'], 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span>Total Terbayar Sampai Tahap Ini</span>
+                                        <span class="font-bold text-emerald-600 font-mono">Rp {{ number_format($aItem['cumulative_paid'], 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-1.5 border-t border-dashed border-slate-200 font-bold {{ $aItem['item_remaining'] > 0 ? 'text-amber-600' : 'text-emerald-600' }}">
+                                        <span>{{ $aItem['item_remaining'] > 0 ? 'Sisa Tagihan Setelah Pembayaran Ini' : 'Status Pelunasan Komponen' }}</span>
+                                        <span class="font-mono">
+                                            @if($aItem['item_remaining'] > 0)
+                                                Rp {{ number_format($aItem['item_remaining'], 0, ',', '.') }} (Belum Lunas)
+                                            @else
+                                                LUNAS SEPENUHNYA (100%)
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
                 @endif
             </div>
 

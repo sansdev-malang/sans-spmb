@@ -667,7 +667,9 @@ class WebDashboardController extends Controller
             }
             $feeGateways = !empty($commonGateways) ? array_values($commonGateways) : ['winpay'];
             $feeName = 'Pelunasan Biaya Administrasi Akhir';
+            $currentPaymentType = 'final_fee';
         } else {
+            $currentPaymentType = 'registration_fee';
             $activePayment = $registration->activeRegistrationPayment;
             $fee = $this->getRegistrationFee($registration);
             $feeAmount = $activePayment ? $activePayment->amount : ($fee ? $fee->amount : 350000);
@@ -694,6 +696,7 @@ class WebDashboardController extends Controller
         }
 
         $channels = SpmbPaymentChannel::where('is_active', true)
+            ->forPaymentType($currentPaymentType)
             ->whereHas('gateway', function($q) use ($feeGateways) {
                 $q->whereIn('code', $feeGateways);
             })
@@ -1292,6 +1295,7 @@ class WebDashboardController extends Controller
             // Resolve active gateway based on the user's selected payment_method
             $activeChannel = \App\Models\SpmbPaymentChannel::where('code', $request->payment_method)
                 ->where('is_active', true)
+                ->forPaymentType($paymentType)
                 ->whereHas('gateway', function($q) use ($gateways) {
                     $q->whereIn('code', $gateways);
                 })

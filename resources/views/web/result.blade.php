@@ -176,19 +176,7 @@
         <div class="p-4 sm:p-8 space-y-5 sm:space-y-8">
             
             <!-- ANNOUNCEMENT BANNER -->
-            @if($registration->registration_status === 'completed')
-                <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
-                    <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
-                        <i data-lucide="party-popper" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan RESMI DITERIMA</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah resmi terdaftar dan diterima menjadi bagian dari keluarga besar Sekolah Anak Saleh.
-                        </p>
-                    </div>
-                </div>
-            @else
+            @if($registration->registration_status !== 'completed')
                 <div class="bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
                     <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
                         <i data-lucide="file-signature" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
@@ -209,35 +197,47 @@
                         <i data-lucide="receipt" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-emerald"></i>
                         <span>Rincian Biaya Masuk Awal</span>
                     </h4>
-                    @if(isset($discountAmount) && ($discountAmount > 0 || ($installmentMode ?? 'none') !== 'none'))
+                    @php
+                        $isCompleted = ($registration->registration_status === 'completed');
+                        $hasDiscount = isset($discountAmount) && $discountAmount > 0;
+                        $hasInstallment = (($installmentMode ?? 'none') !== 'none');
+                        $showInstallmentNotice = !$isCompleted && $hasInstallment;
+                    @endphp
+                    @if($hasDiscount || $showInstallmentNotice)
                         <span class="self-start sm:self-auto px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
-                            Disetujui Keringanan / Cicilan
+                            @if($hasDiscount && $showInstallmentNotice)
+                                Disetujui Keringanan / Cicilan
+                            @elseif($hasDiscount)
+                                Disetujui Keringanan
+                            @else
+                                Disetujui Cicilan
+                            @endif
                         </span>
                     @endif
                 </div>
 
-                @if(isset($discountAmount) && ($discountAmount > 0 || ($installmentMode ?? 'none') !== 'none'))
-                    <!-- Keringanan Notice Banner -->
+                @if($hasDiscount || $showInstallmentNotice)
+                    <!-- Keringanan / Cicilan Notice Banner -->
                     <div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl flex items-start gap-3">
                         <div class="h-8 w-8 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <i data-lucide="sparkles" class="w-4 h-4"></i>
                         </div>
                         <div class="space-y-1">
                             <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-300">
-                                @if($discountAmount > 0 && ($installmentMode ?? 'none') !== 'none')
+                                @if($hasDiscount && $showInstallmentNotice)
                                     Pemberitahuan Persetujuan Keringanan & Kebijakan Cicilan
-                                @elseif($discountAmount > 0)
+                                @elseif($hasDiscount)
                                     Pemberitahuan Persetujuan Keringanan Biaya (Diskon)
                                 @else
                                     Kebijakan Cicilan Pembayaran
                                 @endif
                             </h4>
                             <p class="text-[11px] text-emerald-750 dark:text-emerald-400 leading-relaxed">
-                                @if($discountAmount > 0 && ($installmentMode ?? 'none') !== 'none')
+                                @if($hasDiscount && $showInstallmentNotice)
                                     Alhamdulillah! Ananda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}) dan diizinkan melakukan <strong>pembayaran bertahap (cicilan)</strong>.
-                                @elseif($discountAmount > 0)
+                                @elseif($hasDiscount)
                                     Alhamdulillah! Ananda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}).
-                                @elseif(($installmentMode ?? 'none') !== 'none')
+                                @else
                                     Alhamdulillah! Anda disetujui untuk melakukan <strong>pembayaran bertahap (cicilan)</strong> untuk biaya masuk ini.
                                 @endif
                             </p>
@@ -342,14 +342,16 @@
                                                                 🏷️ Diskon Rp {{ number_format($itemDiscount, 0, ',', '.') }}
                                                             </span>
                                                         @endif
-                                                        @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
-                                                            <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
-                                                                🔓 Boleh Dicicil
-                                                            </span>
-                                                        @elseif(($installmentMode ?? 'none') === 'all')
-                                                            <span class="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] border border-emerald-200/60 dark:border-emerald-900">
-                                                                ✓ Bisa Dicicil
-                                                            </span>
+                                                        @if(!$isItemLunas && $registration->registration_status !== 'completed')
+                                                            @if(($installmentMode ?? 'none') === 'selective' && !empty($item['is_installment_allowed']))
+                                                                <span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[9px] border border-blue-200/60 dark:border-blue-900">
+                                                                    🔓 Boleh Dicicil
+                                                                </span>
+                                                            @elseif(($installmentMode ?? 'none') === 'all')
+                                                                <span class="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[9px] border border-emerald-200/60 dark:border-emerald-900">
+                                                                    ✓ Bisa Dicicil
+                                                                </span>
+                                                            @endif
                                                         @endif
                                                     </div>
 
@@ -640,47 +642,41 @@
                 </div>
             </div>
 
-            <!-- INSTRUCTIONS BOX -->
-            <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
-                <h5 class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
-                    <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i> Informasi Penting & Prosedur Daftar Ulang
-                </h5>
-                <div class="instructions-body text-slate-650 dark:text-slate-350">
-                    @if($registration->registration_status !== 'completed')
+            <!-- BOTTOM SECTION -->
+            @if($registration->registration_status === 'completed')
+                <!-- ANNOUNCEMENT BANNER -->
+                <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
+                    <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                        <i data-lucide="party-popper" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan RESMI DITERIMA</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah resmi terdaftar dan diterima menjadi bagian dari keluarga besar Sekolah Anak Saleh.
+                        </p>
+                    </div>
+                </div>
+            @else
+                <!-- INSTRUCTIONS BOX -->
+                <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
+                    <h5 class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
+                        <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i> Informasi Penting & Prosedur Daftar Ulang
+                    </h5>
+                    <div class="instructions-body text-slate-650 dark:text-slate-350">
                         {!! $registration->unit?->re_registration_instructions_unpaid 
                             ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut Bayar</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar sebagai murid baru.</li></ul>') !!}
-                    @else
-                        {!! $registration->unit?->re_registration_instructions_completed 
-                            ?: \App\Models\Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>') !!}
-                    @endif
+                    </div>
                 </div>
-            </div>
 
-            <!-- ACTION BUTTONS -->
-            <div class="pt-4 flex flex-col sm:flex-row justify-center items-center gap-4">
-                @if($registration->registration_status === 'completed')
-                    <!-- Completed buttons -->
-                    <a href="{{ route('dashboard.admission-letter.download', $registration->id) }}" class="download-link-animate w-full sm:w-auto bg-brand-emerald hover-emerald text-white px-8 py-3.5 rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
-                        <i data-lucide="download" class="w-4.5 h-4.5"></i> Unduh Surat Kelulusan
-                    </a>
-                    @if(isset($successfulPayments) && $successfulPayments->count() > 1)
-                        <button onclick="openReceiptsModal()" class="w-full sm:w-auto border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 px-8 py-3.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center gap-2">
-                            <i data-lucide="file-text" class="w-4.5 h-4.5 text-brand-emerald"></i> Unduh Kwitansi Pembayaran
-                        </button>
-                    @elseif(isset($successfulPayments) && $successfulPayments->count() === 1)
-                        <a href="{{ route('dashboard.payment.receipt', $successfulPayments->first()->id) }}" class="download-link-animate w-full sm:w-auto border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 px-8 py-3.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center gap-2">
-                            <i data-lucide="file-text" class="w-4.5 h-4.5 text-brand-emerald"></i> Unduh Kwitansi Pembayaran
-                        </a>
-                    @endif
-                @else
-                    <!-- Unpaid buttons -->
+                <!-- ACTION BUTTONS -->
+                <div class="pt-4 flex flex-col sm:flex-row justify-center items-center gap-4">
                     <a href="{{ route('dashboard.payment', $registration->id) }}" id="payment-btn" data-base-url="{{ route('dashboard.payment', $registration->id) }}" class="w-full sm:w-auto bg-brand-emerald hover-emerald text-white px-8 py-3.5 rounded-xl font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
                         <span class="btn-label-text flex items-center gap-2">
                             <i data-lucide="credit-card" class="w-4.5 h-4.5 text-brand-yellow animate-pulse"></i> Lanjut Bayar
                         </span>
                     </a>
-                @endif
-            </div>
+                </div>
+            @endif
 
         </div>
     </div>
