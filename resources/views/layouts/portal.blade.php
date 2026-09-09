@@ -174,9 +174,27 @@
         html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
         }
+
+        /* YouTube-style dynamic top progress loading bar */
+        #top-loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background-color: {{ $primaryColor }};
+            z-index: 99999;
+            width: 0;
+            opacity: 0;
+            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+            box-shadow: 0 0 10px {{ $primaryColor }}, 0 0 5px {{ $primaryColor }};
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-800 bg-slate-50 dark:bg-slate-950 dark:text-slate-200">
+    <!-- YouTube-style dynamic top progress loading bar -->
+    <div id="top-loading-bar"></div>
+
     <!-- Header Navigation - Floating Premium (Fixed Seamless Overlay) -->
     @php
         $isLanding = (request()->is('/') || request()->routeIs('home') || request()->routeIs('unit.detail') || request()->is('unit/*'));
@@ -921,8 +939,67 @@
             }
         });
 
-        // Disable submit button on native form submits to prevent double-submitting
+        // Dynamic Continuous Top Loading Progress Bar Controller (YouTube / NProgress style)
+        let topBarProgress = 0;
+        let topBarInterval = null;
+        let topBarSafety = null;
+
+        function startTopLoadingBar() {
+            const bar = document.getElementById('top-loading-bar');
+            if (!bar) return;
+
+            clearInterval(topBarInterval);
+            clearTimeout(topBarSafety);
+
+            topBarProgress = 15;
+            bar.style.transition = 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease';
+            bar.style.opacity = '1';
+            bar.style.width = topBarProgress + '%';
+
+            // Continuous smooth trickle animation so it never freezes in place
+            topBarInterval = setInterval(() => {
+                if (topBarProgress < 60) {
+                    topBarProgress += Math.random() * 10 + 4;
+                } else if (topBarProgress < 85) {
+                    topBarProgress += Math.random() * 4 + 1.5;
+                } else if (topBarProgress < 94) {
+                    topBarProgress += 0.5;
+                }
+                bar.style.width = Math.min(topBarProgress, 94) + '%';
+            }, 180);
+
+            // Safety timeout: automatically finish if navigation takes longer than 4.5s
+            topBarSafety = setTimeout(() => {
+                finishTopLoadingBar();
+            }, 4500);
+        }
+
+        function finishTopLoadingBar() {
+            const bar = document.getElementById('top-loading-bar');
+            if (!bar) return;
+
+            clearInterval(topBarInterval);
+            clearTimeout(topBarSafety);
+
+            bar.style.transition = 'width 0.2s ease, opacity 0.3s ease';
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.style.opacity = '0';
+                setTimeout(() => {
+                    bar.style.width = '0%';
+                    topBarProgress = 0;
+                }, 300);
+            }, 120);
+        }
+
+        // Always finish bar smoothly on page load / cache restore
+        window.addEventListener('DOMContentLoaded', finishTopLoadingBar);
+        window.addEventListener('load', finishTopLoadingBar);
+        window.addEventListener('pageshow', finishTopLoadingBar);
+
+        // Show loading bar & disable button on native form submits
         document.addEventListener('submit', function(e) {
+            startTopLoadingBar();
             const submitBtn = e.target.querySelector('button[type="submit"]');
             if (submitBtn) {
                 setTimeout(() => {
@@ -933,8 +1010,41 @@
             }
         });
 
+        // Show loading bar on menu/link clicks with same-page protection
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+            
+            const href = link.getAttribute('href');
+            const target = link.getAttribute('target');
+            
+            // Skip empty/javascript/anchor/external-tab/download/receipt links
+            if (!href || href.startsWith('javascript:') || href === '#' || href.startsWith('#') || target === '_blank' || link.hasAttribute('download') || href.includes('/receipt') || href.includes('/download')) {
+                return;
+            }
+
+            try {
+                const url = new URL(href, window.location.href);
+                // Skip if clicking exact same URL (prevents stuck bar when clicking already active menu)
+                if (url.origin === window.location.origin && 
+                    url.pathname === window.location.pathname && 
+                    url.search === window.location.search) {
+                    return;
+                }
+                // Skip external links
+                if (url.origin !== window.location.origin) {
+                    return;
+                }
+            } catch (err) {
+                return;
+            }
+            
+            startTopLoadingBar();
+        });
+
         // Initialize Lucide Icons & Auto Session Toasts
         document.addEventListener("DOMContentLoaded", function() {
+            finishTopLoadingBar();
             if (window.lucide) {
                 lucide.createIcons();
             }
