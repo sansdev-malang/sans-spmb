@@ -508,7 +508,7 @@
                                         'spmb_period_id' => ['label' => 'Tahun Ajaran', 'step_id' => 1],
                                         'spmb_wave_id' => ['label' => 'Gelombang Pendaftaran', 'step_id' => 1],
                                         'spmb_type_id' => ['label' => 'Jalur Pendaftaran', 'step_id' => 1],
-                                        'spmb_class_program_id' => ['label' => 'Program Kelas', 'step_id' => 1],
+                                        'spmb_class_program_id' => ['label' => 'Kategori Murid', 'step_id' => 1],
                                         'candidate_name' => ['label' => 'Nama Lengkap Calon Siswa', 'step_id' => 2],
                                         'nickname' => ['label' => 'Nama Panggilan', 'step_id' => 2],
                                         'nik' => ['label' => 'NIK Anak', 'step_id' => 2],

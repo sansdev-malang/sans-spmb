@@ -268,7 +268,9 @@
 
             @php
                 $canRenderStep = true;
+                $candidateFullAddressGlobal = $registration->getFullCandidateAddress();
             @endphp
+            <input type="hidden" id="candidate_full_address_data" value="{{ $candidateFullAddressGlobal }}">
             @foreach($steps as $index => $step)
                 @if($canRenderStep || $registration->registration_status !== 'draft')
                     @php
@@ -283,6 +285,27 @@
                     @endphp
                     <div class="border rounded-2xl transition-all duration-200 overflow-hidden {{ $hasInvalidFields ? 'border-red-400 dark:border-red-600 bg-red-50/5 dark:bg-red-950/20 ring-2 ring-red-200 dark:ring-red-900/40' : ($isCurrentActive ? 'border-brand-emerald bg-white dark:bg-slate-900 ring-4 ring-emerald-500/10 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs') }}">
                         
+                        @php
+                            $hasActiveExtraServices = \App\Models\SpmbExtraService::where('is_active', true)
+                                ->where(function($q) use ($registration) {
+                                    $q->whereNull('spmb_unit_id')
+                                      ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
+                                })
+                                ->exists();
+
+                            $stepDescriptions = [
+                                1 => $hasActiveExtraServices
+                                    ? 'Pilih kategori program belajar ananda serta layanan tambahan non-formal (jika tersedia).'
+                                    : 'Pilih kategori program belajar untuk ananda.',
+                                2 => 'Lengkapi identitas kependudukan, data kelahiran, dan riwayat sekolah calon murid.',
+                                3 => 'Masukkan alamat domisili tempat tinggal calon murid saat ini secara lengkap dan akurat.',
+                                4 => 'Isi data identitas orang tua kandung beserta nomor WhatsApp aktif untuk koordinasi resmi panitia.',
+                                5 => 'Isi data berikut jika calon murid tinggal bersama wali (opsional, dapat dikosongkan jika bersama orang tua).',
+                                6 => 'Unggah dokumen persyaratan pendaftaran seperti Akta Kelahiran, KK, dan Pas Foto (maks. 2MB per berkas).',
+                            ];
+                            $stepDesc = $stepDescriptions[$step->id] ?? $stepDescriptions[$index + 1] ?? 'Lengkapi formulir berikut dengan data yang benar.';
+                        @endphp
+
                         @if ($isAccordionItem)
                             <!-- Accordion Header for Completed Step -->
                             <div onclick="toggleStepAccordion({{ $step->id }})" class="p-4 sm:p-5 flex items-center justify-between cursor-pointer select-none group transition bg-white dark:bg-slate-900 hover:bg-slate-50/70 dark:hover:bg-slate-800/60">
@@ -311,24 +334,33 @@
                             </div>
                         @else
                             <!-- Active Step Header / Error Header -->
-                            <div class="p-5 pb-0 flex justify-between items-center mb-4">
-                                <span class="font-extrabold text-slate-800 dark:text-white flex items-center gap-2.5 text-sm sm:text-base">
-                                    <span class="h-7 w-7 rounded-xl bg-brand-emerald text-white text-xs flex items-center justify-center font-black shadow-xs">{{ $index + 1 }}</span>
-                                    {{ $step->title }}
-                                </span>
-                                <div class="flex items-center gap-2">
-                                    @if ($hasInvalidFields)
-                                        <span class="text-[10px] bg-rose-100 text-rose-700 px-2.5 py-1 rounded-full font-bold flex items-center gap-1 shadow-sm border border-rose-200">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span> Perlu Perbaikan
-                                        </span>
-                                    @endif
+                            <div class="p-5 pb-1">
+                                <div class="flex justify-between items-start">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="h-7 w-7 rounded-xl bg-brand-emerald text-white text-xs flex items-center justify-center font-black shadow-xs shrink-0">{{ $index + 1 }}</span>
+                                            <h3 class="font-extrabold text-slate-800 dark:text-white text-sm sm:text-base tracking-tight">
+                                                {{ $step->title }}
+                                            </h3>
+                                        </div>
+                                        <p class="text-xs text-slate-400 dark:text-slate-400 font-medium pl-9.5 leading-relaxed">
+                                            {{ $stepDesc }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        @if ($hasInvalidFields)
+                                            <span class="text-[10px] bg-rose-100 text-rose-700 px-2.5 py-1 rounded-full font-bold flex items-center gap-1 shadow-sm border border-rose-200">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span> Perlu Perbaikan
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @endif
 
                         <!-- Form Block -->
                         @if ($registration->registration_status === 'draft' || $registration->registration_status === 'failed')
-                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="form-step-ajax space-y-4 text-sm p-5 {{ $isAccordionItem ? 'pt-3 border-t border-slate-100 dark:border-slate-800 hidden' : '' }}" data-step-title="{{ $step->title }}" data-is-last="{{ $index === $steps->count() - 1 ? '1' : '0' }}">
+                            <form id="form-step-{{ $step->id }}" action="{{ route('dashboard.step.save', [$registration->id, $step->id]) }}" method="POST" enctype="multipart/form-data" class="form-step-ajax space-y-4 text-sm px-5 pb-5 pt-2 {{ $isAccordionItem ? 'pt-3 border-t border-slate-100 dark:border-slate-800 hidden' : '' }}" data-step-title="{{ $step->title }}" data-is-last="{{ $index === $steps->count() - 1 ? '1' : '0' }}">
                                 @csrf
 
                                 @if($stepHasErrors)
@@ -349,7 +381,7 @@
                                     </div>
                                 @endif
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                                     @foreach($step->fields as $field)
                                         @php
                                             $val = $registration->getFieldValue($field->field_name);
@@ -363,35 +395,78 @@
                                         @endif
                                         
                                         @php
-                                            $fieldLabel = $field->label;
-                                            if ($field->field_name === 'previous_school' && isset($registration->unit)) {
-                                                $uCode = strtoupper($registration->unit->code);
-                                                if ($uCode === 'PAUD') {
-                                                    $fieldLabel = 'Asal Sekolah / Kelompok Bermain (Jika Ada)';
-                                                } elseif ($uCode === 'SD') {
-                                                    $fieldLabel = 'Asal Sekolah (TK/RA/PAUD)';
-                                                } elseif ($uCode === 'SMP') {
-                                                    $fieldLabel = 'Asal Sekolah (SD/MI)';
+                                            $uCode = strtoupper($registration->unit->code ?? '');
+                                            $admLevel = strtoupper(trim($registration->admission_level ?? ''));
+                                            $isKb = ($admLevel === 'KB');
+                                            $isTkA = in_array($admLevel, ['TK A', 'TKA', 'TK-A']);
+                                            $isTkB = in_array($admLevel, ['TK B', 'TKB', 'TK-B']);
+
+                                            // Determine internal school name for previous_school
+                                            $internalSchoolName = null;
+                                            if ($uCode === 'PAUD') {
+                                                if ($isTkA) {
+                                                    $internalSchoolName = 'KB Anak Saleh';
+                                                } elseif ($isTkB) {
+                                                    $internalSchoolName = 'TK A Anak Saleh';
+                                                } else {
+                                                    $internalSchoolName = 'KB Anak Saleh';
                                                 }
+                                            } elseif ($uCode === 'SD') {
+                                                $internalSchoolName = 'PAUD Terpadu Anak Saleh';
+                                            } elseif ($uCode === 'SMP') {
+                                                $internalSchoolName = 'SD Anak Saleh';
+                                            } else {
+                                                $internalSchoolName = 'Sekolah Anak Saleh';
                                             }
-                                            $isFullWidth = in_array($field->type, ['textarea', 'file']) || strlen($fieldLabel) > 30;
+                                        @endphp
+
+                                        @if($field->field_name === 'previous_school' && $uCode === 'PAUD' && $isKb)
+                                            @continue
+                                        @endif
+
+                                        @if($field->field_name === 'extra_services')
+                                            @php
+                                                $activeServices = \App\Models\SpmbExtraService::where('is_active', true)
+                                                     ->where(function($q) use ($registration) {
+                                                         $q->whereNull('spmb_unit_id')
+                                                           ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
+                                                     })
+                                                     ->get();
+                                            @endphp
+                                            @if($activeServices->isEmpty())
+                                                @continue
+                                            @endif
+                                            @php
+                                                $selectedServiceIds = $registration->extraServices->pluck('id')->toArray();
+                                            @endphp
+                                        @endif
+                                        
+                                        @php
+                                            $fieldLabel = $field->label;
+                                            if ($field->field_name === 'spmb_class_program_id') {
+                                                $fieldLabel = 'Kategori Murid';
+                                            } elseif ($field->field_name === 'previous_school') {
+                                                $fieldLabel = 'Asal Sekolah';
+                                            }
+                                            $isFullWidth = ($field->type === 'textarea') || ($field->type !== 'file' && strlen($fieldLabel) > 30) || $field->field_name === 'extra_services' || $field->field_name === 'previous_school' || in_array($field->field_name, ['father_address', 'mother_address', 'guardian_address']);
                                             $hasFieldError = $errors->has($field->field_name);
                                         @endphp
-                                        <div class="{{ $isFullWidth ? 'md:col-span-2' : '' }}">
-                                            <label class="block text-xs font-semibold text-slate-600 mb-1">
-                                                {{ $fieldLabel }}{{ $field->is_required ? '*' : '' }}
-                                            </label>
+                                        <div class="{{ $isFullWidth ? 'md:col-span-2' : '' }} flex flex-col justify-start">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">
+                                                    {{ $fieldLabel }}{{ $field->is_required ? '*' : '' }}
+                                                </label>
+                                                @if($field->field_name === 'guardian_address')
+                                                    <button type="button" 
+                                                            id="guardian_address_reset_btn_{{ $step->id }}" 
+                                                            onclick="resetGuardianAddress('{{ $step->id }}')" 
+                                                            class="{{ empty($val) ? 'hidden' : '' }} text-[11px] font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 inline-flex items-center gap-1 transition-colors px-2 py-0.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30">
+                                                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Kosongkan Pilihan
+                                                    </button>
+                                                @endif
+                                            </div>
                                             
                                             @if($field->field_name === 'extra_services')
-                                                 @php
-                                                     $activeServices = \App\Models\SpmbExtraService::where('is_active', true)
-                                                          ->where(function($q) use ($registration) {
-                                                              $q->whereNull('spmb_unit_id')
-                                                                ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
-                                                          })
-                                                          ->get();
-                                                     $selectedServiceIds = $registration->extraServices->pluck('id')->toArray();
-                                                 @endphp
                                                  <div class="flex flex-wrap gap-2.5 mt-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                                                      @foreach($activeServices as $service)
                                                          <label class="flex items-center gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
@@ -402,6 +477,180 @@
                                                          </label>
                                                      @endforeach
                                                  </div>
+                                            @elseif($field->field_name === 'previous_school')
+                                                @php
+                                                    $isInternal = (!empty($val) && $val === $internalSchoolName);
+                                                    $isOther = (!empty($val) && $val !== $internalSchoolName);
+                                                @endphp
+                                                <div class="space-y-2.5 mt-1" id="prevSchoolWrapper_{{ $step->id }}">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                        <!-- Option 1: Internal School -->
+                                                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                            <input type="radio" name="prev_school_choice_{{ $step->id }}" value="{{ $internalSchoolName }}" {{ $isInternal ? 'checked' : '' }} onchange="handlePrevSchoolChoice(this, '{{ $step->id }}')" class="w-4 h-4 text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="w-2 h-2 rounded-full bg-brand-emerald shrink-0"></span>
+                                                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-emerald transition-colors">
+                                                                    {{ $internalSchoolName }}
+                                                                </span>
+                                                            </div>
+                                                        </label>
+
+                                                        <!-- Option 2: Lainnya (Sekolah Luar) -->
+                                                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                            <input type="radio" name="prev_school_choice_{{ $step->id }}" value="__OTHER__" {{ $isOther ? 'checked' : '' }} onchange="handlePrevSchoolChoice(this, '{{ $step->id }}')" class="w-4 h-4 text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0"></span>
+                                                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 group-hover:text-brand-emerald transition-colors">
+                                                                    Lainnya (Sekolah Luar)
+                                                                </span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+
+                                                    <!-- Custom Input for previous_school if Lainnya is selected -->
+                                                    <div id="prevSchoolCustomInputBox_{{ $step->id }}" class="{{ $isOther ? '' : 'hidden' }} space-y-1 transition-all duration-200">
+                                                        <input type="text" id="prevSchoolCustomInput_{{ $step->id }}" placeholder="Ketik nama lengkap sekolah asal..." value="{{ $isOther ? $val : '' }}" oninput="syncPrevSchoolValue(this.value, '{{ $step->id }}')" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs shadow-xs">
+                                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 italic pl-1">Masukkan nama sekolah asal sebelumnya (contoh: TK Aisyiyah 1, SDN Klojen 1, dll).</p>
+                                                    </div>
+
+                                                    <input type="hidden" name="previous_school" id="realPreviousSchoolInput_{{ $step->id }}" value="{{ $val }}">
+                                                </div>
+                                            @elseif(in_array($field->field_name, ['father_address', 'mother_address']))
+                                                @php
+                                                    $parentType = str_replace('_address', '', $field->field_name); // 'father', 'mother'
+                                                    $candidateFullAddress = $registration->getFullCandidateAddress();
+                                                    $isSameAddress = empty($val) || ($val === $candidateFullAddress);
+                                                @endphp
+                                                <div class="space-y-2.5 mt-1" id="{{ $field->field_name }}_wrapper_{{ $step->id }}">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                        <!-- Option 1: Sama dengan Calon Murid -->
+                                                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                            <input type="radio" name="{{ $field->field_name }}_choice_{{ $step->id }}" value="same" {{ $isSameAddress ? 'checked' : '' }} onchange="handleParentAddressChoice('{{ $parentType }}', this.value, '{{ $step->id }}')" class="w-4 h-4 text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="w-2 h-2 rounded-full bg-brand-emerald shrink-0"></span>
+                                                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-emerald transition-colors">
+                                                                    Sama dengan Calon Murid
+                                                                </span>
+                                                            </div>
+                                                        </label>
+
+                                                        <!-- Option 2: Alamat Berbeda (Ketik Sendiri) -->
+                                                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                            <input type="radio" name="{{ $field->field_name }}_choice_{{ $step->id }}" value="custom" {{ !$isSameAddress ? 'checked' : '' }} onchange="handleParentAddressChoice('{{ $parentType }}', this.value, '{{ $step->id }}')" class="w-4 h-4 text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0"></span>
+                                                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 group-hover:text-brand-emerald transition-colors">
+                                                                    Alamat Berbeda (Ketik Sendiri)
+                                                                </span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+
+                                                    <!-- Info Box when Same is selected -->
+                                                    <div id="{{ $parentType }}_address_same_box_{{ $step->id }}" class="{{ $isSameAddress ? '' : 'hidden' }} p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 rounded-xl flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300 transition-all shadow-xs">
+                                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-brand-emerald flex items-center justify-center shrink-0 mt-0.5">
+                                                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                                        </div>
+                                                        <div>
+                                                            <span class="font-bold text-slate-800 dark:text-white text-xs block">Alamat disamakan dengan domisili tempat tinggal calon murid:</span>
+                                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed" id="{{ $parentType }}_address_preview_{{ $step->id }}">{{ $candidateFullAddress ?: '(Sesuai alamat calon murid pada Tahap 3)' }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Custom Input Box when Custom is selected -->
+                                                    <div id="{{ $parentType }}_address_custom_box_{{ $step->id }}" class="{{ $isSameAddress ? 'hidden' : '' }} space-y-1 transition-all duration-200">
+                                                        <textarea id="{{ $parentType }}_address_custom_input_{{ $step->id }}" rows="2" placeholder="Masukkan alamat lengkap domisili {{ strtolower($fieldLabel) }}..." oninput="syncParentAddressValue('{{ $parentType }}', this.value, '{{ $step->id }}')" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs shadow-xs">{{ !$isSameAddress ? $val : '' }}</textarea>
+                                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 italic pl-1">Isi jika domisili berbeda dengan alamat tempat tinggal calon murid.</p>
+                                                    </div>
+
+                                                    <!-- Hidden input for submission -->
+                                                    <input type="hidden" name="{{ $field->field_name }}" id="real_{{ $parentType }}_address_{{ $step->id }}" value="{{ $isSameAddress ? $candidateFullAddress : $val }}">
+                                                </div>
+                                            @elseif($field->field_name === 'guardian_address')
+                                                @php
+                                                    $candidateFullAddress = $registration->getFullCandidateAddress();
+                                                    $guardianChoice = '';
+                                                    if (!empty($val)) {
+                                                        if ($val === $candidateFullAddress) {
+                                                            $guardianChoice = 'same';
+                                                        } else {
+                                                            $guardianChoice = 'custom';
+                                                        }
+                                                    }
+                                                @endphp
+                                                <div class="space-y-2.5 mt-1" id="guardian_address_wrapper_{{ $step->id }}">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                        <!-- Option 1: Sama dengan Calon Murid -->
+                                                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                            <input type="radio" 
+                                                                   name="guardian_address_choice_{{ $step->id }}" 
+                                                                   value="same" 
+                                                                   data-was-checked="{{ $guardianChoice === 'same' ? 'true' : 'false' }}"
+                                                                   {{ $guardianChoice === 'same' ? 'checked' : '' }} 
+                                                                   onclick="handleParentAddressRadioClick(this, 'guardian', '{{ $step->id }}')" 
+                                                                   class="w-4 h-4 text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="w-2 h-2 rounded-full bg-brand-emerald shrink-0"></span>
+                                                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-emerald transition-colors">
+                                                                    Sama dengan Calon Murid
+                                                                </span>
+                                                            </div>
+                                                        </label>
+
+                                                        <!-- Option 2: Alamat Berbeda (Ketik Sendiri) -->
+                                                        <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                            <input type="radio" 
+                                                                   name="guardian_address_choice_{{ $step->id }}" 
+                                                                   value="custom" 
+                                                                   data-was-checked="{{ $guardianChoice === 'custom' ? 'true' : 'false' }}"
+                                                                   {{ $guardianChoice === 'custom' ? 'checked' : '' }} 
+                                                                   onclick="handleParentAddressRadioClick(this, 'guardian', '{{ $step->id }}')" 
+                                                                   class="w-4 h-4 text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald">
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0"></span>
+                                                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 group-hover:text-brand-emerald transition-colors">
+                                                                    Alamat Berbeda (Ketik Sendiri)
+                                                                </span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+
+                                                    <!-- Info Box when Same is selected -->
+                                                    <div id="guardian_address_same_box_{{ $step->id }}" class="{{ $guardianChoice === 'same' ? '' : 'hidden' }} p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 rounded-xl flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300 transition-all shadow-xs">
+                                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-brand-emerald flex items-center justify-center shrink-0 mt-0.5">
+                                                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                                        </div>
+                                                        <div>
+                                                            <span class="font-bold text-slate-800 dark:text-white text-xs block">Alamat disamakan dengan domisili tempat tinggal calon murid:</span>
+                                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed" id="guardian_address_preview_{{ $step->id }}">{{ $candidateFullAddress ?: '(Sesuai alamat calon murid pada Tahap 3)' }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Custom Input Box when Custom is selected -->
+                                                    <div id="guardian_address_custom_box_{{ $step->id }}" class="{{ $guardianChoice === 'custom' ? '' : 'hidden' }} space-y-1 transition-all duration-200">
+                                                        <textarea id="guardian_address_custom_input_{{ $step->id }}" rows="2" placeholder="Masukkan alamat lengkap domisili wali..." oninput="syncParentAddressValue('guardian', this.value, '{{ $step->id }}')" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs shadow-xs">{{ $guardianChoice === 'custom' ? $val : '' }}</textarea>
+                                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 italic pl-1">Isi jika domisili wali berbeda dengan alamat tempat tinggal calon murid.</p>
+                                                    </div>
+
+                                                    <!-- Hidden input for submission -->
+                                                    <input type="hidden" name="guardian_address" id="real_guardian_address_{{ $step->id }}" value="{{ $guardianChoice === 'same' ? $candidateFullAddress : ($guardianChoice === 'custom' ? $val : '') }}">
+                                                </div>
+                                            @elseif(in_array($field->field_name, ['province', 'city', 'kecamatan', 'kelurahan']))
+                                                <div class="relative">
+                                                    <select id="wilayah_{{ $field->field_name }}_{{ $step->id }}"
+                                                            name="{{ $field->field_name }}"
+                                                            data-step-id="{{ $step->id }}"
+                                                            data-field="{{ $field->field_name }}"
+                                                            data-current-val="{{ $val }}"
+                                                            class="wilayah-select wilayah-{{ $field->field_name }} w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs transition duration-150 disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed shadow-xs"
+                                                            {{ $field->is_required ? 'required' : '' }}
+                                                            {{ ($field->field_name !== 'province' && empty($val)) ? 'disabled' : '' }}>
+                                                        <option value="">-- Pilih {{ $fieldLabel }} --</option>
+                                                        @if(!empty($val))
+                                                            <option value="{{ $val }}" selected>{{ $val }}</option>
+                                                        @endif
+                                                    </select>
+                                                </div>
                                             @elseif($field->type === 'select')
                                                 @php
                                                     $ops = [];
@@ -436,10 +685,10 @@
                                                     $uniqueId = 'file_' . $field->id . '_' . $field->field_name;
                                                     $hasExisting = !empty($val);
                                                 @endphp
-                                                <div class="space-y-2" id="wrapper-{{ $uniqueId }}">
+                                                <div class="space-y-2 h-full flex flex-col mt-0.5" id="wrapper-{{ $uniqueId }}">
                                                     <!-- Drag & Drop Dropzone Box -->
                                                     <div id="dropzone-{{ $uniqueId }}" 
-                                                         class="dropzone-box group relative border-2 border-dashed {{ $hasFieldError ? 'border-red-400 bg-red-50/40 ring-4 ring-red-500/20' : 'border-slate-300 dark:border-slate-750 hover:border-brand-emerald dark:hover:border-emerald-500 bg-slate-50/70 hover:bg-emerald-50/30 dark:bg-slate-900/40 dark:hover:bg-slate-900/80' }} rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer text-center"
+                                                         class="dropzone-box group relative border-2 border-dashed {{ $hasFieldError ? 'border-red-400 bg-red-50/40 ring-4 ring-red-500/20' : 'border-slate-300 dark:border-slate-750 hover:border-brand-emerald dark:hover:border-emerald-500 bg-slate-50/70 hover:bg-emerald-50/30 dark:bg-slate-900/40 dark:hover:bg-slate-900/80' }} rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer text-center flex-1 flex flex-col items-center justify-center min-h-[125px] sm:min-h-[140px]"
                                                          data-input-id="input-{{ $uniqueId }}"
                                                          data-unique-id="{{ $uniqueId }}">
                                                         
@@ -455,34 +704,34 @@
                                                                accept=".pdf,.jpg,.jpeg,.png">
 
                                                         <!-- Empty / Prompt State -->
-                                                        <div id="prompt-{{ $uniqueId }}" class="{{ $hasExisting ? 'hidden' : 'block' }} pointer-events-none">
-                                                            <div class="w-12 h-12 mx-auto mb-2 rounded-2xl {{ $hasFieldError ? 'bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400' }} flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
-                                                                <i data-lucide="{{ $hasFieldError ? 'alert-triangle' : 'cloud-upload' }}" class="w-6 h-6"></i>
+                                                        <div id="prompt-{{ $uniqueId }}" class="{{ $hasExisting ? 'hidden' : 'block' }} pointer-events-none w-full">
+                                                            <div class="w-10 h-10 sm:w-11 sm:h-11 mx-auto mb-1.5 sm:mb-2 rounded-2xl {{ $hasFieldError ? 'bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400' }} flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-sm">
+                                                                <i data-lucide="{{ $hasFieldError ? 'alert-triangle' : 'cloud-upload' }}" class="w-5 h-5 sm:w-5.5 sm:h-5.5"></i>
                                                             </div>
-                                                            <p class="text-xs font-bold {{ $hasFieldError ? 'text-red-700 dark:text-red-300' : 'text-slate-700 dark:text-slate-200' }}">
-                                                                <span class="{{ $hasFieldError ? 'text-red-700 dark:text-red-300 underline font-black' : 'text-brand-emerald dark:text-emerald-400 underline decoration-dashed font-extrabold' }} underline-offset-4">Klik untuk memilih</span> atau seret file ke sini
+                                                            <p class="text-[11.5px] sm:text-xs font-bold {{ $hasFieldError ? 'text-red-700 dark:text-red-300' : 'text-slate-700 dark:text-slate-200' }}">
+                                                                <span class="{{ $hasFieldError ? 'text-red-700 dark:text-red-300 underline font-black' : 'text-brand-emerald dark:text-emerald-400 underline decoration-dashed font-extrabold' }} underline-offset-4">Klik untuk memilih</span> <span class="hidden sm:inline">atau seret file ke sini</span><span class="sm:hidden">berkas</span>
                                                             </p>
-                                                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-                                                                Format yang didukung: PDF, JPG, JPEG, PNG (Maks. 2 MB)
+                                                            <p class="text-[9.5px] sm:text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                                                Format: PDF, JPG, JPEG, PNG (Maks. 2 MB)
                                                             </p>
                                                         </div>
 
                                                         <!-- Existing File State (from Database) -->
                                                         @if($hasExisting)
-                                                            <div id="existing-{{ $uniqueId }}" class="p-3 bg-white dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-750 flex items-center justify-between gap-3 text-left shadow-sm">
-                                                                <div class="flex items-center gap-3 overflow-hidden">
-                                                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center flex-shrink-0">
+                                                            <div id="existing-{{ $uniqueId }}" class="p-3 bg-white dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-750 flex items-center justify-between gap-2 text-left shadow-sm w-full max-w-full overflow-hidden">
+                                                                <div class="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
+                                                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center shrink-0">
                                                                         <i data-lucide="file-check-2" class="w-5 h-5"></i>
                                                                     </div>
-                                                                    <div class="truncate">
-                                                                        <div class="flex items-center gap-2">
-                                                                            <span class="text-xs font-bold text-slate-800 dark:text-white">Berkas Tersimpan</span>
-                                                                            <span class="text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 px-2 py-0.5 rounded-full font-extrabold">Tersedia</span>
+                                                                    <div class="min-w-0 flex-1 overflow-hidden">
+                                                                        <div class="flex items-center gap-1.5">
+                                                                            <span class="text-xs font-bold text-slate-800 dark:text-white truncate">Berkas Tersimpan</span>
+                                                                            <span class="text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-extrabold shrink-0">Tersedia</span>
                                                                         </div>
-                                                                        <span class="text-[10px] text-slate-400 font-mono block truncate mt-0.5">{{ basename($val) }}</span>
+                                                                        <span class="text-[10px] text-slate-400 font-mono block truncate mt-0.5 w-full">{{ basename($val) }}</span>
                                                                     </div>
                                                                 </div>
-                                                                <div class="flex items-center gap-2 flex-shrink-0" onclick="event.stopPropagation()">
+                                                                <div class="flex items-center gap-1.5 shrink-0 ml-1" onclick="event.stopPropagation()">
                                                                     <a href="{{ Storage::url($val) }}" target="_blank" class="px-2.5 py-1.5 bg-slate-100 hover:bg-brand-emerald hover:text-white text-slate-700 dark:bg-slate-800 dark:text-slate-300 rounded-lg text-xs font-bold transition flex items-center gap-1">
                                                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i> Lihat
                                                                     </a>
@@ -494,27 +743,27 @@
                                                         @endif
 
                                                         <!-- New Selected File Preview Box (Dynamic) -->
-                                                        <div id="preview-{{ $uniqueId }}" class="hidden p-3 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-xl border border-brand-emerald/40 text-left shadow-sm">
-                                                            <div class="flex items-center justify-between gap-3">
-                                                                <div class="flex items-center gap-3 overflow-hidden">
+                                                        <div id="preview-{{ $uniqueId }}" class="hidden p-3 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-xl border border-brand-emerald/40 text-left shadow-sm w-full max-w-full overflow-hidden">
+                                                            <div class="flex items-center justify-between gap-2.5 w-full min-w-0">
+                                                                <div class="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
                                                                     <!-- Thumbnail image or Document icon -->
-                                                                    <div id="thumb-wrap-{{ $uniqueId }}" class="w-11 h-11 rounded-xl bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-inner">
+                                                                    <div id="thumb-wrap-{{ $uniqueId }}" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                                                                         <img id="thumb-img-{{ $uniqueId }}" src="" class="hidden w-full h-full object-cover">
-                                                                        <i id="doc-icon-{{ $uniqueId }}" data-lucide="file-text" class="w-6 h-6 text-brand-emerald"></i>
+                                                                        <i id="doc-icon-{{ $uniqueId }}" data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6 text-brand-emerald"></i>
                                                                     </div>
-                                                                    <div class="truncate">
-                                                                        <span id="file-name-{{ $uniqueId }}" class="text-xs font-extrabold text-slate-800 dark:text-white block truncate">nama_file.pdf</span>
-                                                                        <div class="flex items-center gap-2 mt-1">
-                                                                            <span id="file-size-{{ $uniqueId }}" class="text-[10px] text-slate-500 font-mono">1.2 MB</span>
-                                                                            <span id="file-badge-{{ $uniqueId }}" class="text-[9px] bg-brand-emerald text-white px-1.5 py-0.2 rounded font-black uppercase">PDF</span>
+                                                                    <div class="min-w-0 flex-1 overflow-hidden">
+                                                                        <span id="file-name-{{ $uniqueId }}" class="text-xs font-bold text-slate-800 dark:text-white block truncate w-full">nama_file.pdf</span>
+                                                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                                                            <span id="file-size-{{ $uniqueId }}" class="text-[10px] text-slate-500 font-mono shrink-0">1.2 MB</span>
+                                                                            <span id="file-badge-{{ $uniqueId }}" class="text-[8.5px] bg-brand-emerald text-white px-1.5 py-0.2 rounded font-black uppercase shrink-0">PDF</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                                 <button type="button" 
                                                                         onclick="event.stopPropagation(); window.resetFileInput('{{ $uniqueId }}', {{ $hasExisting ? 'true' : 'false' }})" 
-                                                                        class="w-8 h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 flex items-center justify-center transition flex-shrink-0" 
+                                                                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 flex items-center justify-center transition shrink-0 ml-1" 
                                                                         title="Batalkan File Ini">
-                                                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -568,6 +817,30 @@
                                     @endphp
                                     @if($isHiddenField)
                                         @continue
+                                    @endif
+                                    @if($field->field_name === 'extra_services')
+                                        @php
+                                            $services = $registration->extraServices;
+                                            $hasActiveServices = \App\Models\SpmbExtraService::where('is_active', true)
+                                                 ->where(function($q) use ($registration) {
+                                                     $q->whereNull('spmb_unit_id')
+                                                       ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
+                                                 })
+                                                 ->exists();
+                                        @endphp
+                                        @if(!$hasActiveServices && $services->isEmpty())
+                                            @continue
+                                        @endif
+                                    @endif
+                                    @if($field->field_name === 'previous_school')
+                                        @php
+                                            $uCode = strtoupper($registration->unit->code ?? '');
+                                            $admLevel = strtoupper(trim($registration->admission_level ?? ''));
+                                            $isKb = ($admLevel === 'KB');
+                                        @endphp
+                                        @if($uCode === 'PAUD' && $isKb)
+                                            @continue
+                                        @endif
                                     @endif
                                     @php
                                         $val = $registration->getFieldValue($field->field_name);
@@ -838,7 +1111,10 @@
                 const thumbImg = document.getElementById('thumb-img-' + uniqueId);
                 const docIcon = document.getElementById('doc-icon-' + uniqueId);
 
-                if (fileNameEl) fileNameEl.innerText = file.name;
+                if (fileNameEl) {
+                    fileNameEl.innerText = file.name;
+                    fileNameEl.title = file.name;
+                }
                 if (fileSizeEl) fileSizeEl.innerText = formatBytes(file.size);
                 if (fileBadgeEl) fileBadgeEl.innerText = ext.toUpperCase();
 
@@ -1189,7 +1465,291 @@
                     }
                 }
             }
+
+            // Initialize Wilayah Dropdowns for any active/rendered steps
+            document.querySelectorAll('.wilayah-select').forEach(select => {
+                const stepId = select.getAttribute('data-step-id');
+                if (stepId && window.WilayahEngine) {
+                    window.WilayahEngine.initStep(stepId);
+                }
+            });
         });
+
+        // ==========================================
+        // Wilayah Indonesia Cascading Dropdowns Engine
+        // ==========================================
+        const WilayahEngine = {
+            apiBase: 'https://www.emsifa.com/api-wilayah-indonesia/api',
+            apiFallback: 'https://emsifa.github.io/api-wilayah-indonesia/api',
+            cache: {
+                provinces: null,
+                regencies: {},
+                districts: {},
+                villages: {}
+            },
+            knownVillagePatches: {
+                '3573050': [
+                    { id: '3573050011', district_id: '3573050', name: 'TUNGGULWULUNG' }
+                ],
+                '3573020': [
+                    { id: '3573020004', district_id: '3573020', name: 'SUKUN' }
+                ]
+            },
+            initializedSteps: new Set(),
+
+            formatName(str) {
+                if (!str) return '';
+                return str.toLowerCase().split(' ').map(word => {
+                    if (word === 'dki') return 'DKI';
+                    if (word === 'di') return 'DI';
+                    return word.charAt(0).toUpperCase() + word.slice(1);
+                }).join(' ');
+            },
+
+            async fetchJson(endpoint) {
+                try {
+                    const res = await fetch(`${this.apiBase}/${endpoint}`);
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return await res.json();
+                } catch (e) {
+                    try {
+                        const fbRes = await fetch(`${this.apiFallback}/${endpoint}`);
+                        if (!fbRes.ok) throw new Error('HTTP ' + fbRes.status);
+                        return await fbRes.json();
+                    } catch (err) {
+                        console.error('Wilayah API error:', endpoint, err);
+                        return null;
+                    }
+                }
+            },
+
+            async getProvinces() {
+                if (this.cache.provinces) return this.cache.provinces;
+                let data = await this.fetchJson('provinces.json');
+                if (data && Array.isArray(data)) {
+                    data = [...data].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+                    this.cache.provinces = data;
+                }
+                return data || [];
+            },
+
+            async getRegencies(provinceId) {
+                if (!provinceId) return [];
+                if (this.cache.regencies[provinceId]) return this.cache.regencies[provinceId];
+                let data = await this.fetchJson(`regencies/${provinceId}.json`);
+                if (data && Array.isArray(data)) {
+                    data = [...data].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+                    this.cache.regencies[provinceId] = data;
+                }
+                return data || [];
+            },
+
+            async getDistricts(regencyId) {
+                if (!regencyId) return [];
+                if (this.cache.districts[regencyId]) return this.cache.districts[regencyId];
+                let data = await this.fetchJson(`districts/${regencyId}.json`);
+                if (data && Array.isArray(data)) {
+                    data = [...data].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+                    this.cache.districts[regencyId] = data;
+                }
+                return data || [];
+            },
+
+            async getVillages(districtId) {
+                if (!districtId) return [];
+                if (this.cache.villages[districtId]) return this.cache.villages[districtId];
+                let data = await this.fetchJson(`villages/${districtId}.json`);
+                data = (data && Array.isArray(data)) ? [...data] : [];
+
+                // Inject known missing entries (e.g. Tunggulwulung in Lowokwaru, Sukun in Sukun)
+                if (this.knownVillagePatches[districtId]) {
+                    this.knownVillagePatches[districtId].forEach(patch => {
+                        if (!data.some(item => item.name.toUpperCase().replace(/\s+/g, '') === patch.name.toUpperCase().replace(/\s+/g, ''))) {
+                            data.push(patch);
+                        }
+                    });
+                }
+
+                data.sort((a, b) => a.name.localeCompare(b.name, 'id'));
+                this.cache.villages[districtId] = data;
+                return data;
+            },
+
+            resetSelect(selectEl, placeholder) {
+                if (!selectEl) return;
+                selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+                selectEl.disabled = true;
+            },
+
+            initStep(stepId) {
+                if (this.initializedSteps.has(stepId)) return;
+                const provSelect = document.getElementById(`wilayah_province_${stepId}`);
+                const citySelect = document.getElementById(`wilayah_city_${stepId}`);
+                const kecSelect = document.getElementById(`wilayah_kecamatan_${stepId}`);
+                const kelSelect = document.getElementById(`wilayah_kelurahan_${stepId}`);
+
+                if (!provSelect) return;
+                this.initializedSteps.add(stepId);
+
+                const targetProv = (provSelect.getAttribute('data-current-val') || '').trim();
+                const targetCity = (citySelect?.getAttribute('data-current-val') || '').trim();
+                const targetKec = (kecSelect?.getAttribute('data-current-val') || '').trim();
+                const targetKel = (kelSelect?.getAttribute('data-current-val') || '').trim();
+
+                // 1. Fetch Provinces
+                provSelect.innerHTML = '<option value="">⏳ Memuat daftar Provinsi...</option>';
+                this.getProvinces().then(provinces => {
+                    provSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+                    let matchedProvId = null;
+
+                    provinces.forEach(p => {
+                        const formatted = this.formatName(p.name);
+                        const opt = document.createElement('option');
+                        opt.value = formatted;
+                        opt.textContent = formatted;
+                        opt.dataset.id = p.id;
+
+                        if (targetProv && (targetProv.toLowerCase() === formatted.toLowerCase() || targetProv.toLowerCase() === p.name.toLowerCase())) {
+                            opt.selected = true;
+                            matchedProvId = p.id;
+                        }
+                        provSelect.appendChild(opt);
+                    });
+
+                    if (matchedProvId && citySelect) {
+                        this.loadCities(stepId, matchedProvId, targetCity, targetKec, targetKel);
+                    }
+                });
+
+                // Event listener: Province Change
+                provSelect.addEventListener('change', () => {
+                    const selectedOpt = provSelect.options[provSelect.selectedIndex];
+                    const provId = selectedOpt?.dataset?.id;
+
+                    this.resetSelect(citySelect, '-- Pilih Kabupaten / Kota --');
+                    this.resetSelect(kecSelect, '-- Pilih Kecamatan --');
+                    this.resetSelect(kelSelect, '-- Pilih Kelurahan / Desa --');
+
+                    if (provId) {
+                        this.loadCities(stepId, provId, '', '', '');
+                    }
+                });
+
+                // Event listener: City Change
+                if (citySelect) {
+                    citySelect.addEventListener('change', () => {
+                        const selectedOpt = citySelect.options[citySelect.selectedIndex];
+                        const cityId = selectedOpt?.dataset?.id;
+
+                        this.resetSelect(kecSelect, '-- Pilih Kecamatan --');
+                        this.resetSelect(kelSelect, '-- Pilih Kelurahan / Desa --');
+
+                        if (cityId) {
+                            this.loadDistricts(stepId, cityId, '', '');
+                        }
+                    });
+                }
+
+                // Event listener: Kecamatan Change
+                if (kecSelect) {
+                    kecSelect.addEventListener('change', () => {
+                        const selectedOpt = kecSelect.options[kecSelect.selectedIndex];
+                        const kecId = selectedOpt?.dataset?.id;
+
+                        this.resetSelect(kelSelect, '-- Pilih Kelurahan / Desa --');
+
+                        if (kecId) {
+                            this.loadVillages(stepId, kecId, '');
+                        }
+                    });
+                }
+            },
+
+            async loadCities(stepId, provId, targetCity, targetKec, targetKel) {
+                const citySelect = document.getElementById(`wilayah_city_${stepId}`);
+                if (!citySelect) return;
+
+                citySelect.disabled = false;
+                citySelect.innerHTML = '<option value="">⏳ Memuat data Kabupaten / Kota...</option>';
+
+                const regencies = await this.getRegencies(provId);
+                citySelect.innerHTML = '<option value="">-- Pilih Kabupaten / Kota --</option>';
+
+                let matchedCityId = null;
+                regencies.forEach(r => {
+                    const formatted = this.formatName(r.name);
+                    const opt = document.createElement('option');
+                    opt.value = formatted;
+                    opt.textContent = formatted;
+                    opt.dataset.id = r.id;
+
+                    if (targetCity && (targetCity.toLowerCase() === formatted.toLowerCase() || targetCity.toLowerCase() === r.name.toLowerCase() || targetCity.toLowerCase().includes(formatted.toLowerCase()))) {
+                        opt.selected = true;
+                        matchedCityId = r.id;
+                    }
+                    citySelect.appendChild(opt);
+                });
+
+                if (matchedCityId) {
+                    this.loadDistricts(stepId, matchedCityId, targetKec, targetKel);
+                }
+            },
+
+            async loadDistricts(stepId, regencyId, targetKec, targetKel) {
+                const kecSelect = document.getElementById(`wilayah_kecamatan_${stepId}`);
+                if (!kecSelect) return;
+
+                kecSelect.disabled = false;
+                kecSelect.innerHTML = '<option value="">⏳ Memuat data Kecamatan...</option>';
+
+                const districts = await this.getDistricts(regencyId);
+                kecSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+
+                let matchedKecId = null;
+                districts.forEach(d => {
+                    const formatted = this.formatName(d.name);
+                    const opt = document.createElement('option');
+                    opt.value = formatted;
+                    opt.textContent = formatted;
+                    opt.dataset.id = d.id;
+
+                    if (targetKec && (targetKec.toLowerCase() === formatted.toLowerCase() || targetKec.toLowerCase() === d.name.toLowerCase())) {
+                        opt.selected = true;
+                        matchedKecId = d.id;
+                    }
+                    kecSelect.appendChild(opt);
+                });
+
+                if (matchedKecId) {
+                    this.loadVillages(stepId, matchedKecId, targetKel);
+                }
+            },
+
+            async loadVillages(stepId, districtId, targetKel) {
+                const kelSelect = document.getElementById(`wilayah_kelurahan_${stepId}`);
+                if (!kelSelect) return;
+
+                kelSelect.disabled = false;
+                kelSelect.innerHTML = '<option value="">⏳ Memuat data Kelurahan / Desa...</option>';
+
+                const villages = await this.getVillages(districtId);
+                kelSelect.innerHTML = '<option value="">-- Pilih Kelurahan / Desa --</option>';
+
+                villages.forEach(v => {
+                    const formatted = this.formatName(v.name);
+                    const opt = document.createElement('option');
+                    opt.value = formatted;
+                    opt.textContent = formatted;
+                    opt.dataset.id = v.id;
+
+                    if (targetKel && (targetKel.toLowerCase() === formatted.toLowerCase() || targetKel.toLowerCase() === v.name.toLowerCase())) {
+                        opt.selected = true;
+                    }
+                    kelSelect.appendChild(opt);
+                });
+            }
+        };
+        window.WilayahEngine = WilayahEngine;
 
         // Global Accordion Handlers for Completed Steps
         window.toggleStepAccordion = function(stepId) {
@@ -1227,6 +1787,10 @@
             if (readonlyEl) readonlyEl.classList.add('hidden');
             if (formEl) formEl.classList.remove('hidden');
             if (chevronBox) chevronBox.classList.remove('rotate-180');
+
+            if (window.WilayahEngine) {
+                window.WilayahEngine.initStep(stepId);
+            }
         };
 
         window.cancelStepEdit = function(stepId) {
@@ -1238,6 +1802,93 @@
             if (readonlyEl) {
                 readonlyEl.classList.add('hidden');
                 if (chevronBox) chevronBox.classList.remove('rotate-180');
+            }
+        };
+
+        window.handlePrevSchoolChoice = function(radio, stepId) {
+            const customBox = document.getElementById('prevSchoolCustomInputBox_' + stepId);
+            const customInput = document.getElementById('prevSchoolCustomInput_' + stepId);
+            const realInput = document.getElementById('realPreviousSchoolInput_' + stepId);
+
+            if (radio.value === '__OTHER__') {
+                if (customBox) customBox.classList.remove('hidden');
+                if (customInput) {
+                    customInput.focus();
+                    if (realInput) realInput.value = customInput.value.trim();
+                }
+            } else {
+                if (customBox) customBox.classList.add('hidden');
+                if (realInput) realInput.value = radio.value;
+            }
+        };
+
+        window.syncPrevSchoolValue = function(val, stepId) {
+            const realInput = document.getElementById('realPreviousSchoolInput_' + stepId);
+            if (realInput) {
+                realInput.value = val.trim();
+            }
+        };
+
+        window.handleParentAddressRadioClick = function(radio, parentType, stepId) {
+            const groupName = radio.name;
+            const wasChecked = radio.dataset.wasChecked === 'true';
+
+            if (wasChecked) {
+                radio.checked = false;
+                document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => r.dataset.wasChecked = 'false');
+                handleParentAddressChoice(parentType, 'none', stepId);
+            } else {
+                document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => r.dataset.wasChecked = 'false');
+                radio.dataset.wasChecked = 'true';
+                handleParentAddressChoice(parentType, radio.value, stepId);
+            }
+        };
+
+        window.resetGuardianAddress = function(stepId) {
+            document.querySelectorAll(`input[name="guardian_address_choice_${stepId}"]`).forEach(r => {
+                r.checked = false;
+                r.dataset.wasChecked = 'false';
+            });
+            const customInput = document.getElementById('guardian_address_custom_input_' + stepId);
+            if (customInput) customInput.value = '';
+            handleParentAddressChoice('guardian', 'none', stepId);
+        };
+
+        window.handleParentAddressChoice = function(parentType, choice, stepId) {
+            const sameBox = document.getElementById(parentType + '_address_same_box_' + stepId);
+            const customBox = document.getElementById(parentType + '_address_custom_box_' + stepId);
+            const customInput = document.getElementById(parentType + '_address_custom_input_' + stepId);
+            const realInput = document.getElementById('real_' + parentType + '_address_' + stepId);
+            const resetBtn = document.getElementById(parentType + '_address_reset_btn_' + stepId);
+            const candidateAddress = document.getElementById('candidate_full_address_data')?.value || '';
+
+            if (choice === 'same') {
+                if (sameBox) sameBox.classList.remove('hidden');
+                if (customBox) customBox.classList.add('hidden');
+                if (realInput) realInput.value = candidateAddress;
+                if (resetBtn) resetBtn.classList.remove('hidden');
+            } else if (choice === 'custom') {
+                if (sameBox) sameBox.classList.add('hidden');
+                if (customBox) customBox.classList.remove('hidden');
+                if (customInput) {
+                    customInput.focus();
+                    if (realInput) realInput.value = customInput.value.trim();
+                }
+                if (resetBtn) resetBtn.classList.remove('hidden');
+            } else {
+                // choice === 'none' (Kosongkan / Bersama Orang Tua)
+                if (sameBox) sameBox.classList.add('hidden');
+                if (customBox) customBox.classList.add('hidden');
+                if (realInput) realInput.value = '';
+                if (customInput) customInput.value = '';
+                if (resetBtn) resetBtn.classList.add('hidden');
+            }
+        };
+
+        window.syncParentAddressValue = function(parentType, val, stepId) {
+            const realInput = document.getElementById('real_' + parentType + '_address_' + stepId);
+            if (realInput) {
+                realInput.value = val.trim();
             }
         };
     </script>
