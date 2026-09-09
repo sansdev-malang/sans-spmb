@@ -191,20 +191,22 @@ class Registration extends Model
         $extraServices = $this->extraServices ?? collect();
 
         // 1. Identify Registration Form Fee Category IDs to exclude
-        $regCatIds = SpmbFeeCategory::where(function($q) {
-            $q->where('name', 'like', '%Formulir%')
-              ->orWhere('name', 'like', '%Pendaftaran%')
-              ->orWhere('name', 'like', '%Registrasi%')
-              ->orWhere('name', 'like', '%Enrollment%')
-              ->orWhere('name', 'like', '%Registration%');
-        })->pluck('id')->toArray();
+        $regCatIds = SpmbFeeCategory::where('category_type', SpmbFeeCategory::TYPE_REGISTRATION)
+            ->orWhere(function($q) {
+                $q->where('name', 'like', '%Formulir%')
+                  ->orWhere('name', 'like', '%Pendaftaran%')
+                  ->orWhere('name', 'like', '%Registrasi%')
+                  ->orWhere('name', 'like', '%Enrollment%')
+                  ->orWhere('name', 'like', '%Registration%');
+            })->pluck('id')->toArray();
 
         // 2. Identify Extra Services / Biaya Tambahan Category IDs
-        $extraCatIds = SpmbFeeCategory::where(function($q) {
-            $q->where('name', 'like', '%Tambahan%')
-              ->orWhere('name', 'like', '%Extra%')
-              ->orWhere('name', 'like', '%Layanan%');
-        })->pluck('id')->toArray();
+        $extraCatIds = SpmbFeeCategory::where('category_type', SpmbFeeCategory::TYPE_EXTRA)
+            ->orWhere(function($q) {
+                $q->where('name', 'like', '%Tambahan%')
+                  ->orWhere('name', 'like', '%Extra%')
+                  ->orWhere('name', 'like', '%Layanan%');
+            })->pluck('id')->toArray();
 
         // 3. Fetch active fees for this candidate's unit from master (or global null unit)
         $unitFeesQuery = SpmbFee::with('category')
@@ -222,17 +224,19 @@ class Registration extends Model
         $selectedMasterFees = collect();
 
         foreach ($allUnitFees as $fee) {
+            $catType = $fee->category->category_type ?? null;
             $catName = strtolower(trim($fee->category->name ?? ''));
             $feeNameClean = strtolower(trim($fee->name ?? ''));
 
             // Never include registration / enrollment fee in final admission fees
-            if (in_array($fee->spmb_fee_category_id, $regCatIds)
+            if ($catType === SpmbFeeCategory::TYPE_REGISTRATION
+                || in_array($fee->spmb_fee_category_id, $regCatIds)
                 || preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $feeNameClean)
                 || preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $catName)) {
                 continue;
             }
 
-            $isExtraCat = in_array($fee->spmb_fee_category_id, $extraCatIds);
+            $isExtraCat = ($catType === SpmbFeeCategory::TYPE_EXTRA) || in_array($fee->spmb_fee_category_id, $extraCatIds);
 
             if ($isExtraCat) {
                 // Biaya Tambahan: only include if candidate opted for this extra service
@@ -377,13 +381,17 @@ class Registration extends Model
      */
     public function getRegistrationFee()
     {
-        $regCat = SpmbFeeCategory::where(function($q) {
-            $q->where('name', 'like', '%Formulir%')
-              ->orWhere('name', 'like', '%Pendaftaran%')
-              ->orWhere('name', 'like', '%Registrasi%')
-              ->orWhere('name', 'like', '%Enrollment%')
-              ->orWhere('name', 'like', '%Registration%');
-        })->first();
+        // 1. Primary: Lookup by explicit category_type
+        $regCat = SpmbFeeCategory::where('category_type', SpmbFeeCategory::TYPE_REGISTRATION)->first();
+        if (!$regCat) {
+            $regCat = SpmbFeeCategory::where(function($q) {
+                $q->where('name', 'like', '%Formulir%')
+                  ->orWhere('name', 'like', '%Pendaftaran%')
+                  ->orWhere('name', 'like', '%Registrasi%')
+                  ->orWhere('name', 'like', '%Enrollment%')
+                  ->orWhere('name', 'like', '%Registration%');
+            })->first();
+        }
 
         if ($regCat) {
             $fee = SpmbFee::where('spmb_fee_category_id', $regCat->id)
@@ -399,7 +407,8 @@ class Registration extends Model
             ->where('is_active', true)
             ->where(function($q) {
                 $q->whereHas('category', function($cq) {
-                    $cq->where('name', 'like', '%Formulir%')
+                    $cq->where('category_type', SpmbFeeCategory::TYPE_REGISTRATION)
+                      ->orWhere('name', 'like', '%Formulir%')
                       ->orWhere('name', 'like', '%Pendaftaran%')
                       ->orWhere('name', 'like', '%Registrasi%')
                       ->orWhere('name', 'like', '%Enrollment%')

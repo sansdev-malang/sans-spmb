@@ -266,32 +266,8 @@
                     @endforeach
                 @else
                     @php
-                        $feeCategory = \App\Models\SpmbFeeCategory::where('name', 'Formulir Pendaftaran')->first();
-                        $fee = null;
-                        if ($feeCategory && $registration) {
-                            if ($registration->spmb_unit_id) {
-                                $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                                    ->where('spmb_unit_id', $registration->spmb_unit_id)
-                                    ->where('is_active', true)
-                                    ->first()
-                                    ?? \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                                    ->where('spmb_unit_id', $registration->spmb_unit_id)
-                                    ->first();
-                            }
-                            if (!$fee) {
-                                $admissionLevel = $registration->admission_level ?: ($registration->grade->name ?? '');
-                                $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
-                                    ->where(function($q) use ($admissionLevel) {
-                                        if ($admissionLevel) {
-                                            $q->where('name', 'like', '%' . $admissionLevel . '%')
-                                              ->orWhere('name', 'Formulir Pendaftaran');
-                                        } else {
-                                            $q->where('name', 'Formulir Pendaftaran');
-                                        }
-                                    })->first();
-                            }
-                        }
-                        $feeName = $fee ? $fee->name : 'Formulir Pendaftaran';
+                        $fee = $registration ? $registration->getRegistrationFee() : null;
+                        $feeName = $fee ? $fee->name : 'Biaya Pendaftaran';
                     @endphp
                     <div class="flex justify-between items-center text-xs text-slate-600">
                         <span>

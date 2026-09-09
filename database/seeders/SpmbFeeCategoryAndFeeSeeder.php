@@ -18,9 +18,9 @@ class SpmbFeeCategoryAndFeeSeeder extends Seeder
     {
         // 1. Fee Categories
         $feeCategories = [
-            ['name' => 'Formulir Pendaftaran'],
-            ['name' => 'Biaya Administrasi'],
-            ['name' => 'Biaya Tambahan'],
+            ['name' => 'Formulir Pendaftaran', 'category_type' => SpmbFeeCategory::TYPE_REGISTRATION],
+            ['name' => 'Biaya Administrasi', 'category_type' => SpmbFeeCategory::TYPE_TUITION],
+            ['name' => 'Biaya Tambahan', 'category_type' => SpmbFeeCategory::TYPE_EXTRA],
         ];
         foreach ($feeCategories as $category) {
             SpmbFeeCategory::updateOrCreate(['name' => $category['name']], $category);

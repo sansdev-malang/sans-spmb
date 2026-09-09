@@ -50,7 +50,8 @@ class SpmbFeesController extends Controller
     public function storeCategory(Request $request)
     {
         $rules = [
-            'name' => 'required|string|unique:spmb_fee_categories,name'
+            'name' => 'required|string|unique:spmb_fee_categories,name',
+            'category_type' => 'required|in:registration_fee,tuition_fee,extra_service',
         ];
 
         if (auth()->user()->isSuperAdmin()) {
@@ -67,7 +68,10 @@ class SpmbFeesController extends Controller
                 ->with('failed_modal', 'jenis_biaya_create');
         }
 
-        $category = SpmbFeeCategory::create(['name' => $request->name]);
+        $category = SpmbFeeCategory::create([
+            'name' => $request->name,
+            'category_type' => $request->category_type ?? SpmbFeeCategory::TYPE_TUITION,
+        ]);
 
         $units = auth()->user()->isSuperAdmin() ? $request->spmb_units : [auth()->user()->spmb_unit_id];
         $category->units()->sync($units);
@@ -78,7 +82,8 @@ class SpmbFeesController extends Controller
     public function updateCategory(Request $request, $id)
     {
         $rules = [
-            'name' => 'required|string|unique:spmb_fee_categories,name,' . $id
+            'name' => 'required|string|unique:spmb_fee_categories,name,' . $id,
+            'category_type' => 'required|in:registration_fee,tuition_fee,extra_service',
         ];
 
         if (auth()->user()->isSuperAdmin()) {
@@ -96,7 +101,10 @@ class SpmbFeesController extends Controller
         }
 
         $category = SpmbFeeCategory::findOrFail($id);
-        $category->update(['name' => $request->name]);
+        $category->update([
+            'name' => $request->name,
+            'category_type' => $request->category_type ?? $category->category_type,
+        ]);
 
         if (auth()->user()->isSuperAdmin()) {
             $category->units()->sync($request->spmb_units);

@@ -33,7 +33,7 @@
                     <h3 class="font-extrabold text-base text-slate-800">Kategori Jenis Biaya</h3>
                     <p class="text-[11px] text-slate-400">Kelola kelompok jenis pembayaran masuk.</p>
                 </div>
-                <button onclick="openFeeModal('jenis_biaya', '', '', '{{ route('admin.spmb-settings.fees.categories.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                <button onclick="openFeeModal('jenis_biaya', '', '', '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [], 'tuition_fee')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Jenis Biaya
                 </button>
             </div>
@@ -43,6 +43,7 @@
                     <thead>
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Jenis Biaya</th>
+                            <th class="py-4 px-6 text-center">Fungsi / Tipe Biaya</th>
                             @if(auth()->user()->isSuperAdmin())
                                 <th class="py-4 px-6 text-center">Unit Pengguna</th>
                             @endif
@@ -54,6 +55,11 @@
                         @forelse($categories as $cat)
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $cat->name }}</td>
+                                <td class="py-4 px-6 text-center">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $cat->type_badge_class }}">
+                                        {{ $cat->type_label }}
+                                    </span>
+                                </td>
                                 @if(auth()->user()->isSuperAdmin())
                                     <td class="py-4 px-6 text-center text-xs font-semibold text-slate-500">
                                         @if($cat->units->count() === $units->count())
@@ -68,7 +74,7 @@
                                 </td>
                                 <td class="py-4 px-6 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button type="button" onclick="openFeeModal('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.update', $cat->id) }}', '', 'winpay', '', '', [{{ implode(',', $cat->units->pluck('id')->toArray()) }}])" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
+                                        <button type="button" onclick="openFeeModal('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.update', $cat->id) }}', '', 'winpay', '', '', [{{ implode(',', $cat->units->pluck('id')->toArray()) }}], '{{ $cat->category_type }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
                                             <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                             <span>Edit</span>
                                         </button>
@@ -88,7 +94,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis biaya.</td>
+                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis biaya.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -244,6 +250,17 @@
                 </div>
             @endif
 
+            <!-- Category Type Dropdown (Only for Jenis Biaya) -->
+            <div id="categoryTypeWrapper" class="hidden">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Fungsi / Tipe Biaya*</label>
+                <select id="categoryTypeSelect" name="category_type" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold">
+                    <option value="registration_fee">Biaya Pendaftaran Awal (Dibayar sebelum isi formulir pendaftaran)</option>
+                    <option value="tuition_fee" selected>Biaya Masuk / Administrasi Akhir (Daftar ulang setelah lolos observasi)</option>
+                    <option value="extra_service">Layanan Tambahan (Biaya opsional fasilitas di formulir, misal TPA/TPQ)</option>
+                </select>
+                <p class="text-[11px] text-slate-400 mt-1">Sistem menggunakan tipe ini untuk menentukan alur penagihan yang tepat secara otomatis.</p>
+            </div>
+
             <div>
                 <label id="feeInputLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama*</label>
                 <input type="text" id="feeMainInput" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
@@ -397,7 +414,7 @@
     });
 
     // Modal Control
-    function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = []) {
+    function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee') {
         const errorWrapper = document.getElementById('feeErrorWrapper');
         if (errorWrapper) {
             errorWrapper.classList.add('hidden');
@@ -417,6 +434,8 @@
         const amountWrapper = document.getElementById('feeAmountWrapper');
         const unitWrapper = document.getElementById('feeUnitWrapper');
         const categoryUnitsWrapper = document.getElementById('categoryUnitsWrapper');
+        const catTypeWrapper = document.getElementById('categoryTypeWrapper');
+        const catTypeSelect = document.getElementById('categoryTypeSelect');
         
         const titleEl = document.getElementById('feeModalTitle');
         const labelEl = document.getElementById('feeInputLabel');
@@ -451,6 +470,11 @@
             amountInput.required = false;
             if (unitWrapper) unitWrapper.classList.add('hidden');
 
+            if (catTypeWrapper) {
+                catTypeWrapper.classList.remove('hidden');
+                if (catTypeSelect) catTypeSelect.value = categoryType || 'tuition_fee';
+            }
+
             if (categoryUnitsWrapper) {
                 categoryUnitsWrapper.classList.remove('hidden');
                 if (categoryUnits && categoryUnits.length > 0) {
@@ -466,6 +490,8 @@
             labelEl.innerText = 'Nama Biaya*';
             mainInput.placeholder = 'Contoh: Biaya Pendaftaran TK B';
             
+            if (catTypeWrapper) catTypeWrapper.classList.add('hidden');
+
             amountWrapper.classList.remove('hidden');
             amountInput.value = formatRupiah(amount);
             amountInput.required = true;
@@ -554,11 +580,11 @@
             let failed = "{{ session('failed_modal') }}";
             if (failed.startsWith('jenis_biaya_create')) {
                 switchFeeTab('jenis_biaya');
-                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}]);
+                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}], '{{ old('category_type', 'tuition_fee') }}');
             } else if (failed.startsWith('jenis_biaya_edit_')) {
                 switchFeeTab('jenis_biaya');
                 let id = failed.replace('jenis_biaya_edit_', '');
-                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '/admin/spmb-settings/fees/categories/' + id, '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}]);
+                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '/admin/spmb-settings/fees/categories/' + id, '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}], '{{ old('category_type', 'tuition_fee') }}');
             } else if (failed.startsWith('biaya_admin_create')) {
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
                 if (oldCatId) {
