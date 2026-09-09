@@ -170,8 +170,8 @@ class RegistrationController extends Controller
                 'status' => in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']) ? 'completed' : ($status === 'failed' ? 'failed' : ($status === 'submitted' ? 'in_progress' : 'not_started')),
             ],
             'observation' => [
-                'label' => 'Observasi / Ta\'aruf',
-                'description' => 'Tes kesiapan belajar calon siswa secara daring.',
+                'label' => 'Assessment / Ta\'aruf',
+                'description' => 'Sesi tes kesiapan belajar dan wawancara pendaftar.',
                 'status' => in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']) ? 'completed' : ($status === 'verified' ? 'in_progress' : 'not_started'),
             ],
             'agreement' => [

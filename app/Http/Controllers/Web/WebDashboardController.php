@@ -313,8 +313,8 @@ class WebDashboardController extends Controller
                 'status' => in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']) ? 'completed' : ($status === 'failed' ? 'failed' : ($status === 'submitted' ? 'in_progress' : 'not_started')),
             ],
             'observation' => [
-                'label' => 'Observasi / Ta\'aruf',
-                'description' => 'Tes kesiapan belajar calon siswa secara daring.',
+                'label' => 'Assessment / Ta\'aruf',
+                'description' => 'Sesi tes kesiapan belajar dan wawancara pendaftar.',
                 'status' => in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']) ? 'completed' : ($status === 'verified' ? 'in_progress' : 'not_started'),
             ],
             'agreement' => [
@@ -726,9 +726,17 @@ class WebDashboardController extends Controller
 
         $observationDetails = null;
         if (in_array($registration->registration_status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
+            $isPaud = stripos($registration->unit?->code ?? '', 'PAUD') !== false || stripos($registration->unit?->name ?? '', 'PAUD') !== false || stripos($registration->unit?->name ?? '', 'TK') !== false || stripos($registration->unit?->name ?? '', 'KB') !== false;
+            $fallbackAddress = $isPaud 
+                ? 'Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur' 
+                : 'Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur';
+            $defaultAddress = $registration->unit?->taaruf_default_address ?: $fallbackAddress;
+
             $observationDetails = [
-                'title' => $registration->unit?->taaruf_title ?? 'Sesi Ta\'aruf Tatap Muka',
-                'location' => $registration->observation_location ?: ($registration->unit?->taaruf_default_location ?? 'Sekolah Anak Saleh'),
+                'title' => $registration->unit?->taaruf_title ?? 'Jadwal dan Sesi Assessment / Ta\'aruf',
+                'location' => $registration->observation_location ?: ($registration->unit?->taaruf_default_location ?: ($registration->unit?->name ?? 'Sekolah Dasar Anak Saleh')),
+                'room' => $registration->observation_room ?: ($registration->unit?->taaruf_default_room ?? ''),
+                'address' => $registration->observation_address ?: $defaultAddress,
                 'notes' => $registration->observation_notes ?: ($registration->unit?->taaruf_instructions ?? '')
             ];
         }

@@ -55,50 +55,85 @@
             <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Pantau status peninjauan berkas persyaratan pendaftaran oleh panitia SPMB.</p>
 
             <!-- Integrated Candidate Context Info -->
-            <div class="bg-black/15 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <!-- Left: Avatar + Candidate Details -->
-                <div class="flex items-start sm:items-center gap-3 min-w-0">
-                    <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-white/20 text-white font-black text-sm sm:text-base flex items-center justify-center border border-white/20 shadow-inner shrink-0 mt-0.5 sm:mt-0">
-                        {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
-                    </div>
-                    <div class="min-w-0 flex-1 space-y-0.5">
-                        <div class="flex items-center justify-between sm:justify-start gap-2">
-                            <h4 class="font-extrabold text-sm sm:text-base text-white tracking-tight truncate">
+            <div class="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/15 shadow-sm space-y-3.5">
+                <!-- Top Row: Avatar + Name + Registration Number on the Far Right -->
+                <div class="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="h-11 w-11 sm:h-12 sm:w-12 rounded-xl bg-white/20 text-white font-black text-base sm:text-lg flex items-center justify-center border border-white/25 shadow-inner shrink-0">
+                            {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Siswa</span>
+                            <h4 class="font-black text-sm sm:text-lg text-white tracking-tight leading-snug truncate">
                                 {{ $registration->candidate_name ?? 'Calon Siswa' }}
                             </h4>
-                            @if($registration->id_label)
-                                <span class="sm:hidden text-[10px] font-mono font-bold text-emerald-200 bg-white/15 px-2 py-0.5 rounded-lg border border-white/20 inline-flex items-center gap-1 shadow-xs whitespace-nowrap shrink-0">
-                                    <i data-lucide="tag" class="w-3 h-3 text-emerald-300"></i> {{ $registration->id_label }}
-                                </span>
-                            @endif
                         </div>
-                        
-                        <p class="text-xs text-emerald-100 font-semibold truncate">
-                            <span class="text-emerald-300 font-bold">{{ $registration->unit?->name }}</span> • {{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})
-                        </p>
-                        
-                        <p class="text-[11px] text-white/75 truncate">
-                            Jalur {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
-                            @if($registration->period?->year)
-                                <span class="text-white/50">(TP {{ $registration->period->year }})</span>
-                            @endif
-                        </p>
                     </div>
+
+                    <!-- No. Registrasi Badge di Pojok Kanan -->
+                    @if($registration->id_label)
+                        <div class="shrink-0 text-right">
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider hidden sm:inline-block mr-1.5">No. Registrasi:</span>
+                            <span class="text-xs sm:text-sm font-mono font-extrabold text-emerald-200 bg-white/15 px-3 py-1.5 rounded-xl border border-white/20 inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+                                <i data-lucide="tag" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300"></i> {{ $registration->id_label }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
 
-                <!-- Right: ID Label Badge (Desktop) & Child Switcher -->
-                <div class="flex items-center sm:justify-end gap-2 shrink-0 {{ $otherRegs->isNotEmpty() ? 'border-t sm:border-t-0 pt-2 sm:pt-0 border-white/10' : '' }}">
-                    @if($registration->id_label)
-                        <span class="hidden sm:inline-flex text-[11px] font-mono font-bold text-emerald-200 bg-white/15 px-2.5 py-1 rounded-xl border border-white/20 items-center gap-1.5 shadow-xs whitespace-nowrap">
-                            <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-300"></i> {{ $registration->id_label }}
-                        </span>
-                    @endif
+                <!-- Bottom Row: Structured List / Grid of Metadata -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 flex-1">
+                        <!-- 1. Unit Sekolah -->
+                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                                <i data-lucide="school" class="w-4 h-4"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[10px] text-white/60 font-semibold block leading-none">Unit Sekolah</span>
+                                <span class="font-bold text-emerald-300 truncate block text-xs mt-1">{{ $registration->unit?->name ?? '-' }}</span>
+                            </div>
+                        </div>
 
+                        <!-- 2. Tingkat & Kategori Murid -->
+                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                                <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[10px] text-white/60 font-semibold block leading-none">Kelas & Kategori</span>
+                                <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->grade?->name ?? '-' }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Jalur & Gelombang -->
+                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                                <i data-lucide="layers" class="w-4 h-4"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-1.5">
+                                    <span class="text-[10px] text-white/60 font-semibold block leading-none">Jalur & Gelombang</span>
+                                    @if($registration->period?->year)
+                                        <span class="text-[9px] font-extrabold text-emerald-200 bg-white/15 px-1.5 py-0.5 rounded border border-white/20 leading-none shrink-0 shadow-2xs">
+                                            TP {{ $registration->period->year }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <span class="font-bold text-white/95 truncate block text-xs mt-1">
+                                    {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Switcher Ananda (if multiple children registered) -->
                     @if($otherRegs->isNotEmpty())
-                        <div class="flex items-center gap-1.5 flex-wrap">
+                        <div class="flex items-center gap-1.5 flex-wrap border-t lg:border-t-0 lg:border-l lg:pl-3 pt-2 lg:pt-0 border-white/10 shrink-0">
+                            <span class="text-[10px] font-bold text-white/60 lg:hidden uppercase tracking-wider block w-full mb-0.5">Beralih Ananda:</span>
                             @foreach($otherRegs as $other)
                                 <a href="{{ route('dashboard.verification', $other->id) }}" 
-                                   class="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
+                                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
                                    title="Beralih ke {{ $other->candidate_name }}">
                                     <span>👦 {{ $other->candidate_name }}</span>
                                     <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/80 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
@@ -316,11 +351,11 @@
                             Langkah Selanjutnya
                         </h4>
                         <p class="text-xs text-slate-650 leading-relaxed max-w-xl">
-                            Dokumen pendaftaran Anda telah lengkap diverifikasi dengan benar. Tahapan sesi Ta'aruf kini telah aktif. Silakan lanjut ke tahapan <strong>Ta'aruf</strong> untuk melihat ketentuan kehadiran tatap muka di unit sekolah.
+                            Dokumen pendaftaran Anda telah lengkap diverifikasi dengan benar. Tahapan sesi Assessment / Ta'aruf kini telah aktif. Silakan lanjut ke tahapan <strong>Assessment / Ta'aruf</strong> untuk melihat ketentuan pelaksanaan di unit sekolah.
                         </p>
                     </div>
                     <a href="{{ route('dashboard.observation', $registration->id) }}" class="w-full sm:w-auto whitespace-nowrap bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
-                        <span>Lanjutkan ke Ta'aruf</span>
+                        <span>Lanjutkan ke Assessment / Ta'aruf</span>
                         <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </a>
                 </div>
@@ -329,10 +364,10 @@
                     <div class="space-y-1">
                         <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
                             <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-emerald"></i>
-                            Tahapan Verifikasi Dokumen Selesai
+                            Tahapan Selesai
                         </h4>
                         <p class="text-xs text-slate-650 leading-relaxed max-w-xl">
-                            Seluruh berkas persyaratan telah terverifikasi dan sesi Ta'aruf telah diselesaikan. Silakan lanjut ke tahapan <strong>Administrasi</strong> untuk melihat rincian pembiayaan dan status penerimaan.
+                            Seluruh berkas persyaratan telah terverifikasi dan sesi Assessment / Ta'aruf telah diselesaikan. Silakan lanjut ke tahapan <strong>Administrasi</strong> untuk melihat rincian pembiayaan dan status penerimaan.
                         </p>
                     </div>
                     <a href="{{ route('dashboard.result', $registration->id) }}" class="w-full sm:w-auto whitespace-nowrap bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">

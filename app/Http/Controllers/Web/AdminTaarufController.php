@@ -86,8 +86,17 @@ class AdminTaarufController extends Controller
             $query->whereDate('observation_date', $request->date);
         }
 
-        // Order by observation date or registration id
-        $registrations = $query->orderByRaw('CASE WHEN observation_date IS NULL THEN 0 ELSE 1 END DESC')
+        // Order by priority:
+        // 1. Belum punya jadwal (butuh tindakan segera)
+        // 2. Sudah dijadwalkan (urut jadwal terdekat)
+        // 3. Sudah selesai Ta'aruf
+        $registrations = $query->orderByRaw("
+            CASE 
+                WHEN registration_status = 'verified' AND observation_date IS NULL THEN 1
+                WHEN registration_status = 'verified' AND observation_date IS NOT NULL THEN 2
+                ELSE 3
+            END ASC
+        ")
             ->orderBy('observation_date', 'asc')
             ->orderBy('id', 'desc')
             ->paginate(15)
@@ -125,6 +134,8 @@ class AdminTaarufController extends Controller
             'observation_date' => 'required|date',
             'observation_time' => 'required|string|max:100',
             'observation_location' => 'required|string|max:255',
+            'observation_room' => 'nullable|string|max:255',
+            'observation_address' => 'nullable|string|max:500',
             'observation_interviewer' => 'nullable|string|max:255',
             'observation_notes' => 'nullable|string|max:2000',
         ]);
@@ -133,6 +144,8 @@ class AdminTaarufController extends Controller
             'observation_date' => $request->observation_date,
             'observation_time' => $request->observation_time,
             'observation_location' => $request->observation_location,
+            'observation_room' => $request->observation_room,
+            'observation_address' => $request->observation_address,
             'observation_interviewer' => $request->observation_interviewer,
             'observation_notes' => $request->observation_notes,
         ]);
@@ -147,9 +160,13 @@ class AdminTaarufController extends Controller
         try {
             if ($registration->user) {
                 $formattedDate = \Carbon\Carbon::parse($request->observation_date)->translatedFormat('l, d F Y');
+                $locText = $request->observation_location;
+                if ($request->observation_room) {
+                    $locText .= ' (' . $request->observation_room . ')';
+                }
                 Notification::send($registration->user, new SpmbNotification([
                     'title' => 'Jadwal Ta\'aruf Telah Ditetapkan',
-                    'message' => "Jadwal sesi Ta'aruf ananda {$registration->candidate_name} dijadwalkan pada {$formattedDate} pukul {$request->observation_time} di {$request->observation_location}.",
+                    'message' => "Jadwal sesi Ta'aruf ananda {$registration->candidate_name} dijadwalkan pada {$formattedDate} pukul {$request->observation_time} di {$locText}.",
                     'url' => route('dashboard.observation', $registration->id),
                     'type' => 'info',
                     'spmb_unit_id' => $registration->spmb_unit_id,
@@ -192,6 +209,8 @@ class AdminTaarufController extends Controller
             'observation_date' => null,
             'observation_time' => null,
             'observation_location' => null,
+            'observation_room' => null,
+            'observation_address' => null,
             'observation_interviewer' => null,
             'observation_notes' => null,
         ]);
@@ -277,6 +296,8 @@ class AdminTaarufController extends Controller
         $request->validate([
             'taaruf_title' => 'required|string|max:255',
             'taaruf_default_location' => 'required|string|max:255',
+            'taaruf_default_room' => 'nullable|string|max:255',
+            'taaruf_default_address' => 'nullable|string|max:500',
             'taaruf_instructions' => 'nullable|string|max:3000',
             'taaruf_required_items' => 'nullable|string|max:3000',
         ]);
@@ -286,6 +307,8 @@ class AdminTaarufController extends Controller
         $unit->update([
             'taaruf_title' => $request->taaruf_title,
             'taaruf_default_location' => $request->taaruf_default_location,
+            'taaruf_default_room' => $request->taaruf_default_room,
+            'taaruf_default_address' => $request->taaruf_default_address,
             'taaruf_instructions' => $request->taaruf_instructions,
             'taaruf_required_items' => $request->taaruf_required_items,
         ]);

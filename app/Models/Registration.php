@@ -58,7 +58,7 @@ class Registration extends Model
             'student_photo_path', 'birth_certificate_path', 'family_card_path', 'diploma_certificate_path',
             'student_card_path', 'special_needs_assessment_path', 'payment_receipt_path',
             'spmb_wave_id', 'spmb_type_id', 'spmb_period_id', 'spmb_class_program_id',
-            'observation_date', 'observation_time', 'observation_location', 'observation_interviewer', 'observation_notes'
+            'observation_date', 'observation_time', 'observation_location', 'observation_room', 'observation_address', 'observation_interviewer', 'observation_notes'
         ];
 
         if (in_array($fieldName, $columns)) {

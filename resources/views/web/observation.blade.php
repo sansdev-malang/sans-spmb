@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Tes Observasi & Kesanggupan - Portal SPMB')
+@section('title', 'Assessment / Ta\'aruf - Portal SPMB')
 
 @section('content')
 <style>
@@ -140,7 +140,7 @@
             <div class="flex items-center justify-between gap-2.5 w-full">
                 <h2 class="font-extrabold text-sm sm:text-lg text-white flex items-center gap-2 leading-tight min-w-0">
                     <i data-lucide="users" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-yellow shrink-0"></i>
-                    <span class="truncate sm:whitespace-normal">Observasi & Pernyataan</span>
+                    <span class="truncate sm:whitespace-normal">Assessment / Ta'aruf</span>
                 </h2>
                 
                 <div class="shrink-0 self-center sm:self-start pt-0">
@@ -149,9 +149,15 @@
                             <i data-lucide="check-circle" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Selesai
                         </span>
                     @elseif($registration->registration_status === 'verified')
-                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
-                            <i data-lucide="clock" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Sesi Aktif
-                        </span>
+                        @if(!empty($registration->observation_date))
+                            <span class="inline-flex items-center gap-1 bg-emerald-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-emerald-400 shadow-xs whitespace-nowrap">
+                                <i data-lucide="calendar-check" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Jadwal Aktif
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
+                                <i data-lucide="clock" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Menunggu Jadwal
+                            </span>
+                        @endif
                     @else
                         <span class="inline-flex items-center gap-1 bg-slate-700 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-slate-500 shadow-xs whitespace-nowrap">
                             <i data-lucide="lock" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i> Belum Aktif
@@ -161,53 +167,88 @@
             </div>
 
             <!-- Full-width subtitle -->
-            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Ujian wawancara ta'aruf serta persetujuan komitmen biaya pendidikan.</p>
+            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Assessment / Ta'aruf serta persetujuan komitmen biaya pendidikan.</p>
 
             <!-- Integrated Candidate Context Info -->
-            <div class="bg-black/15 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <!-- Left: Avatar + Candidate Details -->
-                <div class="flex items-start sm:items-center gap-3 min-w-0">
-                    <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-white/20 text-white font-black text-sm sm:text-base flex items-center justify-center border border-white/20 shadow-inner shrink-0 mt-0.5 sm:mt-0">
-                        {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
-                    </div>
-                    <div class="min-w-0 flex-1 space-y-0.5">
-                        <div class="flex items-center justify-between sm:justify-start gap-2">
-                            <h4 class="font-extrabold text-sm sm:text-base text-white tracking-tight truncate">
+            <div class="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/15 shadow-sm space-y-3.5">
+                <!-- Top Row: Avatar + Name + Registration Number on the Far Right -->
+                <div class="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="h-11 w-11 sm:h-12 sm:w-12 rounded-xl bg-white/20 text-white font-black text-base sm:text-lg flex items-center justify-center border border-white/25 shadow-inner shrink-0">
+                            {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Siswa</span>
+                            <h4 class="font-black text-sm sm:text-lg text-white tracking-tight leading-snug truncate">
                                 {{ $registration->candidate_name ?? 'Calon Siswa' }}
                             </h4>
-                            @if($registration->id_label)
-                                <span class="sm:hidden text-[10px] font-mono font-bold text-emerald-200 bg-white/15 px-2 py-0.5 rounded-lg border border-white/20 inline-flex items-center gap-1 shadow-xs whitespace-nowrap shrink-0">
-                                    <i data-lucide="tag" class="w-3 h-3 text-emerald-300"></i> {{ $registration->id_label }}
-                                </span>
-                            @endif
                         </div>
-                        
-                        <p class="text-xs text-emerald-100 font-semibold truncate">
-                            <span class="text-emerald-300 font-bold">{{ $registration->unit?->name }}</span> • {{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})
-                        </p>
-                        
-                        <p class="text-[11px] text-white/75 truncate">
-                            Jalur {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
-                            @if($registration->period?->year)
-                                <span class="text-white/50">(TP {{ $registration->period->year }})</span>
-                            @endif
-                        </p>
                     </div>
+
+                    <!-- No. Registrasi Badge di Pojok Kanan -->
+                    @if($registration->id_label)
+                        <div class="shrink-0 text-right">
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider hidden sm:inline-block mr-1.5">No. Registrasi:</span>
+                            <span class="text-xs sm:text-sm font-mono font-extrabold text-emerald-200 bg-white/15 px-3 py-1.5 rounded-xl border border-white/20 inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+                                <i data-lucide="tag" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300"></i> {{ $registration->id_label }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
 
-                <!-- Right: ID Label Badge (Desktop) & Child Switcher -->
-                <div class="flex items-center sm:justify-end gap-2 shrink-0 {{ $otherRegs->isNotEmpty() ? 'border-t sm:border-t-0 pt-2 sm:pt-0 border-white/10' : '' }}">
-                    @if($registration->id_label)
-                        <span class="hidden sm:inline-flex text-[11px] font-mono font-bold text-emerald-200 bg-white/15 px-2.5 py-1 rounded-xl border border-white/20 items-center gap-1.5 shadow-xs whitespace-nowrap">
-                            <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-300"></i> {{ $registration->id_label }}
-                        </span>
-                    @endif
+                <!-- Bottom Row: Structured List / Grid of Metadata -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 flex-1">
+                        <!-- 1. Unit Sekolah -->
+                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                                <i data-lucide="school" class="w-4 h-4"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[10px] text-white/60 font-semibold block leading-none">Unit Sekolah</span>
+                                <span class="font-bold text-emerald-300 truncate block text-xs mt-1">{{ $registration->unit?->name ?? '-' }}</span>
+                            </div>
+                        </div>
 
+                        <!-- 2. Tingkat & Kategori Murid -->
+                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                                <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <span class="text-[10px] text-white/60 font-semibold block leading-none">Kelas & Kategori</span>
+                                <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->grade?->name ?? '-' }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Jalur & Gelombang -->
+                        <div class="flex items-center gap-2.5 bg-white/10 sm:bg-white/5 px-3 py-2 rounded-xl border border-white/10">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                                <i data-lucide="layers" class="w-4 h-4"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center justify-between gap-1.5">
+                                    <span class="text-[10px] text-white/60 font-semibold block leading-none">Jalur & Gelombang</span>
+                                    @if($registration->period?->year)
+                                        <span class="text-[9px] font-extrabold text-emerald-200 bg-white/15 px-1.5 py-0.5 rounded border border-white/20 leading-none shrink-0 shadow-2xs">
+                                            TP {{ $registration->period->year }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <span class="font-bold text-white/95 truncate block text-xs mt-1">
+                                    {{ $registration->type?->name ?? '-' }} • {{ $registration->wave?->name ?? '-' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Switcher Ananda (if multiple children registered) -->
                     @if($otherRegs->isNotEmpty())
-                        <div class="flex items-center gap-1.5 flex-wrap">
+                        <div class="flex items-center gap-1.5 flex-wrap border-t lg:border-t-0 lg:border-l lg:pl-3 pt-2 lg:pt-0 border-white/10 shrink-0">
+                            <span class="text-[10px] font-bold text-white/60 lg:hidden uppercase tracking-wider block w-full mb-0.5">Beralih Ananda:</span>
                             @foreach($otherRegs as $other)
                                 <a href="{{ route('dashboard.observation', $other->id) }}" 
-                                   class="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
+                                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition border border-white/20 shadow-xs"
                                    title="Beralih ke {{ $other->candidate_name }}">
                                     <span>👦 {{ $other->candidate_name }}</span>
                                     <span class="text-[9px] px-1.5 py-0.5 bg-emerald-950/80 rounded-md text-emerald-300 font-extrabold">{{ $other->unit?->code }}</span>
@@ -225,8 +266,16 @@
             @if ($registration->registration_status === 'verified')
                 @php
                     $isScheduled = !empty($registration->observation_date);
-                    $unitTitle = $registration->unit?->taaruf_title ?? 'Sesi Ta\'aruf & Observasi Offline';
-                    $defaultLoc = $registration->unit?->taaruf_default_location ?? 'Sekolah Anak Saleh';
+                    $unitTitle = $registration->unit?->taaruf_title ?? 'Jadwal dan Sesi Assessment / Ta\'aruf';
+                    $defaultLoc = $registration->unit?->taaruf_default_location ?: ($registration->unit?->name ?? 'Sekolah Dasar Anak Saleh');
+                    $defaultRoom = $registration->unit?->taaruf_default_room;
+                    
+                    $isPaud = stripos($registration->unit?->code ?? '', 'PAUD') !== false || stripos($registration->unit?->name ?? '', 'PAUD') !== false || stripos($registration->unit?->name ?? '', 'TK') !== false || stripos($registration->unit?->name ?? '', 'KB') !== false;
+                    $fallbackAddress = $isPaud 
+                        ? 'Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur' 
+                        : 'Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur';
+                    $defaultAddress = $registration->unit?->taaruf_default_address ?: $fallbackAddress;
+                    
                     $instructions = $registration->unit?->taaruf_instructions;
                     $requiredItems = $registration->unit?->taaruf_required_items;
                 @endphp
@@ -245,7 +294,7 @@
                                         <div class="flex items-center gap-2">
                                             <h3 class="font-black text-slate-800 dark:text-white text-base sm:text-lg">{{ $unitTitle }}</h3>
                                         </div>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Undangan Resmi Sesi Tatap Muka di {{ $registration->unit->name }}</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Undangan Resmi Pelaksanaan di {{ $registration->unit->name }}</p>
                                     </div>
                                 </div>
                                 <span class="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
@@ -272,12 +321,26 @@
                                     </div>
                                 </div>
 
-                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-sm sm:col-span-2">
-                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Lokasi & Ruangan</span>
-                                    <div class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm flex items-start gap-2">
-                                        <i data-lucide="map-pin" class="w-4 h-4 text-rose-500 mt-0.5 flex-shrink-0"></i>
-                                        <span>{{ $registration->observation_location ?: $defaultLoc }}</span>
+                                <div class="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-sm sm:col-span-2">
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Lokasi & Ruangan Pelaksanaan</span>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <div class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm flex items-center gap-2">
+                                            <i data-lucide="map-pin" class="w-4 h-4 text-rose-500 flex-shrink-0"></i>
+                                            <span>{{ $registration->observation_location ?: $defaultLoc }}</span>
+                                        </div>
+                                        @if($registration->observation_room || $defaultRoom)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold text-xs shadow-2xs">
+                                                <i data-lucide="door-open" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                                <span>{{ $registration->observation_room ?: $defaultRoom }}</span>
+                                            </span>
+                                        @endif
                                     </div>
+                                    @if($registration->observation_address || $defaultAddress)
+                                        <div class="pt-2 mt-1 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                                            <i data-lucide="navigation" class="w-3.5 h-3.5 text-slate-400 mt-0.5 flex-shrink-0"></i>
+                                            <span class="leading-relaxed"><strong class="text-slate-700 dark:text-slate-300 font-semibold">Alamat:</strong> {{ $registration->observation_address ?: $defaultAddress }}</span>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 @if($registration->observation_interviewer)
@@ -309,7 +372,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-slate-800 dark:text-white text-xs">Langkah & Tahapan Selanjutnya</h4>
-                                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Alur setelah pelaksanaan sesi Ta'aruf & Observasi</p>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Alur setelah pelaksanaan sesi Assessment / Ta'aruf</p>
                                     </div>
                                 </div>
 
@@ -330,7 +393,7 @@
                                             <span>Validasi Panitia</span>
                                         </div>
                                         <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                                            Setelah sesi tatap muka selesai, panitia akan menyelesaikan status observasi di sistem.
+                                            Setelah sesi Assessment / Ta'aruf selesai, panitia akan memperbarui status di sistem.
                                         </p>
                                     </div>
 
@@ -356,7 +419,7 @@
                                     </div>
                                     <div>
                                         <h3 class="font-black text-slate-800 dark:text-white text-base">{{ $unitTitle }}</h3>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Tatap Muka di {{ $registration->unit->name }}</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Mohon senantiasa memantau halaman ini secara berkala untuk pembaruan jadwal resmi</p>
                                     </div>
                                 </div>
                                 <span class="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
@@ -385,7 +448,7 @@
                             </div>
 
                             <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
-                                Berkas pendaftaran ananda telah diverifikasi oleh panitia. Jadwal tanggal, waktu, serta ruangan pelaksanaan <strong>{{ $unitTitle }}</strong> sedang dialokasikan oleh panitia unit <strong>{{ $registration->unit->name }}</strong>. Rincian jadwal resmi akan langsung tampil otomatis pada kartu di halaman ini.
+                                Berkas pendaftaran ananda telah berhasil diverifikasi oleh panitia. Saat ini, rincian tanggal, sesi waktu, dan ruangan pelaksanaan <strong>Assessment / Ta'aruf</strong> sedang dalam proses alokasi oleh panitia unit <strong>{{ $registration->unit->name }}</strong>. Mohon senantiasa memantau halaman ini secara berkala karena jadwal resmi akan langsung terbit dan diperbarui secara otomatis di sini.
                             </p>
                         </div>
                     @endif
@@ -428,9 +491,9 @@
                             <i data-lucide="check" class="w-5 h-5"></i>
                         </span>
                         <div>
-                            <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">Observasi / Ta'aruf Selesai</h3>
+                            <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">Assessment / Ta'aruf Selesai</h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                                Ananda telah menyelesaikan rangkaian ujian observasi kesiapan belajar. Selanjutnya, silakan baca dan setujui Pernyataan Kesanggupan berikut ini untuk melanjutkan ke tahap administrasi keuangan.
+                                Ananda telah menyelesaikan rangkaian sesi Assessment / Ta'aruf kesiapan belajar. Selanjutnya, silakan baca dan setujui Pernyataan Kesanggupan berikut ini untuk melanjutkan ke tahap administrasi keuangan.
                             </p>
                         </div>
                     </div>
@@ -565,7 +628,7 @@
                     </span>
                     <h3 class="font-bold text-slate-800 dark:text-white text-sm">Belum Dibuka</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-450 max-w-sm mx-auto leading-relaxed">
-                        Tahapan tes observasi dan penandatanganan kesanggupan hanya akan aktif setelah berkas pendaftaran Anda lolos verifikasi sukses di menu <strong>Verification</strong>.
+                        Tahapan sesi Assessment / Ta'aruf dan penandatanganan kesanggupan hanya akan aktif setelah berkas pendaftaran Anda lolos verifikasi sukses di menu <strong>Verifikasi Data</strong>.
                     </p>
                 </div>
             @endif

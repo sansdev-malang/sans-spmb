@@ -262,19 +262,22 @@
                                     @endif
  
                                     @if ($reg->registration_status === 'verified')
-                                        <!-- Atur Jadwal Ta'aruf Link -->
-                                        <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" class="bg-brand-emerald hover-emerald text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Atur Jadwal Ta'aruf">
-                                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
-                                            <span>Jadwal Ta'aruf</span>
-                                        </a>
-
-                                        <!-- Selesaikan Ta'aruf -->
-                                        <form action="{{ route('admin.registrations.complete-taaruf', $reg->id) }}" method="POST" hx-boost="false" class="inline">
-                                            @csrf
-                                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
-                                                Selesaikan Ta'aruf
-                                            </button>
-                                        </form>
+                                        @if(!$reg->observation_date)
+                                            <!-- Belum dijadwalkan: Tampilkan tombol Atur Jadwal Ta'aruf -->
+                                            <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" class="bg-brand-emerald hover-emerald text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Atur Jadwal Ta'aruf">
+                                                <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                                                <span>Jadwal Ta'aruf</span>
+                                            </a>
+                                        @else
+                                            <!-- Sudah dijadwalkan: Tampilkan tombol Selesaikan Ta'aruf -->
+                                            <form action="{{ route('admin.registrations.complete-taaruf', $reg->id) }}" method="POST" hx-boost="false" class="inline" onsubmit="return confirm('Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}?');">
+                                                @csrf
+                                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Selesaikan Sesi Ta'aruf">
+                                                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                                                    <span>Selesaikan Ta'aruf</span>
+                                                </button>
+                                            </form>
+                                        @endif
                                     @endif
                                 </div>
                             </td>

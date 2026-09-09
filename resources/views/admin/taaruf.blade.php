@@ -167,33 +167,28 @@
                             $isScheduled = !empty($reg->observation_date);
                             $isCompleted = in_array($reg->registration_status, ['taaruf_completed', 'agreement_signed', 'completed']);
                             
-                            $defaultLocation = $reg->unit?->taaruf_default_location ?? 'Sekolah Anak Saleh';
-                            $payload = [
-                                'id' => $reg->id,
-                                'candidate_name' => $reg->candidate_name,
-                                'unit_name' => $reg->unit?->name,
-                                'grade_name' => $reg->grade?->name,
-                                'parent_phone' => $reg->parent_phone,
-                                'observation_date' => $reg->observation_date ? $reg->observation_date->format('Y-m-d') : date('Y-m-d'),
-                                'observation_time' => $reg->observation_time ?? 'Sesi 1 (08:00 - 09:30 WIB)',
-                                'observation_location' => $reg->observation_location ?: $defaultLocation,
-                                'observation_interviewer' => $reg->observation_interviewer ?? '',
-                                'observation_notes' => $reg->observation_notes ?? '',
-                                'status' => $reg->registration_status
-                            ];
+                            $isPaudUnit = stripos($reg->unit?->code ?? '', 'PAUD') !== false || stripos($reg->unit?->name ?? '', 'PAUD') !== false || stripos($reg->unit?->name ?? '', 'TK') !== false || stripos($reg->unit?->name ?? '', 'KB') !== false;
+                            $fallbackAddress = $isPaudUnit 
+                                ? 'Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur' 
+                                : 'Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur';
+
+                            $defaultLocation = $reg->unit?->taaruf_default_location ?: ($reg->unit?->name ?? 'Sekolah Dasar Anak Saleh');
+                            $defaultRoom = $reg->unit?->taaruf_default_room ?? '';
+                            $defaultAddress = $reg->unit?->taaruf_default_address ?: $fallbackAddress;
                         @endphp
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-850/40 transition">
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-855/40 transition">
                             <!-- 1. Candidate Info -->
                             <td class="py-4 px-6">
                                 <div class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
                                     <span>{{ $reg->candidate_name }}</span>
                                     <span class="text-[10px] font-mono text-slate-400 font-normal">(#{{ str_pad($reg->id, 5, '0', STR_PAD_LEFT) }})</span>
                                 </div>
-                                <div class="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
-                                    <span class="flex items-center gap-1">
-                                        <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>
-                                        {{ $reg->parent_phone ?? '-' }}
-                                    </span>
+                                <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                                    <span>No: <strong class="text-slate-600 dark:text-slate-300 font-semibold">{{ $reg->registration_number ?? '-' }}</strong></span>
+                                    @if($reg->parent_phone)
+                                        <span>•</span>
+                                        <span>WA: {{ $reg->parent_phone }}</span>
+                                    @endif
                                 </div>
                             </td>
 
@@ -222,14 +217,24 @@
                                 @endif
                             </td>
 
-                            <!-- 4. Location & Interviewer -->
+                            <!-- 4. Location, Room, Address & Interviewer -->
                             <td class="py-4 px-6 max-w-xs">
                                 @if($isScheduled)
-                                    <div class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" title="{{ $reg->observation_location }}">
-                                        📍 {{ $reg->observation_location }}
+                                    <div class="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 truncate" title="{{ $reg->observation_location }}">
+                                        <span>📍 {{ $reg->observation_location }}</span>
                                     </div>
+                                    @if($reg->observation_room)
+                                        <div class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 truncate mt-0.5" title="{{ $reg->observation_room }}">
+                                            🚪 {{ $reg->observation_room }}
+                                        </div>
+                                    @endif
+                                    @if($reg->observation_address)
+                                        <div class="text-[10px] text-slate-400 truncate mt-0.5" title="{{ $reg->observation_address }}">
+                                            🏠 {{ $reg->observation_address }}
+                                        </div>
+                                    @endif
                                     @if($reg->observation_interviewer)
-                                        <div class="text-[11px] text-slate-400 truncate mt-0.5" title="{{ $reg->observation_interviewer }}">
+                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5" title="{{ $reg->observation_interviewer }}">
                                             👤 {{ $reg->observation_interviewer }}
                                         </div>
                                     @endif
@@ -265,10 +270,13 @@
                                                 data-action-url="{{ route('admin.taaruf.schedule.update', $reg->id) }}"
                                                 data-candidate-name="{{ $reg->candidate_name }}"
                                                 data-unit-name="{{ $reg->unit?->name }}"
+                                                data-unit-code="{{ $reg->unit?->code }}"
                                                 data-grade-name="{{ $reg->grade?->name }}"
                                                 data-observation-date="{{ $reg->observation_date ? $reg->observation_date->format('Y-m-d') : date('Y-m-d') }}"
                                                 data-observation-time="{{ $reg->observation_time ?? 'Sesi 1 (08:00 - 09:30 WIB)' }}"
                                                 data-observation-location="{{ $reg->observation_location ?: $defaultLocation }}"
+                                                data-observation-room="{{ $reg->observation_room ?: $defaultRoom }}"
+                                                data-observation-address="{{ $reg->observation_address ?: $defaultAddress }}"
                                                 data-observation-interviewer="{{ $reg->observation_interviewer }}"
                                                 data-observation-notes="{{ $reg->observation_notes }}"
                                                 data-is-scheduled="{{ $isScheduled ? '1' : '0' }}"
@@ -278,14 +286,16 @@
                                             <span>{{ $isScheduled ? 'Edit' : 'Atur Jadwal' }}</span>
                                         </button>
 
-                                        <!-- Complete Ta'aruf Action -->
-                                        <form action="{{ route('admin.taaruf.complete', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('{{ !$isScheduled ? ('PERINGATAN: Jadwal Ta\'aruf ananda ' . addslashes($reg->candidate_name) . ' belum diatur. Apakah Anda yakin ingin langsung menyelesaikan tahapan Ta\'aruf?') : ('Selesaikan sesi Ta\'aruf ananda ' . addslashes($reg->candidate_name) . '? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.') }}');">
-                                            @csrf
-                                            <button type="submit" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Selesaikan Ta'aruf">
-                                                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
-                                                <span class="hidden sm:inline">Selesai</span>
-                                            </button>
-                                        </form>
+                                        <!-- Complete Ta'aruf Action (Hanya tampil jika jadwal sudah dibuat) -->
+                                        @if($isScheduled)
+                                            <form action="{{ route('admin.taaruf.complete', $reg->id) }}" method="POST" class="inline" onsubmit="return confirm('Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.');">
+                                                @csrf
+                                                <button type="submit" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Selesaikan Ta'aruf">
+                                                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                                                    <span class="hidden sm:inline">Selesai</span>
+                                                </button>
+                                            </form>
+                                        @endif
 
                                         <!-- Delete/Cancel Schedule -->
                                         @if($isScheduled)
@@ -320,9 +330,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 px-6 text-center text-slate-400 text-xs">
-                                <i data-lucide="calendar-off" class="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-700"></i>
-                                Tidak ada data pendaftar yang sesuai filter.
+                            <td colspan="6" class="py-12 px-6 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center space-y-3">
+                                    <div class="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                        <i data-lucide="calendar-x-2" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="font-bold text-sm text-slate-600 dark:text-slate-300">Tidak ada data pendaftar pada tahapan Ta'aruf</span>
+                                    <p class="text-xs text-slate-400 max-w-sm">Hanya pendaftar yang telah diverifikasi (status verified atau taaruf_completed) yang tampil di modul ini.</p>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
@@ -331,110 +346,152 @@
         </div>
 
         @if($registrations->hasPages())
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-150 dark:border-slate-800">
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
                 {{ $registrations->links() }}
             </div>
         @endif
     </div>
 </div>
 
-<!-- Modal: Atur / Edit Jadwal Ta'aruf -->
-<div id="scheduleModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in">
+<!-- Modal: Atur Jadwal Ta'aruf Calon Siswa -->
+<div id="scheduleModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in">
         <form id="scheduleForm" method="POST" action="" class="space-y-0">
             @csrf
 
             <!-- Modal Header -->
-            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
+            <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
                 <div>
                     <h3 class="text-base font-extrabold text-slate-800 dark:text-white" id="modalTitle">Atur Jadwal Ta'aruf</h3>
-                    <p class="text-xs text-slate-400" id="modalCandidateInfo">Nama Calon Siswa</p>
+                    <p class="text-xs text-slate-400 mt-0.5" id="modalCandidateInfo">Nama Calon Siswa</p>
                 </div>
                 <button type="button" onclick="closeScheduleModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="p-6 space-y-4 text-xs">
-                
-                <!-- Tanggal Pelaksanaan -->
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Tanggal Pelaksanaan <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="date" 
-                           id="modalObservationDate" 
-                           name="observation_date" 
-                           required 
-                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
-                </div>
-
-                <!-- Waktu / Sesi Pelaksanaan -->
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                        Waktu / Sesi Pelaksanaan <span class="text-rose-500">*</span>
-                    </label>
-                    <p class="text-[11px] text-slate-400 mb-2">Pilih sesi cepat dari dropdown untuk mengisi otomatis, atau ketik langsung jadwal khusus pada kolom input.</p>
-                    <div class="space-y-2">
-                        <select id="modalTimePreset" onchange="applyTimePreset(this.value)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">-- Pilih Preset Sesi Cepat --</option>
-                            <option value="Sesi 1 (08:00 - 09:30 WIB)">Sesi 1: 08:00 - 09:30 WIB (Pagi)</option>
-                            <option value="Sesi 2 (09:30 - 11:00 WIB)">Sesi 2: 09:30 - 11:00 WIB (Pagi)</option>
-                            <option value="Sesi 3 (11:00 - 12:30 WIB)">Sesi 3: 11:00 - 12:30 WIB (Siang)</option>
-                            <option value="Sesi 4 (13:00 - 14:30 WIB)">Sesi 4: 13:00 - 14:30 WIB (Siang)</option>
-                            <option value="Sesi 5 (14:30 - 16:00 WIB)">Sesi 5: 14:30 - 16:00 WIB (Sore)</option>
-                        </select>
-                        <input type="text" 
-                               id="modalObservationTime" 
-                               name="observation_time" 
+            <!-- Modal Body (2-Column Grid) -->
+            <div class="p-5 sm:p-6 text-xs">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- 1. Tanggal Pelaksanaan -->
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Tanggal Pelaksanaan <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" 
+                               id="modalObservationDate" 
+                               name="observation_date" 
                                required 
-                               placeholder="Misal: Sesi 1 (08:00 - 09:30 WIB)" 
                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
                     </div>
-                </div>
 
-                <!-- Lokasi / Ruangan -->
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Lokasi & Ruangan <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" 
-                           id="modalObservationLocation" 
-                           name="observation_location" 
-                           required 
-                           placeholder="Misal: Ruang Observasi Lantai 1, Gedung Barat" 
-                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
-                </div>
+                    <!-- 2. Waktu / Sesi Pelaksanaan -->
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Waktu / Sesi Pelaksanaan <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="space-y-1.5">
+                            <select id="modalTimePreset" onchange="applyTimePreset(this.value)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                                <option value="">-- Pilih Preset Sesi Cepat --</option>
+                                <option value="Sesi 1 (08:00 - 09:30 WIB)">Sesi 1: 08:00 - 09:30 WIB (Pagi)</option>
+                                <option value="Sesi 2 (09:30 - 11:00 WIB)">Sesi 2: 09:30 - 11:00 WIB (Pagi)</option>
+                                <option value="Sesi 3 (11:00 - 12:30 WIB)">Sesi 3: 11:00 - 12:30 WIB (Siang)</option>
+                                <option value="Sesi 4 (13:00 - 14:30 WIB)">Sesi 4: 13:00 - 14:30 WIB (Siang)</option>
+                                <option value="Sesi 5 (14:30 - 16:00 WIB)">Sesi 5: 14:30 - 16:00 WIB (Sore)</option>
+                            </select>
+                            <input type="text" 
+                                   id="modalObservationTime" 
+                                   name="observation_time" 
+                                   required 
+                                   placeholder="Misal: Sesi 1 (08:00 - 09:30 WIB)" 
+                                   class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
+                        </div>
+                    </div>
 
-                <!-- Pewawancara / Penguji -->
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Pewawancara / Penguji (Opsional)
-                    </label>
-                    <input type="text" 
-                           id="modalObservationInterviewer" 
-                           name="observation_interviewer" 
-                           placeholder="Misal: Tim Observasi & Ustadzah Fatimah, S.Pd" 
-                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                </div>
+                    <!-- 3. Lokasi / Gedung -->
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Lokasi / Gedung Pelaksanaan <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" 
+                               id="modalObservationLocation" 
+                               name="observation_location" 
+                               required 
+                               placeholder="Misal: Kampus 1 SD Anak Saleh" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
+                    </div>
 
-                <!-- Catatan Khusus / Perlengkapan Bawaan Tambahan -->
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Catatan Khusus Tambahan untuk Wali Murid (Opsional)
-                    </label>
-                    <textarea id="modalObservationNotes" 
-                              name="observation_notes" 
-                              rows="3" 
-                              placeholder="Misal: Harap membawa fotokopi buku KIA, raport, atau mainan kesukaan ananda..." 
-                              class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald"></textarea>
-                </div>
+                    <!-- 4. Ruangan -->
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Ruangan Pelaksanaan (Opsional)
+                        </label>
+                        <input type="text" 
+                               id="modalObservationRoom" 
+                               name="observation_room" 
+                               placeholder="Misal: Ruang Observasi Lantai 1 / Ruang 102" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    </div>
 
+                    <!-- 5. Alamat Lengkap (Full Width with Preset Chips) -->
+                    <div class="md:col-span-2">
+                        <div class="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                Alamat Lengkap (Opsional)
+                            </label>
+                            <div class="flex items-center gap-1.5 flex-wrap text-[11px]">
+                                <span class="text-slate-400 font-medium">Pilihan Alamat Default:</span>
+                                <button type="button" 
+                                        onclick="setModalAddress('Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur')" 
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-semibold transition cursor-pointer" 
+                                        title="Alamat Kampus SD & SMP">
+                                    🏫 SD & SMP (Arumba)
+                                </button>
+                                <button type="button" 
+                                        onclick="setModalAddress('Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur')" 
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-semibold transition cursor-pointer" 
+                                        title="Alamat Kampus PAUD">
+                                    🧸 PAUD (Candi Panggung)
+                                </button>
+                            </div>
+                        </div>
+                        <input type="text" 
+                               id="modalObservationAddress" 
+                               name="observation_address" 
+                               placeholder="Misal: Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    </div>
+
+                    <!-- 6. Pewawancara / Penguji (Full Width) -->
+                    <div class="md:col-span-2">
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Pewawancara / Penguji (Opsional)
+                        </label>
+                        <input type="text" 
+                               id="modalObservationInterviewer" 
+                               name="observation_interviewer" 
+                               placeholder="Misal: Tim Observasi & Ustadzah Fatimah, S.Pd" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    </div>
+
+                    <!-- 7. Catatan Khusus (Full Width) -->
+                    <div class="md:col-span-2">
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Catatan Khusus Tambahan untuk Wali Murid (Opsional)
+                        </label>
+                        <textarea id="modalObservationNotes" 
+                                  name="observation_notes" 
+                                  rows="2" 
+                                  placeholder="Misal: Harap membawa fotokopi buku KIA, raport, atau mainan kesukaan ananda..." 
+                                  class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald"></textarea>
+                    </div>
+
+                </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5">
+            <div class="p-5 sm:p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5">
                 <button type="button" onclick="closeScheduleModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition">
                     Batal
                 </button>
@@ -449,67 +506,109 @@
 
 <!-- Modal: Pengaturan Template Default Unit -->
 @if($currentUnit)
-<div id="unitSettingsModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in">
+<div id="unitSettingsModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in">
         <form id="unitSettingsForm" method="POST" action="{{ route('admin.taaruf.units.settings', $currentUnit->id) }}" class="space-y-0">
             @csrf
 
             <!-- Header -->
-            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
+            <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
                 <div>
                     <h3 class="text-base font-extrabold text-slate-800 dark:text-white">Pengaturan Ketentuan Ta'aruf: {{ $currentUnit->name }}</h3>
-                    <p class="text-xs text-slate-400">Template panduan dan lokasi bawaan yang tampil otomatis pada kartu undangan unit ini.</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Template panduan dan lokasi bawaan yang tampil otomatis pada kartu undangan unit ini.</p>
                 </div>
                 <button type="button" onclick="closeUnitSettingsModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <!-- Body -->
-            <div class="p-6 space-y-4 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Judul / Nama Sesi Unit <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" 
-                           name="taaruf_title" 
-                           value="{{ $currentUnit->taaruf_title ?? 'Sesi Ta\'aruf & Observasi' }}" 
-                           required 
-                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
-                </div>
+            <!-- Body (2-Column Grid) -->
+            <div class="p-5 sm:p-6 text-xs">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <div class="md:col-span-2">
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Judul / Nama Sesi Unit <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="taaruf_title" 
+                               value="{{ $currentUnit->taaruf_title ?? 'Sesi Ta\'aruf & Observasi' }}" 
+                               required 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
+                    </div>
 
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Lokasi & Alamat Default Unit <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" 
-                           name="taaruf_default_location" 
-                           value="{{ $currentUnit->taaruf_default_location ?? 'Sekolah Anak Saleh' }}" 
-                           required 
-                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
-                </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Lokasi / Gedung Default Unit <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="taaruf_default_location" 
+                               value="{{ $currentUnit->taaruf_default_location ?: $currentUnit->name }}" 
+                               required 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
+                    </div>
 
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Panduan & Ketentuan Kehadiran Unit
-                    </label>
-                    <textarea name="taaruf_instructions" 
-                              rows="4" 
-                              class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-mono leading-relaxed">{{ $currentUnit->taaruf_instructions }}</textarea>
-                </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Ruangan Default Unit (Opsional)
+                        </label>
+                        <input type="text" 
+                               name="taaruf_default_room" 
+                               value="{{ $currentUnit->taaruf_default_room ?? '' }}" 
+                               placeholder="Misal: Ruang Observasi Lantai 1" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    </div>
 
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                        Perlengkapan / Berkas yang Wajib Dibawa
-                    </label>
-                    <textarea name="taaruf_required_items" 
-                              rows="4" 
-                              class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-mono leading-relaxed">{{ $currentUnit->taaruf_required_items }}</textarea>
+                    <div class="md:col-span-2">
+                        <div class="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                Alamat Lengkap Default Unit (Opsional)
+                            </label>
+                            <div class="flex items-center gap-1.5 flex-wrap text-[11px]">
+                                <span class="text-slate-400 font-medium">Pilihan Alamat Default:</span>
+                                <button type="button" 
+                                        onclick="setUnitSettingsAddress('Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur')" 
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-semibold transition cursor-pointer">
+                                    🏫 SD & SMP (Arumba)
+                                </button>
+                                <button type="button" 
+                                        onclick="setUnitSettingsAddress('Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur')" 
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-semibold transition cursor-pointer">
+                                    🧸 PAUD (Candi Panggung)
+                                </button>
+                            </div>
+                        </div>
+                        <input type="text" 
+                               id="unitDefaultAddressInput"
+                               name="taaruf_default_address" 
+                               value="{{ $currentUnit->taaruf_default_address ?? '' }}" 
+                               placeholder="Misal: Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur" 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Panduan & Ketentuan Kehadiran Unit
+                        </label>
+                        <textarea name="taaruf_instructions" 
+                                  rows="3" 
+                                  class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-mono leading-relaxed">{{ $currentUnit->taaruf_instructions }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                            Perlengkapan / Berkas yang Wajib Dibawa
+                        </label>
+                        <textarea name="taaruf_required_items" 
+                                  rows="3" 
+                                  class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-mono leading-relaxed">{{ $currentUnit->taaruf_required_items }}</textarea>
+                    </div>
+
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5">
+            <div class="p-5 sm:p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5">
                 <button type="button" onclick="closeUnitSettingsModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition">
                     Batal
                 </button>
@@ -524,14 +623,36 @@
 @endif
 
 <script>
+    function setModalAddress(addr) {
+        const input = document.getElementById('modalObservationAddress');
+        if (input) {
+            input.value = addr;
+            input.focus();
+        }
+    }
+
+    function setUnitSettingsAddress(addr) {
+        const input = document.getElementById('unitDefaultAddressInput');
+        if (input) {
+            input.value = addr;
+            input.focus();
+        }
+    }
+
     function openScheduleModalFromButton(btn) {
         const actionUrl = btn.getAttribute('data-action-url');
         const name = btn.getAttribute('data-candidate-name') || '';
         const unit = btn.getAttribute('data-unit-name') || '';
+        const unitCode = btn.getAttribute('data-unit-code') || '';
         const grade = btn.getAttribute('data-grade-name') || '';
         const obsDate = btn.getAttribute('data-observation-date') || '';
         const obsTime = btn.getAttribute('data-observation-time') || '';
-        const obsLoc = btn.getAttribute('data-observation-location') || '';
+        let obsLoc = btn.getAttribute('data-observation-location') || '';
+        if (!obsLoc || obsLoc === 'Sekolah Anak Saleh') {
+            obsLoc = unit;
+        }
+        const obsRoom = btn.getAttribute('data-observation-room') || '';
+        let obsAddress = btn.getAttribute('data-observation-address') || '';
         const obsInterviewer = btn.getAttribute('data-observation-interviewer') || '';
         const obsNotes = btn.getAttribute('data-observation-notes') || '';
         const isEdit = btn.getAttribute('data-is-scheduled') === '1';
@@ -545,6 +666,17 @@
         document.getElementById('modalObservationDate').value = obsDate;
         document.getElementById('modalObservationTime').value = obsTime;
         document.getElementById('modalObservationLocation').value = obsLoc;
+        document.getElementById('modalObservationRoom').value = obsRoom;
+
+        // Auto fallback default address if not filled
+        if (!obsAddress) {
+            const isPaud = /paud|tk|kb/i.test(unit) || /paud|tk|kb/i.test(unitCode);
+            obsAddress = isPaud 
+                ? 'Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur'
+                : 'Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur';
+        }
+        document.getElementById('modalObservationAddress').value = obsAddress;
+        
         document.getElementById('modalObservationInterviewer').value = obsInterviewer;
         document.getElementById('modalObservationNotes').value = obsNotes;
         
