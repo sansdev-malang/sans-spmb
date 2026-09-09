@@ -938,18 +938,58 @@
             }
         });
 
+        // Top Loading Progress Bar Controller
+        let loadingBarTimeout = null;
+        let loadingBarSafetyTimeout = null;
+
+        function startTopLoadingBar() {
+            const bar = document.getElementById('top-loading-bar');
+            if (!bar) return;
+
+            clearTimeout(loadingBarTimeout);
+            clearTimeout(loadingBarSafetyTimeout);
+
+            bar.style.transition = 'width 0.4s ease, opacity 0.2s ease';
+            bar.style.opacity = '1';
+            bar.style.width = '35%';
+
+            loadingBarTimeout = setTimeout(() => {
+                if (bar.style.opacity === '1') {
+                    bar.style.width = '75%';
+                }
+            }, 300);
+
+            // Safety timeout: automatically finish and hide if page transition doesn't happen within 3.5 seconds
+            loadingBarSafetyTimeout = setTimeout(() => {
+                finishTopLoadingBar();
+            }, 3500);
+        }
+
+        function finishTopLoadingBar() {
+            const bar = document.getElementById('top-loading-bar');
+            if (!bar) return;
+
+            clearTimeout(loadingBarTimeout);
+            clearTimeout(loadingBarSafetyTimeout);
+
+            bar.style.transition = 'width 0.2s ease, opacity 0.3s ease';
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.style.opacity = '0';
+                setTimeout(() => {
+                    bar.style.width = '0%';
+                }, 300);
+            }, 150);
+        }
+
+        // Always finish bar smoothly on page load / bfcache restore
+        window.addEventListener('DOMContentLoaded', finishTopLoadingBar);
+        window.addEventListener('load', finishTopLoadingBar);
+        window.addEventListener('pageshow', finishTopLoadingBar);
+
         // Show loading bar & spinner on native form submits
         document.addEventListener('submit', function(e) {
-            const bar = document.getElementById('top-loading-bar');
-            if (bar) {
-                bar.style.opacity = '1';
-                bar.style.width = '40%';
-                setTimeout(() => {
-                    if (bar.style.opacity === '1') {
-                        bar.style.width = '80%';
-                    }
-                }, 500);
-            }
+            startTopLoadingBar();
             
             // Disable submit button to prevent double-submitting
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -971,17 +1011,21 @@
             const target = link.getAttribute('target');
             
             // Skip empty/javascript/anchor/external-tab/download links
-            if (!href || href.startsWith('javascript:') || target === '_blank' || link.hasAttribute('download') || href.includes('/receipt') || href.includes('/download')) {
+            if (!href || href.startsWith('javascript:') || href === '#' || target === '_blank' || link.hasAttribute('download') || href.includes('/receipt') || href.includes('/download')) {
                 return;
             }
 
-            // Skip anchor links on the current page (e.g. "/#program" on home page)
+            // Check URL
             try {
                 const url = new URL(href, window.location.href);
+                // Skip if clicking same exact URL (prevent stuck bar when clicking already active page or anchor)
                 if (url.origin === window.location.origin && 
                     url.pathname === window.location.pathname && 
-                    url.search === window.location.search && 
-                    url.hash) {
+                    url.search === window.location.search) {
+                    return;
+                }
+                // Skip non-internal links
+                if (url.origin !== window.location.origin) {
                     return;
                 }
             } catch (err) {
@@ -990,24 +1034,12 @@
                 }
             }
             
-            // Check if link is internal (same origin)
-            const isInternal = href.startsWith('/') || href.startsWith(window.location.origin);
-            if (isInternal) {
-                const bar = document.getElementById('top-loading-bar');
-                if (bar) {
-                    bar.style.opacity = '1';
-                    bar.style.width = '50%';
-                    setTimeout(() => {
-                        if (bar.style.opacity === '1') {
-                            bar.style.width = '85%';
-                        }
-                    }, 400);
-                }
-            }
+            startTopLoadingBar();
         });
 
         // Initialize Lucide Icons & Auto Session Toasts
         document.addEventListener("DOMContentLoaded", function() {
+            finishTopLoadingBar();
             if (window.lucide) {
                 lucide.createIcons();
             }
