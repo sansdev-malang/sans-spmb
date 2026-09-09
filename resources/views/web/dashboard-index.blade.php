@@ -23,9 +23,9 @@
                     $firstGradeId = $firstGrade?->id ?? '';
                     $brochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url');
                     $waUrl = $unit->getWhatsappUrl();
-                    $unitLogoPath = file_exists(public_path('logo/' . $uCode . '.png')) 
-                        ? 'logo/' . $uCode . '.png' 
-                        : (file_exists(public_path('logo/' . $uCode . '.svg')) ? 'logo/' . $uCode . '.svg' : 'storage/logo/' . $uCode . '.svg');
+                    $unitLogoPath = file_exists(public_path('logo/' . $uCode . '.svg')) 
+                        ? 'logo/' . $uCode . '.svg' 
+                        : (file_exists(public_path('logo/' . $uCode . '.png')) ? 'logo/' . $uCode . '.png' : 'storage/logo/' . $uCode . '.svg');
                     $hasUnitLogo = file_exists(public_path($unitLogoPath));
                     $unitTheme = match (strtoupper($unit->code)) {
                         'PAUD' => [
