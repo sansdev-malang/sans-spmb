@@ -36,8 +36,18 @@
                 ->orderBy('id', 'desc')
                 ->get();
 
-            if (!isset($registration)) {
-                $registration = $allUserRegistrations->first();
+            if (!isset($registration) || !$registration) {
+                $candidateId = request('candidate_id') ?? session('active_candidate_id');
+                if ($candidateId) {
+                    $registration = $allUserRegistrations->firstWhere('id', (int)$candidateId) ?? $allUserRegistrations->first();
+                } else {
+                    $registration = $allUserRegistrations->first();
+                }
+                if ($registration) {
+                    session(['active_candidate_id' => $registration->id]);
+                }
+            } else {
+                session(['active_candidate_id' => $registration->id]);
             }
         }
     @endphp
@@ -351,16 +361,23 @@
                                         @foreach($allUserRegistrations as $itemReg)
                                             @php
                                                 $isSelected = ($registration && $registration->id === $itemReg->id);
-                                                // Target URL based on active view
-                                                $targetUrl = route('dashboard.detail', $itemReg->id);
-                                                if (Route::is('dashboard.form')) {
+                                                // Keep the user on the current page while switching candidate data
+                                                if (request()->routeIs('dashboard') || request()->is('dashboard')) {
+                                                    $targetUrl = route('dashboard', ['candidate_id' => $itemReg->id]);
+                                                } elseif (request()->routeIs('dashboard.form') || request()->is('*/form')) {
                                                     $targetUrl = route('dashboard.form', $itemReg->id);
-                                                } elseif (Route::is('dashboard.verification')) {
+                                                } elseif (request()->routeIs('dashboard.verification') || request()->is('*/verification')) {
                                                     $targetUrl = route('dashboard.verification', $itemReg->id);
-                                                } elseif (Route::is('dashboard.observation')) {
+                                                } elseif (request()->routeIs('dashboard.observation') || request()->is('*/observation')) {
                                                     $targetUrl = route('dashboard.observation', $itemReg->id);
-                                                } elseif (Route::is('dashboard.result') || Route::is('dashboard.payment')) {
+                                                } elseif (request()->routeIs('dashboard.result') || request()->is('*/result')) {
                                                     $targetUrl = route('dashboard.result', $itemReg->id);
+                                                } elseif (request()->routeIs('dashboard.payment') || request()->is('*/payment')) {
+                                                    $targetUrl = route('dashboard.payment', $itemReg->id);
+                                                } elseif (request()->routeIs('dashboard.history') || request()->is('dashboard/history*')) {
+                                                    $targetUrl = route('dashboard.history', ['id' => $itemReg->id]);
+                                                } else {
+                                                    $targetUrl = route('dashboard.detail', $itemReg->id);
                                                 }
                                             @endphp
                                             <a href="{{ $targetUrl }}" class="flex items-center justify-between p-2.5 rounded-xl transition {{ $isSelected ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-brand-emerald/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800' }}">
@@ -465,8 +482,26 @@
                                 @foreach($allUserRegistrations as $itemMobReg)
                                     @php
                                         $isMobSelected = ($registration && $registration->id === $itemMobReg->id);
+                                        // Keep the user on the current page while switching candidate data
+                                        if (request()->routeIs('dashboard') || request()->is('dashboard')) {
+                                            $targetMobUrl = route('dashboard', ['candidate_id' => $itemMobReg->id]);
+                                        } elseif (request()->routeIs('dashboard.form') || request()->is('*/form')) {
+                                            $targetMobUrl = route('dashboard.form', $itemMobReg->id);
+                                        } elseif (request()->routeIs('dashboard.verification') || request()->is('*/verification')) {
+                                            $targetMobUrl = route('dashboard.verification', $itemMobReg->id);
+                                        } elseif (request()->routeIs('dashboard.observation') || request()->is('*/observation')) {
+                                            $targetMobUrl = route('dashboard.observation', $itemMobReg->id);
+                                        } elseif (request()->routeIs('dashboard.result') || request()->is('*/result')) {
+                                            $targetMobUrl = route('dashboard.result', $itemMobReg->id);
+                                        } elseif (request()->routeIs('dashboard.payment') || request()->is('*/payment')) {
+                                            $targetMobUrl = route('dashboard.payment', $itemMobReg->id);
+                                        } elseif (request()->routeIs('dashboard.history') || request()->is('dashboard/history*')) {
+                                            $targetMobUrl = route('dashboard.history', ['id' => $itemMobReg->id]);
+                                        } else {
+                                            $targetMobUrl = route('dashboard.detail', $itemMobReg->id);
+                                        }
                                     @endphp
-                                    <a href="{{ route('dashboard.detail', $itemMobReg->id) }}" onclick="closeMobileMenu()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1 {{ $isMobSelected ? 'bg-brand-emerald text-white shadow-sm' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700' }}">
+                                    <a href="{{ $targetMobUrl }}" onclick="closeMobileMenu()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-1 {{ $isMobSelected ? 'bg-brand-emerald text-white shadow-sm' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700' }}">
                                         <span>👦 {{ $itemMobReg->candidate_name }}</span>
                                         <span class="text-[9px] opacity-80">({{ $itemMobReg->unit?->code }})</span>
                                     </a>

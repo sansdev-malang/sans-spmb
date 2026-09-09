@@ -156,8 +156,11 @@ class WebDashboardController extends Controller
         return null;
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->has('candidate_id')) {
+            session(['active_candidate_id' => (int)$request->query('candidate_id')]);
+        }
         // 1. Clean up empty placeholder registrations (incomplete auto-drafts)
         Registration::where('user_id', auth()->id())
             ->where(function($q) {
