@@ -17,9 +17,15 @@ class Setting extends Model
     {
         if (static::$runtimeCache === null) {
             try {
-                static::$runtimeCache = self::pluck('value', 'key')->toArray();
+                static::$runtimeCache = \Illuminate\Support\Facades\Cache::remember('spmb_app_settings_map', 3600, function() {
+                    return self::pluck('value', 'key')->toArray();
+                });
             } catch (\Throwable $e) {
-                static::$runtimeCache = [];
+                try {
+                    static::$runtimeCache = self::pluck('value', 'key')->toArray();
+                } catch (\Throwable $ex) {
+                    static::$runtimeCache = [];
+                }
             }
         }
 
@@ -35,6 +41,10 @@ class Setting extends Model
      */
     public static function set($key, $value)
     {
+        try {
+            \Illuminate\Support\Facades\Cache::forget('spmb_app_settings_map');
+        } catch (\Throwable $e) {}
+
         if (static::$runtimeCache !== null) {
             static::$runtimeCache[$key] = $value;
         }

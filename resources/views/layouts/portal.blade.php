@@ -12,7 +12,6 @@
         $schoolTagline = \App\Models\Setting::get('school_tagline', 'Yayasan Pendidikan Anak Saleh');
         $schoolLogo = \App\Models\Setting::get('school_logo_url', '');
         $schoolFavicon = \App\Models\Setting::get('school_favicon_url', '');
-        $navbarUnits = \App\Models\SpmbUnit::where('is_active', true)->get();
         
         $footerContactUrl = \App\Models\Setting::get('footer_contact_url', '#');
         $footerPrivacyUrl = \App\Models\Setting::get('footer_privacy_url', '#');
@@ -25,7 +24,7 @@
         if (!isset($allUserRegistrations) || $allUserRegistrations === null) {
             $allUserRegistrations = collect();
             if (auth()->check() && !auth()->user()->isAdmin()) {
-                $allUserRegistrations = \App\Models\Registration::with(['unit', 'grade', 'classProgram'])
+                $allUserRegistrations = \App\Models\Registration::with(['unit', 'grade', 'classProgram', 'payments'])
                     ->where('user_id', auth()->id())
                     ->where(function($q) {
                         $q->whereHas('payments', function($pq) {
@@ -38,6 +37,15 @@
                     ->get();
             }
         }
+
+        $currentReg = null;
+        $formPaid = false;
+        $status = 'none';
+        $formUnlocked = false;
+        $verificationUnlocked = false;
+        $observationUnlocked = false;
+        $resultUnlocked = false;
+        $historyUnlocked = false;
 
         if (auth()->check() && !auth()->user()->isAdmin()) {
             if (!isset($registration) || !$registration) {
@@ -52,6 +60,19 @@
                 }
             } else {
                 session(['active_candidate_id' => $registration->id]);
+            }
+
+            $currentReg = $registration;
+            if ($currentReg) {
+                $formPaid = $currentReg->relationLoaded('payments')
+                    ? $currentReg->payments->where('payment_type', 'registration_fee')->where('status', 'success')->isNotEmpty()
+                    : $currentReg->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
+                $status = $currentReg->registration_status ?? 'none';
+                $formUnlocked = $formPaid;
+                $verificationUnlocked = ($status !== 'draft');
+                $observationUnlocked = in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
+                $resultUnlocked = in_array($status, ['agreement_signed', 'completed']);
+                $historyUnlocked = ($status === 'completed');
             }
         }
     @endphp
@@ -229,16 +250,6 @@
                 <div class="hidden md:flex items-center gap-8">
                     @if(!$isLanding)
                         <!-- Candidate Active Registration stages tabs -->
-                        @php
-                            $currentReg = $registration ?? (auth()->check() && !auth()->user()->isAdmin() ? auth()->user()->registrations()->latest()->first() : null);
-                            $formPaid = $currentReg ? $currentReg->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists() : false;
-                            $status = $currentReg?->registration_status ?? 'none';
-                            $formUnlocked = $currentReg && $formPaid;
-                            $verificationUnlocked = $currentReg && ($status !== 'draft');
-                            $observationUnlocked = $currentReg && in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
-                            $resultUnlocked = $currentReg && in_array($status, ['agreement_signed', 'completed']);
-                            $historyUnlocked = $currentReg && ($status === 'completed');
-                        @endphp
                         <div class="flex items-center gap-6 text-xs font-bold">
                             <a href="{{ route('dashboard') }}" class="transition pb-1 {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
                                 Beranda
@@ -520,14 +531,12 @@
                 @if(!$isLanding)
                     <!-- Mobile Dashboard Stages -->
                     @php
-                        $currentRegMob = $registration ?? (auth()->check() && !auth()->user()->isAdmin() ? auth()->user()->registrations()->latest()->first() : null);
-                        $formPaidMob = $currentRegMob ? $currentRegMob->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists() : false;
-                        $statusMob = $currentRegMob?->registration_status ?? 'none';
-                        $formUnlockedMob = $currentRegMob && $formPaidMob;
-                        $verificationUnlockedMob = $currentRegMob && ($statusMob !== 'draft');
-                        $observationUnlockedMob = $currentRegMob && in_array($statusMob, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
-                        $resultUnlockedMob = $currentRegMob && in_array($statusMob, ['agreement_signed', 'completed']);
-                        $historyUnlockedMob = $currentRegMob && ($statusMob === 'completed');
+                        $currentRegMob = $currentReg;
+                        $formUnlockedMob = $formUnlocked;
+                        $verificationUnlockedMob = $verificationUnlocked;
+                        $observationUnlockedMob = $observationUnlocked;
+                        $resultUnlockedMob = $resultUnlocked;
+                        $historyUnlockedMob = $historyUnlocked;
                     @endphp
                     <div class="space-y-1">
                         <a href="{{ route('dashboard') }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
