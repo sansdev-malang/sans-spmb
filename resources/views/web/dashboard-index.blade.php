@@ -5,17 +5,6 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 pt-4 pb-12 sm:px-6 lg:px-8 space-y-6">
 
-    @if (session('success'))
-        <div class="bg-green-50 text-green-700 p-4 rounded-xl text-sm border border-green-200 font-semibold shadow-sm">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="bg-red-50 text-red-700 p-4 rounded-xl text-sm border border-red-200 font-semibold shadow-sm">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <!-- WELCOME BANNER & ONBOARDING CARD GRID (ALWAYS SHOWN) -->
     <div class="max-w-4xl mx-auto pt-2 pb-6 space-y-6 text-center">
         <div class="space-y-3">
