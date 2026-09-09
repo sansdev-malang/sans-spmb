@@ -648,8 +648,8 @@
         </div>
     </footer>
 
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Local Lucide Icons -->
+    <script src="{{ asset('vendor/lucide/lucide.min.js') }}"></script>
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none"></div>

@@ -35,8 +35,8 @@
     <!-- Local Compiled CSS/JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Local Lucide Icons -->
+    <script src="{{ asset('vendor/lucide/lucide.min.js') }}"></script>
     
     <!-- Dark mode initialization (runs before page renders) -->
     <script>

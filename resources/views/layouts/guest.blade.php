@@ -363,9 +363,9 @@
             
         </div>
         
-        <!-- Anime.js + Lucide Icons CDN -->
+        <!-- Anime.js + Local Lucide Icons -->
         <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-        <script src="https://unpkg.com/lucide@latest"></script>
+        <script src="{{ asset('vendor/lucide/lucide.min.js') }}"></script>
         <script>
             // Initialize Lucide Icons
             if (window.lucide) {

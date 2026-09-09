@@ -30,8 +30,8 @@
         }
     </script>
     
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Local Lucide Icons -->
+    <script src="{{ asset('vendor/lucide/lucide.min.js') }}"></script>
 
     <style>
         @media print {
