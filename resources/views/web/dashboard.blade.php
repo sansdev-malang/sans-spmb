@@ -504,38 +504,81 @@
                         @if(!empty($registration->invalid_fields) && is_array($registration->invalid_fields))
                             <div class="bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/50 rounded-2xl p-4 text-left space-y-2.5 max-w-md mx-auto">
                                 @php
+                                    $dbFields = \App\Models\SpmbFormField::all()->keyBy('field_name');
                                     $fieldMeta = [
+                                        // Step 1: Program & Layanan
                                         'spmb_period_id' => ['label' => 'Tahun Ajaran', 'step_id' => 1],
                                         'spmb_wave_id' => ['label' => 'Gelombang Pendaftaran', 'step_id' => 1],
                                         'spmb_type_id' => ['label' => 'Jalur Pendaftaran', 'step_id' => 1],
                                         'spmb_class_program_id' => ['label' => 'Kategori Murid', 'step_id' => 1],
+                                        'extra_services' => ['label' => 'Layanan Tambahan', 'step_id' => 1],
+
+                                        // Step 2: Informasi Calon Siswa
                                         'candidate_name' => ['label' => 'Nama Lengkap Calon Siswa', 'step_id' => 2],
                                         'nickname' => ['label' => 'Nama Panggilan', 'step_id' => 2],
                                         'nik' => ['label' => 'NIK Anak', 'step_id' => 2],
+                                        'family_card_no' => ['label' => 'Nomor Kartu Keluarga (KK)', 'step_id' => 2],
                                         'gender' => ['label' => 'Jenis Kelamin', 'step_id' => 2],
                                         'religion' => ['label' => 'Agama', 'step_id' => 2],
                                         'birth_place' => ['label' => 'Tempat & Tanggal Lahir', 'step_id' => 2],
+                                        'birth_date' => ['label' => 'Tanggal Lahir', 'step_id' => 2],
                                         'previous_school' => ['label' => 'Asal Sekolah', 'step_id' => 2],
                                         'admission_level' => ['label' => 'Tingkat Pendaftaran', 'step_id' => 2],
-                                        'extra_services' => ['label' => 'Layanan Tambahan', 'step_id' => 2],
-                                        'father_name' => ['label' => 'Nama Ayah Kandung', 'step_id' => 3],
-                                        'mother_name' => ['label' => 'Nama Ibu Kandung', 'step_id' => 3],
-                                        'parent_phone' => ['label' => 'No. WhatsApp Orang Tua', 'step_id' => 3],
-                                        'birth_certificate_path' => ['label' => 'Scan Akta Kelahiran', 'step_id' => 4],
-                                        'family_card_path' => ['label' => 'Scan Kartu Keluarga', 'step_id' => 4],
+
+                                        // Step 3: Tempat Tinggal
+                                        'province' => ['label' => 'Provinsi', 'step_id' => 3],
+                                        'city' => ['label' => 'Kabupaten / Kota', 'step_id' => 3],
+                                        'kecamatan' => ['label' => 'Kecamatan', 'step_id' => 3],
+                                        'kelurahan' => ['label' => 'Kelurahan / Desa', 'step_id' => 3],
+                                        'address' => ['label' => 'Alamat Domisili', 'step_id' => 3],
+                                        'house_number' => ['label' => 'Nomor Rumah', 'step_id' => 3],
+                                        'rt' => ['label' => 'RT', 'step_id' => 3],
+                                        'rw' => ['label' => 'RW', 'step_id' => 3],
+
+                                        // Step 4: Data Orang Tua
+                                        'father_name' => ['label' => 'Nama Ayah Kandung', 'step_id' => 4],
+                                        'father_nik' => ['label' => 'NIK Ayah', 'step_id' => 4],
+                                        'father_job' => ['label' => 'Pekerjaan Ayah', 'step_id' => 4],
+                                        'father_phone' => ['label' => 'No. WhatsApp Ayah', 'step_id' => 4],
+                                        'parent_phone' => ['label' => 'No. WhatsApp Orang Tua', 'step_id' => 4],
+                                        'father_address' => ['label' => 'Alamat Ayah', 'step_id' => 4],
+                                        'mother_name' => ['label' => 'Nama Ibu Kandung', 'step_id' => 4],
+                                        'mother_nik' => ['label' => 'NIK Ibu', 'step_id' => 4],
+                                        'mother_job' => ['label' => 'Pekerjaan Ibu', 'step_id' => 4],
+                                        'mother_phone' => ['label' => 'No. WhatsApp Ibu', 'step_id' => 4],
+                                        'mother_address' => ['label' => 'Alamat Ibu', 'step_id' => 4],
+
+                                        // Step 5: Data Wali (Opsional)
+                                        'guardian_name' => ['label' => 'Nama Wali', 'step_id' => 5],
+                                        'guardian_nik' => ['label' => 'NIK Wali', 'step_id' => 5],
+                                        'guardian_job' => ['label' => 'Pekerjaan Wali', 'step_id' => 5],
+                                        'guardian_phone' => ['label' => 'No. WhatsApp Wali', 'step_id' => 5],
+                                        'guardian_address' => ['label' => 'Alamat Wali', 'step_id' => 5],
+
+                                        // Step 6: Data Lampiran
+                                        'student_photo_path' => ['label' => 'Pas Foto Formal Calon Murid', 'step_id' => 6],
+                                        'birth_certificate_path' => ['label' => 'Scan Akta Kelahiran', 'step_id' => 6],
+                                        'family_card_path' => ['label' => 'Scan Kartu Keluarga', 'step_id' => 6],
+                                        'diploma_certificate_path' => ['label' => 'Ijazah / Surat Keterangan Lulus', 'step_id' => 6],
+                                        'student_card_path' => ['label' => 'NISN / KIA / Kartu Pelajar', 'step_id' => 6],
+                                        'special_needs_assessment_path' => ['label' => 'Asesmen Kebutuhan Khusus', 'step_id' => 6],
                                     ];
                                 @endphp
                                 <ul class="space-y-1.5">
                                     @foreach($registration->invalid_fields as $invalidField)
                                         @php
-                                            $meta = $fieldMeta[$invalidField] ?? ['label' => $invalidField, 'step_id' => 2];
+                                            $dbField = $dbFields->get($invalidField);
+                                            $stepId = $dbField ? $dbField->form_step_id : ($fieldMeta[$invalidField]['step_id'] ?? 2);
+                                            $label = $dbField ? $dbField->label : ($fieldMeta[$invalidField]['label'] ?? $invalidField);
+                                            if ($invalidField === 'family_card_path') $label = 'Scan Kartu Keluarga';
+                                            if ($invalidField === 'birth_certificate_path') $label = 'Scan Akta Kelahiran';
                                         @endphp
                                         <li class="flex items-center justify-between gap-4 text-xs font-semibold text-red-700 dark:text-rose-400">
                                             <span class="flex items-center gap-1.5">
                                                 <span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
-                                                {{ $meta['label'] }}
+                                                {{ $label }}
                                             </span>
-                                            <a href="{{ route('dashboard.form', $registration->id) }}?highlight={{ $invalidField }}&step={{ $meta['step_id'] }}" 
+                                            <a href="{{ route('dashboard.form', $registration->id) }}?highlight={{ $invalidField }}&step={{ $stepId }}" 
                                                class="bg-red-100 hover:bg-red-200 dark:bg-rose-950/30 dark:hover:bg-rose-900/50 text-red-800 dark:text-rose-350 px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-sm transition">
                                                 Perbaiki →
                                             </a>

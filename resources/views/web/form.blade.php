@@ -757,11 +757,8 @@
                                                                         <i data-lucide="file-check-2" class="w-5 h-5"></i>
                                                                     </div>
                                                                     <div class="min-w-0 flex-1 overflow-hidden">
-                                                                        <div class="flex items-center gap-1.5">
-                                                                            <span class="text-xs font-bold text-slate-800 dark:text-white truncate">Berkas Tersimpan</span>
-                                                                            <span class="text-[9px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 px-1.5 py-0.5 rounded-full font-extrabold shrink-0">Tersedia</span>
-                                                                        </div>
-                                                                        <span class="text-[10px] text-slate-400 font-mono block truncate mt-0.5 w-full">{{ basename($val) }}</span>
+                                                                        <span class="text-xs font-bold text-slate-800 dark:text-white block truncate">Berkas Tersimpan</span>
+                                                                        <span class="text-[10px] text-slate-400 font-mono block truncate mt-0.5 w-full" title="{{ basename($val) }}">{{ basename($val) }}</span>
                                                                     </div>
                                                                 </div>
                                                                 <div class="flex items-center gap-1.5 shrink-0 ml-1" onclick="event.stopPropagation()">
@@ -961,9 +958,8 @@
                                                 </div>
                                                 @if(!empty($val))
                                                     <div class="flex items-center justify-between pt-1 border-t border-slate-200/40 dark:border-slate-800">
-                                                        <span class="text-[9.5px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 px-1.5 py-0.5 rounded-md font-extrabold">Tersimpan</span>
-                                                        <a href="{{ Storage::url($val) }}" target="_blank" class="inline-flex items-center gap-1 text-brand-emerald dark:text-emerald-400 font-bold hover:underline text-xs">
-                                                            <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i> Lihat Berkas
+                                                        <a href="{{ Storage::url($val) }}" target="_blank" class="inline-flex items-center gap-1.5 text-brand-emerald dark:text-emerald-400 font-bold hover:underline text-xs">
+                                                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Lihat Berkas
                                                         </a>
                                                     </div>
                                                 @else
