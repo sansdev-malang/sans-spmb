@@ -501,8 +501,8 @@
                             Seluruh tahapan pendaftaran dan pembayaran administrasi ananda telah selesai diselesaikan. Selamat bergabung di Sekolah Anak Saleh!
                         </p>
                         <div class="pt-4 flex gap-3 justify-center">
-                            <a href="{{ route('dashboard.result', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-5 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
-                                <i data-lucide="award" class="w-4 h-4"></i> Surat Kelulusan & Kartu
+                            <a href="{{ route('dashboard.history', ['id' => $registration->id]) }}" class="bg-brand-emerald hover-emerald text-white px-6 py-3.5 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-2">
+                                <i data-lucide="history" class="w-4 h-4"></i> Lihat Status Akhir
                             </a>
                         </div>
                     </div>
