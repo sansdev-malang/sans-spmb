@@ -153,9 +153,9 @@
                         <i data-lucide="file-signature" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
                     </div>
                     <div class="space-y-1">
-                        <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Tahap Administrasi & Daftar Ulang Siswa Baru</h3>
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Tahap Administrasi & Daftar Ulang</h3>
                         <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Surat Pernyataan Kesanggupan telah berhasil disetujui. Silakan selesaikan pembayaran administrasi masuk awal di bawah ini agar ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> resmi dinyatakan diterima dan terdaftar sebagai siswa baru.
+                            Surat Pernyataan Kesanggupan telah berhasil disetujui. Silakan selesaikan pembayaran administrasi masuk awal di bawah ini agar ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> resmi dinyatakan diterima dan terdaftar sebagai murid baru.
                         </p>
                     </div>
                 </div>
@@ -258,6 +258,7 @@
                                         $itemRemaining = max(0, $itemNet - $itemPaid);
                                         $isItemLunas = ($itemRemaining <= 0);
                                         $canCicil = (!$isItemLunas) && (!empty($item['is_installment_allowed']) || ($installmentMode ?? 'none') === 'all');
+                                        $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
                                     @endphp
                                     <tr class="block sm:table-row bg-slate-50/50 dark:bg-slate-950/30 sm:bg-transparent border border-slate-200/80 dark:border-slate-800 sm:border-0 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none text-slate-650 dark:text-slate-350 {{ $isItemLunas ? 'bg-slate-50/30 dark:bg-slate-950/10' : '' }}">
                                         @if($registration->registration_status !== 'completed' || ($remainingBalance ?? 0) > 0)

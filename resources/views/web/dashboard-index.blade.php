@@ -88,7 +88,7 @@
                             </a>
                             @if(!empty($brochureUrl))
                                 <a href="{{ $brochureUrl }}" target="_blank" download class="py-2 px-2.5 {{ $unitTheme['secondaryButton'] }} rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 border" title="Unduh Brosur {{ $unit->name }}">
-                                    <i data-lucide="file-down" class="w-3.5 h-3.5"></i> Unduh Brosur
+                                    <i data-lucide="file-down" class="w-3.5 h-3.5"></i> Brosur
                                 </a>
                             @else
                                 <span class="py-2 px-2.5 bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-100 dark:border-slate-800 cursor-not-allowed" title="Brosur belum tersedia">

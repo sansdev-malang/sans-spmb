@@ -322,13 +322,32 @@ class Registration extends Model
         $snapshotItems = $this->final_fee_snapshot['items'] ?? [];
         $mergedItems = [];
         $processedNames = [];
+        $processedCleanNames = [];
+        $processedIds = [];
 
         // First, process active master fees
         foreach ($selectedMasterFees as $f) {
             $nameLower = strtolower(trim($f->name));
+            $nameClean = preg_replace('/[^a-z0-9]/', '', $nameLower);
             $processedNames[] = $nameLower;
+            $processedCleanNames[] = $nameClean;
+            $processedIds[] = (int) $f->id;
 
-            $snapItem = collect($snapshotItems)->first(fn($si) => strtolower(trim($si['name'] ?? '')) === $nameLower);
+            $snapItem = collect($snapshotItems)->first(function($si) use ($f, $nameLower, $nameClean) {
+                if (isset($si['id']) && (int)$si['id'] === (int)$f->id) {
+                    return true;
+                }
+                $siNameLower = strtolower(trim($si['name'] ?? ''));
+                $siNameClean = preg_replace('/[^a-z0-9]/', '', $siNameLower);
+                return ($siNameLower === $nameLower) || ($siNameClean === $nameClean);
+            });
+
+            if ($snapItem && !empty($snapItem['name'])) {
+                $snapNameLower = strtolower(trim($snapItem['name']));
+                $processedNames[] = $snapNameLower;
+                $processedCleanNames[] = preg_replace('/[^a-z0-9]/', '', $snapNameLower);
+            }
+
             $paidAmount = $this->getItemPaidAmount($f->name, $f->id);
             $amount = (float) $f->amount;
 
@@ -359,19 +378,27 @@ class Registration extends Model
             if (preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $nameLower)) {
                 continue;
             }
-            if (!in_array($nameLower, $processedNames)) {
-                $paidAmount = $this->getItemPaidAmount($si['name'], $si['id'] ?? null);
-                if ($paidAmount > 0) {
-                    $mergedItems[] = [
-                        'id' => $si['id'] ?? null,
-                        'name' => $si['name'],
-                        'category_id' => null,
-                        'category_name' => 'Biaya Administrasi',
-                        'amount' => (float) ($si['amount'] ?? $paidAmount),
-                        'gateways' => $si['gateways'] ?? ['winpay'],
-                        'is_installment_allowed' => false,
-                    ];
-                }
+            $nameClean = preg_replace('/[^a-z0-9]/', '', $nameLower);
+            $siId = isset($si['id']) ? (int)$si['id'] : null;
+
+            if (($siId && in_array($siId, $processedIds)) || in_array($nameLower, $processedNames) || in_array($nameClean, $processedCleanNames)) {
+                continue;
+            }
+
+            $paidAmount = $this->getItemPaidAmount($si['name'], $siId);
+            if ($paidAmount > 0) {
+                $mergedItems[] = [
+                    'id' => $siId,
+                    'name' => $si['name'],
+                    'category_id' => null,
+                    'category_name' => 'Biaya Administrasi',
+                    'amount' => (float) ($si['amount'] ?? $paidAmount),
+                    'gateways' => $si['gateways'] ?? ['winpay'],
+                    'is_installment_allowed' => false,
+                ];
+                if ($siId) $processedIds[] = $siId;
+                $processedNames[] = $nameLower;
+                $processedCleanNames[] = $nameClean;
             }
         }
 

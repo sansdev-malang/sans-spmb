@@ -352,29 +352,53 @@
                             </div>
                         </div>
 
-                        @if($allUserRegistrations->count() > 1 && !$isLanding)
-                            <!-- Candidate Switcher Dropdown (Multi-Child) -->
-                            <div class="hidden sm:block relative">
-                                <button type="button" 
-                                        id="candidateSwitcherBtn"
-                                        onclick="toggleCandidateDropdown(event)" 
-                                        class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-brand-emerald/30 text-xs font-bold text-slate-800 dark:text-white hover:bg-emerald-100/70 transition shadow-sm"
-                                        title="Pilih Ananda yang Dikelola">
-                                    <span class="h-5 w-5 rounded-full bg-brand-emerald text-white flex items-center justify-center text-[10px] font-black">
-                                        👦
-                                    </span>
-                                    <span class="max-w-[120px] truncate">{{ $registration->candidate_name ?? 'Pilih Ananda' }}</span>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-brand-emerald/15 text-brand-emerald dark:text-emerald-400 font-black">{{ $registration->unit->code ?? 'UNIT' }}</span>
-                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
-                                </button>
-
-                                <!-- Dropdown Menu -->
-                                <div id="candidateDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-150 dark:border-slate-800 py-2 z-50 animate-fade-in text-xs">
-                                    <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilih Ananda</span>
-                                        <span class="text-[10px] font-bold text-brand-emerald">{{ $allUserRegistrations->count() }} Pendaftaran</span>
+                        <!-- User Profile & Candidate Dropdown Toggle (Option B: Compact Multi-Context) -->
+                        <div class="hidden md:block relative">
+                            <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-2.5 py-1 px-2.5 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800 transition text-xs font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 shadow-xs group" title="Pengaturan Akun & Pilihan Ananda">
+                                <div class="relative">
+                                    <div class="h-7 w-7 rounded-lg bg-custom-primary text-white flex items-center justify-center font-black text-xs uppercase dark:bg-emerald-600 shadow-xs">
+                                        {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
                                     </div>
-                                    <div class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 p-1">
+                                    @if($currentReg && !$isLanding)
+                                        <span class="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-brand-emerald text-white flex items-center justify-center text-[8px] font-black ring-2 ring-white dark:ring-slate-900" title="{{ $currentReg->unit->code ?? 'UNIT' }}">
+                                            👦
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="flex flex-col text-left leading-tight min-w-0">
+                                    <span class="font-extrabold text-xs text-slate-800 dark:text-white truncate max-w-[125px]">{{ auth()->user()->name }}</span>
+                                    @if($currentReg && !$isLanding)
+                                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[125px] flex items-center gap-1">
+                                            <span class="truncate">{{ $currentReg->candidate_name ?? 'Ananda' }}</span>
+                                            <span class="text-[9px] px-1 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold">{{ $currentReg->unit->code ?? 'UNIT' }}</span>
+                                        </span>
+                                    @else
+                                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate max-w-[125px]">Akun Orang Tua</span>
+                                    @endif
+                                </div>
+                                <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition"></i>
+                            </button>
+
+                            <!-- Profile Dropdown Box (With Integrated Candidate Switcher) -->
+                            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-150 dark:border-slate-800 py-2 z-50 animate-fade-in text-xs">
+                                <!-- User Info Header -->
+                                <div class="px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2.5">
+                                    <div class="h-9 w-9 rounded-full bg-custom-primary text-white flex items-center justify-center font-black text-sm uppercase dark:bg-emerald-600 flex-shrink-0 shadow-xs">
+                                        {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-extrabold text-xs text-slate-800 dark:text-white truncate">{{ auth()->user()->name }}</div>
+                                        <div class="text-[10px] text-slate-400 dark:text-slate-500 truncate">{{ auth()->user()->email }}</div>
+                                    </div>
+                                </div>
+
+                                @if($allUserRegistrations->count() > 1 && !$isLanding)
+                                    <!-- Candidate Switcher Section -->
+                                    <div class="px-3.5 pt-2.5 pb-1.5 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pilih Ananda</span>
+                                        <span class="text-[10px] font-bold text-brand-emerald dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/50 dark:border-emerald-900/50">{{ $allUserRegistrations->count() }} Pendaftaran</span>
+                                    </div>
+                                    <div class="max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 px-2 py-1 space-y-1">
                                         @foreach($allUserRegistrations as $itemReg)
                                             @php
                                                 $isSelected = ($registration && $registration->id === $itemReg->id);
@@ -397,16 +421,16 @@
                                                     $targetUrl = route('dashboard.detail', $itemReg->id);
                                                 }
                                             @endphp
-                                            <a href="{{ $targetUrl }}" class="flex items-center justify-between p-2.5 rounded-xl transition {{ $isSelected ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-brand-emerald/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800' }}">
+                                            <a href="{{ $targetUrl }}" class="flex items-center justify-between p-2 rounded-xl transition {{ $isSelected ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-brand-emerald/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800' }}">
                                                 <div class="flex items-center gap-2.5 min-w-0">
-                                                    <div class="h-8 w-8 rounded-xl {{ $isSelected ? 'bg-brand-emerald text-white font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }} flex items-center justify-center text-xs flex-shrink-0">
+                                                    <div class="h-7 w-7 rounded-lg {{ $isSelected ? 'bg-brand-emerald text-white font-black' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }} flex items-center justify-center text-[11px] flex-shrink-0">
                                                         {{ substr($itemReg->candidate_name ?? 'A', 0, 1) }}
                                                     </div>
                                                     <div class="min-w-0">
                                                         <div class="font-extrabold text-slate-800 dark:text-white truncate flex items-center gap-1">
                                                             <span class="truncate">{{ $itemReg->candidate_name }}</span>
                                                             @if($isSelected)
-                                                                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-emerald flex-shrink-0"></i>
+                                                                <i data-lucide="check" class="w-3.5 h-3.5 text-brand-emerald dark:text-emerald-400 flex-shrink-0"></i>
                                                             @endif
                                                         </div>
                                                         <div class="text-[10px] text-slate-400 truncate">
@@ -414,56 +438,43 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full {{ $isSelected ? 'bg-brand-emerald text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500' }}">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md {{ $isSelected ? 'bg-brand-emerald text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500' }}">
                                                     {{ $itemReg->unit?->code }}
                                                 </span>
                                             </a>
                                         @endforeach
                                     </div>
-                                    <div class="p-2 border-t border-slate-100 dark:border-slate-800">
-                                        <a href="{{ route('dashboard') }}#pendaftaran-ananda" class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-brand-emerald dark:text-emerald-400 font-bold text-[11px] transition">
+                                    <div class="px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                        <a href="{{ route('dashboard') }}#pendaftaran-ananda" class="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-brand-emerald dark:text-emerald-400 font-bold text-[11px] transition border border-slate-200/50 dark:border-slate-700/50">
                                             <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
                                             <span>Daftarkan Ananda Baru</span>
                                         </a>
                                     </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- User Profile Dropdown Toggle (Desktop Only) -->
-                        <div class="hidden md:block relative">
-                            <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-1.5 p-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition text-xs font-bold text-slate-700 dark:text-slate-300" title="Akun">
-                                <div class="h-6 w-6 rounded-full bg-custom-primary text-white flex items-center justify-center font-bold text-xs uppercase dark:bg-emerald-600">
-                                    {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
-                                </div>
-                                <span class="font-bold text-slate-700 dark:text-slate-200 pr-1 max-w-[120px] truncate">{{ auth()->user()->name }}</span>
-                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
-                            </button>
-                            <!-- Dropdown Box -->
-                            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-2 z-50 text-xs">
-                                <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 font-medium text-slate-400 dark:text-slate-500 truncate">
-                                    {{ auth()->user()->email }}
-                                </div>
-                                @if($isLanding)
-                                    @if(auth()->user()->isAdmin())
-                                        <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
-                                            <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
-                                        </a>
-                                    @else
-                                        <a href="{{ route('dashboard') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
-                                            <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
-                                        </a>
-                                    @endif
                                 @endif
-                                <a href="{{ auth()->user()->isAdmin() ? route('admin.profile.edit') : route('profile.edit') }}" class="block px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
-                                    <i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Edit Profile
-                                </a>
-                                <form method="POST" action="{{ route('logout') }}" hx-boost="false">
-                                    @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-2.5 text-red-655 hover:bg-red-50 dark:hover:bg-red-950/20 transition flex items-center gap-2 font-bold">
-                                        <i data-lucide="log-out" class="w-4 h-4 text-red-500"></i> Keluar / Logout
-                                    </button>
-                                </form>
+
+                                <!-- Account Actions -->
+                                <div class="pt-1">
+                                    @if($isLanding)
+                                        @if(auth()->user()->isAdmin())
+                                            <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
+                                                <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
+                                            </a>
+                                        @else
+                                            <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2 font-bold text-custom-primary dark:text-emerald-400">
+                                                <i data-lucide="layout-dashboard" class="w-4 h-4 text-custom-primary dark:text-emerald-400"></i> Dashboard
+                                            </a>
+                                        @endif
+                                    @endif
+                                    <a href="{{ auth()->user()->isAdmin() ? route('admin.profile.edit') : route('profile.edit') }}" class="block px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-2">
+                                        <i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Edit Profile
+                                    </a>
+                                    <form method="POST" action="{{ route('logout') }}" hx-boost="false">
+                                        @csrf
+                                        <button type="submit" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition flex items-center gap-2 font-bold">
+                                            <i data-lucide="log-out" class="w-4 h-4 text-red-500"></i> Keluar / Logout
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
 
