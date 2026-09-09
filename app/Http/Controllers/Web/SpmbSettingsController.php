@@ -40,7 +40,7 @@ class SpmbSettingsController extends Controller
             return $program;
         });
 
-        $activeTab = request()->get('tab', 'periode');
+        $activeTab = request()->input('tab', 'periode');
         return view('admin.settings-spmb', compact('periods', 'waves', 'types', 'classPrograms', 'activeTab'));
     }
 
@@ -67,8 +67,19 @@ class SpmbSettingsController extends Controller
     public function qrcode()
     {
         $isSuperAdmin = auth()->user()->isSuperAdmin();
-        $qrcodeUrl = \App\Models\Setting::get('spmb_qrcode_url', url('/register'));
-        return view('admin.settings-spmb-qrcode', compact('qrcodeUrl', 'isSuperAdmin'));
+        $qrcodeUrl = Setting::get('spmb_qrcode_url', url('/register'));
+        $schoolLogo = Setting::get('school_logo');
+        
+        $brandingPath = 'storage/branding/whsokYPk9uLYyz6SCRmuMTQgD2UxVTqmTEMoz36r.png';
+        if ($schoolLogo && file_exists(public_path('storage/' . ltrim($schoolLogo, '/')))) {
+            $logoUrl = asset('storage/' . ltrim($schoolLogo, '/'));
+        } elseif (file_exists(public_path($brandingPath))) {
+            $logoUrl = asset($brandingPath);
+        } else {
+            $logoUrl = asset('storage/branding/whsokYPk9uLYyz6SCRmuMTQgD2UxVTqmTEMoz36r.png');
+        }
+
+        return view('admin.settings-spmb-qrcode', compact('qrcodeUrl', 'isSuperAdmin', 'logoUrl'));
     }
 
     public function saveQrcode(Request $request)
@@ -85,7 +96,7 @@ class SpmbSettingsController extends Controller
                 ->withInput();
         }
 
-        \App\Models\Setting::set('spmb_qrcode_url', $request->qrcode_url);
+        Setting::set('spmb_qrcode_url', $request->qrcode_url);
 
         return redirect()->back()->with('success', 'Tautan QR Code berhasil disimpan.');
     }

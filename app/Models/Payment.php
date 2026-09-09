@@ -175,4 +175,68 @@ class Payment extends Model
         // 6. Fallback to gateway code (e.g. WINPAY, BNI)
         return strtoupper($this->payment_gateway_code ?? 'Winpay');
     }
+
+    /**
+     * Get logo URL from idn-finlogos or SpmbPaymentChannel for this payment.
+     */
+    public function getLogoUrl(): ?string
+    {
+        // 1. Try matching via SpmbPaymentChannel if payment_method matches code or name
+        if (!empty($this->payment_method)) {
+            $channel = SpmbPaymentChannel::where('code', $this->payment_method)
+                ->orWhere('name', $this->payment_method)
+                ->first();
+            if ($channel) {
+                $logo = $channel->getLogoUrl();
+                if ($logo) {
+                    return $logo;
+                }
+            }
+        }
+
+        // 2. Fallback: match by channel_display_name, payment_method, or payment_info
+        $info = $this->payment_info;
+        if (is_string($info)) {
+            $info = json_decode($info, true);
+        }
+        $bankName = $info['bankName'] ?? '';
+        $ewallet = $info['ewalletChannel'] ?? '';
+        $channelKey = strtolower(($this->channel_display_name ?? '') . ' ' . ($this->payment_method ?? '') . ' ' . $bankName . ' ' . $ewallet);
+
+        $logoSlugs = [
+            'qris' => 'qris',
+            'bca' => 'bca',
+            'shopee' => 'shopee-pay',
+            'mandiri' => 'mandiri',
+            'dana' => 'dana',
+            'bsi' => 'bsi',
+            'bni' => 'bni',
+            'bri' => 'bri',
+            'indomaret' => 'indomaret',
+            'alfamart' => 'alfamart',
+            'permata' => 'permata',
+            'cimb' => 'cimb-niaga',
+            'gopay' => 'gopay',
+            'ovo' => 'ovo',
+            'linkaja' => 'linkaja',
+        ];
+
+        foreach ($logoSlugs as $keyword => $slug) {
+            if (str_contains($channelKey, $keyword)) {
+                $path = 'vendor/idn-finlogos/' . $slug . '.svg';
+                if (file_exists(public_path($path))) {
+                    $svg = file_get_contents(public_path($path));
+                    if ($svg !== false) {
+                        if (!str_contains($svg, 'xmlns=')) {
+                            $svg = preg_replace('/<svg\b(?![^>]*\bxmlns=)/i', '<svg xmlns="http://www.w3.org/2000/svg"', $svg, 1);
+                        }
+                        return 'data:image/svg+xml;base64,' . base64_encode($svg);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 }
+

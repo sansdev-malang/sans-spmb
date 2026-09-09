@@ -270,11 +270,11 @@
                                 SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800 dark:text-white">{{ $cand->candidate_name }}</div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-white">{{ $cand->candidate_name }}</div>
                                 <div class="text-xs text-slate-400 dark:text-slate-500">WA: {{ $cand->parent_phone ?: '-' }}</div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-brand-emerald">
-                                {{ $cand->admission_level }}
+                                <span class="text-xs uppercase">{{ $cand->admission_level }}</span>
                                 <div class="mt-0.5">
                                     @if($cand->classProgram && $cand->classProgram->name === 'Inklusi')
                                         <span class="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-bold border border-indigo-200">Inklusi</span>

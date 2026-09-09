@@ -71,8 +71,8 @@
                     <tbody class="text-sm divide-y divide-slate-100">
                         @forelse($steps as $step)
                             <tr class="hover:bg-slate-50/30 transition">
-                                <td class="py-4 px-6 font-bold text-slate-700">Langkah #{{ $step->order }}</td>
-                                <td class="py-4 px-6 font-extrabold text-slate-800">{{ $step->title }}</td>
+                                <td class="py-4 px-6 text-xs font-bold text-slate-700">Langkah #{{ $step->order }}</td>
+                                <td class="py-4 px-6 text-xs font-extrabold text-slate-800">{{ $step->title }}</td>
                                 <td class="py-4 px-6 space-x-1 space-y-1">
                                     @forelse($step->units as $u)
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
@@ -97,7 +97,7 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button type="button" onclick="openEditStepModal({{ json_encode($step) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Tahapan">
+                                        <button type="button" onclick="openEditStepModal({{ json_encode($step) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Tahapan">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         <button type="button" onclick="deleteStepItem('{{ $step->title }}', '{{ route('admin.spmb-settings.form.steps.delete', $step->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Tahapan">
@@ -146,8 +146,8 @@
                         <tbody class="text-sm divide-y divide-slate-100">
                             @forelse($step->fields as $field)
                                 <tr class="hover:bg-slate-50/30 transition">
-                                    <td class="py-4 px-6 font-bold text-slate-700">#{{ $field->order }}</td>
-                                    <td class="py-4 px-6 font-extrabold text-slate-800">{{ $field->label }}</td>
+                                    <td class="py-4 px-6 text-xs font-bold text-slate-700">#{{ $field->order }}</td>
+                                    <td class="py-4 px-6 text-xs font-extrabold text-slate-800">{{ $field->label }}</td>
                                     <td class="py-4 px-6 space-x-1 space-y-1">
                                         @forelse($field->units as $u)
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
@@ -172,7 +172,7 @@
                                     </td>
                                     <td class="py-4 px-6">
                                         <div class="flex items-center justify-end gap-1.5">
-                                            <button type="button" onclick="openEditFieldModal({{ json_encode($field) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-500" title="Edit Kolom">
+                                            <button type="button" onclick="openEditFieldModal({{ json_encode($field) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Kolom">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
                                         @if(in_array($field->field_name, ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id']))

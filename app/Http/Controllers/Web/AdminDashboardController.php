@@ -5,15 +5,20 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Registration;
+use App\Models\Payment;
+use App\Models\SpmbPeriod;
+use App\Models\SpmbUnit;
+use App\Models\SpmbWave;
 use App\Models\SpmbActivityLog;
+use App\Models\User;
 
 class AdminDashboardController extends Controller
 {
     public function index(Request $request)
     {
         $selectedPeriodId = session('selected_period_id', function() {
-            return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
-                ?? \App\Models\SpmbPeriod::value('id');
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
         });
 
         // Base query for candidate verification (excluding draft)
@@ -48,7 +53,7 @@ class AdminDashboardController extends Controller
         }
 
         // Per page limit
-        $perPage = intval($request->get('per_page', 10));
+        $perPage = intval($request->input('per_page', 10));
         if (!in_array($perPage, [10, 25, 50, 100])) {
             $perPage = 10;
         }
@@ -71,8 +76,8 @@ class AdminDashboardController extends Controller
     public function dashboard()
     {
         $selectedPeriodId = session('selected_period_id', function() {
-            return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
-                ?? \App\Models\SpmbPeriod::value('id');
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
         });
 
         $isSuperAdmin = auth()->user()->isSuperAdmin();
@@ -81,9 +86,58 @@ class AdminDashboardController extends Controller
         $totalCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->count();
         $submittedCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->where('registration_status', 'submitted')->count();
         $verifiedCandidates = Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)->whereIn('registration_status', ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])->count();
-        
-        // Financial & Payment Metrics (Scoped by Academic Period & Admin Unit)
-        $successPaymentsQuery = \App\Models\Payment::scopedByAdmin()
+
+        // Financial & Payment Metrics
+        $financialData = $this->calculateFinancialStats($selectedPeriodId, $isSuperAdmin);
+
+        // Pipeline stages & payment stats
+        $pipelineStages = $this->calculatePipelineStages($selectedPeriodId, $totalCandidates);
+        $paymentStats = $this->calculatePaymentStats($selectedPeriodId);
+
+        // Charts stats (by grade / level name)
+        $levelStats = Registration::scopedByAdmin()
+            ->where('registrations.spmb_period_id', $selectedPeriodId)
+            ->leftJoin('spmb_grades', 'registrations.spmb_grade_id', '=', 'spmb_grades.id')
+            ->selectRaw('COALESCE(spmb_grades.name, registrations.admission_level, "Lainnya") as level_name, count(registrations.id) as count')
+            ->groupBy('level_name')
+            ->orderBy('count', 'desc')
+            ->get();
+
+        // Recent Registrations (5 items)
+        $recentRegistrations = Registration::scopedByAdmin()
+            ->with(['user', 'unit'])
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        // Recent Logs & Wave Info
+        $recentLogs = $isSuperAdmin ? SpmbActivityLog::latest()->limit(5)->get() : collect();
+        $activeWaves = SpmbWave::where('is_active', true)->get();
+        $totalGuardiansCount = User::whereHas('registrations', function($q) use ($selectedPeriodId) {
+            $q->scopedByAdmin()->where('spmb_period_id', $selectedPeriodId);
+        })->count();
+
+        return view('admin.dashboard', array_merge([
+            'totalCandidates' => $totalCandidates,
+            'submittedCandidates' => $submittedCandidates,
+            'verifiedCandidates' => $verifiedCandidates,
+            'levelStats' => $levelStats,
+            'pipelineStages' => $pipelineStages,
+            'paymentStats' => $paymentStats,
+            'recentRegistrations' => $recentRegistrations,
+            'recentLogs' => $recentLogs,
+            'activeWaves' => $activeWaves,
+            'totalGuardiansCount' => $totalGuardiansCount,
+        ], $financialData));
+    }
+
+    /**
+     * Calculate financial and payment metrics for dashboard
+     */
+    private function calculateFinancialStats($selectedPeriodId, bool $isSuperAdmin): array
+    {
+        $successPaymentsQuery = Payment::scopedByAdmin()
             ->where('status', 'success')
             ->whereHas('registration', function($q) use ($selectedPeriodId) {
                 $q->where('spmb_period_id', $selectedPeriodId);
@@ -93,7 +147,7 @@ class AdminDashboardController extends Controller
         $totalGrossRevenue = (clone $successPaymentsQuery)->sum('amount');
         $totalAdminFee = (clone $successPaymentsQuery)->sum('admin_fee');
         $totalNetRevenue = (clone $successPaymentsQuery)->selectRaw('SUM(COALESCE(base_amount, amount - COALESCE(admin_fee, 0))) as total_net')->value('total_net') ?? 0;
-        $totalRevenue = $totalNetRevenue; // Net revenue received by school
+        $totalRevenue = $totalNetRevenue;
 
         // Form Registration Fee Breakdown
         $formFeeNet = (clone $successPaymentsQuery)
@@ -110,7 +164,7 @@ class AdminDashboardController extends Controller
             ->where('payment_type', 'registration_fee')
             ->count();
 
-        // DSP / Final Fee / Uang Masuk Breakdown
+        // DSP / Final Fee Breakdown
         $dspFeeNet = (clone $successPaymentsQuery)
             ->where('payment_type', '!=', 'registration_fee')
             ->selectRaw('SUM(COALESCE(base_amount, amount - COALESCE(admin_fee, 0))) as total_net')
@@ -125,18 +179,19 @@ class AdminDashboardController extends Controller
             ->where('payment_type', '!=', 'registration_fee')
             ->count();
 
-        // Total Outstanding / Piutang DSP (Tagihan Masuk dari calon siswa tahap penetapan/daftar ulang)
+        // Total Outstanding / Piutang DSP
         $billingQuery = Registration::scopedByAdmin()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
             ->where('spmb_period_id', $selectedPeriodId)
             ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
-        
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Registration> $billingCandidates */
         $billingCandidates = $billingQuery->get();
-        $totalDSPGrossBilled = $billingCandidates->sum(fn($c) => $c->getGrossFee());
-        $totalDSPDiscount = $billingCandidates->sum(fn($c) => $c->total_discount);
-        $totalDSPNetBilled = $billingCandidates->sum(fn($c) => $c->net_fee);
-        $totalDSPPaid = $billingCandidates->sum(fn($c) => $c->total_paid_final_fee);
-        $totalDSPRemaining = $billingCandidates->sum(fn($c) => $c->remaining_balance);
+        $totalDSPGrossBilled = $billingCandidates->sum(fn(Registration $c) => $c->getGrossFee());
+        $totalDSPDiscount = $billingCandidates->sum(fn(Registration $c) => $c->total_discount);
+        $totalDSPNetBilled = $billingCandidates->sum(fn(Registration $c) => $c->net_fee);
+        $totalDSPPaid = $billingCandidates->sum(fn(Registration $c) => $c->total_paid_final_fee);
+        $totalDSPRemaining = $billingCandidates->sum(fn(Registration $c) => $c->remaining_balance);
 
         // Payment Channels Breakdown
         $allSuccessPayments = (clone $successPaymentsQuery)->get();
@@ -146,6 +201,7 @@ class AdminDashboardController extends Controller
             if (!isset($channelStats[$ch])) {
                 $channelStats[$ch] = [
                     'channel' => $ch,
+                    'logo_url' => $p->getLogoUrl(),
                     'count' => 0,
                     'net' => 0,
                     'admin_fee' => 0,
@@ -159,8 +215,8 @@ class AdminDashboardController extends Controller
         }
         uasort($channelStats, fn($a, $b) => $b['count'] <=> $a['count']);
 
-        // Recent Payments (Latest 6 transactions)
-        $recentPayments = \App\Models\Payment::scopedByAdmin()
+        // Recent Payments
+        $recentPayments = Payment::scopedByAdmin()
             ->with(['registration.unit', 'registration.user'])
             ->whereHas('registration', function($q) use ($selectedPeriodId) {
                 $q->where('spmb_period_id', $selectedPeriodId);
@@ -172,76 +228,62 @@ class AdminDashboardController extends Controller
         // Unit Financial Summary (For Super Admin)
         $unitFinanceSummary = [];
         if ($isSuperAdmin) {
-            $units = \App\Models\SpmbUnit::where('is_active', true)->get();
+            $units = SpmbUnit::where('is_active', true)->get();
             foreach ($units as $u) {
-                $uPayments = \App\Models\Payment::where('status', 'success')
+                $uPayments = Payment::where('status', 'success')
                     ->whereHas('registration', function($q) use ($selectedPeriodId, $u) {
                         $q->where('spmb_period_id', $selectedPeriodId)->where('spmb_unit_id', $u->id);
                     })->get();
-                
-                $uNet = $uPayments->sum(fn($p) => $p->base_amount ?: ($p->amount - ($p->admin_fee ?: 0)));
-                $uFee = $uPayments->sum('admin_fee');
-                $uGross = $uPayments->sum('amount');
-                $uPaidTrx = $uPayments->count();
-                $uRegCount = Registration::where('spmb_period_id', $selectedPeriodId)->where('spmb_unit_id', $u->id)->count();
 
                 $unitFinanceSummary[] = [
                     'unit' => $u,
-                    'reg_count' => $uRegCount,
-                    'paid_trx' => $uPaidTrx,
-                    'net_revenue' => $uNet,
-                    'admin_fee' => $uFee,
-                    'gross_revenue' => $uGross,
+                    'reg_count' => Registration::where('spmb_period_id', $selectedPeriodId)->where('spmb_unit_id', $u->id)->count(),
+                    'paid_trx' => $uPayments->count(),
+                    'net_revenue' => $uPayments->sum(fn($p) => $p->base_amount ?: ($p->amount - ($p->admin_fee ?: 0))),
+                    'admin_fee' => $uPayments->sum('admin_fee'),
+                    'gross_revenue' => $uPayments->sum('amount'),
                 ];
             }
         }
 
-        // Charts stats (by grade / level name)
-        $levelStats = Registration::scopedByAdmin()
-            ->where('registrations.spmb_period_id', $selectedPeriodId)
-            ->leftJoin('spmb_grades', 'registrations.spmb_grade_id', '=', 'spmb_grades.id')
-            ->selectRaw('COALESCE(spmb_grades.name, registrations.admission_level, "Lainnya") as level_name, count(registrations.id) as count')
-            ->groupBy('level_name')
-            ->orderBy('count', 'desc')
-            ->get();
+        return compact(
+            'paidTransactions',
+            'totalRevenue',
+            'totalNetRevenue',
+            'totalAdminFee',
+            'totalGrossRevenue',
+            'formFeeNet',
+            'formFeeAdmin',
+            'formFeeGross',
+            'formFeeTrxCount',
+            'dspFeeNet',
+            'dspFeeAdmin',
+            'dspFeeGross',
+            'dspFeeTrxCount',
+            'totalDSPGrossBilled',
+            'totalDSPDiscount',
+            'totalDSPNetBilled',
+            'totalDSPPaid',
+            'totalDSPRemaining',
+            'channelStats',
+            'recentPayments',
+            'unitFinanceSummary'
+        );
+    }
 
-        // Charts stats (by complete registration lifecycle pipeline with dynamic stage counts)
+    /**
+     * Calculate pipeline stages breakdown for dashboard
+     */
+    private function calculatePipelineStages($selectedPeriodId, int $totalCandidates): array
+    {
         $statusDefinitions = [
-            'draft' => [
-                'label' => 'Draft Formulir',
-                'color' => 'bg-slate-400',
-                'dot' => 'bg-slate-400',
-            ],
-            'submitted' => [
-                'label' => 'Menunggu Verifikasi',
-                'color' => 'bg-amber-500',
-                'dot' => 'bg-amber-500',
-            ],
-            'failed' => [
-                'label' => 'Perlu Revisi Berkas',
-                'color' => 'bg-rose-500',
-                'dot' => 'bg-rose-500',
-            ],
-            'verified' => [
-                'label' => 'Observasi / Ta\'aruf',
-                'color' => 'bg-indigo-500',
-                'dot' => 'bg-indigo-500',
-            ],
-            'taaruf_completed' => [
-                'label' => 'Penandatanganan Akad',
-                'color' => 'bg-purple-500',
-                'dot' => 'bg-purple-500',
-            ],
-            'agreement_signed' => [
-                'label' => 'Pembayaran Biaya Masuk',
-                'color' => 'bg-blue-500',
-                'dot' => 'bg-blue-500',
-            ],
-            'completed' => [
-                'label' => 'Resmi Diterima (Lunas)',
-                'color' => 'bg-emerald-500',
-                'dot' => 'bg-emerald-500',
-            ],
+            'draft' => ['label' => 'Draft Formulir', 'color' => 'bg-slate-400', 'dot' => 'bg-slate-400'],
+            'submitted' => ['label' => 'Menunggu Verifikasi', 'color' => 'bg-amber-500', 'dot' => 'bg-amber-500'],
+            'failed' => ['label' => 'Perlu Revisi Berkas', 'color' => 'bg-rose-500', 'dot' => 'bg-rose-500'],
+            'verified' => ['label' => 'Observasi / Ta\'aruf', 'color' => 'bg-indigo-500', 'dot' => 'bg-indigo-500'],
+            'taaruf_completed' => ['label' => 'Penandatanganan Akad', 'color' => 'bg-purple-500', 'dot' => 'bg-purple-500'],
+            'agreement_signed' => ['label' => 'Pembayaran Biaya Masuk', 'color' => 'bg-blue-500', 'dot' => 'bg-blue-500'],
+            'completed' => ['label' => 'Resmi Diterima (Lunas)', 'color' => 'bg-emerald-500', 'dot' => 'bg-emerald-500'],
         ];
 
         $rawStatusCounts = Registration::scopedByAdmin()
@@ -268,8 +310,15 @@ class AdminDashboardController extends Controller
             ];
         }
 
-        // Charts stats (by registration fee payment status)
-        $paymentStats = [
+        return $pipelineStages;
+    }
+
+    /**
+     * Calculate registration fee payment stats for dashboard
+     */
+    private function calculatePaymentStats($selectedPeriodId): array
+    {
+        return [
             'Paid' => Registration::scopedByAdmin()->where('spmb_period_id', $selectedPeriodId)
                 ->where(function($q) {
                     $q->where('payment_status', 'paid')
@@ -288,59 +337,6 @@ class AdminDashboardController extends Controller
                     $pq->where('payment_type', 'registration_fee')->where('status', 'success');
                 })->count(),
         ];
-
-        // Recent Registrations (5 items)
-        $recentRegistrations = Registration::scopedByAdmin()
-            ->with(['user', 'unit'])
-            ->where('spmb_period_id', $selectedPeriodId)
-            ->latest()
-            ->limit(5)
-            ->get();
-
-        // Recent Logs (5 items)
-        $recentLogs = $isSuperAdmin ? SpmbActivityLog::latest()->limit(5)->get() : collect();
-
-        // Active Wave/Gelombang Info (All active waves)
-        $activeWaves = \App\Models\SpmbWave::where('is_active', true)->get();
-
-        // Total registered guardians (wali murid with registrations)
-        $totalGuardiansCount = \App\Models\User::whereHas('registrations', function($q) use ($selectedPeriodId) {
-            $q->scopedByAdmin()->where('spmb_period_id', $selectedPeriodId);
-        })->count();
-
-        return view('admin.dashboard', compact(
-            'totalCandidates',
-            'submittedCandidates',
-            'verifiedCandidates',
-            'paidTransactions',
-            'totalRevenue',
-            'totalNetRevenue',
-            'totalAdminFee',
-            'totalGrossRevenue',
-            'formFeeNet',
-            'formFeeAdmin',
-            'formFeeGross',
-            'formFeeTrxCount',
-            'dspFeeNet',
-            'dspFeeAdmin',
-            'dspFeeGross',
-            'dspFeeTrxCount',
-            'totalDSPGrossBilled',
-            'totalDSPDiscount',
-            'totalDSPNetBilled',
-            'totalDSPPaid',
-            'totalDSPRemaining',
-            'channelStats',
-            'recentPayments',
-            'unitFinanceSummary',
-            'levelStats',
-            'pipelineStages',
-            'paymentStats',
-            'recentRegistrations',
-            'recentLogs',
-            'activeWaves',
-            'totalGuardiansCount'
-        ));
     }
 
     public function verify(Request $request, $id)

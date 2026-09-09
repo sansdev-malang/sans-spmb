@@ -72,8 +72,14 @@
             <div class="border border-slate-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 bg-slate-50/50">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hasil Gambar QR</span>
                 
-                <div class="bg-white p-3 border border-slate-200 rounded-2xl shadow-sm">
-                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($qrcodeUrl) }}" alt="SANS SPMB QR Code" class="h-36 w-36">
+                <div class="bg-white p-3 border border-slate-200 rounded-2xl shadow-sm relative flex items-center justify-center">
+                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&ecc=H&data={{ urlencode($qrcodeUrl) }}" alt="SANS SPMB QR Code" class="h-44 w-44 object-contain">
+                    <!-- Center Branding Logo Overlay -->
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="w-20 h-20">
+                            <img id="qrCenterLogo" src="{{ $logoUrl }}" alt="School Logo" class="max-h-full max-w-full object-contain rounded">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Display URL under QR Code to be copied -->
@@ -87,10 +93,10 @@
                     </div>
                 </div>
 
-                <a id="downloadQrButton" href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($qrcodeUrl) }}" target="_blank" download="sans-spmb-qrcode.png"
-                    class="w-full bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm text-center">
-                    📥 Unduh Gambar QR
-                </a>
+                <button type="button" onclick="downloadQrWithLogo()" id="downloadQrButton"
+                    class="w-full bg-brand-emerald hover-emerald text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-sm text-center flex items-center justify-center gap-2 cursor-pointer">
+                    <i data-lucide="download" class="w-4 h-4"></i> Unduh QR Code
+                </button>
             </div>
 
         </div>
@@ -117,9 +123,8 @@
         const url = this.value;
         const encoded = encodeURIComponent(url);
 
-        document.getElementById('qrCodeImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encoded}`;
+        document.getElementById('qrCodeImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&ecc=H&data=${encoded}`;
         document.getElementById('displayUrlInput').value = url;
-        document.getElementById('downloadQrButton').href = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}`;
     });
 
     function copyToClipboard() {
@@ -128,6 +133,90 @@
         input.setSelectionRange(0, 99999); // for mobile
         navigator.clipboard.writeText(input.value);
         showToast('Tautan disalin ke papan klip!', 'success');
+    }
+
+    function downloadQrWithLogo() {
+        const logoUrl = "{{ $logoUrl }}";
+        const url = document.getElementById('qrcodeUrlInput').value || "{{ $qrcodeUrl }}";
+        const encoded = encodeURIComponent(url);
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&ecc=H&data=${encoded}`;
+
+        const downloadBtn = document.getElementById('downloadQrButton');
+        const originalHtml = downloadBtn.innerHTML;
+        downloadBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memproses QR...';
+        if (window.lucide) lucide.createIcons();
+
+        const canvas = document.createElement('canvas');
+        const size = 600;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        const qrImg = new Image();
+        qrImg.crossOrigin = "Anonymous";
+        qrImg.src = qrApiUrl;
+
+        qrImg.onload = function() {
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(qrImg, 0, 0, size, size);
+
+            const logoImg = new Image();
+            logoImg.crossOrigin = "Anonymous";
+            logoImg.src = logoUrl;
+
+            logoImg.onload = function() {
+                const boxSize = size * 0.22;
+                const x = (size - boxSize) / 2;
+                const y = (size - boxSize) / 2;
+                const radius = 16;
+
+                ctx.save();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = '#FFFFFF';
+
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.arcTo(x + boxSize, y, x + boxSize, y + boxSize, radius);
+                ctx.arcTo(x + boxSize, y + boxSize, x, y + boxSize, radius);
+                ctx.arcTo(x, y + boxSize, x, y, radius);
+                ctx.arcTo(x, y, x + boxSize, y, radius);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+
+                const pad = 10;
+                const logoDrawSize = boxSize - (pad * 2);
+                ctx.drawImage(logoImg, x + pad, y + pad, logoDrawSize, logoDrawSize);
+
+                const link = document.createElement('a');
+                link.download = 'sans-spmb-qrcode-logo.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                downloadBtn.innerHTML = originalHtml;
+                if (window.lucide) lucide.createIcons();
+            };
+
+            logoImg.onerror = function() {
+                const link = document.createElement('a');
+                link.download = 'sans-spmb-qrcode.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                downloadBtn.innerHTML = originalHtml;
+                if (window.lucide) lucide.createIcons();
+            };
+        };
+
+        qrImg.onerror = function() {
+            if (typeof showToast === 'function') {
+                showToast('Gagal memuat gambar QR code', 'error');
+            }
+            downloadBtn.innerHTML = originalHtml;
+            if (window.lucide) lucide.createIcons();
+        };
     }
 </script>
 @endsection

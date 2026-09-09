@@ -82,9 +82,9 @@ class SpmbPaymentChannel extends Model
      */
     public function getLogoUrl()
     {
-        if ($this->logo) {
-            return '/storage/' . ltrim($this->logo, '/');
-        }
+        // if ($this->logo) {
+        //     return '/storage/' . ltrim($this->logo, '/');
+        // }
 
         $channelKey = strtolower($this->code . ' ' . $this->name);
         $logoSlugs = [
@@ -98,6 +98,11 @@ class SpmbPaymentChannel extends Model
             'bri' => 'bri',
             'indomaret' => 'indomaret',
             'alfamart' => 'alfamart',
+            'permata' => 'permata',
+            'cimb' => 'cimb-niaga',
+            'gopay' => 'gopay',
+            'ovo' => 'ovo',
+            'linkaja' => 'linkaja',
         ];
 
         foreach ($logoSlugs as $keyword => $slug) {

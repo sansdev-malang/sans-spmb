@@ -109,14 +109,11 @@
     @php
         $firstUnit = $units->first();
         $defaultTab = $firstUnit ? 'unit_' . $firstUnit->id : '';
-        $activeTab = request()->get('tab', $defaultTab);
+        $activeTab = request()->input('tab', $defaultTab);
     @endphp
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex items-center gap-3">
-            <div class="h-12 w-12 bg-emerald-50 dark:bg-emerald-950/20 text-brand-emerald rounded-2xl flex items-center justify-center shadow-inner">
-                <i data-lucide="file-signature" class="w-6 h-6"></i>
-            </div>
             <div>
                 <h1 class="text-xl font-extrabold text-slate-800">Surat Pernyataan Kesanggupan</h1>
                 <p class="text-xs text-slate-500 mt-1">Kelola draf surat komitmen, tata tertib, dan syarat pembiayaan masuk sekolah yang wajib disetujui wali murid secara digital.</p>

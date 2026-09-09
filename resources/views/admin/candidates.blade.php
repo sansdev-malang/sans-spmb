@@ -489,10 +489,10 @@
                                 SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800 dark:text-white">{{ $cand->candidate_name }}</div>
+                                <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $cand->candidate_name }}</div>
                             </td>
-                            <td class="py-4 px-6 font-semibold text-brand-emerald">
-                                {{ $cand->admission_level }}
+                            <td class="py-4 px-6">
+                                <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $cand->admission_level }}</div>
                                 <div class="mt-0.5">
                                     @if($cand->classProgram && $cand->classProgram->name === 'Inklusi')
                                         <span class="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-xs font-bold border border-indigo-200">Inklusi</span>
@@ -879,7 +879,7 @@
         </div>
 
         <!-- Modal Body (Scrollable Tab Panes with Consistent Height) -->
-        <div id="modalDetailBody" class="p-6 overflow-y-auto flex-1 min-h-0 text-xs text-slate-700 dark:text-slate-300 space-y-6">
+        <div id="modalDetailBody" class="p-6 overflow-y-auto flex-1 min-h-0 text-xs text-slate-700 dark:text-slate-300">
             
             <!-- TAB PANE 1: BIODATA & ORANG TUA -->
             <div id="tab-pane-biodata" class="cand-tab-pane space-y-6">
@@ -1031,7 +1031,7 @@
 
             <!-- TAB PANE 2: BERKAS & DOKUMEN -->
             <div id="tab-pane-documents" class="cand-tab-pane hidden space-y-4">
-                <div class="p-4.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
+                <div class="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
                     <div>
                         <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">Data Berkas & Dokumen Pendaftaran</h4>
                         <p class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Seluruh dokumen pendukung yang diunggah oleh wali murid saat melengkapi formulir.</p>
@@ -1143,14 +1143,11 @@
             <!-- TAB PANE 3: DATA & RIWAYAT PEMBAYARAN -->
             <div id="tab-pane-payments" class="cand-tab-pane hidden space-y-6">
                 <!-- Banner: Kelola Kebijakan Biaya di Data Pembayaran -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4.5 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800/60">
                     <div class="flex items-center gap-3">
-                        <div class="h-9 w-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                        </div>
                         <div>
-                            <span class="text-xs font-extrabold text-emerald-950 dark:text-emerald-200 block">Pengaturan Keringanan (Diskon) & Kebijakan Cicilan</span>
-                            <span class="text-[11px] text-emerald-700 dark:text-emerald-400">Pemberian potongan biaya dan persetujuan cicilan dapat dikonfigurasi melalui menu Data Pembayaran.</span>
+                            <span class="text-xs font-extrabold text-emerald-900 dark:text-emerald-200 block">Pengaturan Keringanan (Diskon) & Kebijakan Cicilan</span>
+                            <span class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Pemberian potongan biaya dan persetujuan cicilan dapat dikonfigurasi melalui menu Data Pembayaran.</span>
                         </div>
                     </div>
                     <a id="det-pay-manage-link" href="{{ route('admin.payments.data') }}" class="px-4 py-2 bg-brand-emerald hover-emerald text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap">
@@ -1625,7 +1622,7 @@
                     });
 
                     const catCard = `
-                        <div class="p-4.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 space-y-3 shadow-2xs">
+                        <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 space-y-3 shadow-2xs">
                             <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-2.5">
                                 <div class="flex items-center gap-2">
                                     <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-emerald/10 dark:bg-emerald-950/70 text-brand-emerald dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">

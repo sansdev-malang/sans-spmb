@@ -9,7 +9,6 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex justify-between items-center">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
-                <i data-lucide="blocks" class="w-5 h-5 text-brand-emerald"></i>
                 Integrasi API & Koneksi Aplikasi
             </h1>
             <p class="text-xs text-slate-500 mt-1">Penyediaan data pendaftaran SPMB agar dapat disinkronkan dengan aplikasi eksternal (SANS HRD, SANS SD, SANS SMP, SANS PAUD).</p>

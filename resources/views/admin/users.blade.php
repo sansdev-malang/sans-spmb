@@ -9,7 +9,6 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
-                <i data-lucide="users-round" class="w-5 h-5 text-brand-emerald"></i>
                 Manajemen Pengguna (User Data)
             </h1>
             <p class="text-xs text-slate-500 mt-1">Kelola data login pengguna sistem SPMB Sekolah Anak Saleh (Admin dan Orang Tua/Calon Siswa).</p>
@@ -71,7 +70,7 @@
                         @endif
 
                         <!-- Integrated Search Button -->
-                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-[10px] font-bold shadow-sm transition">
+                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition">
                             Cari
                         </button>
                     </div>
@@ -87,7 +86,7 @@
                     @endif
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-3 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -117,7 +116,7 @@
                                     {{ ($admins->currentPage() - 1) * $admins->perPage() + $loop->iteration }}
                                 </td>
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                                    <div class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 flex-wrap">
                                         {{ $admin->name }}
                                         @if($admin->id === Auth::id())
                                             <span class="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-200">Anda</span>
@@ -133,7 +132,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="py-4 px-6 font-medium text-slate-600">{{ $admin->email }}</td>
+                                <td class="py-4 px-6 text-xs font-medium text-slate-600">{{ $admin->email }}</td>
                                 <td class="py-4 px-6 text-slate-500 text-xs">{{ $admin->created_at->format('d M Y, H:i') }}</td>
                                 <td class="py-4 px-6 text-right space-x-2">
                                     <button onclick="openEditUserModal({{ json_encode($admin) }})" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
@@ -178,7 +177,7 @@
                                     {{ ($candidates->currentPage() - 1) * $candidates->perPage() + $loop->iteration }}
                                 </td>
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-800">{{ $cand->name }}</div>
+                                    <div class="text-xs font-extrabold text-slate-800">{{ $cand->name }}</div>
                                     @if($cand->registrations->isNotEmpty())
                                         <div class="text-[10px] text-slate-400 font-semibold mt-1.5 flex flex-wrap gap-1.5 items-center">
                                             <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-200">
@@ -197,7 +196,7 @@
                                     @endif
                                 </td>
                                 <td class="py-4 px-6">
-                                    <div class="font-medium text-slate-600">{{ $cand->email }}</div>
+                                    <div class="text-xs font-medium text-slate-600">{{ $cand->email }}</div>
                                     @php
                                         $candPhone = $cand->registrations->first()?->parent_phone;
                                     @endphp
@@ -257,7 +256,7 @@
                                     {{ ($unregistered->currentPage() - 1) * $unregistered->perPage() + $loop->iteration }}
                                 </td>
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-800">{{ $unreg->name }}</div>
+                                    <div class="text-xs font-extrabold text-slate-800">{{ $unreg->name }}</div>
                                     @if($unreg->registrations->isNotEmpty())
                                         <div class="text-[10px] text-slate-400 font-semibold mt-1 flex flex-wrap gap-1 items-center">
                                             @foreach($unreg->registrations as $reg)
@@ -267,7 +266,7 @@
                                     @endif
                                 </td>
                                 <td class="py-4 px-6">
-                                    <div class="font-medium text-slate-600">{{ $unreg->email }}</div>
+                                    <div class="text-xs font-medium text-slate-600">{{ $unreg->email }}</div>
                                     @php
                                         $leadPhone = $unreg->registrations->first()?->parent_phone;
                                     @endphp

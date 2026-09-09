@@ -399,8 +399,8 @@
                             <!-- Kebijakan Cicilan -->
                             <td class="border-b border-slate-200 dark:border-slate-700 px-4 py-4">
                                 @if($cand->installment_mode === 'all')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
-                                        <i data-lucide="layers" class="w-3 h-3"></i> Cicil Semua
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                                        <i data-lucide="layers" class="w-4 h-4"></i> Cicil Semua
                                     </span>
                                     <span class="block text-[10px] text-slate-400 font-semibold mt-1">
                                         Min: Rp {{ number_format($cand->min_installment_amount ?: 500000, 0, ',', '.') }}
@@ -409,15 +409,15 @@
                                     @php
                                         $allowedCount = count($cand->installment_allowed_fee_ids ?? []);
                                     @endphp
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
-                                        <i data-lucide="check-square" class="w-3 h-3"></i> Cicil Selektif ({{ $allowedCount }})
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
+                                        <i data-lucide="check-square" class="w-4 h-4"></i> Cicil Selektif ({{ $allowedCount }})
                                     </span>
                                     <span class="block text-[10px] text-slate-400 font-semibold mt-1">
                                         Min: Rp {{ number_format($cand->min_installment_amount ?: 0, 0, ',', '.') }}
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                                        <i data-lucide="shield" class="w-3 h-3"></i> Wajib Lunas
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                        <i data-lucide="shield" class="w-4 h-4"></i> Wajib Lunas
                                     </span>
                                 @endif
                             </td>
@@ -457,15 +457,15 @@
                             <td class="border-b border-slate-200 dark:border-slate-700 px-4 py-4 text-center">
                                 @if($isLunas)
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-2xs">
-                                        <i data-lucide="check-circle" class="w-3 h-3"></i> LUNAS
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i> LUNAS
                                     </span>
                                 @elseif($paid > 0)
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700 shadow-2xs">
-                                        <i data-lucide="clock-3" class="w-3 h-3"></i> TERBAYAR ({{ $percent }}%)
+                                        <i data-lucide="clock-3" class="w-4 h-4"></i> TERBAYAR ({{ $percent }}%)
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shadow-2xs">
-                                        <i data-lucide="alert-circle" class="w-3 h-3"></i> BELUM BAYAR
+                                        <i data-lucide="alert-circle" class="w-4 h-4"></i> BELUM BAYAR
                                     </span>
                                 @endif
                             </td>
@@ -729,9 +729,9 @@
             </div>
 
             <!-- SECTION 3: LIVE SIMULATION CALCULATION CARD -->
-            <div class="p-4.5 bg-emerald-950 text-white rounded-2xl space-y-3 shadow-md">
+            <div class="p-4 bg-emerald-950 text-white rounded-2xl space-y-3 shadow-md">
                 <span class="text-[10px] font-black uppercase tracking-widest text-emerald-300 block">
-                    ✨ Simulasi Ringkasan Keuangan Siswa
+                    Simulasi Ringkasan Keuangan Siswa
                 </span>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div>
