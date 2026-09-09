@@ -26,6 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
     
     <!-- Quill Rich Text Editor (Loaded globally for subpages) -->
     <link href="https://cdn.jsdelivr.net/npm/quill@1.3.6/dist/quill.snow.css" rel="stylesheet">
@@ -480,7 +481,7 @@
                 </div>
             @else
                 <div class="h-8 w-8 bg-brand-yellow rounded-lg flex items-center justify-center shadow shrink-0 select-none">
-                   <span class="flex items-center justify-center text-lg leading-none font-black text-slate-900 tracking-tighter">S</span>
+                   <span class="flex items-center justify-center text-lg leading-none font-bold text-black" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700; color: #000000; line-height: 1; transform: translateY(-0.5px);">S</span>
                 </div>
             @endif
             <div class="min-w-0 sidebar-text">

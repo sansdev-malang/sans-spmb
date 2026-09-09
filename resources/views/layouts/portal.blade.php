@@ -62,6 +62,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
     
     <!-- Local Compiled CSS/JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -208,7 +209,7 @@
                         <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-8 object-contain">
                     @else
                         <div class="h-8 w-8 bg-brand-yellow rounded-xl flex items-center justify-center shadow-sm">
-                            <span class="flex items-center justify-center text-lg leading-none font-black text-slate-900 tracking-tighter">S</span>
+                            <span class="flex items-center justify-center text-lg leading-none font-bold text-black" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700; color: #000000; line-height: 1; transform: translateY(-0.5px);">S</span>
                         </div>
                     @endif
                     <div class="flex flex-col text-left">
@@ -938,37 +939,29 @@
             }
         });
 
-        // Dynamic Continuous Top Loading Progress Bar Controller (YouTube / NProgress style)
-        let topBarProgress = 0;
-        let topBarInterval = null;
-        let topBarSafety = null;
+        // Top Loading Progress Bar Controller
+        let loadingBarTimeout = null;
+        let loadingBarSafetyTimeout = null;
 
         function startTopLoadingBar() {
             const bar = document.getElementById('top-loading-bar');
             if (!bar) return;
 
-            clearInterval(topBarInterval);
-            clearTimeout(topBarSafety);
+            clearTimeout(loadingBarTimeout);
+            clearTimeout(loadingBarSafetyTimeout);
 
-            topBarProgress = 15;
-            bar.style.transition = 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease';
+            bar.style.transition = 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease';
             bar.style.opacity = '1';
-            bar.style.width = topBarProgress + '%';
+            bar.style.width = '35%';
 
-            // Continuous smooth trickle animation so it never freezes in place
-            topBarInterval = setInterval(() => {
-                if (topBarProgress < 60) {
-                    topBarProgress += Math.random() * 10 + 4;
-                } else if (topBarProgress < 85) {
-                    topBarProgress += Math.random() * 4 + 1.5;
-                } else if (topBarProgress < 94) {
-                    topBarProgress += 0.5;
+            loadingBarTimeout = setTimeout(() => {
+                if (bar.style.opacity === '1') {
+                    bar.style.width = '75%';
                 }
-                bar.style.width = Math.min(topBarProgress, 94) + '%';
-            }, 180);
+            }, 300);
 
-            // Safety timeout: automatically finish if navigation takes longer than 4.5s
-            topBarSafety = setTimeout(() => {
+            // Safety timeout
+            loadingBarSafetyTimeout = setTimeout(() => {
                 finishTopLoadingBar();
             }, 4500);
         }
@@ -977,18 +970,17 @@
             const bar = document.getElementById('top-loading-bar');
             if (!bar) return;
 
-            clearInterval(topBarInterval);
-            clearTimeout(topBarSafety);
+            clearTimeout(loadingBarTimeout);
+            clearTimeout(loadingBarSafetyTimeout);
 
-            bar.style.transition = 'width 0.2s ease, opacity 0.3s ease';
+            bar.style.transition = 'width 0.25s ease, opacity 0.3s ease';
             bar.style.width = '100%';
             setTimeout(() => {
                 bar.style.opacity = '0';
                 setTimeout(() => {
                     bar.style.width = '0%';
-                    topBarProgress = 0;
                 }, 300);
-            }, 120);
+            }, 150);
         }
 
         // Always finish bar smoothly on page load / cache restore
