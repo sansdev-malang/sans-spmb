@@ -598,7 +598,7 @@
 
     <script>
         // Beautiful dynamic toast notification handler
-        function showToast(message, type = 'success') {
+        function showToast(message, type = 'success', duration = 2500) {
             const container = document.getElementById('toastContainer');
             if (!container || !message) return;
 
@@ -640,7 +640,7 @@
                 setTimeout(() => {
                     toast.remove();
                 }, 300);
-            }, 5000);
+            }, duration);
         }
 
         // Notification dropdown handler
