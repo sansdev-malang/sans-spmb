@@ -62,7 +62,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
     
     <!-- Local Compiled CSS/JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -209,7 +208,7 @@
                         <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" class="h-8 object-contain">
                     @else
                         <div class="h-8 w-8 bg-brand-yellow rounded-xl flex items-center justify-center shadow-sm">
-                            <span class="flex items-center justify-center text-lg leading-none font-bold text-black" style="font-family: 'Nasalization Rg', sans-serif; font-weight: 700; color: #000000; line-height: 1; transform: translateY(-0.5px);">S</span>
+                            <span class="flex items-center justify-center text-lg leading-none font-black text-slate-900 tracking-tighter">S</span>
                         </div>
                     @endif
                     <div class="flex flex-col text-left">
@@ -1051,9 +1050,11 @@
             updateThemeIcon();
             
             @auth
-            // Fetch initial notification count and pre-load notifications silently
-            fetchNotificationCount();
-            fetchNotifications(true); // Silent pre-load on page load!
+            // Defer notification fetch to background so page rendering remains 100% smooth and instant
+            setTimeout(() => {
+                fetchNotificationCount();
+                fetchNotifications(true);
+            }, 300);
             
             setInterval(fetchNotificationCount, 45000);
             // Silently auto-refresh notifications list every 45s ONLY if dropdown is closed
