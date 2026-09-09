@@ -45,6 +45,7 @@ Route::post('/quick-register', [UserController::class, 'quickRegister'])->name('
 Route::middleware('auth')->group(function () {
     // Candidate Dashboard
     Route::get('/dashboard', [WebDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/history', [WebDashboardController::class, 'history'])->name('dashboard.history');
     Route::post('/dashboard/registration/create', [WebDashboardController::class, 'createRegistration'])->name('dashboard.registration.create');
     
     // Candidate In-App Notifications Routes

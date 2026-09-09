@@ -41,7 +41,7 @@
         $otherRegs = $userAllRegs->where('id', '!=', $registration->id);
     @endphp
 
-    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-150/80 dark:border-slate-800 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
         
         <!-- CARD HEADER -->
         <div class="bg-brand-emerald text-white p-5 sm:p-6 space-y-3 sm:space-y-4">
@@ -182,7 +182,7 @@
                         <i data-lucide="file-signature" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
                     </div>
                     <div class="space-y-1">
-                        <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Tahap Administrasi & Daftar Ulang Siswa Baru</h3>
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Tahap Administrasi & Daftar Ulang Siswa Baru</h3>
                         <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                             Surat Pernyataan Kesanggupan telah berhasil disetujui. Silakan selesaikan pembayaran administrasi masuk awal di bawah ini agar ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> resmi dinyatakan diterima dan terdaftar sebagai siswa baru.
                         </p>
@@ -200,55 +200,35 @@
                     @php
                         $isCompleted = ($registration->registration_status === 'completed');
                         $hasDiscount = isset($discountAmount) && $discountAmount > 0;
-                        $hasInstallment = (($installmentMode ?? 'none') !== 'none');
-                        $showInstallmentNotice = !$isCompleted && $hasInstallment;
                     @endphp
-                    @if($hasDiscount || $showInstallmentNotice)
+                    @if($hasDiscount)
                         <span class="self-start sm:self-auto px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
-                            @if($hasDiscount && $showInstallmentNotice)
-                                Disetujui Keringanan / Cicilan
-                            @elseif($hasDiscount)
-                                Disetujui Keringanan
-                            @else
-                                Disetujui Cicilan
-                            @endif
+                            Disetujui Keringanan Biaya
                         </span>
                     @endif
                 </div>
 
-                @if($hasDiscount || $showInstallmentNotice)
-                    <!-- Keringanan / Cicilan Notice Banner -->
+                @if($hasDiscount)
+                    <!-- Keringanan Notice Banner -->
                     <div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl flex items-start gap-3">
                         <div class="h-8 w-8 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            <i data-lucide="tag" class="w-4 h-4"></i>
                         </div>
                         <div class="space-y-1">
                             <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-300">
-                                @if($hasDiscount && $showInstallmentNotice)
-                                    Pemberitahuan Persetujuan Keringanan & Kebijakan Cicilan
-                                @elseif($hasDiscount)
-                                    Pemberitahuan Persetujuan Keringanan Biaya (Diskon)
-                                @else
-                                    Kebijakan Cicilan Pembayaran
-                                @endif
+                                Pemberitahuan Persetujuan Keringanan Biaya (Diskon)
                             </h4>
-                            <p class="text-[11px] text-emerald-750 dark:text-emerald-400 leading-relaxed">
-                                @if($hasDiscount && $showInstallmentNotice)
-                                    Alhamdulillah! Ananda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}) dan diizinkan melakukan <strong>pembayaran bertahap (cicilan)</strong>.
-                                @elseif($hasDiscount)
-                                    Alhamdulillah! Ananda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}).
-                                @else
-                                    Alhamdulillah! Anda disetujui untuk melakukan <strong>pembayaran bertahap (cicilan)</strong> untuk biaya masuk ini.
-                                @endif
+                            <p class="text-[11px] text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                                Alhamdulillah! Ananda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}).
                             </p>
                         </div>
                     </div>
                 @endif
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-150/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs sm:shadow-inner">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs sm:shadow-inner">
                     <table class="w-full text-left text-xs border-collapse block sm:table">
                         <thead class="hidden sm:table-header-group">
-                            <tr class="bg-slate-50 dark:bg-slate-950 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100 dark:border-slate-850">
+                            <tr class="bg-slate-50 dark:bg-slate-950 text-[10px] text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
                                 @if($registration->registration_status !== 'completed')
                                     <th class="p-4 text-center w-12 select-none">Pilih</th>
                                 @endif
@@ -257,7 +237,7 @@
                                 <th class="p-4 text-center">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="block sm:table-row-group p-3 sm:p-0 space-y-3 sm:space-y-0 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-850">
+                        <tbody class="block sm:table-row-group p-3 sm:p-0 space-y-3 sm:space-y-0 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-800">
                             @if(isset($feeDetails['items']) && is_array($feeDetails['items']))
                                 @php
                                     $successfulPayments = $registration->payments()
@@ -336,7 +316,7 @@
                                             <div class="flex flex-col gap-0.5">
                                                 <div class="flex items-start justify-between gap-2">
                                                     <div class="flex items-center gap-2 flex-wrap {{ $isItemLunas ? 'line-through' : '' }}">
-                                                        <span class="font-extrabold text-xs text-slate-850 dark:text-white">{{ $item['name'] }}</span>
+                                                        <span class="font-extrabold text-xs text-slate-900 dark:text-white">{{ $item['name'] }}</span>
                                                         @if($itemDiscount > 0)
                                                             <span class="px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-[9px] border border-rose-200/60 dark:border-rose-900">
                                                                 🏷️ Diskon Rp {{ number_format($itemDiscount, 0, ',', '.') }}
@@ -416,12 +396,12 @@
                                                         <span>Sisa: <strong class="text-amber-600 dark:text-amber-400 font-bold font-mono">Rp {{ number_format($itemRemaining, 0, ',', '.') }}</strong></span>
                                                     </div>
 
-                                                    {{-- List Riwayat Cicilan yang Sudah Dibayarkan dengan Tombol Kwitansi Masing-Masing --}}
+                                                    {{-- List Riwayat Cicilan yang Sudah Dibayarkan --}}
                                                     @if(!empty($itemPayments))
                                                         <div class="mt-2.5 bg-slate-50/90 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-1.5">
                                                             <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                                                                 <span class="flex items-center gap-1.5">
-                                                                    <i data-lucide="receipt-text" class="w-3.5 h-3.5 text-brand-emerald"></i> Riwayat Kwitansi Pembayaran Cicilan ({{ count($itemPayments) }}x):
+                                                                    <i data-lucide="receipt-text" class="w-3.5 h-3.5 text-brand-emerald"></i> Riwayat Cicilan ({{ count($itemPayments) }}x):
                                                                 </span>
                                                             </div>
                                                             <div class="space-y-1 pt-0.5">
@@ -432,8 +412,8 @@
                                                                             <span class="font-bold text-emerald-600 dark:text-emerald-400 font-mono">Rp {{ number_format($ip['amount'], 0, ',', '.') }}</span>
                                                                             <span class="text-slate-400 text-[9px]">via {{ $ip['method'] }} • {{ $ip['date'] }} WIB</span>
                                                                         </div>
-                                                                        <a href="{{ route('dashboard.payment.receipt', $ip['payment']->id) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap transition" title="Unduh Kwitansi Cicilan ke-{{ $idx + 1 }}">
-                                                                            <i data-lucide="download" class="w-2.5 h-2.5"></i> Kwitansi Cicilan #{{ $idx + 1 }}
+                                                                        <a href="{{ route('dashboard.payment.receipt', $ip['payment']->id) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap transition" title="Unduh Kwitansi">
+                                                                            <i data-lucide="download" class="w-2.5 h-2.5"></i> Kwitansi
                                                                         </a>
                                                                     </div>
                                                                 @endforeach
@@ -442,7 +422,7 @@
                                                     @endif
                                                 @endif
 
-                                                {{-- Accordion Input Cicilan pada Item yang Boleh Dicicil --}}
+                                                {{-- Accordion Input Cicilan --}}
                                                 @if(!$isItemLunas && $canCicil)
                                                     <div class="mt-2" id="cicil-control-wrapper-{{ $loop->index }}">
                                                         <button type="button" onclick="toggleResultItemAccordion({{ $loop->index }})" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand-emerald hover:underline select-none">
@@ -452,7 +432,6 @@
                                                         </button>
 
                                                         <div id="accordion-input-box-{{ $loop->index }}" class="hidden mt-2.5 p-3.5 sm:p-4 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/60 space-y-2.5 max-w-lg shadow-xs">
-                                                            <!-- Header: Label + Boundary Info Badge -->
                                                             <div class="flex items-center justify-between gap-2 flex-wrap">
                                                                 <label for="input-amount-{{ $loop->index }}" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                                                     <i data-lucide="coins" class="w-3.5 h-3.5 text-brand-emerald"></i>
@@ -463,13 +442,12 @@
                                                                 </span>
                                                             </div>
 
-                                                            <!-- Full-Width Input Field -->
                                                             <div class="relative w-full">
                                                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-bold text-slate-400 dark:text-slate-500 font-mono select-none">Rp</span>
                                                                 <input type="text"
                                                                     inputmode="numeric" 
                                                                     id="input-amount-{{ $loop->index }}"
-                                                                    class="result-item-amount-input w-full pl-10 pr-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold font-mono text-slate-850 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs transition"
+                                                                    class="result-item-amount-input w-full pl-10 pr-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs transition"
                                                                     placeholder="Contoh: {{ number_format($minItemInstallment, 0, ',', '.') }}"
                                                                     value=""
                                                                     data-applied-amount="{{ $itemRemaining }}"
@@ -480,13 +458,12 @@
                                                                     onkeydown="if(event.key === 'Enter'){ event.preventDefault(); applyResultItemInstallment({{ $loop->index }}); }">
                                                             </div>
 
-                                                            <!-- Action Buttons Row: Terapkan (Primary) & Bayar Penuh (Secondary) -->
                                                             <div class="flex items-center gap-2 pt-0.5">
                                                                 <button type="button" onclick="applyResultItemInstallment({{ $loop->index }})" class="flex-1 py-2 px-3.5 bg-brand-emerald hover-emerald text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5 select-none active:scale-[0.98]">
                                                                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                                                     <span>Terapkan</span>
                                                                 </button>
-                                                                <button type="button" onclick="resetResultItemFull({{ $loop->index }})" class="py-2 px-3 bg-white dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs font-bold transition select-none whitespace-nowrap active:scale-[0.98] shadow-xs" title="Batalkan cicilan dan bayar penuh">
+                                                                <button type="button" onclick="resetResultItemFull({{ $loop->index }})" class="py-2 px-3 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition select-none whitespace-nowrap active:scale-[0.98] shadow-xs" title="Batalkan cicilan dan bayar penuh">
                                                                     Bayar Penuh
                                                                 </button>
                                                             </div>
@@ -514,20 +491,6 @@
                                             @if($isItemLunas || $registration->registration_status === 'completed')
                                                 <div class="flex flex-col items-center justify-center gap-1.5">
                                                     <span class="text-[9px] bg-green-50 dark:bg-green-950/20 text-green-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Lunas</span>
-                                                    @if(!empty($itemPayments))
-                                                        @php
-                                                            $isMultipleInstallments = count($itemPayments) > 1;
-                                                            $btnLabel = $isMultipleInstallments ? 'Kwitansi Utama' : 'Kwitansi';
-                                                            $btnTitle = $isMultipleInstallments ? 'Unduh Kwitansi Utama / Pelunasan' : 'Unduh Kwitansi';
-                                                            $receiptUrl = route('dashboard.payment.receipt', end($itemPayments)['payment']->id);
-                                                            if ($isMultipleInstallments) {
-                                                                $receiptUrl .= '?type=settlement&item_name=' . urlencode($item['name']);
-                                                            }
-                                                        @endphp
-                                                        <a href="{{ $receiptUrl }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap" title="{{ $btnTitle }}">
-                                                            <i data-lucide="download" class="w-2.5 h-2.5 text-brand-emerald"></i> {{ $btnLabel }}
-                                                        </a>
-                                                    @endif
                                                 </div>
                                             @elseif($itemPaid > 0)
                                                 <div class="flex flex-col items-center justify-center gap-1">
@@ -535,100 +498,41 @@
                                                     <span class="text-[9px] text-slate-400 font-medium">Belum Lunas</span>
                                                 </div>
                                             @else
-                                                <span class="text-[9px] bg-amber-50 dark:bg-amber-955/20 text-amber-600 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Tanggungan</span>
+                                                <span class="text-[9px] bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider select-none">Tanggungan</span>
                                             @endif
                                         </td>
                                     </tr>
                                 @endforeach
                             @endif
 
-                            @php
-                                $isInstallmentActive = (($installmentMode ?? 'none') !== 'none');
-                            @endphp
-
                             @if(isset($discountAmount) && $discountAmount > 0)
                                 <tr class="block sm:table-row text-rose-600 dark:text-rose-400 bg-rose-50/30 dark:bg-rose-950/20 border border-rose-200/50 dark:border-rose-900/40 sm:border-0 rounded-2xl sm:rounded-none p-3.5 sm:p-0">
-                                    @if($registration->registration_status !== 'completed')
-                                        <td class="hidden sm:table-cell"></td>
-                                    @endif
-                                    <td class="block sm:table-cell p-0 sm:p-4 font-bold">
-                                        <div class="flex items-center justify-between sm:justify-start gap-2">
-                                            <span>Potongan Keringanan (Diskon)</span>
-                                            <span class="sm:hidden text-[9px] bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded font-bold">Diskon</span>
-                                        </div>
-                                    </td>
-                                    <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold border-t border-rose-100 dark:border-rose-900/30 sm:border-0 mt-1.5 sm:mt-0">
-                                        <div class="flex items-center justify-between sm:justify-end gap-2">
-                                            <span class="sm:hidden text-[10px] text-rose-400 font-bold uppercase tracking-wider">Potongan:</span>
-                                            <span>- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
-                                        </div>
-                                    </td>
+                                    <td class="hidden sm:table-cell"></td>
+                                    <td class="block sm:table-cell p-0 sm:p-4 font-bold">Potongan Keringanan</td>
+                                    <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</td>
                                     <td class="hidden sm:table-cell p-4 text-center"><span class="text-[9px] bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded font-bold">Diskon</span></td>
                                 </tr>
                             @endif
 
-                            {{-- Baris 'Telah Terbayar' hanya muncul jika skema cicilan adalah Cicilan Global (all) --}}
-                            @if(($installmentMode ?? 'none') === 'all' && isset($totalPaid) && $totalPaid > 0)
-                                <tr class="block sm:table-row text-emerald-600 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/40 sm:border-0 rounded-2xl sm:rounded-none p-3.5 sm:p-0">
-                                    @if($registration->registration_status !== 'completed')
-                                        <td class="hidden sm:table-cell"></td>
-                                    @endif
-                                    <td class="block sm:table-cell p-0 sm:p-4 font-bold">
-                                        <div class="flex items-center justify-between sm:justify-start gap-2">
-                                            <span>Telah Terbayar (Cicilan Global)</span>
-                                            <span class="sm:hidden text-[9px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">Terbayar</span>
-                                        </div>
-                                    </td>
-                                    <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold border-t border-emerald-100 dark:border-emerald-900/30 sm:border-0 mt-1.5 sm:mt-0">
-                                        <div class="flex items-center justify-between sm:justify-end gap-2">
-                                            <span class="sm:hidden text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Terbayar:</span>
-                                            <span>Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="hidden sm:table-cell p-4 text-center"><span class="text-[9px] bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded font-bold">Terbayar</span></td>
-                                </tr>
-                            @endif
-
                             {{-- Baris Sisa Tanggungan Keseluruhan --}}
-                            <tr class="block sm:table-row bg-slate-100/80 dark:bg-slate-850 sm:bg-slate-50/50 sm:dark:bg-slate-950/30 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase border border-slate-200 dark:border-slate-800 sm:border-0 sm:border-t rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
+                            <tr class="block sm:table-row bg-slate-100/80 dark:bg-slate-900 sm:bg-slate-50/50 sm:dark:bg-slate-950/30 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase border border-slate-200 dark:border-slate-800 sm:border-0 sm:border-t rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
                                 @if($registration->registration_status !== 'completed')
                                     <td class="hidden sm:table-cell"></td>
                                 @endif
-                                <td class="block sm:table-cell p-0 sm:p-4 font-extrabold">
-                                    <div class="flex items-center justify-between sm:justify-start gap-2">
-                                        <span>{{ ($isInstallmentActive && isset($totalPaid) && $totalPaid > 0) || (isset($discountAmount) && $discountAmount > 0) ? 'Sisa Tanggungan Keseluruhan' : 'Total Tanggungan' }}</span>
-                                        @if($registration->registration_status === 'completed' || (isset($remainingBalance) && $remainingBalance <= 0))
-                                            <span class="sm:hidden text-[9px] bg-green-500 text-white px-2.5 py-0.5 rounded font-bold uppercase tracking-wider shadow-xs">Lunas</span>
-                                        @endif
-                                    </div>
+                                <td class="block sm:table-cell p-0 sm:p-4 font-extrabold">Total Tanggungan</td>
+                                <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold text-slate-900 dark:text-white border-t border-slate-200/60 dark:border-slate-800 sm:border-0 mt-1.5 sm:mt-0">
+                                    Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
                                 </td>
-                                <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right font-mono font-bold text-slate-850 dark:text-white border-t border-slate-200/60 dark:border-slate-800 sm:border-0 mt-1.5 sm:mt-0">
-                                    <div class="flex items-center justify-between sm:justify-end gap-2">
-                                        <span class="sm:hidden text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total:</span>
-                                        <span>Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}</span>
-                                    </div>
-                                </td>
-                                <td class="hidden sm:table-cell p-4 text-center">
-                                    @if($registration->registration_status === 'completed' || (isset($remainingBalance) && $remainingBalance <= 0))
-                                        <span class="text-[10px] bg-green-500 text-white px-3 py-1 rounded font-bold uppercase tracking-wider shadow-sm">Lunas</span>
-                                    @endif
-                                </td>
+                                <td class="hidden sm:table-cell p-4 text-center"></td>
                             </tr>
 
-                            {{-- Baris Total Pembayaran Transaksi Ini (Hanya muncul jika belum lunas) --}}
+                            {{-- Baris Total Pembayaran Transaksi Ini --}}
                             @if($registration->registration_status !== 'completed' && (isset($remainingBalance) && $remainingBalance > 0))
-                                <tr class="block sm:table-row bg-emerald-50 dark:bg-emerald-950/40 sm:bg-emerald-50/50 sm:dark:bg-emerald-950/20 text-xs font-black text-slate-850 dark:text-white uppercase border border-emerald-300/70 dark:border-emerald-800 sm:border-0 sm:border-t sm:border-emerald-100 sm:dark:border-emerald-900/40 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
+                                <tr class="block sm:table-row bg-emerald-50 dark:bg-emerald-950/40 sm:bg-emerald-50/50 sm:dark:bg-emerald-950/20 text-xs font-black text-slate-900 dark:text-white uppercase border border-emerald-300/70 dark:border-emerald-800 sm:border-0 sm:border-t sm:border-emerald-100 sm:dark:border-emerald-900/40 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
                                     <td class="hidden sm:table-cell"></td>
-                                    <td class="block sm:table-cell p-0 sm:p-4 text-brand-emerald dark:text-emerald-400">
-                                        Total Pembayaran Transaksi Ini
-                                    </td>
+                                    <td class="block sm:table-cell p-0 sm:p-4 text-brand-emerald dark:text-emerald-400">Total Bayar Sekarang</td>
                                     <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono border-t border-emerald-200/60 dark:border-emerald-900/40 sm:border-0 mt-1.5 sm:mt-0">
-                                        <div class="flex items-center justify-between sm:justify-end gap-2">
-                                            <span class="sm:hidden text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Bayar Sekarang:</span>
-                                            <span id="total-amount-display">
-                                                Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
-                                            </span>
-                                        </div>
+                                        Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
                                     </td>
                                     <td class="hidden sm:table-cell p-4 text-center"></td>
                                 </tr>
@@ -636,9 +540,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="gateway-conflict-warning" class="hidden text-[11px] text-red-800 dark:text-red-300 font-extrabold bg-red-50 dark:bg-red-955/20 border border-red-200/50 dark:border-red-900/50 rounded-xl p-4 mt-4 flex items-center gap-2.5 shadow-sm leading-relaxed">
+                <div id="gateway-conflict-warning" class="hidden text-[11px] text-red-800 dark:text-red-300 font-extrabold bg-red-50 dark:bg-red-950/40 border border-red-200/50 dark:border-red-900/50 rounded-xl p-4 mt-4 flex items-center gap-2.5 shadow-sm leading-relaxed">
                     <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-red-600 flex-shrink-0 animate-bounce"></i>
-                    <span>Komponen biaya yang dipilih tidak dapat dibayar bersamaan karena menggunakan metode pembayaran berbeda (misal BNI Snap saja & Winpay saja). Silakan centang item satu per satu.</span>
+                    <span>Komponen biaya yang dipilih tidak dapat dibayar bersamaan karena menggunakan metode pembayaran berbeda. Silakan centang item satu per satu.</span>
                 </div>
             </div>
 
@@ -650,7 +554,7 @@
                         <i data-lucide="party-popper" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
                     </div>
                     <div class="space-y-1">
-                        <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan RESMI DITERIMA</h3>
+                        <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Alhamdulillah, Dinyatakan RESMI DITERIMA</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                             Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah resmi terdaftar dan diterima menjadi bagian dari keluarga besar Sekolah Anak Saleh.
                         </p>
@@ -658,11 +562,11 @@
                 </div>
             @else
                 <!-- INSTRUCTIONS BOX -->
-                <div class="bg-slate-50 dark:bg-slate-955 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
+                <div class="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
                     <h5 class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
                         <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i> Informasi Penting & Prosedur Daftar Ulang
                     </h5>
-                    <div class="instructions-body text-slate-650 dark:text-slate-350">
+                    <div class="instructions-body text-slate-600 dark:text-slate-400">
                         {!! $registration->unit?->re_registration_instructions_unpaid 
                             ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut Bayar</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar sebagai murid baru.</li></ul>') !!}
                     </div>

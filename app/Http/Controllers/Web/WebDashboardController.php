@@ -202,6 +202,37 @@ class WebDashboardController extends Controller
         return view('web.dashboard-index', compact('registrations', 'units', 'grades', 'waves', 'types'));
     }
     
+    public function history(Request $request)
+    {
+        $user = auth()->user();
+        
+        $registrations = Registration::with([
+                'unit', 
+                'grade', 
+                'period', 
+                'wave', 
+                'type', 
+                'classProgram', 
+                'extraServices', 
+                'payments' => function($q) {
+                    $q->with('items')->orderBy('created_at', 'desc');
+                }
+            ])
+            ->where('user_id', $user->id)
+            ->where('registration_status', 'completed')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        if ($registrations->isEmpty()) {
+            return redirect()->route('dashboard')->with('error', 'Menu Status Akhir terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.');
+        }
+
+        $selectedId = $request->query('id', $registrations->first()?->id);
+        $selectedRegistration = $registrations->firstWhere('id', (int)$selectedId) ?? $registrations->first();
+
+        return view('web.history', compact('user', 'registrations', 'selectedRegistration'));
+    }
+    
     public function createRegistration(Request $request)
     {
         $request->validate([

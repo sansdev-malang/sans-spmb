@@ -221,6 +221,7 @@
                             $verificationUnlocked = $currentReg && ($status !== 'draft');
                             $observationUnlocked = $currentReg && in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
                             $resultUnlocked = $currentReg && in_array($status, ['agreement_signed', 'completed']);
+                            $historyUnlocked = $currentReg && ($status === 'completed');
                         @endphp
                         <div class="flex items-center gap-6 text-xs font-bold">
                             <a href="{{ route('dashboard') }}" class="transition pb-1 {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
@@ -264,6 +265,16 @@
                             @else
                                 <button onclick="showToast('{{ $currentReg ? 'Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="nav-locked-item hover:opacity-75 font-medium transition flex items-center gap-1 cursor-pointer select-none">
                                     <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i> Administrasi
+                                </button>
+                            @endif
+
+                            @if($historyUnlocked)
+                                <a href="{{ route('dashboard.history', ['id' => $currentReg->id]) }}" class="transition pb-1 {{ Route::is('dashboard.history') ? 'text-custom-primary dark:text-emerald-400 font-extrabold border-b-2 border-custom-primary' : 'hover:text-custom-primary dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 font-bold' }}">
+                                    Status Akhir
+                                </a>
+                            @else
+                                <button onclick="showToast('{{ $currentReg ? 'Menu Status Akhir terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error')" class="nav-locked-item hover:opacity-75 font-medium transition flex items-center gap-1 cursor-pointer select-none">
+                                    <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i> Status Akhir
                                 </button>
                             @endif
                         </div>
@@ -475,6 +486,7 @@
                         $verificationUnlockedMob = $currentRegMob && ($statusMob !== 'draft');
                         $observationUnlockedMob = $currentRegMob && in_array($statusMob, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']);
                         $resultUnlockedMob = $currentRegMob && in_array($statusMob, ['agreement_signed', 'completed']);
+                        $historyUnlockedMob = $currentRegMob && ($statusMob === 'completed');
                     @endphp
                     <div class="space-y-1">
                         <a href="{{ route('dashboard') }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
@@ -517,6 +529,17 @@
                         @else
                             <button onclick="showToast('{{ $currentRegMob ? 'Menu Administrasi terkunci. Selesaikan tahapan observasi dan pelunasan administrasi.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold nav-locked-item hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-xl transition">
                                 <span class="flex items-center gap-2"><i data-lucide="award" class="w-4 h-4 opacity-70"></i> Administrasi</span>
+                                <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i>
+                            </button>
+                        @endif
+
+                        @if($historyUnlockedMob)
+                            <a href="{{ route('dashboard.history', ['id' => $currentRegMob->id]) }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard.history') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
+                                <i data-lucide="history" class="w-4 h-4"></i> Status Akhir
+                            </a>
+                        @else
+                            <button onclick="showToast('{{ $currentRegMob ? 'Menu Status Akhir terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.' : 'Silakan daftarkan anak Anda terlebih dahulu.' }}', 'error'); closeMobileMenu();" class="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold nav-locked-item hover:bg-slate-50/50 dark:hover:bg-slate-800/30 rounded-xl transition">
+                                <span class="flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 opacity-70"></i> Status Akhir</span>
                                 <i data-lucide="lock" class="w-3.5 h-3.5 opacity-70"></i>
                             </button>
                         @endif

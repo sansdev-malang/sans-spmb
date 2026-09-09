@@ -268,7 +268,7 @@
                                     @endif
                                 </div>
                                 <!-- Payment Summary breakdown -->
-                                <div id="paymentSummaryCardForm1" class="bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs mt-4">
+                                <div id="paymentSummaryCardForm1" class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3 text-xs mt-4">
                                     <h4 class="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-[10px] pb-1 border-b border-slate-200/50 dark:border-slate-800">Rincian Pembayaran</h4>
                                     <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                                         <span>Tagihan Pokok</span>
@@ -641,7 +641,7 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span>Tahun Pelajaran</span>
-                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->period->name ?? '2026/2027' }}</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->period->year ?? ($registration->period->name ?? '2027-2028') }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span>Jalur Masuk</span>
