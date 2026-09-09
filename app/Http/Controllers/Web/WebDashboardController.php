@@ -170,19 +170,7 @@ class WebDashboardController extends Controller
             session(['active_candidate_id' => (int)$request->query('candidate_id')]);
         }
 
-        // 1. Clean up empty placeholder registrations or stale unpaid drafts in a single fast query
-        Registration::where('user_id', auth()->id())
-            ->where('registration_status', 'draft')
-            ->whereDoesntHave('payments', function($pq) {
-                $pq->where('payment_type', 'registration_fee')
-                   ->where('status', 'success');
-            })
-            ->where(function($q) {
-                $q->whereNull('candidate_name')
-                  ->orWhere('candidate_name', '');
-            })->delete();
-
-        // 2. Query active registrations with all required relationships
+        // Query active registrations with all required relationships
         $registrations = Registration::with(['unit', 'grade', 'period', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->where('user_id', auth()->id())
             ->where(function($q) {
@@ -202,8 +190,12 @@ class WebDashboardController extends Controller
         $grades = SpmbGrade::where('is_active', true)->get();
         $waves = \App\Models\SpmbWave::where('is_active', true)->get();
         $types = \App\Models\SpmbType::where('is_active', true)->get();
+        $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
 
-        return view('web.dashboard-index', compact('registrations', 'units', 'grades', 'waves', 'types'));
+        // Share registrations with layout to prevent duplicate database query
+        $allUserRegistrations = $registrations;
+
+        return view('web.dashboard-index', compact('registrations', 'units', 'grades', 'waves', 'types', 'activePeriod', 'allUserRegistrations'));
     }
     
     public function history(Request $request)

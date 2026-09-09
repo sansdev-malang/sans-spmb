@@ -23,7 +23,8 @@
                     $firstGradeId = $firstGrade?->id ?? '';
                     $brochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url');
                     $waUrl = $unit->getWhatsappUrl();
-                    $unitLogoUrl = asset('storage/logo/' . $uCode . '.svg');
+                    $unitLogoPath = 'storage/logo/' . $uCode . '.svg';
+                    $hasUnitLogo = file_exists(public_path($unitLogoPath));
                     $unitTheme = match (strtoupper($unit->code)) {
                         'PAUD' => [
                             'card' => 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600',
@@ -58,7 +59,13 @@
                 <div class="{{ $unitTheme['card'] }} rounded-3xl p-6 border shadow-sm flex flex-col justify-between items-center text-center space-y-4 hover:shadow-lg transition-all duration-200">
                     <div class="space-y-3 w-full flex flex-col items-center">
                         <div class="h-16 w-16 flex items-center justify-center overflow-hidden">
-                            <img src="{{ $unitLogoUrl }}" alt="Logo {{ $unit->name }}" class="h-full w-full object-contain">
+                            @if($hasUnitLogo)
+                                <img src="{{ asset($unitLogoPath) }}" alt="Logo {{ $unit->name }}" class="h-full w-full object-contain">
+                            @else
+                                <div class="h-14 w-14 rounded-2xl bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/25 flex items-center justify-center shadow-inner">
+                                    <span class="font-black text-lg tracking-wider {{ $unitTheme['title'] }}">{{ strtoupper($unit->code) }}</span>
+                                </div>
+                            @endif
                         </div>
                         <div class="space-y-1">
                             <h3 class="font-extrabold {{ $unitTheme['title'] }} text-sm leading-snug">{!! str_replace('Anak Saleh', '<br>Anak Saleh', e($unit->name)) !!}</h3>
@@ -401,9 +408,6 @@
                 </div>
 
                 <!-- Baris 3: Tingkatan/Kelas, Gelombang, & Tahun -->
-                @php
-                    $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
-                @endphp
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">

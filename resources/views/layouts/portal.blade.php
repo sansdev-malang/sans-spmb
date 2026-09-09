@@ -22,20 +22,24 @@
         $rawCopyright = \App\Models\Setting::get('footer_copyright_text', '© 2026 {SchoolName}. All rights reserved.');
         $footerCopyright = str_replace(['{SchoolName}', '{Year}'], [$schoolName, date('Y')], $rawCopyright);
 
-        $allUserRegistrations = collect();
-        if (auth()->check() && !auth()->user()->isAdmin()) {
-            $allUserRegistrations = \App\Models\Registration::with(['unit', 'grade', 'classProgram'])
-                ->where('user_id', auth()->id())
-                ->where(function($q) {
-                    $q->whereHas('payments', function($pq) {
-                        $pq->where('payment_type', 'registration_fee')
-                           ->where('status', 'success');
+        if (!isset($allUserRegistrations) || $allUserRegistrations === null) {
+            $allUserRegistrations = collect();
+            if (auth()->check() && !auth()->user()->isAdmin()) {
+                $allUserRegistrations = \App\Models\Registration::with(['unit', 'grade', 'classProgram'])
+                    ->where('user_id', auth()->id())
+                    ->where(function($q) {
+                        $q->whereHas('payments', function($pq) {
+                            $pq->where('payment_type', 'registration_fee')
+                               ->where('status', 'success');
+                        })
+                        ->orWhere('registration_status', '!=', 'draft');
                     })
-                    ->orWhere('registration_status', '!=', 'draft');
-                })
-                ->orderBy('id', 'desc')
-                ->get();
+                    ->orderBy('id', 'desc')
+                    ->get();
+            }
+        }
 
+        if (auth()->check() && !auth()->user()->isAdmin()) {
             if (!isset($registration) || !$registration) {
                 $candidateId = request('candidate_id') ?? session('active_candidate_id');
                 if ($candidateId) {
@@ -62,7 +66,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.cdnfonts.com/css/nasalization" onload="this.rel='stylesheet'">
+    <noscript><link href="https://fonts.cdnfonts.com/css/nasalization" rel="stylesheet"></noscript>
     
     <!-- Local Compiled CSS/JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
