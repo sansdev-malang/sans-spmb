@@ -196,7 +196,7 @@
                     <div class="space-y-1">
                         <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Tahap Administrasi & Daftar Ulang Siswa Baru</h3>
                         <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Surat Pernyataan Kesanggupan telah berhasil disetujui. Silakan selesaikan pembayaran administrasi masuk awal di bawah ini agar ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> resmi dinyatakan diterima dan Surat Keputusan Penerimaan (SKP) dapat diterbitkan.
+                            Surat Pernyataan Kesanggupan telah berhasil disetujui. Silakan selesaikan pembayaran administrasi masuk awal di bawah ini agar ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> resmi dinyatakan diterima dan terdaftar sebagai siswa baru.
                         </p>
                     </div>
                 </div>
@@ -648,10 +648,10 @@
                 <div class="instructions-body text-slate-650 dark:text-slate-350">
                     @if($registration->registration_status !== 'completed')
                         {!! $registration->unit?->re_registration_instructions_unpaid 
-                            ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut Bayar</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar dan Anda dapat mencetak Surat Keterangan Penerimaan (SKP) langsung dari halaman ini.</li></ul>') !!}
+                            ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut Bayar</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar sebagai murid baru.</li></ul>') !!}
                     @else
                         {!! $registration->unit?->re_registration_instructions_completed 
-                            ?: \App\Models\Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Surat Keputusan Penerimaan (SKP):</strong> Anda dapat mengunduh dan mencetak surat kelulusan resmi menggunakan tombol cetak di bawah ini.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>') !!}
+                            ?: \App\Models\Setting::get('re_registration_instructions_completed', '<ul><li><strong>Status Resmi:</strong> Selamat, ananda telah resmi menjadi bagian dari keluarga besar Sekolah Anak Saleh.</li><li><strong>Bukti Pembayaran:</strong> Silakan simpan / cetak kwitansi lunas elektronik sebagai tanda bukti setoran awal Anda yang sah.</li></ul>') !!}
                     @endif
                 </div>
             </div>

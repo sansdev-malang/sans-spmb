@@ -106,7 +106,7 @@
                 <!-- 2. Instruksi Sudah Lunas -->
                 <div class="space-y-2 pt-6 border-t border-slate-100">
                     <label class="block text-xs font-bold text-slate-700">Instruksi Saat Tagihan Sudah Lunas (Resmi Terdaftar)</label>
-                    <p class="text-[10px] text-slate-400">Ucapan selamat, panduan unduh berkas kelulusan (SKP), kwitansi resmi, dan langkah daftar ulang selanjutnya.</p>
+                    <p class="text-[10px] text-slate-400">Ucapan selamat, panduan unduh berkas penerimaan, kwitansi resmi, dan langkah daftar ulang selanjutnya.</p>
                     
                     <!-- Quill container -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
