@@ -176,7 +176,7 @@
                         <th class="py-4 px-6">Metode Pembayaran</th>
                         <th class="py-4 px-6">Nominal</th>
                         <th class="py-4 px-6 text-center">Status</th>
-                        <th class="py-4 px-6 text-center w-28">Aksi</th>
+                        <th class="py-4 px-6 text-center w-28">Bukti Bayar</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
@@ -218,7 +218,7 @@
 
                             <!-- 3. Calon Siswa & Tagihan -->
                             <td class="py-4 px-6">
-                                <div class="font-bold text-slate-850 dark:text-white text-sm">
+                                <div class="font-bold text-slate-850 dark:text-white text-xs">
                                     {{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}
                                 </div>
                                 @php
@@ -261,10 +261,10 @@
                                         ->first();
                                     $paymentLogo = $paymentChannel?->getLogoUrl();
                                 @endphp
-                                <div class="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                                <div class="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-2">
                                     @if($paymentLogo)
-                                        <span class="w-12 h-12 rounded-lg bg-white border border-slate-200/80 dark:border-slate-700 flex items-center justify-center p-1 shadow-2xs flex-shrink-0">
-                                            <img src="{{ $paymentLogo }}" alt="Logo {{ $pay->payment_method }}" class="max-w-full max-h-full object-contain">
+                                        <span class="w-8 h-8 rounded-md bg-white border border-slate-200/80 dark:border-slate-700 flex items-center justify-center p-1 flex-shrink-0">
+                                            <img src="{{ $paymentLogo }}" alt="Logo {{ $pay->payment_method }}" loading="lazy" class="w-full h-full object-contain">
                                         </span>
                                     @else
                                         <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
@@ -314,7 +314,6 @@
                                 @if($pay->status === 'success')
                                     <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-900/60 transition duration-200 shadow-2xs" title="Unduh Bukti Pembayaran Resmi">
                                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                        <span>Bukti Bayar</span>
                                     </a>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-600 text-xs font-medium">-</span>

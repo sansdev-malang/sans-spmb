@@ -45,9 +45,6 @@
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex items-center gap-3">
-            <div class="h-12 w-12 bg-emerald-50 dark:bg-emerald-950/20 text-brand-emerald rounded-2xl flex items-center justify-center shadow-inner">
-                <i data-lucide="scroll-text" class="w-6 h-6"></i>
-            </div>
             <div>
                 <h1 class="text-xl font-extrabold text-slate-800">Instruksi & Prosedur Daftar Ulang</h1>
                 <p class="text-xs text-slate-500 mt-1">Instruksi ini akan ditampilkan kepada wali murid pada halaman rincian tagihan setelah menandatangani surat kesanggupan.</p>

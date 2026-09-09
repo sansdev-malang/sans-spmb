@@ -628,7 +628,7 @@
         </div>
 
         <!-- Modal Body (Scrollable Tab Panes with Consistent Height) -->
-        <div id="modalDetailBody" class="px-6 py-4 overflow-y-auto flex-1 min-h-0 text-xs text-slate-700 dark:text-slate-300 space-y-6">
+        <div id="modalDetailBody" class="px-6 py-4 overflow-y-auto flex-1 min-h-0 text-xs text-slate-700 dark:text-slate-300">
             
             <!-- TAB PANE 1: BIODATA & ORANG TUA -->
             <div id="tab-pane-biodata" class="cand-tab-pane space-y-6">

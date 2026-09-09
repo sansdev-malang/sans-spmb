@@ -9,7 +9,6 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
-                <i data-lucide="scroll-text" class="w-5 h-5 text-brand-emerald"></i>
                 Log Sistem & Pembayaran
             </h1>
             <p class="text-xs text-slate-500 mt-1">Pantau callback gateway, error exceptions, dan rekonsiliasi data transaksi langsung dari server.</p>

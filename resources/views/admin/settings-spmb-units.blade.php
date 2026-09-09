@@ -78,24 +78,27 @@
                                     @endif
                                 </td>
                                 <td class="py-4 px-6 text-center">
-                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold {{ $unit->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $unit->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $unit->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                         {{ $unit->is_active ? 'Aktif' : 'Non-Aktif' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 text-center text-xs font-semibold {{ $unit->registrations_count > 0 ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
-                                    {{ $unit->registrations_count }} Pendaftar
+                                <td class="py-4 px-6 text-center">
+                                    <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $unit->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
+                                        {{ $unit->registrations_count }} Pendaftar
+                                    </span>
                                 </td>
                                 <td class="py-4 px-6">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Unit">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Unit">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($unit->registrations_count > 0)
-                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Unit karena sudah digunakan oleh pendaftar!', 'error')" class="p-2 text-slate-300 bg-slate-50 rounded-lg cursor-not-allowed" title="Hapus Unit">
+                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Unit karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Unit">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @else
-                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.units.delete', $unit->id) }}', 'Apakah Anda yakin ingin menghapus Unit ini? Data yang terhapus tidak dapat dikembalikan.')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Unit">
+                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.units.delete', $unit->id) }}', 'Apakah Anda yakin ingin menghapus Unit ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Unit">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @endif
@@ -141,24 +144,27 @@
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $grade->name }}</td>
                                 <td class="py-4 px-6 text-slate-600">{{ $grade->unit->name ?? '-' }}</td>
                                 <td class="py-4 px-6 text-center">
-                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold {{ $grade->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $grade->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $grade->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                         {{ $grade->is_active ? 'Aktif' : 'Non-Aktif' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 text-center text-xs font-semibold {{ $grade->registrations_count > 0 ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
-                                    {{ $grade->registrations_count }} Pendaftar
+                                <td class="py-4 px-6 text-center">
+                                    <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $grade->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
+                                        {{ $grade->registrations_count }} Pendaftar
+                                    </span>
                                 </td>
                                 <td class="py-4 px-6">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <button onclick="openGradeModal('{{ $grade->name }}', '{{ $grade->spmb_unit_id }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Tingkatan">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button onclick="openGradeModal('{{ $grade->name }}', '{{ $grade->spmb_unit_id }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Tingkatan">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($grade->registrations_count > 0)
-                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Tingkatan karena sudah digunakan oleh pendaftar!', 'error')" class="p-2 text-slate-300 bg-slate-50 rounded-lg cursor-not-allowed" title="Hapus Tingkatan">
+                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Tingkatan karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Tingkatan">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @else
-                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.grades.delete', $grade->id) }}', 'Apakah Anda yakin ingin menghapus Tingkatan ini? Data yang terhapus tidak dapat dikembalikan.')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Tingkatan">
+                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.grades.delete', $grade->id) }}', 'Apakah Anda yakin ingin menghapus Tingkatan ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Tingkatan">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @endif
@@ -220,24 +226,27 @@
                                         @endif
                                     </td>
                                     <td class="py-4 px-6 text-center">
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase border {{ $service->is_active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-100 text-slate-500 border-slate-200' }}">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $service->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200' }}">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $service->is_active ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
                                             {{ $service->is_active ? 'Aktif' : 'Non-Aktif' }}
                                         </span>
                                     </td>
-                                    <td class="py-4 px-6 text-center text-xs font-semibold {{ $service->registrations_count > 0 ? 'text-slate-600 font-bold' : 'text-slate-400' }}">
-                                        {{ $service->registrations_count }} Pendaftar
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $service->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
+                                            {{ $service->registrations_count }} Pendaftar
+                                        </span>
                                     </td>
                                     <td class="py-4 px-6">
-                                        <div class="flex items-center justify-center gap-2">
-                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->spmb_unit_id }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Layanan">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->spmb_unit_id }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Layanan">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
                                             @if($service->registrations_count > 0)
-                                                <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Layanan karena sudah digunakan oleh pendaftar!', 'error')" class="p-2 text-slate-300 bg-slate-50 rounded-lg cursor-not-allowed" title="Hapus Layanan">
+                                                <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Layanan karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Layanan">
                                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             @else
-                                                <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.extra-services.delete', $service->id) }}', 'Apakah Anda yakin ingin menghapus Layanan ini? Data yang terhapus tidak dapat dikembalikan.')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Layanan">
+                                                <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.extra-services.delete', $service->id) }}', 'Apakah Anda yakin ingin menghapus Layanan ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Layanan">
                                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             @endif

@@ -10,7 +10,6 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
-                <i data-lucide="settings-2" class="w-5 h-5 text-brand-emerald"></i>
                 Pengaturan Tahapan & Kolom Formulir (Form Settings)
             </h1>
             <p class="text-xs text-slate-500 mt-1">Kelola tahapan wizard pendaftaran calon siswa beserta pertanyaan kolom input secara dinamis.</p>
@@ -76,24 +75,35 @@
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $step->title }}</td>
                                 <td class="py-4 px-6 space-x-1 space-y-1">
                                     @forelse($step->units as $u)
-                                        <span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
                                             {{ $u->code }}
                                         </span>
                                     @empty
-                                        <span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-550 border border-slate-200">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-550 border border-slate-200">
                                             Global (Semua)
                                         </span>
                                     @endforelse
                                 </td>
-                                <td class="py-4 px-6 text-center font-semibold text-slate-600">{{ $step->fields->count() }} Input</td>
                                 <td class="py-4 px-6 text-center">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase {{ $step->is_active ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-slate-100 text-slate-400' }}">
+                                    <span class="inline-flex min-w-16 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700">
+                                        {{ $step->fields->count() }} Input
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $step->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $step->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                         {{ $step->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
-                                    <button onclick="openEditStepModal({{ json_encode($step) }})" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
-                                    <button onclick="deleteStepItem('{{ $step->title }}', '{{ route('admin.spmb-settings.form.steps.delete', $step->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button type="button" onclick="openEditStepModal({{ json_encode($step) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Tahapan">
+                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                        </button>
+                                        <button type="button" onclick="deleteStepItem('{{ $step->title }}', '{{ route('admin.spmb-settings.form.steps.delete', $step->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Tahapan">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -140,11 +150,11 @@
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $field->label }}</td>
                                     <td class="py-4 px-6 space-x-1 space-y-1">
                                         @forelse($field->units as $u)
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
                                                 {{ $u->code }}
                                             </span>
                                         @empty
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-slate-50 text-slate-500 border border-slate-200">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-500 border border-slate-200">
                                                 Global
                                             </span>
                                         @endforelse
@@ -152,20 +162,29 @@
                                     <td class="py-4 px-6 font-mono text-xs text-slate-500">{{ $field->field_name }}</td>
                                     <td class="py-4 px-6 font-semibold text-brand-emerald text-xs uppercase">{{ $field->type }}</td>
                                     <td class="py-4 px-6 text-center">
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase {{ $field->is_required ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-slate-100 text-slate-500' }}">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $field->is_required ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-slate-50 text-slate-500 border-slate-200' }}">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $field->is_required ? 'bg-rose-500' : 'bg-slate-400' }}"></span>
                                             {{ $field->is_required ? 'Wajib' : 'Opsional' }}
                                         </span>
                                     </td>
                                     <td class="py-4 px-6 text-xs text-slate-500 max-w-xs truncate">
                                         {{ $field->options ?? '-' }}
                                     </td>
-                                    <td class="py-4 px-6 text-right space-x-2">
-                                        <button onclick="openEditFieldModal({{ json_encode($field) }})" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <button type="button" onclick="openEditFieldModal({{ json_encode($field) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-500" title="Edit Kolom">
+                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                            </button>
                                         @if(in_array($field->field_name, ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id']))
-                                            <span class="text-xs text-slate-400 font-semibold cursor-not-allowed select-none" title="Kolom Sistem Utama (Proteksi)">Hapus</span>
+                                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white cursor-not-allowed" title="Kolom Sistem Utama (Proteksi)">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </span>
                                         @else
-                                            <button onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                            <button type="button" onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Kolom">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
                                         @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

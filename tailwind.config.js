@@ -10,6 +10,16 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
+    safelist: [
+        'bg-slate-400',
+        'bg-amber-500',
+        'bg-rose-500',
+        'bg-indigo-500',
+        'bg-purple-500',
+        'bg-blue-500',
+        'bg-emerald-500',
+    ],
+
     theme: {
         extend: {
             fontFamily: {
