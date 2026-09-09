@@ -451,6 +451,39 @@
                                             $isFullWidth = ($field->type === 'textarea') || ($field->type !== 'file' && strlen($fieldLabel) > 30) || $field->field_name === 'extra_services' || $field->field_name === 'previous_school' || in_array($field->field_name, ['father_address', 'mother_address', 'guardian_address']);
                                             $hasFieldError = $errors->has($field->field_name);
                                         @endphp
+
+                                        @if($step->id == 4 && $field->field_name === 'father_name')
+                                            <div class="md:col-span-2 flex items-center gap-2.5 pt-1 pb-2 border-b border-slate-200/70 dark:border-slate-800">
+                                                <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center text-xs shadow-xs">
+                                                    👨
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white tracking-tight">Data Ayah Kandung</h4>
+                                                    <p class="text-[10.5px] text-slate-400 font-medium">Informasi identitas dan kontak ayah kandung calon murid</p>
+                                                </div>
+                                            </div>
+                                        @elseif($step->id == 4 && $field->field_name === 'mother_name')
+                                            <div class="md:col-span-2 flex items-center gap-2.5 pt-4 pb-2 border-b border-slate-200/70 dark:border-slate-800 mt-2">
+                                                <div class="w-7 h-7 rounded-lg bg-pink-100 dark:bg-pink-950/60 text-pink-600 flex items-center justify-center text-xs shadow-xs">
+                                                    👩
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white tracking-tight">Data Ibu Kandung</h4>
+                                                    <p class="text-[10.5px] text-slate-400 font-medium">Informasi identitas dan kontak ibu kandung calon murid</p>
+                                                </div>
+                                            </div>
+                                        @elseif($step->id == 5 && $field->field_name === 'guardian_name')
+                                            <div class="md:col-span-2 flex items-center gap-2.5 pt-1 pb-2 border-b border-slate-200/70 dark:border-slate-800">
+                                                <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center text-xs shadow-xs">
+                                                    🤝
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-extrabold text-xs sm:text-sm text-slate-800 dark:text-white tracking-tight">Data Wali Murid (Opsional)</h4>
+                                                    <p class="text-[10.5px] text-slate-400 font-medium">Isi jika calon murid tinggal bersama wali, kosongkan jika bersama orang tua</p>
+                                                </div>
+                                            </div>
+                                        @endif
+
                                         <div class="{{ $isFullWidth ? 'md:col-span-2' : '' }} flex flex-col justify-start">
                                             <div class="flex items-center justify-between mb-2">
                                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -808,70 +841,204 @@
 
                         <!-- Readonly Block (Accordion Content) -->
                         @if ($step->is_completed)
-                            <div id="readonly-step-{{ $step->id }}" class="hidden px-5 pb-5 pt-1 border-t border-slate-100 {{ $hasInvalidFields ? '!hidden' : '' }}">
-                                <div class="text-xs text-slate-600 grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-3 bg-slate-50 p-4 rounded-xl border border-slate-200/60">
-                                
-                                @foreach($step->fields as $field)
-                                    @php
-                                        $isHiddenField = in_array($field->field_name, ['spmb_period_id', 'spmb_wave_id', 'spmb_type_id']);
-                                    @endphp
-                                    @if($isHiddenField)
-                                        @continue
-                                    @endif
-                                    @if($field->field_name === 'extra_services')
-                                        @php
-                                            $services = $registration->extraServices;
-                                            $hasActiveServices = \App\Models\SpmbExtraService::where('is_active', true)
-                                                 ->where(function($q) use ($registration) {
-                                                     $q->whereNull('spmb_unit_id')
-                                                       ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
-                                                 })
-                                                 ->exists();
-                                        @endphp
-                                        @if(!$hasActiveServices && $services->isEmpty())
-                                            @continue
-                                        @endif
-                                    @endif
-                                    @if($field->field_name === 'previous_school')
-                                        @php
-                                            $uCode = strtoupper($registration->unit->code ?? '');
-                                            $admLevel = strtoupper(trim($registration->admission_level ?? ''));
-                                            $isKb = ($admLevel === 'KB');
-                                        @endphp
-                                        @if($uCode === 'PAUD' && $isKb)
-                                            @continue
-                                        @endif
-                                    @endif
-                                    @php
-                                        $val = $registration->getFieldValue($field->field_name);
-                                    @endphp
-                                    <div class="space-y-0.5">
-                                        <strong class="text-slate-500 font-semibold block">{{ $field->label }}:</strong> 
-                                        @if($field->type === 'file' && !empty($val))
-                                            <a href="{{ Storage::url($val) }}" target="_blank" class="text-brand-emerald font-bold hover:underline">Lihat Berkas 📄</a>
-                                        @elseif($field->field_name === 'spmb_class_program_id')
-                                            <span class="text-slate-800 font-bold">{{ $registration->classProgram?->name ?? '-' }}</span>
-                                        @elseif($field->field_name === 'extra_services')
-                                            @php
-                                                $services = $registration->extraServices;
-                                            @endphp
-                                            @if($services->isEmpty())
-                                                <span class="text-slate-800 font-bold">Tidak Ada</span>
-                                            @else
-                                                <div class="space-y-1 mt-1 pl-1">
-                                                    @foreach($services as $s)
-                                                        <div class="flex items-center gap-1.5 text-slate-850 font-bold">
-                                                            <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
-                                                            <span>{{ $s->name }}</span>
-                                                        </div>
-                                                    @endforeach
+                            <div id="readonly-step-{{ $step->id }}" class="hidden px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-800 {{ $hasInvalidFields ? '!hidden' : '' }}">
+                                @if($step->id == 4)
+                                    <!-- Step 4: Data Orang Tua (Terpisah: Kartu Ayah & Kartu Ibu) -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                        <!-- Card 1: 👨 Data Ayah Kandung -->
+                                        <div class="bg-slate-50/80 dark:bg-slate-850/60 p-4 sm:p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 space-y-3.5 shadow-xs">
+                                            <div class="flex items-center gap-2 pb-2.5 border-b border-slate-200/60 dark:border-slate-800 text-slate-800 dark:text-white font-extrabold text-xs sm:text-sm">
+                                                <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-brand-emerald dark:text-emerald-400 flex items-center justify-center text-xs">👨</span>
+                                                <span>Data Ayah Kandung</span>
+                                            </div>
+                                            <div class="space-y-2.5 text-xs">
+                                                <div class="space-y-0.5">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Nama Ayah Kandung</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $registration->father_name ?? '-' }}</span>
                                                 </div>
-                                            @endif
-                                        @else
-                                            <span class="text-slate-800 font-bold">{{ $val ?? '-' }}</span>
-                                        @endif
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                    <div class="space-y-0.5">
+                                                        <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">NIK Ayah Kandung</span>
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold font-mono">{{ $registration->father_nik ?? '-' }}</span>
+                                                    </div>
+                                                    <div class="space-y-0.5">
+                                                        <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Pekerjaan Ayah</span>
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $registration->father_job ?? '-' }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="space-y-0.5">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Handphone / WhatsApp Ayah</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold font-mono">{{ $registration->father_phone ?? '-' }}</span>
+                                                </div>
+                                                <div class="space-y-0.5 pt-1.5 border-t border-slate-200/40 dark:border-slate-800">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Alamat Ayah</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold leading-relaxed">{{ $registration->father_address ?? '-' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2: 👩 Data Ibu Kandung -->
+                                        <div class="bg-slate-50/80 dark:bg-slate-850/60 p-4 sm:p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 space-y-3.5 shadow-xs">
+                                            <div class="flex items-center gap-2 pb-2.5 border-b border-slate-200/60 dark:border-slate-800 text-slate-800 dark:text-white font-extrabold text-xs sm:text-sm">
+                                                <span class="w-6 h-6 rounded-lg bg-pink-100 dark:bg-pink-950/80 text-pink-600 dark:text-pink-400 flex items-center justify-center text-xs">👩</span>
+                                                <span>Data Ibu Kandung</span>
+                                            </div>
+                                            <div class="space-y-2.5 text-xs">
+                                                <div class="space-y-0.5">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Nama Ibu Kandung</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $registration->mother_name ?? '-' }}</span>
+                                                </div>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                    <div class="space-y-0.5">
+                                                        <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">NIK Ibu Kandung</span>
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold font-mono">{{ $registration->mother_nik ?? '-' }}</span>
+                                                    </div>
+                                                    <div class="space-y-0.5">
+                                                        <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Pekerjaan Ibu</span>
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $registration->mother_job ?? '-' }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="space-y-0.5">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Handphone / WhatsApp Ibu</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold font-mono">{{ $registration->mother_phone ?? '-' }}</span>
+                                                </div>
+                                                <div class="space-y-0.5 pt-1.5 border-t border-slate-200/40 dark:border-slate-800">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Alamat Ibu</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold leading-relaxed">{{ $registration->mother_address ?? '-' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                @endforeach
+                                @elseif($step->id == 5)
+                                    <!-- Step 5: Data Wali (Opsional) -->
+                                    @if(!empty($registration->guardian_name))
+                                        <div class="bg-slate-50/80 dark:bg-slate-850/60 p-4 sm:p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 space-y-3.5 mt-3 shadow-xs">
+                                            <div class="flex items-center gap-2 pb-2.5 border-b border-slate-200/60 dark:border-slate-800 text-slate-800 dark:text-white font-extrabold text-xs sm:text-sm">
+                                                <span class="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">🤝</span>
+                                                <span>Data Wali Murid</span>
+                                            </div>
+                                            <div class="space-y-2.5 text-xs">
+                                                <div class="space-y-0.5">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Nama Wali</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $registration->guardian_name }}</span>
+                                                </div>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                    <div class="space-y-0.5">
+                                                        <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">NIK Wali</span>
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold font-mono">{{ $registration->guardian_nik ?? '-' }}</span>
+                                                    </div>
+                                                    <div class="space-y-0.5">
+                                                        <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Pekerjaan Wali</span>
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $registration->guardian_job ?? '-' }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="space-y-0.5">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Handphone / WhatsApp Wali</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold font-mono">{{ $registration->guardian_phone ?? '-' }}</span>
+                                                </div>
+                                                <div class="space-y-0.5 pt-1.5 border-t border-slate-200/40 dark:border-slate-800">
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">Alamat Wali</span>
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold leading-relaxed">{{ $registration->guardian_address ?? '-' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="mt-3 p-4 bg-slate-50/80 dark:bg-slate-850/60 rounded-2xl border border-slate-200/70 dark:border-slate-800 flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                            <i data-lucide="info" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                            <span>Tidak mengisi data wali (calon murid tinggal bersama orang tua kandung).</span>
+                                        </div>
+                                    @endif
+                                @elseif($step->id == 6)
+                                    <!-- Step 6: Data Lampiran -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                                        @foreach($step->fields as $field)
+                                            @php
+                                                $val = $registration->getFieldValue($field->field_name);
+                                            @endphp
+                                            <div class="p-3.5 bg-slate-50/80 dark:bg-slate-850/60 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-2 flex flex-col justify-between">
+                                                <div>
+                                                    <span class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px] truncate" title="{{ $field->label }}">{{ $field->label }}</span>
+                                                </div>
+                                                @if(!empty($val))
+                                                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/40 dark:border-slate-800">
+                                                        <span class="text-[9.5px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 px-1.5 py-0.5 rounded-md font-extrabold">Tersimpan</span>
+                                                        <a href="{{ Storage::url($val) }}" target="_blank" class="inline-flex items-center gap-1 text-brand-emerald dark:text-emerald-400 font-bold hover:underline text-xs">
+                                                            <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i> Lihat Berkas
+                                                        </a>
+                                                    </div>
+                                                @else
+                                                    <span class="text-slate-400 italic text-[11px] pt-1">Tidak diunggah</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <!-- Step 1, 2, 3: Other Steps -->
+                                    <div class="text-xs text-slate-600 dark:text-slate-300 grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-3 bg-slate-50/80 dark:bg-slate-850/60 p-4 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                                        @foreach($step->fields as $field)
+                                            @php
+                                                $isHiddenField = in_array($field->field_name, ['spmb_period_id', 'spmb_wave_id', 'spmb_type_id']);
+                                            @endphp
+                                            @if($isHiddenField)
+                                                @continue
+                                            @endif
+                                            @if($field->field_name === 'extra_services')
+                                                @php
+                                                    $services = $registration->extraServices;
+                                                    $hasActiveServices = \App\Models\SpmbExtraService::where('is_active', true)
+                                                         ->where(function($q) use ($registration) {
+                                                             $q->whereNull('spmb_unit_id')
+                                                               ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
+                                                         })
+                                                         ->exists();
+                                                @endphp
+                                                @if(!$hasActiveServices && $services->isEmpty())
+                                                    @continue
+                                                @endif
+                                            @endif
+                                            @if($field->field_name === 'previous_school')
+                                                @php
+                                                    $uCode = strtoupper($registration->unit->code ?? '');
+                                                    $admLevel = strtoupper(trim($registration->admission_level ?? ''));
+                                                    $isKb = ($admLevel === 'KB');
+                                                @endphp
+                                                @if($uCode === 'PAUD' && $isKb)
+                                                    @continue
+                                                @endif
+                                            @endif
+                                            @php
+                                                $val = $registration->getFieldValue($field->field_name);
+                                                $isFullWidthSummary = in_array($field->field_name, ['address', 'extra_services']);
+                                            @endphp
+                                            <div class="space-y-0.5 {{ $isFullWidthSummary ? 'md:col-span-2' : '' }}">
+                                                <strong class="text-slate-400 dark:text-slate-500 font-semibold block text-[11px]">{{ $field->label }}:</strong> 
+                                                @if($field->type === 'file' && !empty($val))
+                                                    <a href="{{ Storage::url($val) }}" target="_blank" class="text-brand-emerald dark:text-emerald-400 font-bold hover:underline">Lihat Berkas 📄</a>
+                                                @elseif($field->field_name === 'spmb_class_program_id')
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $registration->classProgram?->name ?? '-' }}</span>
+                                                @elseif($field->field_name === 'extra_services')
+                                                    @php
+                                                        $services = $registration->extraServices;
+                                                    @endphp
+                                                    @if($services->isEmpty())
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold">Tidak Ada</span>
+                                                    @else
+                                                        <div class="flex flex-wrap gap-1.5 mt-1">
+                                                            @foreach($services as $s)
+                                                                <span class="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-lg text-slate-800 dark:text-slate-200 font-bold text-xs">
+                                                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald"></span>
+                                                                    {{ $s->name }}
+                                                                </span>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $val ?? '-' }}</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         @endif
                     </div>
