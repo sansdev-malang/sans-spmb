@@ -47,14 +47,19 @@
         <div class="bg-brand-emerald text-white p-5 sm:p-6 space-y-3 sm:space-y-4">
             <div class="flex items-center justify-between gap-2.5 w-full">
                 <h2 class="font-extrabold text-sm sm:text-lg text-white flex items-center gap-2 leading-tight min-w-0">
-                    <i data-lucide="award" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-yellow shrink-0"></i>
-                    <span class="truncate sm:whitespace-normal">Hasil Seleksi & Administrasi</span>
+                    @if($registration->registration_status === 'completed')
+                        <i data-lucide="award" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-yellow shrink-0"></i>
+                        <span class="truncate sm:whitespace-normal">Hasil Seleksi & Penerimaan Resmi</span>
+                    @else
+                        <i data-lucide="receipt" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-yellow shrink-0"></i>
+                        <span class="truncate sm:whitespace-normal">Administrasi & Biaya Masuk Awal</span>
+                    @endif
                 </h2>
                 
                 <div class="shrink-0 self-center sm:self-start pt-0">
                     @if($registration->registration_status === 'completed')
                         <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-ping"></span> Lunas &amp; Resmi
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-ping"></span> Lunas &amp; Resmi Diterima
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border border-amber-500 shadow-xs whitespace-nowrap">
@@ -65,7 +70,11 @@
             </div>
 
             <!-- Full-width subtitle -->
-            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Pengumuman kelulusan resmi dan rincian pembiayaan pendidikan.</p>
+            @if($registration->registration_status === 'completed')
+                <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Selamat! Ananda telah resmi terdaftar dan diterima sebagai siswa baru.</p>
+            @else
+                <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Pernyataan kesanggupan telah disetujui. Silakan selesaikan pembayaran daftar ulang di bawah ini.</p>
+            @endif
 
             <!-- Integrated Candidate Context Info -->
             <div class="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/15 shadow-sm space-y-3.5">
@@ -167,17 +176,31 @@
         <div class="p-4 sm:p-8 space-y-5 sm:space-y-8">
             
             <!-- ANNOUNCEMENT BANNER -->
-            <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
-                <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
-                    <i data-lucide="party-popper" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
+            @if($registration->registration_status === 'completed')
+                <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
+                    <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                        <i data-lucide="party-popper" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan RESMI DITERIMA</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah resmi terdaftar dan diterima menjadi bagian dari keluarga besar Sekolah Anak Saleh.
+                        </p>
+                    </div>
                 </div>
-                <div class="space-y-1">
-                    <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan LULUS & DITERIMA</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah lolos seluruh tahapan observasi kesiapan belajar dan berkas pendaftaran.
-                    </p>
+            @else
+                <div class="bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
+                    <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                        <i data-lucide="file-signature" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">Tahap Administrasi & Daftar Ulang Siswa Baru</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Surat Pernyataan Kesanggupan telah berhasil disetujui. Silakan selesaikan pembayaran administrasi masuk awal di bawah ini agar ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> resmi dinyatakan diterima dan Surat Keputusan Penerimaan (SKP) dapat diterbitkan.
+                        </p>
+                    </div>
                 </div>
-            </div>
+            @endif
 
             <!-- TUITION FEES COMPONENT BREAKDOWN -->
             <div class="space-y-4">

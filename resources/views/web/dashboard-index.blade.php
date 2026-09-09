@@ -326,10 +326,10 @@
                                 $stageButtonLabel = 'Isi Surat Pernyataan';
                             } elseif ($status === 'agreement_signed') {
                                 $stageTargetUrl = route('dashboard.result', $reg->id);
-                                $stageButtonLabel = 'Lihat Hasil & Pelunasan Administrasi';
+                                $stageButtonLabel = 'Pelunasan Administrasi & Daftar Ulang';
                             } elseif ($status === 'completed') {
                                 $stageTargetUrl = route('dashboard.result', $reg->id);
-                                $stageButtonLabel = 'Lihat Hasil Seleksi & Bukti Kelulusan';
+                                $stageButtonLabel = 'Lihat Bukti Kelulusan & Penerimaan';
                             }
                         @endphp
 

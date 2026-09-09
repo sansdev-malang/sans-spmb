@@ -476,15 +476,15 @@
                         <!-- Case 6.2: Final Fee Payment & Result CTA -->
                         <div class="text-center py-6 space-y-4 max-w-md mx-auto">
                             <div class="h-16 w-16 bg-emerald-50 dark:bg-emerald-950/20 text-brand-emerald dark:text-emerald-400 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-                                <i data-lucide="award" class="w-8 h-8"></i>
+                                <i data-lucide="receipt" class="w-8 h-8"></i>
                             </div>
-                            <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Alhamdulillah, Dinyatakan Lulus & Diterima!</h3>
+                            <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Tahap Administrasi & Pelunasan Biaya Masuk</h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                Selamat! Ananda telah menyelesaikan tahapan seleksi. Silakan buka halaman Administrasi untuk melihat pengumuman resmi, rincian biaya, keringanan/diskon, opsi cicilan, serta menyelesaikan pembayaran.
+                                Surat pernyataan kesanggupan telah disetujui. Silakan buka menu Administrasi untuk melihat rincian biaya masuk awal, opsi cicilan/keringanan, dan menyelesaikan pembayaran daftar ulang.
                             </p>
                             <div class="pt-4">
                                 <a href="{{ route('dashboard.result', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-6 py-3.5 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-2">
-                                    <i data-lucide="receipt" class="w-4 h-4"></i> Buka Hasil Seleksi & Administrasi
+                                    <i data-lucide="receipt" class="w-4 h-4"></i> Buka Rincian Administrasi & Pembayaran
                                 </a>
                             </div>
                         </div>
