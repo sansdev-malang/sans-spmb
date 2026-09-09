@@ -293,13 +293,13 @@
                                     </div>
                                 @elseif($status === 'agreement_signed')
                                     <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-[10px] text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-2">
-                                        <i data-lucide="award" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
-                                        <span>Alhamdulillah Dinyatakan Diterima! Selesaikan administrasi biaya masuk.</span>
+                                        <i data-lucide="receipt" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                        <span>Tahap Pelunasan Administrasi & Daftar Ulang. Selesaikan pembayaran biaya masuk.</span>
                                     </div>
                                 @elseif($status === 'completed')
-                                    <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-[10px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
-                                        <i data-lucide="check-circle" class="w-4 h-4 flex-shrink-0"></i>
-                                        <span>Penerimaan ananda telah resmi selesai & lunas.</span>
+                                    <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-[10px] text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-2">
+                                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                        <span>Alhamdulillah Pendaftaran Ananda dinyatakan Selesai & Diterima</span>
                                     </div>
                                 @endif
                             </div>
@@ -327,19 +327,18 @@
                             } elseif ($status === 'agreement_signed') {
                                 $stageTargetUrl = route('dashboard.result', $reg->id);
                                 $stageButtonLabel = 'Pelunasan Administrasi & Daftar Ulang';
-                            } elseif ($status === 'completed') {
-                                $stageTargetUrl = route('dashboard.result', $reg->id);
-                                $stageButtonLabel = 'Lihat Bukti Kelulusan & Penerimaan';
                             }
                         @endphp
 
-                        <!-- Main Action Button -->
-                        <div class="pt-2">
-                            <a href="{{ $stageTargetUrl }}" class="w-full py-3.5 px-4 bg-slate-900 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 text-white text-xs font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md">
-                                <span>{{ $stageButtonLabel }}</span>
-                                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
-                            </a>
-                        </div>
+                        <!-- Main Action Button (Hanya tampil jika belum selesai/diterima) -->
+                        @if($status !== 'completed')
+                            <div class="pt-2">
+                                <a href="{{ $stageTargetUrl }}" class="w-full py-3.5 px-4 bg-slate-900 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 text-white text-xs font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md">
+                                    <span>{{ $stageButtonLabel }}</span>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                                </a>
+                            </div>
+                        @endif
 
                     </div>
                 @endforeach
