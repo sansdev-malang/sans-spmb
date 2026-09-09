@@ -41,6 +41,7 @@
     .agreement-body > ol > li,
     .agreement-body ol:not(ol ol) > li:not([class*="ql-indent"]):not(ol ol li) {
         counter-increment: list-0 !important;
+        counter-set: list-1 0 list-2 0 !important;
         counter-reset: list-1 !important;
     }
     .agreement-body > ol > li::before,
@@ -56,6 +57,7 @@
     .agreement-body ol ol > li:not(ol ol ol li):not([class*="ql-indent"]),
     .agreement-body li.ql-indent-1 {
         counter-increment: list-1 !important;
+        counter-set: list-2 0 !important;
         counter-reset: list-2 !important;
         padding-left: 1.75rem !important;
         margin-left: 1.25rem !important;
