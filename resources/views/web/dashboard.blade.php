@@ -678,7 +678,7 @@
                     </h4>
                     
                     @php
-                        $finalFees = $registration->final_fee_snapshot ?? app(\App\Http\Controllers\Web\WebDashboardController::class)->getFinalFeeDetails($registration);
+                        $finalFees = $registration->getFinalFeeDetails();
                     @endphp
 
                     <!-- Final Fee Breakdowns -->

@@ -194,7 +194,9 @@ class Registration extends Model
         $regCatIds = SpmbFeeCategory::where(function($q) {
             $q->where('name', 'like', '%Formulir%')
               ->orWhere('name', 'like', '%Pendaftaran%')
-              ->orWhere('name', 'like', '%Registrasi%');
+              ->orWhere('name', 'like', '%Registrasi%')
+              ->orWhere('name', 'like', '%Enrollment%')
+              ->orWhere('name', 'like', '%Registration%');
         })->pluck('id')->toArray();
 
         // 2. Identify Extra Services / Biaya Tambahan Category IDs
@@ -220,12 +222,21 @@ class Registration extends Model
         $selectedMasterFees = collect();
 
         foreach ($allUnitFees as $fee) {
+            $catName = strtolower(trim($fee->category->name ?? ''));
+            $feeNameClean = strtolower(trim($fee->name ?? ''));
+
+            // Never include registration / enrollment fee in final admission fees
+            if (in_array($fee->spmb_fee_category_id, $regCatIds)
+                || preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $feeNameClean)
+                || preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $catName)) {
+                continue;
+            }
+
             $isExtraCat = in_array($fee->spmb_fee_category_id, $extraCatIds);
 
             if ($isExtraCat) {
                 // Biaya Tambahan: only include if candidate opted for this extra service
                 if ($extraServices->isNotEmpty()) {
-                    $feeNameClean = strtolower(trim($fee->name));
                     $matches = $extraServices->contains(function($es) use ($feeNameClean) {
                         $esName = strtolower(trim($es->name ?? ''));
                         $esCode = strtolower(trim($es->code ?? ''));
@@ -331,9 +342,12 @@ class Registration extends Model
             ];
         }
 
-        // Second, if snapshot has legacy items that were already paid, preserve them
+        // Second, if snapshot has legacy items that were already paid, preserve them (excluding registration fees)
         foreach ($snapshotItems as $si) {
             $nameLower = strtolower(trim($si['name'] ?? ''));
+            if (preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $nameLower)) {
+                continue;
+            }
             if (!in_array($nameLower, $processedNames)) {
                 $paidAmount = $this->getItemPaidAmount($si['name'], $si['id'] ?? null);
                 if ($paidAmount > 0) {
@@ -366,7 +380,9 @@ class Registration extends Model
         $regCat = SpmbFeeCategory::where(function($q) {
             $q->where('name', 'like', '%Formulir%')
               ->orWhere('name', 'like', '%Pendaftaran%')
-              ->orWhere('name', 'like', '%Registrasi%');
+              ->orWhere('name', 'like', '%Registrasi%')
+              ->orWhere('name', 'like', '%Enrollment%')
+              ->orWhere('name', 'like', '%Registration%');
         })->first();
 
         if ($regCat) {
@@ -381,9 +397,19 @@ class Registration extends Model
 
         return SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
             ->where('is_active', true)
-            ->whereHas('category', function($q) {
-                $q->where('name', 'like', '%Formulir%')
-                  ->orWhere('name', 'like', '%Pendaftaran%');
+            ->where(function($q) {
+                $q->whereHas('category', function($cq) {
+                    $cq->where('name', 'like', '%Formulir%')
+                      ->orWhere('name', 'like', '%Pendaftaran%')
+                      ->orWhere('name', 'like', '%Registrasi%')
+                      ->orWhere('name', 'like', '%Enrollment%')
+                      ->orWhere('name', 'like', '%Registration%');
+                })
+                ->orWhere('name', 'like', '%Formulir%')
+                ->orWhere('name', 'like', '%Pendaftaran%')
+                ->orWhere('name', 'like', '%Registrasi%')
+                ->orWhere('name', 'like', '%Enrollment%')
+                ->orWhere('name', 'like', '%Registration%');
             })->first();
     }
 

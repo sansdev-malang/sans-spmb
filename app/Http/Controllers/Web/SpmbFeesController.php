@@ -277,8 +277,11 @@ class SpmbFeesController extends Controller
 
     public static function isFeeUsed($fee)
     {
-        // 1. If it's a registration fee category
-        if ($fee->category && $fee->category->name === 'Formulir Pendaftaran') {
+        // 1. If it's a registration fee category or registration fee
+        $isRegFee = ($fee->category && preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $fee->category->name))
+            || preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $fee->name);
+
+        if ($isRegFee) {
             return Payment::where('payment_type', 'registration_fee')
                 ->whereIn('status', ['success', 'pending'])
                 ->whereHas('registration', function ($q) use ($fee) {

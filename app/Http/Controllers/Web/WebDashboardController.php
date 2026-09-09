@@ -34,14 +34,23 @@ class WebDashboardController extends Controller
 
     public function getRegistrationFee($registration)
     {
+        if (method_exists($registration, 'getRegistrationFee')) {
+            $fee = $registration->getRegistrationFee();
+            if ($fee) {
+                return $fee;
+            }
+        }
+
         $unitId = $registration->spmb_unit_id;
 
-        // 1. Try finding fee category for registration form (match 'Formulir', 'Pendaftaran', 'Registrasi')
+        // 1. Try finding fee category for registration form (match 'Formulir', 'Pendaftaran', 'Registrasi', 'Enrollment', 'Registration')
         $feeCategory = \App\Models\SpmbFeeCategory::where(function($q) {
             $q->where('name', 'like', '%Formulir%')
               ->orWhere('name', 'like', '%Pendaftaran%')
-              ->orWhere('name', 'like', '%Registrasi%');
-        })->first() ?? \App\Models\SpmbFeeCategory::first();
+              ->orWhere('name', 'like', '%Registrasi%')
+              ->orWhere('name', 'like', '%Enrollment%')
+              ->orWhere('name', 'like', '%Registration%');
+        })->first();
 
         if ($feeCategory && $unitId) {
             $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
@@ -71,7 +80,21 @@ class WebDashboardController extends Controller
             ];
         }
 
-        // 3. Fallback to any active fee in the registration category
+        // 3. Fallback to any fee matching registration keywords
+        $feeByName = \App\Models\SpmbFee::where('spmb_unit_id', $unitId)
+            ->where('is_active', true)
+            ->where(function($q) {
+                $q->where('name', 'like', '%Formulir%')
+                  ->orWhere('name', 'like', '%Pendaftaran%')
+                  ->orWhere('name', 'like', '%Registrasi%')
+                  ->orWhere('name', 'like', '%Enrollment%')
+                  ->orWhere('name', 'like', '%Registration%');
+            })->first();
+        if ($feeByName) {
+            return $feeByName;
+        }
+
+        // 4. Fallback to any active fee in the registration category
         if ($feeCategory) {
             $fee = \App\Models\SpmbFee::where('spmb_fee_category_id', $feeCategory->id)
                 ->where('is_active', true)
@@ -81,7 +104,7 @@ class WebDashboardController extends Controller
             }
         }
 
-        // 4. Default fallback object
+        // 5. Default fallback object
         return (object) [
             'id' => null,
             'name' => 'Formulir Pendaftaran',

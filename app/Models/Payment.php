@@ -60,9 +60,11 @@ class Payment extends Model
                 $cat = SpmbFeeCategory::where(function($q) {
                     $q->where('name', 'like', '%Formulir%')
                       ->orWhere('name', 'like', '%Pendaftaran%')
-                      ->orWhere('name', 'like', '%Registrasi%');
+                      ->orWhere('name', 'like', '%Registrasi%')
+                      ->orWhere('name', 'like', '%Enrollment%')
+                      ->orWhere('name', 'like', '%Registration%');
                 })->first();
-                $categoryNames[] = $cat ? $cat->name : 'Formulir Pendaftaran';
+                $categoryNames[] = $cat ? $cat->name : 'Biaya Pendaftaran';
             }
         } else {
             // Check relational payment_items first
@@ -108,7 +110,13 @@ class Payment extends Model
 
         $categoryNames = array_values(array_unique(array_filter($categoryNames)));
         if (empty($categoryNames)) {
-            $defaultCat = SpmbFeeCategory::where('name', '!=', 'Formulir Pendaftaran')->first();
+            $defaultCat = SpmbFeeCategory::where(function($q) {
+                $q->where('name', 'not like', '%Formulir%')
+                  ->where('name', 'not like', '%Pendaftaran%')
+                  ->where('name', 'not like', '%Registrasi%')
+                  ->where('name', 'not like', '%Enrollment%')
+                  ->where('name', 'not like', '%Registration%');
+            })->first();
             $categoryNames = [$defaultCat ? $defaultCat->name : 'Biaya Administrasi'];
         }
 
