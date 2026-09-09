@@ -243,4 +243,20 @@ class BniSnapService implements PaymentGatewayInterface
             'data' => null
         ];
     }
+
+    /**
+     * Check / Inquiry payment status from BNI.
+     */
+    public function checkPaymentStatus($invoiceNo, $paymentInfo = [])
+    {
+        Log::info('BNI checkPaymentStatus called', ['invoice' => $invoiceNo]);
+        return [
+            'success' => true,
+            'is_paid' => false,
+            'status' => 'PENDING',
+            'message' => 'Status transaksi BNI: Menunggu pembayaran.',
+            'data' => null
+        ];
+    }
 }
+

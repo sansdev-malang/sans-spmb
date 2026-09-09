@@ -33,4 +33,14 @@ interface PaymentGatewayInterface
      * @return array ['success' => bool, 'message' => string, 'data' => array|null]
      */
     public function cancelPayment($invoiceNo, $paymentInfo = []);
+
+    /**
+     * Check / Inquiry payment status at Gateway (e.g. QRIS MPM Query or VA Inquiry Status).
+     *
+     * @param string $invoiceNo
+     * @param array $paymentInfo
+     * @return array ['success' => bool, 'is_paid' => bool, 'status' => string, 'message' => string, 'data' => array|null]
+     */
+    public function checkPaymentStatus($invoiceNo, $paymentInfo = []);
 }
+

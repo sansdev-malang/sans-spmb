@@ -71,9 +71,10 @@ class PaymentController extends Controller
             $status = $registration->registration_status;
             $processedItems = [];
 
-            if ($status === 'agreement_signed') {
+            if (in_array($status, ['agreement_signed', 'completed'])) {
                 $paymentType = 'final_fee';
                 $feeDetails = $this->getFinalFeeDetails($registration);
+
                 $allSnapshotItems = $feeDetails['items'] ?? [];
 
                 $inputItems = $request->input('items');

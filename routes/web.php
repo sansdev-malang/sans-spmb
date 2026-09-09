@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
     // Payments
     Route::post('/dashboard/registration/{id}/payments/charge', [WebDashboardController::class, 'chargePayment'])->name('dashboard.charge');
     Route::post('/dashboard/payments/{id}/simulate', [WebDashboardController::class, 'simulatePaymentCallback'])->name('dashboard.simulate-payment');
+    Route::post('/dashboard/payments/{id}/check-status', [WebDashboardController::class, 'checkPaymentStatus'])->name('dashboard.check-payment-status');
     Route::post('/dashboard/payments/{id}/cancel', [WebDashboardController::class, 'cancelPayment'])->name('dashboard.cancel-payment');
     Route::get('/dashboard/payments/{id}/receipt', [WebDashboardController::class, 'downloadReceipt'])->name('dashboard.payment.receipt');
     Route::get('/dashboard/registration/{id}/admission-letter', [WebDashboardController::class, 'downloadAdmissionLetter'])->name('dashboard.admission-letter.download');
@@ -119,7 +120,10 @@ Route::middleware('auth')->group(function () {
         // Admin Billing & Payment Transaction Pages
         Route::get('/admin/payments/data', [AdminPaymentController::class, 'data'])->name('admin.payments.data');
         Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
+        Route::post('/admin/payments/sync-pending', [AdminPaymentController::class, 'syncPending'])->name('admin.payments.sync-pending');
+        Route::post('/admin/payments/{id}/check-status', [AdminPaymentController::class, 'checkStatus'])->name('admin.payments.check-status');
         Route::get('/admin/payments/receipt/{id}', [WebDashboardController::class, 'downloadReceipt'])->name('admin.payments.receipt');
+
 
         // Admin Finance Reports & Receivables Breakdown
         Route::get('/admin/finance/reports', [AdminFinanceReportController::class, 'index'])->name('admin.finance.reports');

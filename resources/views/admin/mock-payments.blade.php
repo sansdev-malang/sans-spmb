@@ -11,13 +11,21 @@
             <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Riwayat Transaksi Pembayaran (Log)</h1>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Log riwayat transaksi pembayaran pendaftaran calon siswa terintegrasi Winpay SNAP API secara real-time.</p>
         </div>
-        <div class="flex gap-2 items-center">
+        <div class="flex gap-2 items-center flex-wrap">
+            <form action="{{ route('admin.payments.sync-pending') }}" method="POST" class="inline" hx-boost="false">
+                @csrf
+                <button type="submit" onclick="this.disabled=true; this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-4 h-4 animate-spin\'></i> Menyinkronkan...'; this.form.submit();" class="border border-brand-emerald text-brand-emerald hover:bg-emerald-50 dark:hover:bg-emerald-950/40 px-3.5 py-2 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-2 cursor-pointer">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span>Sinkronkan Pending</span>
+                </button>
+            </form>
             <button type="button" onclick="showFeatureComingSoon('Ekspor Log Pembayaran (CSV)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
                 <span>Ekspor CSV</span>
                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400 text-amber-950 shadow-2xs">Soon</span>
             </button>
         </div>
+
     </div>
 
     <!-- Payments List Table -->
@@ -315,10 +323,19 @@
                                     <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-900/60 transition duration-200 shadow-2xs" title="Unduh Bukti Pembayaran Resmi">
                                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                     </a>
+                                @elseif($pay->status === 'pending')
+                                    <form action="{{ route('admin.payments.check-status', $pay->id) }}" method="POST" class="inline" hx-boost="false">
+                                        @csrf
+                                        <button type="submit" onclick="this.disabled=true; this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-3.5 h-3.5 animate-spin\'></i>'; this.form.submit();" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-750 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800 transition duration-200 shadow-2xs cursor-pointer" title="Cek status mutasi ke bank">
+                                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                            <span>Cek Status</span>
+                                        </button>
+                                    </form>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-600 text-xs font-medium">-</span>
                                 @endif
                             </td>
+
                         </tr>
                     @empty
                         <tr>

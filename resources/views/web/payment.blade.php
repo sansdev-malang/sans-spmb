@@ -468,12 +468,20 @@
                             @endif
                         </div>
 
-                        <!-- Ganti Metode Pembayaran / Batal Button -->
-                        <div class="border-t border-slate-200 pt-4 flex justify-center">
-                            <button type="button" onclick="openCancelModal()" class="border border-red-200 hover:bg-red-50 text-red-600 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                <i data-lucide="x-circle" class="w-4 h-4"></i> Batalkan / Ganti Metode Pembayaran
+                        <!-- Action Buttons: Cek Status & Batal / Ganti Metode -->
+                        <div class="border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <button type="button" id="btnCheckStatus" onclick="checkPaymentStatusAjax()" class="w-full sm:w-auto bg-brand-emerald hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+                                <i data-lucide="refresh-cw" class="w-4 h-4" id="iconCheckStatus"></i>
+                                <span id="textCheckStatus">Cek Status Pembayaran</span>
+                            </button>
+                            <button type="button" onclick="openCancelModal()" class="w-full sm:w-auto border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i> Batalkan / Ganti Metode
                             </button>
                         </div>
+
+                        <!-- Feedback Box for Check Status -->
+                        <div id="checkStatusFeedback" class="hidden text-xs rounded-xl p-3 text-center transition"></div>
+
 
                         <!-- Cancel Payment Confirmation Modal -->
                         <div id="cancelPaymentModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -656,7 +664,82 @@
         }
     }
 
+    async function checkPaymentStatusAjax() {
+        const btn = document.getElementById('btnCheckStatus');
+        const icon = document.getElementById('iconCheckStatus');
+        const text = document.getElementById('textCheckStatus');
+        const feedback = document.getElementById('checkStatusFeedback');
+
+        if (!btn) return;
+
+        const originalText = text ? text.innerText : 'Cek Status Pembayaran';
+
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-wait');
+        if (icon) icon.classList.add('animate-spin');
+        if (text) text.innerText = 'Memeriksa status ke bank...';
+        if (feedback) {
+            feedback.className = 'hidden text-xs rounded-xl p-3 text-center transition';
+            feedback.innerHTML = '';
+        }
+
+        try {
+            const response = await fetch("{{ route('dashboard.check-payment-status', $activePayment->id ?? 0) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.is_paid) {
+                if (feedback) {
+                    feedback.className = 'text-xs rounded-xl p-3 text-center bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 font-bold block';
+                    feedback.innerHTML = '🎉 ' + (data.message || 'Pembayaran berhasil diverifikasi!') + ' Mengalihkan...';
+                }
+                setTimeout(() => {
+                    window.location.href = data.redirect || window.location.href;
+                }, 1200);
+                return;
+            }
+
+            if (data.status === 'EXPIRED') {
+                if (feedback) {
+                    feedback.className = 'text-xs rounded-xl p-3 text-center bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 font-semibold block';
+                    feedback.innerHTML = '⚠️ ' + (data.message || 'Tagihan telah kedaluwarsa.');
+                }
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+                return;
+            }
+
+            // Pending / Unpaid status
+            if (feedback) {
+                feedback.className = 'text-xs rounded-xl p-3 text-center bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 leading-relaxed block';
+                feedback.innerHTML = '⏳ ' + (data.message || 'Pembayaran belum terdeteksi. Silakan selesaikan pembayaran terlebih dahulu.');
+            }
+
+        } catch (err) {
+            console.error('Check status error:', err);
+            if (feedback) {
+                feedback.className = 'text-xs rounded-xl p-3 text-center bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 block';
+                feedback.innerHTML = 'Gagal terhubung ke server. Silakan coba beberapa saat lagi.';
+            }
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-wait');
+            if (icon) icon.classList.remove('animate-spin');
+            if (text) text.innerText = originalText;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+
     async function downloadQrisImage(url, filename) {
+
         const btn = document.getElementById('btnDownloadQris');
         const btnText = document.getElementById('btnDownloadQrisText');
         const originalText = btnText ? btnText.innerText : 'Unduh Kode QRIS (PNG)';

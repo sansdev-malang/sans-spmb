@@ -791,6 +791,189 @@ class WinpayService implements PaymentGatewayInterface
     }
 
     /**
+     * Pengecekan / Inquiry Status Pembayaran Real-time ke Winpay SNAP BI
+     *
+     * Mendukung:
+     * - QRIS: POST /v1.0/qr/qr-mpm-query (Service Code: 51)
+     * - Virtual Account & Retail: POST /v1.0/transfer-va/inquiry-status (Service Code: 28)
+     * - E-Wallet / Debit: POST /v1.0/debit/status (Service Code: 55)
+     *
+     * @param string $invoiceNo
+     * @param array $paymentInfo
+     * @return array ['success' => bool, 'is_paid' => bool, 'status' => string, 'message' => string, 'data' => array|null]
+     */
+    public function checkPaymentStatus($invoiceNo, $paymentInfo = [])
+    {
+        // 1. Tangani Mode Simulator
+        if ($this->mode === 'simulator') {
+            Log::info('Winpay checkPaymentStatus bypassed (Simulator mode)', ['invoice' => $invoiceNo]);
+            return [
+                'success' => true,
+                'is_paid' => false,
+                'status' => 'PENDING',
+                'message' => 'Status transaksi (Simulator): Menunggu pembayaran.',
+                'data' => [
+                    'latestTransactionStatus' => '01',
+                    'transactionStatusDesc' => 'Pending'
+                ]
+            ];
+        }
+
+        // 2. Identifikasi channel & tipe pembayaran
+        $channel = strtoupper(trim(
+            $paymentInfo['channel'] 
+            ?? ($paymentInfo['bankName'] 
+            ?? ($paymentInfo['additionalInfo']['channel'] 
+            ?? ($paymentInfo['payment_method'] ?? '')))
+        ));
+
+        $isQris = ($channel === 'QRIS') 
+            || !empty($paymentInfo['qrUrl']) 
+            || !empty($paymentInfo['qrContent'])
+            || (isset($paymentInfo['payment_method']) && strtoupper($paymentInfo['payment_method']) === 'QRIS');
+
+        $isEwallet = in_array($channel, ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC', 'GOPAY', 'LINKAJA'])
+            || !empty($paymentInfo['webRedirectUrl'])
+            || !empty($paymentInfo['appRedirectUrl']);
+
+        $timezone = new \DateTimeZone('Asia/Jakarta');
+        $now = new \DateTime('now', $timezone);
+        $timestamp = $now->format('Y-m-d\TH:i:sP');
+
+        $contractId = $paymentInfo['referenceId'] 
+            ?? ($paymentInfo['contractId'] 
+            ?? ($paymentInfo['additionalInfo']['contractId'] 
+            ?? ''));
+
+        $httpMethod = 'POST';
+
+        if ($isQris) {
+            // [A] QRIS Query Status (POST /v1.0/qr/qr-mpm-query)
+            $endpoint = '/v1.0/qr/qr-mpm-query';
+            $body = [
+                'originalPartnerReferenceNo' => $invoiceNo,
+                'serviceCode' => '51',
+            ];
+            if (!empty($paymentInfo['referenceId'])) {
+                $body['originalReferenceNo'] = (string) $paymentInfo['referenceId'];
+            }
+            if (!empty($contractId)) {
+                $body['additionalInfo'] = ['contractId' => (string) $contractId];
+            }
+        } elseif ($isEwallet) {
+            // [B] E-Wallet / Debit Query Status (POST /v1.0/debit/status)
+            $endpoint = '/v1.0/debit/status';
+            $body = [
+                'originalPartnerReferenceNo' => $invoiceNo,
+                'serviceCode' => '55',
+            ];
+            if (!empty($paymentInfo['referenceId'])) {
+                $body['originalReferenceNo'] = (string) $paymentInfo['referenceId'];
+            }
+            if (!empty($contractId)) {
+                $body['additionalInfo'] = ['contractId' => (string) $contractId];
+            }
+        } else {
+            // [C] Virtual Account & Modern Retail Inquiry Status (POST /v1.0/transfer-va/inquiry-status)
+            $endpoint = '/v1.0/transfer-va/inquiry-status';
+            $vaNo = trim(
+                $paymentInfo['virtualAccountNo'] 
+                ?? ($paymentInfo['virtualAccount'] 
+                ?? ($paymentInfo['vaNo'] 
+                ?? ($paymentInfo['payCode'] ?? '')))
+            );
+
+            $body = [
+                'partnerServiceId' => (string) ($this->merchantId ?: '90341'),
+                'customerNo' => (string) ($paymentInfo['customerNo'] ?? ($paymentInfo['phone'] ?? $invoiceNo)),
+                'virtualAccountNo' => $vaNo,
+                'inquiryRequestId' => (string) \Illuminate\Support\Str::uuid(),
+                'additionalInfo' => array_filter([
+                    'contractId' => (string) $contractId,
+                    'channel' => $channel ?: 'MANDIRI',
+                    'trxId' => $invoiceNo,
+                ])
+            ];
+        }
+
+        // Generate SNAP Asymmetric Digital Signature (SHA256withRSA)
+        $signature = $this->generateAsymmetricSignature($httpMethod, $endpoint, $body, $timestamp);
+
+        try {
+            $response = Http::timeout(20)->withHeaders([
+                'X-SIGNATURE' => $signature,
+                'X-TIMESTAMP' => $timestamp,
+                'X-PARTNER-ID' => $this->clientKey,
+                'X-EXTERNAL-ID' => $invoiceNo,
+                'CHANNEL-ID' => 'WEB',
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . $endpoint, $body);
+
+            $respData = $response->json();
+            $httpOk = $response->successful();
+
+            Log::info("Winpay checkPaymentStatus {$endpoint} response", [
+                'invoice' => $invoiceNo,
+                'status_code' => $response->status(),
+                'response' => $respData
+            ]);
+
+            if ($httpOk && is_array($respData)) {
+                $rawStatus = $respData['latestTransactionStatus'] 
+                    ?? ($respData['virtualAccountData']['paymentFlagStatus'] 
+                    ?? ($respData['paymentStatus'] 
+                    ?? ($respData['status'] ?? null)));
+
+                $isPaid = false;
+                $statusNormalized = 'PENDING';
+
+                if (in_array((string)$rawStatus, ['00', 'SUCCESS', 'PAID', 'SETTLED', 'SUCCESSFUL'])) {
+                    $isPaid = true;
+                    $statusNormalized = 'PAID';
+                } elseif (in_array((string)$rawStatus, ['02', 'EXPIRED', 'KADALUWARSA'])) {
+                    $statusNormalized = 'EXPIRED';
+                } elseif (in_array((string)$rawStatus, ['03', 'FAILED', 'CANCELLED', 'BATAL'])) {
+                    $statusNormalized = 'CANCELLED';
+                }
+
+                $msg = $respData['responseMessage'] 
+                    ?? ($respData['transactionStatusDesc'] 
+                    ?? ($isPaid ? 'Pembayaran berhasil dikonfirmasi lunas.' : 'Pembayaran belum terdeteksi.'));
+
+                return [
+                    'success' => true,
+                    'is_paid' => $isPaid,
+                    'status' => $statusNormalized,
+                    'message' => $msg,
+                    'data' => $respData
+                ];
+            }
+
+            return [
+                'success' => false,
+                'is_paid' => false,
+                'status' => 'UNKNOWN',
+                'message' => $respData['responseMessage'] ?? 'Gagal memeriksa status pembayaran di Winpay.',
+                'data' => $respData
+            ];
+        } catch (\Throwable $e) {
+            Log::error("Winpay checkPaymentStatus exception", [
+                'invoice' => $invoiceNo,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'is_paid' => false,
+                'status' => 'ERROR',
+                'message' => $e->getMessage(),
+                'data' => null
+            ];
+        }
+    }
+
+
+    /**
      * =============================================================================================
      * [KHUSUS MODE SIMULATOR LOKAL] Return Mock Response untuk Pengujian Offline Tanpa Koneksi Internet
      * =============================================================================================

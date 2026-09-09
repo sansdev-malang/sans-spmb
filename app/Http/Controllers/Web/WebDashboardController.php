@@ -340,11 +340,12 @@ class WebDashboardController extends Controller
 
         // Load active payment based on phase
         $activePayment = null;
-        if ($status === 'agreement_signed') {
+        if (in_array($status, ['agreement_signed', 'completed'])) {
             $activePayment = $registration->activeFinalPayment;
         } else {
             $activePayment = $registration->activeRegistrationPayment;
         }
+
 
         $formDetails = $this->getFormDetails($registration);
         $allStepsCompleted = $formDetails['allStepsCompleted'];
@@ -1176,9 +1177,11 @@ class WebDashboardController extends Controller
             $status = $registration->registration_status;
 
             // Determine payment type
-            if ($status === 'agreement_signed') {
+            if (in_array($status, ['agreement_signed', 'completed'])) {
                 $paymentType = 'final_fee';
                 $feeDetails = $this->getFinalFeeDetails($registration);
+
+
 
                 // Filter out already fully paid items
                 $fullyPaidItemNames = [];
@@ -1560,8 +1563,126 @@ class WebDashboardController extends Controller
         }
     }
 
+    /**
+     * Cek status pembayaran secara real-time ke Payment Gateway (Winpay / BNI SNAP BI)
+     */
+    public function checkPaymentStatus($id)
+    {
+        $payment = Payment::find($id);
+        if (!$payment) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Transaksi pembayaran tidak ditemukan.'], 404);
+            }
+            return redirect()->back()->with('error', 'Transaksi pembayaran tidak ditemukan.');
+        }
+
+        // Verify ownership
+        $registration = Registration::where('id', $payment->registration_id)
+            ->where('user_id', auth()->id())
+            ->first();
+        if (!$registration) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+            }
+            abort(403, 'Unauthorized action.');
+        }
+
+        $redirectUrl = ($payment->payment_type === 'final_fee' || in_array($registration->registration_status, ['agreement_signed', 'completed']))
+            ? route('dashboard.result', $registration->id)
+            : route('dashboard.form', $registration->id);
+
+        // Jika transaksi di database kita memang sudah lunas
+        if ($payment->status === 'success') {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'is_paid' => true,
+                    'status' => 'PAID',
+                    'message' => 'Alhamdulillah! Pembayaran Anda sudah lunas terkonfirmasi.',
+                    'redirect' => $redirectUrl
+                ]);
+            }
+            return redirect()->to($redirectUrl)->with('success', 'Pembayaran sudah lunas terkonfirmasi.');
+        }
+
+        $gatewayCode = $payment->payment_info['gateway'] ?? 'winpay';
+
+        try {
+            $gatewayService = \App\Services\PaymentGatewayFactory::make($gatewayCode ?: 'winpay');
+            $statusResult = method_exists($gatewayService, 'checkPaymentStatus')
+                ? $gatewayService->checkPaymentStatus($payment->invoice_number, $payment->payment_info ?: [])
+                : ['success' => false, 'is_paid' => false, 'status' => 'UNKNOWN', 'message' => 'Fitur pengecekan status tidak didukung oleh gateway ini.'];
+
+            if (!empty($statusResult['is_paid'])) {
+                // Settle payment atomically
+                \App\Services\PaymentSettlementService::settlePayment($payment, $statusResult['data'] ?? [], 'user_inquiry_check');
+
+                $successMsg = ($payment->payment_type === 'final_fee')
+                    ? 'Alhamdulillah! Pembayaran biaya administrasi akhir sebesar Rp ' . number_format($payment->amount, 0, ',', '.') . ' berhasil diverifikasi lunas.'
+                    : 'Alhamdulillah! Pembayaran biaya pendaftaran berhasil diverifikasi lunas. Silakan lengkapi formulir pendaftaran.';
+
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'is_paid' => true,
+                        'status' => 'PAID',
+                        'message' => $successMsg,
+                        'redirect' => $redirectUrl
+                    ]);
+                }
+                return redirect()->to($redirectUrl)->with('success', $successMsg);
+            }
+
+            if (($statusResult['status'] ?? '') === 'EXPIRED') {
+                \App\Services\PaymentSettlementService::expirePayment($payment, 'gateway_inquiry_expired');
+
+                $expireMsg = 'Batas waktu pembayaran tagihan ini telah kedaluwarsa. Silakan pilih kembali metode pembayaran Anda.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'is_paid' => false,
+                        'status' => 'EXPIRED',
+                        'message' => $expireMsg,
+                        'reload' => true
+                    ]);
+                }
+                return redirect()->route('dashboard.payment', $registration->id)->with('warning', $expireMsg);
+            }
+
+            // Status masih pending / unpaid
+            $pendingMsg = 'Pembayaran belum terdeteksi oleh sistem perbankan. Jika Anda baru saja menyelesaikan transfer, mohon tunggu 1-2 menit lalu klik tombol ini kembali.';
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'is_paid' => false,
+                    'status' => 'PENDING',
+                    'message' => $pendingMsg
+                ]);
+            }
+            return redirect()->back()->with('info', $pendingMsg);
+
+        } catch (\Throwable $e) {
+            Log::error('checkPaymentStatus controller exception', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+
+            $errMsg = 'Terjadi kendala saat memeriksa status ke bank: ' . $e->getMessage();
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'is_paid' => false,
+                    'status' => 'ERROR',
+                    'message' => $errMsg
+                ], 500);
+            }
+            return redirect()->back()->with('error', $errMsg);
+        }
+    }
+
     public function cancelPayment($id)
     {
+
         $payment = Payment::findOrFail($id);
         
         // Verify ownership

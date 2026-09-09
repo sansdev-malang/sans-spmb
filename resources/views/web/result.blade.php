@@ -502,12 +502,13 @@
                                 <tr class="block sm:table-row bg-emerald-50 dark:bg-emerald-950/40 sm:bg-emerald-50/50 sm:dark:bg-emerald-950/20 text-xs font-black text-slate-900 dark:text-white uppercase border border-emerald-300/70 dark:border-emerald-800 sm:border-0 sm:border-t sm:border-emerald-100 sm:dark:border-emerald-900/40 rounded-2xl sm:rounded-none p-3.5 sm:p-0 shadow-xs sm:shadow-none">
                                     <td class="hidden sm:table-cell"></td>
                                     <td class="block sm:table-cell p-0 sm:p-4 text-brand-emerald dark:text-emerald-400">Total Bayar Sekarang</td>
-                                    <td class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono border-t border-emerald-200/60 dark:border-emerald-900/40 sm:border-0 mt-1.5 sm:mt-0">
-                                        Rp {{ number_format($remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
+                                    <td id="total-amount-display" class="block sm:table-cell p-0 pt-1.5 sm:p-4 text-right text-brand-emerald dark:text-emerald-400 text-sm font-extrabold font-mono border-t border-emerald-200/60 dark:border-emerald-900/40 sm:border-0 mt-1.5 sm:mt-0">
+                                        Rp {{ number_format($minPaymentRequired ?? $remainingBalance ?? $netFee ?? 0, 0, ',', '.') }}
                                     </td>
                                     <td class="hidden sm:table-cell p-4 text-center"></td>
                                 </tr>
                             @endif
+
                         </tbody>
                     </table>
                 </div>

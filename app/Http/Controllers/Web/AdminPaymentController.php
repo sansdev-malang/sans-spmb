@@ -249,4 +249,106 @@ class AdminPaymentController extends Controller
 
         return view('admin.mock-payments', compact('payments'));
     }
+
+    /**
+     * Check single payment transaction status from Admin Panel
+     */
+    public function checkStatus($id)
+    {
+        $payment = Payment::with('registration')->findOrFail($id);
+        $gatewayCode = $payment->payment_info['gateway'] ?? 'winpay';
+
+        try {
+            $gatewayService = \App\Services\PaymentGatewayFactory::make($gatewayCode ?: 'winpay');
+            $result = method_exists($gatewayService, 'checkPaymentStatus')
+                ? $gatewayService->checkPaymentStatus($payment->invoice_number, $payment->payment_info ?: [])
+                : ['success' => false, 'is_paid' => false, 'status' => 'UNKNOWN', 'message' => 'Pengecekan status tidak didukung oleh gateway ini.'];
+
+            if (!empty($result['is_paid'])) {
+                \App\Services\PaymentSettlementService::settlePayment($payment, $result['data'] ?? [], 'admin_check');
+                $msg = 'Alhamdulillah! Transaksi [' . $payment->invoice_number . '] terkonfirmasi LUNAS dari bank.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json(['success' => true, 'is_paid' => true, 'status' => 'PAID', 'message' => $msg]);
+                }
+                return redirect()->back()->with('success', $msg);
+            }
+
+            if (($result['status'] ?? '') === 'EXPIRED') {
+                \App\Services\PaymentSettlementService::expirePayment($payment, 'admin_gateway_expired');
+                $msg = 'Transaksi [' . $payment->invoice_number . '] terdeteksi telah KEDALUWARSA di bank.';
+                if (request()->expectsJson() || request()->ajax()) {
+                    return response()->json(['success' => true, 'is_paid' => false, 'status' => 'EXPIRED', 'message' => $msg]);
+                }
+                return redirect()->back()->with('warning', $msg);
+            }
+
+            $msg = 'Status transaksi [' . $payment->invoice_number . ']: Menunggu Pembayaran (Belum ada mutasi masuk).';
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json(['success' => true, 'is_paid' => false, 'status' => 'PENDING', 'message' => $msg]);
+            }
+            return redirect()->back()->with('info', $msg);
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Admin checkStatus error', ['payment_id' => $id, 'error' => $e->getMessage()]);
+            $msg = 'Gagal memeriksa status ke bank: ' . $e->getMessage();
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 500);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+    }
+
+    /**
+     * Bulk sync all pending payments in the last 48 hours from Admin Panel
+     */
+    public function syncPending(Request $request)
+    {
+        $pendingPayments = Payment::with('registration')
+            ->where('status', 'pending')
+            ->where('created_at', '>=', now()->subHours(48))
+            ->orderBy('created_at', 'asc')
+            ->limit(50)
+            ->get();
+
+        if ($pendingPayments->isEmpty()) {
+            $msg = 'Tidak ada transaksi berstatus PENDING aktif saat ini.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'count' => 0, 'message' => $msg]);
+            }
+            return redirect()->back()->with('info', $msg);
+        }
+
+        $settled = 0;
+        $expired = 0;
+        $pending = 0;
+
+        foreach ($pendingPayments as $payment) {
+            $gatewayCode = $payment->payment_info['gateway'] ?? 'winpay';
+            try {
+                $gatewayService = \App\Services\PaymentGatewayFactory::make($gatewayCode ?: 'winpay');
+                $result = method_exists($gatewayService, 'checkPaymentStatus')
+                    ? $gatewayService->checkPaymentStatus($payment->invoice_number, $payment->payment_info ?: [])
+                    : ['is_paid' => false, 'status' => 'UNKNOWN'];
+
+                if (!empty($result['is_paid'])) {
+                    \App\Services\PaymentSettlementService::settlePayment($payment, $result['data'] ?? [], 'admin_bulk_sync');
+                    $settled++;
+                } elseif (($result['status'] ?? '') === 'EXPIRED') {
+                    \App\Services\PaymentSettlementService::expirePayment($payment, 'admin_bulk_expired');
+                    $expired++;
+                } else {
+                    $pending++;
+                }
+            } catch (\Throwable $e) {
+                // skip on error
+            }
+        }
+
+        $msg = "Sinkronisasi selesai! {$settled} transaksi berhasil dilunaskan, {$expired} kedaluwarsa, {$pending} masih menunggu.";
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'settled' => $settled, 'expired' => $expired, 'pending' => $pending, 'message' => $msg]);
+        }
+        return redirect()->back()->with('success', $msg);
+    }
 }
+
