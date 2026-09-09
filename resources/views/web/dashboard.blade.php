@@ -20,7 +20,7 @@
             'verified' => 'Assessment / Ta\'aruf',
             'taaruf_completed' => 'Persetujuan Pernyataan',
             'agreement_signed' => 'Administrasi Akhir',
-            'completed' => 'Kelulusan & Selesai',
+            'completed' => 'Selesai',
         ];
         $currentStageName = $statusMap[$registration->registration_status] ?? 'Proses Pendaftaran';
     @endphp
@@ -656,9 +656,16 @@
                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->created_at->format('d M Y') }}</span>
                     </div>
                     @if($registration->extraServices->count() > 0)
-                        <div class="flex justify-between items-center border-t border-slate-100 dark:border-slate-800 pt-2 mt-2">
-                            <span>Layanan Tambahan</span>
-                            <span class="font-bold text-brand-emerald dark:text-emerald-400">{{ $registration->extraServices->pluck('name')->implode(', ') }}</span>
+                        <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5 mt-2 space-y-1.5 text-left">
+                            <span class="font-semibold text-slate-600 dark:text-slate-400 block text-[10px]">Layanan Tambahan</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach($registration->extraServices as $service)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-brand-emerald dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                                        <i data-lucide="check" class="w-3 h-3 text-brand-emerald dark:text-emerald-400 stroke-[2.5]"></i>
+                                        <span>{{ $service->name }}</span>
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -839,14 +846,14 @@
                             @endif
                         </div>
 
-                        <!-- Step 5: Kelulusan & Diterima -->
+                        <!-- Step 5: Selesai -->
                         <div class="flex items-start gap-2.5">
                             @if(in_array($status, ['accepted', 'agreement_signed', 'completed']))
                                 <span class="flex-shrink-0 w-5 h-5 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 flex items-center justify-center text-green-600 dark:text-green-450 mt-0.5">
-                                    <i data-lucide="award" class="w-3 h-3"></i>
+                                    <i data-lucide="check-circle" class="w-3 h-3"></i>
                                 </span>
                                 <div>
-                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Kelulusan & Hasil</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Selesai</span>
                                     <span class="text-[10px] text-green-600 font-semibold block uppercase">Diterima</span>
                                 </div>
                             @else
@@ -854,8 +861,8 @@
                                     <i data-lucide="circle" class="w-3.5 h-3.5"></i>
                                 </span>
                                 <div>
-                                    <span class="font-bold text-slate-500 dark:text-slate-400 block">Kelulusan & Hasil</span>
-                                    <span class="text-[10px] text-slate-400 block uppercase">Belum Diumumkan</span>
+                                    <span class="font-bold text-slate-500 dark:text-slate-400 block">Selesai</span>
+                                    <span class="text-[10px] text-slate-400 block uppercase">Belum Selesai</span>
                                 </div>
                             @endif
                         </div>

@@ -382,7 +382,7 @@ class WebDashboardController extends Controller
                 'status' => ($status === 'completed') ? 'completed' : ($status === 'agreement_signed' ? 'in_progress' : 'not_started'),
             ],
             'completed' => [
-                'label' => 'Kelulusan & Selesai',
+                'label' => 'Selesai',
                 'description' => 'Resmi bergabung dengan Sekolah Anak Saleh.',
                 'status' => ($status === 'completed') ? 'completed' : 'not_started',
             ],
