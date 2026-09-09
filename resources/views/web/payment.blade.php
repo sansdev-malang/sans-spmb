@@ -364,25 +364,27 @@
                         @endphp
 
                         @if ($isQrisMethod)
+                            @php
+                                $qrisDownloadUrl = !empty($activePayment->payment_info['qrUrl'])
+                                    ? $activePayment->payment_info['qrUrl']
+                                    : 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=15&data=' . urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING');
+                                $qrisFilename = 'QRIS-' . ($activePayment->invoice_number ?? 'SPMB') . '.png';
+                            @endphp
                             <!-- QRIS Display -->
                             <div class="flex flex-col items-center justify-center gap-3">
-                                <div class="bg-white p-3 border border-slate-200 rounded-xl shadow-inner flex items-center justify-center">
+                                <div class="bg-white p-3 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner flex items-center justify-center">
                                     @if(!empty($activePayment->payment_info['qrUrl']))
-                                        <img src="{{ $activePayment->payment_info['qrUrl'] }}" alt="QRIS Code" class="h-44 w-44 object-contain">
+                                        <img id="qrisImagePreview" src="{{ $activePayment->payment_info['qrUrl'] }}" alt="QRIS Code" class="h-48 w-48 object-contain rounded-lg">
                                     @else
-                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-44 w-44">
+                                        <img id="qrisImagePreview" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" alt="QRIS Code" class="h-48 w-48 rounded-lg">
                                     @endif
                                 </div>
-                                <p class="text-xs text-slate-400 font-medium">Scan QRIS menggunakan Mobile Banking atau e-Wallet pilihan Anda.</p>
-                                @if(!empty($activePayment->payment_info['qrUrl']))
-                                    <a href="{{ $activePayment->payment_info['qrUrl'] }}" download="QRIS-SPMB-SekolahAnakSaleh.png" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 mt-2">
-                                        <i data-lucide="download" class="w-4 h-4"></i> Unduh/Lihat QRIS (PNG)
-                                    </a>
-                                @else
-                                    <a href="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($activePayment->payment_info['qrContent'] ?? $activePayment->payment_info['qrisString'] ?? 'MOCK_QRIS_STRING') }}" download="QRIS-SPMB-SekolahAnakSaleh.png" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 mt-2">
-                                        <i data-lucide="download" class="w-4 h-4"></i> Unduh Kode QRIS (PNG)
-                                    </a>
-                                @endif
+                                <p class="text-xs text-slate-400 font-medium text-center">Scan QRIS menggunakan Mobile Banking atau e-Wallet pilihan Anda.</p>
+                                
+                                <button type="button" id="btnDownloadQris" onclick="downloadQrisImage('{{ $qrisDownloadUrl }}', '{{ $qrisFilename }}')" class="bg-brand-emerald hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 mt-1 cursor-pointer">
+                                    <i data-lucide="download" class="w-4 h-4" id="btnDownloadQrisIcon"></i>
+                                    <span id="btnDownloadQrisText">Unduh Kode QRIS (PNG)</span>
+                                </button>
                             </div>
                         @elseif ($isEwalletMethod)
                             <!-- E-Wallet Display -->
@@ -646,6 +648,63 @@
         if (modal) {
             modal.classList.add('hidden');
             document.body.style.overflow = '';
+        }
+    }
+
+    async function downloadQrisImage(url, filename) {
+        const btn = document.getElementById('btnDownloadQris');
+        const btnText = document.getElementById('btnDownloadQrisText');
+        const originalText = btnText ? btnText.innerText : 'Unduh Kode QRIS (PNG)';
+
+        try {
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-wait');
+            }
+            if (btnText) {
+                btnText.innerText = 'Mengunduh Gambar...';
+            }
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Fetch failed');
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = filename || 'QRIS-SPMB.png';
+            document.body.appendChild(a);
+            a.click();
+
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-75', 'cursor-wait');
+                }
+                if (btnText) {
+                    btnText.innerText = originalText;
+                }
+            }, 1000);
+        } catch (error) {
+            console.error('Download QRIS error, falling back to open:', error);
+            const fallbackLink = document.createElement('a');
+            fallbackLink.href = url;
+            fallbackLink.target = '_blank';
+            fallbackLink.download = filename || 'QRIS-SPMB.png';
+            document.body.appendChild(fallbackLink);
+            fallbackLink.click();
+            document.body.removeChild(fallbackLink);
+
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-wait');
+            }
+            if (btnText) {
+                btnText.innerText = originalText;
+            }
         }
     }
 </script>
