@@ -125,14 +125,14 @@
                     </div>
                 </div>
 
-                <!-- Card 4: Program Kelas -->
+                <!-- Card 4: Kategori Murid -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
                     <div class="space-y-2">
                         <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
                             <i data-lucide="book-open" class="w-4 h-4"></i>
-                            <h3>Program Kelas</h3>
+                            <h3>Kategori Murid</h3>
                         </div>
-                        <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Program kelas (seperti Reguler, Tahfidz) yang bisa dipilih.</p>
+                        <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Kategori murid (seperti Reguler, Inklusi) yang bisa dipilih.</p>
                     </div>
                     
                     <div class="space-y-2 pt-2">
@@ -145,7 +145,7 @@
                                 </div>
                             </label>
                         @empty
-                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada data program kelas.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Belum ada data kategori murid.</p>
                         @endforelse
                     </div>
                 </div>

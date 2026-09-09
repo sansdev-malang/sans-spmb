@@ -85,7 +85,7 @@
                 class="w-full flex items-center justify-between px-6 py-4 bg-slate-50/50 hover:bg-slate-50 transition text-xs font-extrabold text-slate-700 uppercase tracking-wider">
             <span class="flex items-center gap-2">
                 <i data-lucide="bar-chart-horizontal" class="w-4 h-4 text-brand-emerald"></i>
-                Lihat Rekap Gelombang, Jalur, & Program Kelas
+                Lihat Rekap Gelombang, Jalur, & Kategori Murid
             </span>
             <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200 chevron-icon"></i>
         </button>
@@ -144,11 +144,11 @@
                     </div>
                 </div>
 
-                <!-- Column 3: Program Kelas -->
+                <!-- Column 3: Kategori Murid -->
                 <div class="space-y-3">
                     <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
                         <i data-lucide="award" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                        Program Kelas
+                        Kategori Murid
                     </h4>
                     <div class="space-y-2.5">
                         @forelse($classProgramStats as $cps)
@@ -165,7 +165,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-xs text-slate-400 font-semibold py-2">Tidak ada data program kelas.</p>
+                            <p class="text-xs text-slate-400 font-semibold py-2">Tidak ada data kategori murid.</p>
                         @endforelse
                     </div>
                 </div>
@@ -362,9 +362,9 @@
                     </div>
                     <!-- Filter: Class Program -->
                     <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Program Kelas</label>
+                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Kategori Murid</label>
                         <select name="class_program_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">Semua Program</option>
+                            <option value="">Semua Kategori</option>
                             @foreach(\App\Models\SpmbClassProgram::all() as $program)
                                 <option value="{{ $program->id }}" {{ request('class_program_id') == $program->id ? 'selected' : '' }}>{{ $program->name }}</option>
                             @endforeach
@@ -909,7 +909,7 @@
                             <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Program Kelas</span>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">Kategori Murid</span>
                             <span id="det-program" class="font-bold text-brand-emerald dark:text-emerald-400 text-xs">-</span>
                         </div>
                         <div class="sm:col-span-2 md:col-span-3 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">

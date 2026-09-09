@@ -464,9 +464,9 @@
                         </div>
                         <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
                             <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Program Kelas</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Kategori Murid</span>
                                 <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="spmb_class_program_id" data-label="Program Kelas" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                    <input type="checkbox" data-field="spmb_class_program_id" data-label="Kategori Murid" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                                     <span>OK</span>
                                 </label>
                             </div>

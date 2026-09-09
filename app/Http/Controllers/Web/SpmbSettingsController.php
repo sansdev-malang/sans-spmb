@@ -389,7 +389,7 @@ class SpmbSettingsController extends Controller
             'is_active' => true
         ]);
 
-        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Program kelas berhasil ditambahkan.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Kategori murid berhasil ditambahkan.');
     }
 
     public function updateClassProgram(Request $request, $id)
@@ -414,7 +414,7 @@ class SpmbSettingsController extends Controller
             'is_active' => $request->has('is_active')
         ]);
 
-        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Program kelas berhasil diperbarui.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Kategori murid berhasil diperbarui.');
     }
 
     public function destroyClassProgram($id)
@@ -422,11 +422,11 @@ class SpmbSettingsController extends Controller
         $program = SpmbClassProgram::findOrFail($id);
 
         if (Registration::where('spmb_class_program_id', $program->id)->exists()) {
-            return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('error', 'Gagal menghapus! Program kelas sedang digunakan oleh pendaftar.');
+            return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('error', 'Gagal menghapus! Kategori murid sedang digunakan oleh pendaftar.');
         }
 
         $program->delete();
-        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Program kelas berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Kategori murid berhasil dihapus.');
     }
 
     // Extra Services CRUD

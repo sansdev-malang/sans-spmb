@@ -143,9 +143,9 @@
                     </div>
                     <!-- Filter: Class Program -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Program Kelas</label>
+                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Kategori Murid</label>
                         <select name="class_program_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">Semua Program</option>
+                            <option value="">Semua Kategori</option>
                             @foreach(\App\Models\SpmbClassProgram::all() as $program)
                                 <option value="{{ $program->id }}" {{ request('class_program_id') == $program->id ? 'selected' : '' }}>{{ $program->name }}</option>
                             @endforeach
@@ -691,7 +691,7 @@
                             <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Program Kelas</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">Kategori Murid</span>
                             <span id="det-program" class="font-bold text-brand-emerald dark:text-emerald-400 text-xs">-</span>
                         </div>
                         <div class="sm:col-span-2 md:col-span-3 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">

@@ -359,7 +359,7 @@
                     </span>
                 </td>
                 <td style="width: 50%;">
-                    <span class="label">Jalur & Program Kelas</span>
+                    <span class="label">Jalur & Kategori Murid</span>
                     <span class="value">
                         {{ $registration->type->name ?? '-' }}@if(!empty($registration->classProgram->name)) ({{ $registration->classProgram->name }})@endif
                     </span>

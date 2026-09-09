@@ -8,7 +8,7 @@
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h1 class="text-xl font-extrabold text-slate-800">Master Jalur & Gelombang</h1>
-        <p class="text-xs text-slate-500 mt-1">Kelola data periode akademik, gelombang masuk, kategori jenis pendaftaran, dan program kelas.</p>
+        <p class="text-xs text-slate-500 mt-1">Kelola data periode akademik, gelombang masuk, kategori jenis pendaftaran, dan kategori murid.</p>
     </div>
 
     <!-- Tab Navigation Pills -->
@@ -23,7 +23,7 @@
             <i data-lucide="tag" class="w-4 h-4"></i> Jenis Pendaftaran
         </button>
         <button onclick="switchTab('program')" id="tabBtn-program" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'program' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
-            <i data-lucide="layers" class="w-4 h-4"></i> Program Kelas
+            <i data-lucide="layers" class="w-4 h-4"></i> Kategori Murid
         </button>
     </div>
 
@@ -187,15 +187,15 @@
             </div>
         </div>
 
-        <!-- Tab: Program Kelas -->
+        <!-- Tab: Kategori Murid -->
         <div id="tabContent-program" class="tab-content p-8 space-y-6 {{ $activeTab === 'program' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
-                    <h3 class="font-extrabold text-base text-slate-800">Program Kelas (Kategori Siswa)</h3>
-                    <p class="text-[11px] text-slate-400">Kelola program/kategori penerimaan (contoh: Reguler, Inklusi).</p>
+                    <h3 class="font-extrabold text-base text-slate-850">Kategori Murid</h3>
+                    <p class="text-[11px] text-slate-400">Kelola kategori penerimaan murid (contoh: Reguler, Inklusi).</p>
                 </div>
                 <button onclick="openModal('program', '', '', '{{ route('admin.spmb-settings.class-programs.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Program
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Kategori Murid
                 </button>
             </div>
             
@@ -203,7 +203,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
-                            <th class="py-4 px-6">Nama Program</th>
+                            <th class="py-4 px-6">Nama Kategori Murid</th>
                             <th class="py-4 px-6 text-center">Status</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
@@ -213,7 +213,7 @@
                         @forelse($classPrograms as $program)
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-800">{{ $program->name }}</div>
+                                    <div class="font-extrabold text-slate-850">{{ $program->name }}</div>
                                     @if($program->description)
                                         <div class="text-[11px] text-slate-400 font-medium mt-0.5">{{ $program->description }}</div>
                                     @endif
@@ -230,10 +230,10 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button type="button" onclick="openModal('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.update', $program->id) }}', '{{ $program->is_active }}', '{{ addslashes($program->description) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Program Kelas">
+                                        <button type="button" onclick="openModal('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.update', $program->id) }}', '{{ $program->is_active }}', '{{ addslashes($program->description) }}')" class="p-2 text-slate-400 hover:text-brand-emerald bg-slate-50 hover:bg-emerald-50 rounded-lg transition" title="Edit Kategori Murid">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
-                                        <button type="button" onclick="deleteItem('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.delete', $program->id) }}')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Program Kelas">
+                                        <button type="button" onclick="deleteItem('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.delete', $program->id) }}')" class="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 rounded-lg transition" title="Hapus Kategori Murid">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </div>
@@ -241,7 +241,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data program kelas.</td>
+                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data kategori murid.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -283,7 +283,7 @@
             
             <div id="statusToggleBox" class="hidden flex items-center gap-2 pt-2">
                 <input type="checkbox" id="crudStatusInput" name="is_active" value="1" class="rounded border-slate-300 text-brand-emerald focus:ring-brand-emerald">
-                <label for="crudStatusInput" class="text-xs font-semibold text-slate-700">Aktifkan Program Kelas</label>
+                <label for="crudStatusInput" class="text-xs font-semibold text-slate-700">Aktifkan Kategori Murid</label>
             </div>
             
             <div class="flex justify-end gap-2 pt-4">
@@ -403,8 +403,8 @@
             mainInput.placeholder = 'Contoh: Gelombang 3';
         } else if (moduleType === 'program') {
             mainInput.name = 'name';
-            titleEl.innerText = val ? 'Edit Program Kelas' : 'Tambah Program Kelas';
-            labelEl.innerText = 'Nama Program Kelas*';
+            titleEl.innerText = val ? 'Edit Kategori Murid' : 'Tambah Kategori Murid';
+            labelEl.innerText = 'Nama Kategori Murid*';
             mainInput.placeholder = 'Contoh: Inklusi';
         } else {
             mainInput.name = 'name';
@@ -430,7 +430,7 @@
 
     // Delete Operations
     function deleteItem(type, name, isUsed, deleteUrl) {
-        let label = (type === 'periode') ? 'Periode' : (type === 'gelombang' ? 'Gelombang' : (type === 'program' ? 'Program Kelas' : 'Jenis Pendaftaran'));
+        let label = (type === 'periode') ? 'Periode' : (type === 'gelombang' ? 'Gelombang' : (type === 'program' ? 'Kategori Murid' : 'Jenis Pendaftaran'));
         if (isUsed === 'true' || isUsed === true || isUsed > 0) {
             showToast(`Peringatan: Tidak dapat menghapus ${label} "${name}" karena data sudah dipakai dalam transaksi aktif! Anda hanya dapat mengubah datanya.`, 'error');
         } else {

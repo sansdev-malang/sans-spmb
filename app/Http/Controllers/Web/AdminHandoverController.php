@@ -98,7 +98,7 @@ class AdminHandoverController extends Controller
 
         $columns = [
             'ID SPMB', 'No Registrasi', 'Nama Lengkap Siswa', 'Nama Panggilan', 'Jenis Kelamin', 'NISN', 'NIK Siswa', 
-            'Tempat Lahir', 'Tanggal Lahir', 'Agama', 'Alamat Lengkap', 'Unit Tujuan', 'Jenjang/Tingkat', 'Program Kelas',
+            'Tempat Lahir', 'Tanggal Lahir', 'Agama', 'Alamat Lengkap', 'Unit Tujuan', 'Jenjang/Tingkat', 'Kategori Murid',
             'Nama Ayah', 'Pekerjaan Ayah', 'No HP/WA Ayah', 'Nama Ibu', 'Pekerjaan Ibu', 'No HP/WA Ibu', 'Asal Sekolah',
             'Status Pembayaran', 'Status SPMB'
         ];

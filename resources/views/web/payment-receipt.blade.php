@@ -231,7 +231,7 @@
                     </span>
                 </div>
                 <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Jalur & Program Kelas</span>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Jalur & Kategori Murid</span>
                     <span class="font-bold text-slate-800 mt-0.5 block">
                         {{ $registration->type->name ?? '-' }}@if(!empty($registration->classProgram->name)) ({{ $registration->classProgram->name }})@endif
                     </span>

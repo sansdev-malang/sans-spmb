@@ -5,60 +5,78 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-6">
 
-    <!-- Top Navigation Breadcrumb -->
-    <div class="flex items-center justify-between">
-        <a href="{{ route('dashboard') }}" class="text-xs font-bold text-brand-emerald dark:text-emerald-400 hover:underline flex items-center gap-1.5">
-            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-            Kembali ke Daftar Calon Siswa
-        </a>
-        <span class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-3 py-1.5 rounded-full font-bold uppercase tracking-wider">
-            No. Registrasi: SANS-{{ substr($registration->period->year ?? '2026', 0, 4) }}-{{ str_pad($registration->id, 4, '0', STR_PAD_LEFT) }}
-        </span>
-    </div>
-
     <!-- Header Title -->
     <div class="border-b border-slate-100 dark:border-slate-800 pb-4">
         <h1 class="text-2xl font-extrabold text-slate-850 dark:text-white">Status Pendaftaran</h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Pantau tahapan penerimaan ananda dengan mudah secara real-time.</p>
     </div>
 
+    @php
+        $formPaid = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
+        $statusMap = [
+            'draft' => (!$formPaid ? 'Biaya Pendaftaran' : 'Pengisian Formulir'),
+            'submitted' => 'Verifikasi Berkas',
+            'failed' => 'Perlu Perbaikan Berkas',
+            'verified' => 'Observasi / Ta\'aruf',
+            'taaruf_completed' => 'Persetujuan Pernyataan',
+            'agreement_signed' => 'Administrasi Akhir',
+            'completed' => 'Kelulusan & Selesai',
+        ];
+        $currentStageName = $statusMap[$registration->registration_status] ?? 'Proses Pendaftaran';
+    @endphp
+
     <!-- Stepper Horizontal Timeline Progress Card (Mockup Style - Full Width) -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-150/80 dark:border-slate-800 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h3 class="font-extrabold text-slate-850 dark:text-white text-xs uppercase tracking-wider">Progres Tahapan SPMB</h3>
-            <span class="text-[10px] font-bold text-brand-emerald dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full uppercase">
-                Tahap: {{ str_replace('_', ' ', $registration->registration_status) }}
+            <h3 class="font-extrabold text-slate-850 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="git-commit" class="w-4 h-4 text-brand-emerald"></i>
+                <span>Alur Tahapan SPMB</span>
+            </h3>
+            <span class="text-[11px] font-bold text-brand-emerald dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60 px-3 py-1 rounded-full shadow-xs">
+                Tahap Saat Ini: <span class="font-extrabold text-slate-850 dark:text-white">{{ $currentStageName }}</span>
             </span>
         </div>
         
-        <!-- Horizontal stepper scrollable on mobile -->
-        <div class="flex items-center justify-between overflow-x-auto gap-4 py-2 select-none">
+        <!-- Horizontal stepper items without progress bar -->
+        <div class="flex items-start justify-between overflow-x-auto gap-3 sm:gap-4 select-none pt-2 pb-1 px-1">
             @foreach($timeline as $key => $step)
-                <div class="flex flex-col items-center text-center min-w-[90px] flex-grow relative">
+                <div class="flex flex-col items-center text-center min-w-[85px] sm:min-w-[90px] flex-1 relative px-1">
                     <!-- Bullet Indicator -->
-                    <div class="h-8 w-8 rounded-2xl flex items-center justify-center font-bold text-xs shadow-sm transition-all duration-300
-                        @if($step['status'] === 'completed') bg-green-500 text-white ring-4 ring-green-50 dark:ring-green-950/20
-                        @elseif($step['status'] === 'in_progress') bg-brand-yellow text-slate-900 ring-4 ring-yellow-50 dark:ring-yellow-950/20 font-black scale-110
-                        @elseif($step['status'] === 'failed') bg-rose-500 text-white
-                        @else bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 @endif">
+                    <div class="h-8 w-8 rounded-2xl flex items-center justify-center font-bold text-xs transition-all duration-300
+                        @if($step['status'] === 'completed') bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950/40 shadow-sm
+                        @elseif($step['status'] === 'in_progress') bg-brand-yellow text-slate-900 ring-4 ring-yellow-100 dark:ring-yellow-950/40 font-black scale-110 shadow-md animate-pulse
+                        @elseif($step['status'] === 'failed') bg-rose-500 text-white ring-4 ring-rose-100 dark:ring-rose-950/40
+                        @else bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 @endif">
                         @if($step['status'] === 'completed')
-                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <i data-lucide="check" class="w-4 h-4 text-white stroke-[3]"></i>
                         @elseif($step['status'] === 'in_progress')
-                            <i data-lucide="loader" class="w-4 h-4 animate-spin"></i>
+                            <i data-lucide="loader" class="w-4 h-4 animate-spin stroke-[2.5]"></i>
                         @elseif($step['status'] === 'failed')
-                            <i data-lucide="x" class="w-4 h-4"></i>
+                            <i data-lucide="x" class="w-4 h-4 text-white stroke-[3]"></i>
                         @else
-                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                            <i data-lucide="lock" class="w-3.5 h-3.5 stroke-[2]"></i>
                         @endif
                     </div>
                     
                     <!-- Step Label -->
-                    <span class="text-[9px] font-bold mt-2 tracking-wide block text-center leading-tight uppercase
+                    <span class="text-[9px] sm:text-[10px] font-bold mt-2 tracking-tight block text-center leading-tight uppercase
                         @if($step['status'] === 'completed') text-slate-800 dark:text-slate-200
                         @elseif($step['status'] === 'in_progress') text-brand-emerald dark:text-emerald-400 font-extrabold
-                        @elseif($step['status'] === 'failed') text-rose-600
+                        @elseif($step['status'] === 'failed') text-rose-600 font-extrabold
                         @else text-slate-400 dark:text-slate-600 @endif">
                         {{ $step['label'] }}
+                    </span>
+
+                    <!-- Status subtitle pill under each step -->
+                    <span class="text-[8px] font-bold mt-1 px-1.5 py-0.2 rounded-md uppercase tracking-wider
+                        @if($step['status'] === 'completed') text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/50
+                        @elseif($step['status'] === 'in_progress') text-amber-800 bg-amber-100 dark:text-amber-300 dark:bg-amber-950/80 font-black
+                        @elseif($step['status'] === 'failed') text-rose-700 bg-rose-50 dark:text-rose-400 dark:bg-rose-950/50 font-black
+                        @else text-slate-400 bg-slate-100 dark:text-slate-500 dark:bg-slate-800/40 @endif">
+                        @if($step['status'] === 'completed') Selesai
+                        @elseif($step['status'] === 'in_progress') Aktif
+                        @elseif($step['status'] === 'failed') Revisi
+                        @else Terkunci @endif
                     </span>
                 </div>
             @endforeach
@@ -618,7 +636,7 @@
                 </div>
                 <div class="text-[10px] space-y-2.5 text-slate-600 dark:text-slate-400">
                     <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-                        <span class="font-semibold">ID Pendaftaran</span>
+                        <span class="font-semibold">No. Registrasi</span>
                         <span class="font-mono font-extrabold text-slate-850 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{{ $registration->id_label }}</span>
                     </div>
                     <div class="flex justify-between items-center">
@@ -630,7 +648,7 @@
                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->type->name ?? 'Reguler' }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span>Program Kelas</span>
+                        <span>Kategori Murid</span>
                         <span class="font-bold text-brand-emerald dark:text-emerald-400">{{ $registration->classProgram->name ?? ($registration->getFieldValue('class_program') ?: '-') }}</span>
                     </div>
                     <div class="flex justify-between items-center">
@@ -721,14 +739,14 @@
                         <i data-lucide="activity" class="w-4 h-4 text-brand-emerald"></i> Status Tahapan
                     </h4>
                     <div class="space-y-4 text-xs">
-                        <!-- Step 1: Pembayaran Formulir -->
+                        <!-- Step 1: Biaya Pendaftaran -->
                         <div class="flex items-start gap-2.5">
                             @if($formPaid)
                                 <span class="flex-shrink-0 w-5 h-5 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 flex items-center justify-center text-green-600 dark:text-green-450 mt-0.5">
                                     <i data-lucide="check" class="w-3 h-3"></i>
                                 </span>
                                 <div>
-                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Pembayaran Formulir</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Biaya Pendaftaran</span>
                                     <span class="text-[10px] text-green-600 font-semibold block uppercase">Lunas</span>
                                 </div>
                             @else
@@ -736,7 +754,7 @@
                                     <i data-lucide="loader" class="w-3 h-3"></i>
                                 </span>
                                 <div>
-                                    <span class="font-bold text-slate-600 dark:text-slate-300 block">Pembayaran Formulir</span>
+                                    <span class="font-bold text-slate-600 dark:text-slate-300 block">Biaya Pendaftaran</span>
                                     <span class="text-[10px] text-amber-600 font-semibold block uppercase">Belum Dibayar</span>
                                 </div>
                             @endif

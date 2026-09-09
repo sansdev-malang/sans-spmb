@@ -298,7 +298,7 @@ class WebDashboardController extends Controller
         // Build 7-step timeline
         $timeline = [
             'registration_fee' => [
-                'label' => 'Pembayaran Formulir',
+                'label' => 'Biaya Pendaftaran',
                 'description' => 'Membayar biaya seleksi pendaftaran Rp ' . number_format($feeAmount, 0, ',', '.'),
                 'status' => $formPaid ? 'completed' : 'in_progress',
             ],

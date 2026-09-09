@@ -249,7 +249,7 @@
                 <td class="value">{{ $registration->unit->name ?? '-' }} ({{ $registration->admission_level }})</td>
             </tr>
             <tr>
-                <td class="label">Program Kelas</td>
+                <td class="label">Kategori Murid</td>
                 <td class="value">{{ $registration->classProgram->name ?? 'Reguler' }}</td>
             </tr>
             <tr>

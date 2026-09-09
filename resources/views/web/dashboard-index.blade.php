@@ -252,7 +252,7 @@
                                     <span class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->type->name ?? 'Reguler' }} • {{ $reg->wave->name ?? 'Gel. 1' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                                    <span class="flex items-center gap-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i> Program Kelas</span>
+                                    <span class="flex items-center gap-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i> Kategori Murid</span>
                                     <span class="font-bold text-brand-emerald dark:text-emerald-400">{{ $reg->classProgram->name ?? ($reg->getFieldValue('class_program') ?: 'Reguler') }}</span>
                                 </div>
                                 @if($reg->extraServices && $reg->extraServices->count() > 0)
