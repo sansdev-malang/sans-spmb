@@ -23,7 +23,7 @@
                     $firstGradeId = $firstGrade?->id ?? '';
                     $brochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url');
                     $waUrl = $unit->getWhatsappUrl();
-                    $unitLogoPath = 'storage/logo/' . $uCode . '.svg';
+                    $unitLogoPath = file_exists(public_path('logo/' . $uCode . '.svg')) ? 'logo/' . $uCode . '.svg' : 'storage/logo/' . $uCode . '.svg';
                     $hasUnitLogo = file_exists(public_path($unitLogoPath));
                     $unitTheme = match (strtoupper($unit->code)) {
                         'PAUD' => [
@@ -60,7 +60,7 @@
                     <div class="space-y-3 w-full flex flex-col items-center">
                         <div class="h-16 w-16 flex items-center justify-center overflow-hidden">
                             @if($hasUnitLogo)
-                                <img src="{{ asset($unitLogoPath) }}" alt="Logo {{ $unit->name }}" class="h-full w-full object-contain">
+                                <img src="{{ asset($unitLogoPath) }}" alt="Logo {{ $unit->name }}" class="h-full w-full object-contain" loading="lazy" decoding="async">
                             @else
                                 <div class="h-14 w-14 rounded-2xl bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/25 flex items-center justify-center shadow-inner">
                                     <span class="font-black text-lg tracking-wider {{ $unitTheme['title'] }}">{{ strtoupper($unit->code) }}</span>
