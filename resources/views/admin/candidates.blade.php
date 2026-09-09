@@ -786,13 +786,37 @@
                                         })()),
                                     ];
                                 @endphp
-                                <div class="flex items-center justify-center">
+                                <div class="flex items-center justify-center gap-1.5">
                                     <button type="button" 
                                         id="cand-btn-{{ $cand->id }}"
                                         onclick="openCandidateDetailModal({{ json_encode($candJson) }})" 
                                         class="bg-brand-emerald hover-emerald text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i> Detail
                                     </button>
+
+                                    @if($cand->registration_status === 'agreement_signed')
+                                        @php
+                                            $dispCandidatePayload = [
+                                                'id' => $cand->id,
+                                                'candidate_name' => $cand->candidate_name ?? 'Calon Siswa',
+                                                'id_label' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
+                                                'unit_name' => $cand->unit->name ?? 'Unit',
+                                                'admission_level' => $cand->admission_level ?? '',
+                                                'net_fee' => (float) $calcNet,
+                                                'total_paid' => (float) ($cand->total_paid_final_fee ?? 0),
+                                                'remaining_balance' => (float) ($cand->remaining_balance ?? 0),
+                                                'registration_status' => $cand->registration_status,
+                                                'is_dispensation' => (bool) $cand->is_dispensation,
+                                                'dispensation_reason' => $cand->dispensation_reason ?? 'anak_guru',
+                                            ];
+                                        @endphp
+                                        <button type="button" 
+                                            onclick='openCandidateDispensationModal(@json($dispCandidatePayload))'
+                                            class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                                            title="Dispensasi Penerimaan Langsung (Tahap Administrasi)">
+                                            <i data-lucide="award" class="w-3.5 h-3.5"></i> Dispensasi
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -1218,11 +1242,102 @@
                 <span id="det-created" class="text-xs font-semibold text-slate-600 dark:text-slate-300">20 Aug 2026, 03:00 WIB</span>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2 rounded-xl text-xs font-bold transition">
+                <div id="modal-dispensation-btn-container"></div>
+                <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2 rounded-xl text-xs font-bold transition cursor-pointer">
                     Tutup
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: DISPENSASI PENERIMAAN MANUAL (TAHAP ADMINISTRASI)                 -->
+<!-- ========================================================================= -->
+<div id="candidateDispensationModal" onclick="if(event.target === this) closeCandidateDispensationModal()" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-800 to-indigo-900 p-6 text-white flex items-center justify-between">
+            <div class="flex items-center gap-3.5">
+                <div class="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center text-amber-300 flex-shrink-0 border border-white/15">
+                    <i data-lucide="award" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 id="cand_disp_name" class="text-base font-extrabold text-white">Dispensasi Penerimaan</h3>
+                    <div class="flex items-center gap-2 mt-0.5 text-xs text-purple-200">
+                        <span id="cand_disp_id_label" class="font-mono font-bold select-all"></span>
+                        <span>•</span>
+                        <span id="cand_disp_unit"></span>
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="closeCandidateDispensationModal()" class="h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <form id="candidate-dispensation-form" onsubmit="submitCandidateDispensationForm(event); return false;" class="p-6 space-y-5">
+            @csrf
+            <input type="hidden" id="cand_disp_registration_id" name="registration_id" value="">
+
+            <!-- Ringkasan Status Keuangan Saat Ini -->
+            <div class="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-150 dark:border-purple-800/60 space-y-2">
+                <div class="flex items-center justify-between text-xs font-semibold">
+                    <span class="text-slate-500 dark:text-slate-400">Tahap Saat Ini:</span>
+                    <span class="font-extrabold text-purple-800 dark:text-purple-300">Tahap Administrasi (Persetujuan Ditandatangani)</span>
+                </div>
+                <div class="flex items-center justify-between text-xs font-semibold">
+                    <span class="text-slate-500 dark:text-slate-400">Total Biaya Masuk Bersih (Netto):</span>
+                    <span id="cand_disp_net_fee" class="font-mono font-bold text-slate-800 dark:text-slate-200">Rp 0</span>
+                </div>
+                <div class="flex items-center justify-between text-xs font-semibold">
+                    <span class="text-emerald-600 dark:text-emerald-400">Telah Terbayar:</span>
+                    <span id="cand_disp_total_paid" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">Rp 0</span>
+                </div>
+                <div class="flex items-center justify-between text-xs font-bold pt-1.5 border-t border-purple-200/60 dark:border-purple-800">
+                    <span class="text-amber-700 dark:text-amber-400">Sisa Tagihan / Piutang:</span>
+                    <span id="cand_disp_remaining" class="font-mono text-sm font-extrabold text-amber-700 dark:text-amber-400">Rp 0</span>
+                </div>
+            </div>
+
+            <!-- Form Input Alasan Dispensasi -->
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Kategori / Alasan Dispensasi <span class="text-rose-500">*</span>
+                </label>
+                <select id="cand_disp_reason" name="reason" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-500">
+                    <option value="anak_guru">Anak Guru / Karyawan</option>
+                    <option value="kebijakan_yayasan">Kebijakan Khusus Yayasan</option>
+                    <option value="beasiswa_prestasi">Beasiswa Prestasi / Tahfidz</option>
+                    <option value="dispensasi_direktur">Dispensasi Khusus Direktur</option>
+                    <option value="keringanan_cicilan">Keringanan Pembayaran Cicilan</option>
+                </select>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-300">
+                <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                <p class="leading-relaxed">
+                    Dengan menetapkan dispensasi ini, calon siswa akan <strong>langsung resmi berstatus DITERIMA (Completed)</strong> di sistem dan portal orang tua, meskipun biaya administrasi belum lunas. Sisa tagihan tetap tercatat sebagai piutang berjalan.
+                </p>
+            </div>
+
+            <!-- Modal Footer Buttons -->
+            <div class="flex items-center justify-between gap-3 pt-2">
+                <button type="button" id="cand_btn_revert_dispensation" onclick="revertCandidateDispensation()" class="hidden px-4 py-2.5 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-rose-200 dark:border-rose-800 cursor-pointer">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Batalkan Dispensasi
+                </button>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button type="button" onclick="closeCandidateDispensationModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer">
+                        Tutup
+                    </button>
+                    <button type="submit" id="cand_btn_save_dispensation" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="check-check" class="w-4 h-4"></i> Tetapkan Diterima
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1549,6 +1664,55 @@
             }
         }
 
+        // Populate dispensation button in detail modal footer if in stage agreement_signed
+        const dispBtnContainer = document.getElementById('modal-dispensation-btn-container');
+        if (dispBtnContainer) {
+            dispBtnContainer.innerHTML = '';
+            const statusUpper = (cand.status || '').toUpperCase();
+            if (statusUpper === 'AGREEMENT_SIGNED') {
+                const dispPayload = {
+                    id: cand.id,
+                    candidate_name: cand.name,
+                    id_label: cand.id_label,
+                    unit_name: cand.unit_name || 'Unit',
+                    admission_level: cand.admission_level || '',
+                    net_fee: cand.net_fee || 0,
+                    total_paid: cand.total_paid || 0,
+                    remaining_balance: cand.remaining_balance || 0,
+                    registration_status: 'agreement_signed',
+                    is_dispensation: cand.is_dispensation || false,
+                    dispensation_reason: cand.dispensation_reason || 'anak_guru',
+                };
+                dispBtnContainer.innerHTML = `
+                    <button type="button" 
+                        id="btn-modal-dispensation-${cand.id}"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                        <i data-lucide="award" class="w-4 h-4"></i> Dispensasi Penerimaan
+                    </button>
+                `;
+                const btnEl = document.getElementById(`btn-modal-dispensation-${cand.id}`);
+                if (btnEl) {
+                    btnEl.onclick = function() {
+                        window.openCandidateDispensationModal(dispPayload);
+                    };
+                }
+            } else if (cand.is_dispensation && statusUpper === 'COMPLETED') {
+                dispBtnContainer.innerHTML = `
+                    <button type="button" 
+                        id="btn-modal-revert-disp-${cand.id}"
+                        class="bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Batalkan Dispensasi
+                    </button>
+                `;
+                const revertBtnEl = document.getElementById(`btn-modal-revert-disp-${cand.id}`);
+                if (revertBtnEl) {
+                    revertBtnEl.onclick = function() {
+                        window.revertCandidateDispensation(cand.id);
+                    };
+                }
+            }
+        }
+
         // Default to first tab
         switchCandidateTab('biodata');
 
@@ -1623,9 +1787,141 @@
                 if (detailModal && !detailModal.classList.contains('hidden')) {
                     window.closeDetailModal();
                 }
+                const dispModal = document.getElementById('candidateDispensationModal');
+                if (dispModal && !dispModal.classList.contains('hidden')) {
+                    window.closeCandidateDispensationModal();
+                }
             }
         });
     }
+
+    // =========================================================================
+    // JAVASCRIPT HANDLERS FOR CANDIDATE DISPENSATION MODAL
+    // =========================================================================
+    let currentCandDisp = null;
+
+    window.openCandidateDispensationModal = function(cand) {
+        currentCandDisp = cand;
+
+        document.getElementById('cand_disp_name').textContent = cand.candidate_name || 'Calon Siswa';
+        document.getElementById('cand_disp_id_label').textContent = cand.id_label || ('ID: ' + cand.id);
+        document.getElementById('cand_disp_unit').textContent = (cand.unit_name || 'Unit') + (cand.admission_level ? ' (' + cand.admission_level + ')' : '');
+        document.getElementById('cand_disp_registration_id').value = cand.id;
+
+        document.getElementById('cand_disp_net_fee').textContent = 'Rp ' + Number(cand.net_fee || 0).toLocaleString('id-ID');
+        document.getElementById('cand_disp_total_paid').textContent = 'Rp ' + Number(cand.total_paid || 0).toLocaleString('id-ID');
+        document.getElementById('cand_disp_remaining').textContent = 'Rp ' + Number(cand.remaining_balance || 0).toLocaleString('id-ID');
+
+        const revertBtn = document.getElementById('cand_btn_revert_dispensation');
+        if (revertBtn) {
+            if (cand.is_dispensation) {
+                revertBtn.classList.remove('hidden');
+            } else {
+                revertBtn.classList.add('hidden');
+            }
+        }
+
+        const reasonSelect = document.getElementById('cand_disp_reason');
+        if (reasonSelect && cand.dispensation_reason) {
+            for (let opt of reasonSelect.options) {
+                if (opt.value === cand.dispensation_reason || opt.text === cand.dispensation_reason) {
+                    opt.selected = true;
+                    break;
+                }
+            }
+        }
+
+        document.getElementById('candidateDispensationModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    };
+
+    window.closeCandidateDispensationModal = function() {
+        document.getElementById('candidateDispensationModal').classList.add('hidden');
+    };
+
+    window.submitCandidateDispensationForm = async function(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const regId = document.getElementById('cand_disp_registration_id').value;
+        const reason = document.getElementById('cand_disp_reason').value;
+        const saveBtn = document.getElementById('cand_btn_save_dispensation');
+
+        if (!regId) return;
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('reason', reason);
+
+            const res = await fetch(`/admin/candidates/${regId}/manual-accept`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                window.closeCandidateDispensationModal();
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Gagal menetapkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i data-lucide="check-check" class="w-4 h-4"></i> Tetapkan Diterima';
+                if (window.lucide) lucide.createIcons();
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Terjadi kesalahan jaringan.');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i data-lucide="check-check" class="w-4 h-4"></i> Tetapkan Diterima';
+            if (window.lucide) lucide.createIcons();
+        }
+    };
+
+    window.revertCandidateDispensation = async function(customId) {
+        const regId = customId || (currentCandDisp ? currentCandDisp.id : null);
+        if (!regId) return;
+
+        if (!confirm('Apakah Anda yakin ingin membatalkan status dispensasi calon siswa ini?')) {
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+
+            const res = await fetch(`/admin/candidates/${regId}/revert-manual-accept`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                window.closeCandidateDispensationModal();
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Terjadi kesalahan jaringan.');
+        }
+    };
 
     // Update Tab 4 (Data & Riwayat Pembayaran) dynamically
     window.updateModalPaymentTab = function(cand) {
