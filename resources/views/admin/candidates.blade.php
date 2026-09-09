@@ -807,7 +807,7 @@
                                                 'remaining_balance' => (float) ($cand->remaining_balance ?? 0),
                                                 'registration_status' => $cand->registration_status,
                                                 'is_dispensation' => (bool) $cand->is_dispensation,
-                                                'dispensation_reason' => $cand->dispensation_reason ?? 'anak_guru',
+                                                'dispensation_reason' => $cand->dispensation_reason ?? '',
                                             ];
                                         @endphp
                                         <button type="button" 
@@ -1304,15 +1304,14 @@
             <!-- Form Input Alasan Dispensasi -->
             <div class="space-y-1.5">
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Kategori / Alasan Dispensasi <span class="text-rose-500">*</span>
+                    Alasan / Keterangan Dispensasi <span class="text-rose-500">*</span>
                 </label>
-                <select id="cand_disp_reason" name="reason" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-500">
-                    <option value="anak_guru">Anak Guru / Karyawan</option>
-                    <option value="kebijakan_yayasan">Kebijakan Khusus Yayasan</option>
-                    <option value="beasiswa_prestasi">Beasiswa Prestasi / Tahfidz</option>
-                    <option value="dispensasi_direktur">Dispensasi Khusus Direktur</option>
-                    <option value="keringanan_cicilan">Keringanan Pembayaran Cicilan</option>
-                </select>
+                <input type="text" 
+                    id="cand_disp_reason" 
+                    name="reason" 
+                    required 
+                    placeholder="Contoh: Anak Guru TK, Kebijakan Khusus Yayasan, dll." 
+                    class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
             </div>
 
             <!-- Info Alert -->
@@ -1681,7 +1680,7 @@
                     remaining_balance: cand.remaining_balance || 0,
                     registration_status: 'agreement_signed',
                     is_dispensation: cand.is_dispensation || false,
-                    dispensation_reason: cand.dispensation_reason || 'anak_guru',
+                    dispensation_reason: cand.dispensation_reason || '',
                 };
                 dispBtnContainer.innerHTML = `
                     <button type="button" 
@@ -1821,14 +1820,9 @@
             }
         }
 
-        const reasonSelect = document.getElementById('cand_disp_reason');
-        if (reasonSelect && cand.dispensation_reason) {
-            for (let opt of reasonSelect.options) {
-                if (opt.value === cand.dispensation_reason || opt.text === cand.dispensation_reason) {
-                    opt.selected = true;
-                    break;
-                }
-            }
+        const reasonInput = document.getElementById('cand_disp_reason');
+        if (reasonInput) {
+            reasonInput.value = cand.dispensation_reason || '';
         }
 
         document.getElementById('candidateDispensationModal').classList.remove('hidden');

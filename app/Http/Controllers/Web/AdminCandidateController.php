@@ -307,18 +307,11 @@ class AdminCandidateController extends Controller
         $registration = Registration::scopedByAdmin()->findOrFail($id);
 
         $validated = $request->validate([
-            'reason' => 'required|string|max:100',
+            'reason' => 'required|string|max:150',
         ]);
 
         $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;
-        $reasonLabels = [
-            'anak_guru' => 'Anak Guru / Karyawan',
-            'kebijakan_yayasan' => 'Kebijakan Khusus Yayasan',
-            'beasiswa_prestasi' => 'Beasiswa Prestasi / Tahfidz',
-            'dispensasi_direktur' => 'Dispensasi Khusus Direktur',
-            'keringanan_cicilan' => 'Keringanan Pembayaran Cicilan',
-        ];
-        $reasonText = $reasonLabels[$validated['reason']] ?? $validated['reason'];
+        $reasonText = trim($validated['reason']);
 
         $registration->update([
             'registration_status' => 'completed',
