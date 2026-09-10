@@ -13,9 +13,9 @@ class SpmbAgreementTemplateSeeder extends Seeder
      */
     public function run(): void
     {
-        $agreementBody = '<p>Saya yang bertanda tangan di bawah ini selaku Orang Tua / Wali murid dari calon siswa:</p>
+        $agreementBody = '<p>Saya yang bertanda tangan di bawah ini selaku Orang Tua / Wali murid dari calon murid:</p>
 <div class="pl-4 my-2 space-y-1 font-semibold text-slate-800 dark:text-slate-200">
-    <p>Nama Calon Siswa : <strong>{{nama_calon_siswa}}</strong></p>
+    <p>Nama Calon Murid : <strong>{{nama_calon_murid}}</strong></p>
     <p>Unit & Program : <strong>{{nama_unit}} - {{nama_kelas}}</strong></p>
     <p>Tahun Ajaran : <strong>{{tahun_ajaran}}</strong></p>
 </div>

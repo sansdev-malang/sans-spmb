@@ -324,13 +324,13 @@ class AdminCandidateController extends Controller
 
         \App\Models\SpmbActivityLog::log(
             'MANUAL_ADMISSION_DISPENSATION',
-            "Menetapkan status Diterima (Dispensasi) untuk calon siswa {$candidateName} dengan alasan: {$reasonText}"
+            "Menetapkan status Diterima (Dispensasi) untuk calon murid {$candidateName} dengan alasan: {$reasonText}"
         );
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Calon siswa {$candidateName} berhasil ditetapkan DITERIMA melalui dispensasi khusus ({$reasonText}).",
+                'message' => "Calon murid {$candidateName} berhasil ditetapkan DITERIMA melalui dispensasi khusus ({$reasonText}).",
                 'data' => [
                     'id' => $registration->id,
                     'registration_status' => $registration->registration_status,
@@ -341,7 +341,7 @@ class AdminCandidateController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', "Calon siswa {$candidateName} berhasil ditetapkan DITERIMA melalui dispensasi khusus ({$reasonText}).");
+        return redirect()->back()->with('success', "Calon murid {$candidateName} berhasil ditetapkan DITERIMA melalui dispensasi khusus ({$reasonText}).");
     }
 
     /**
@@ -355,10 +355,10 @@ class AdminCandidateController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Calon siswa ini tidak diterima melalui jalur dispensasi manual.'
+                    'message' => 'Calon murid ini tidak diterima melalui jalur dispensasi manual.'
                 ], 422);
             }
-            return redirect()->back()->with('error', 'Calon siswa ini tidak diterima melalui jalur dispensasi manual.');
+            return redirect()->back()->with('error', 'Calon murid ini tidak diterima melalui jalur dispensasi manual.');
         }
 
         $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;
@@ -388,13 +388,13 @@ class AdminCandidateController extends Controller
 
         \App\Models\SpmbActivityLog::log(
             'REVERT_MANUAL_ADMISSION_DISPENSATION',
-            "Membatalkan status dispensasi penerimaan untuk calon siswa {$candidateName}"
+            "Membatalkan status dispensasi penerimaan untuk calon murid {$candidateName}"
         );
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Dispensasi penerimaan calon siswa {$candidateName} berhasil dibatalkan.",
+                'message' => "Dispensasi penerimaan calon murid {$candidateName} berhasil dibatalkan.",
                 'data' => [
                     'id' => $registration->id,
                     'registration_status' => $registration->registration_status,
@@ -403,6 +403,6 @@ class AdminCandidateController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', "Dispensasi penerimaan calon siswa {$candidateName} berhasil dibatalkan.");
+        return redirect()->back()->with('success', "Dispensasi penerimaan calon murid {$candidateName} berhasil dibatalkan.");
     }
 }

@@ -182,11 +182,11 @@
                         Token Placeholder Dinamis
                     </h4>
                     <p class="text-[10px] text-slate-500 leading-relaxed">
-                        Anda dapat menyematkan kode-kode token di bawah ini di dalam Judul atau Konten Surat. Sistem akan secara otomatis mengganti kode tersebut dengan data asli calon siswa saat halaman dirender:
+                        Anda dapat menyematkan kode-kode token di bawah ini di dalam Judul atau Konten Surat. Sistem akan secara otomatis mengganti kode tersebut dengan data asli calon murid saat halaman dirender:
                     </p>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
                         <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
-                            <code class="text-xs text-brand-emerald font-bold">@{{ nama_calon_siswa }}</code>
+                            <code class="text-xs text-brand-emerald font-bold">@{{ nama_calon_murid }}</code>
                             <span class="block text-[10px] text-slate-400 mt-0.5">Nama Anak</span>
                         </div>
                         <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">

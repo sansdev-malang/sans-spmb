@@ -9,7 +9,7 @@
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Riwayat Transaksi Pembayaran (Log)</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Log riwayat transaksi pembayaran pendaftaran calon siswa terintegrasi Winpay SNAP API secara real-time.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Log riwayat transaksi pembayaran pendaftaran calon murid terintegrasi Winpay SNAP API secara real-time.</p>
         </div>
         <div class="flex gap-2 items-center flex-wrap">
             <form action="{{ route('admin.payments.sync-pending') }}" method="POST" class="inline" hx-boost="false">
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Payments List Table -->
-    <div id="mock-payments-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#mock-payments-card" hx-select="#mock-payments-card">
+    <div id="payment-history-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#payment-history-card" hx-select="#payment-history-card">
         
         <!-- Search & Filter Form -->
         <form action="{{ route('admin.payments') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 space-y-4">
@@ -43,7 +43,7 @@
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice, Winpay ID (215584), VA, atau nama siswa..." 
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari invoice, Winpay ID (215584), VA, atau nama murid..." 
                                class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
                         
                         <!-- Clear (X) Button -->
@@ -180,7 +180,7 @@
                     <tr class="border-b border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">Transaksi & Waktu</th>
-                        <th class="py-4 px-6">Calon Siswa & Tagihan</th>
+                        <th class="py-4 px-6">Calon Murid & Tagihan</th>
                         <th class="py-4 px-6">Metode Pembayaran</th>
                         <th class="py-4 px-6">Nominal</th>
                         <th class="py-4 px-6 text-center">Status</th>
@@ -224,7 +224,7 @@
                                 </div>
                             </td>
 
-                            <!-- 3. Calon Siswa & Tagihan -->
+                            <!-- 3. Calon Murid & Tagihan -->
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-850 dark:text-white text-xs">
                                     {{ $pay->registration->candidate_name ?? 'Draft / Belum isi biodata' }}

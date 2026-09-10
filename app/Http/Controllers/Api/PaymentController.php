@@ -302,9 +302,9 @@ class PaymentController extends Controller
 
             // Step 2: Request payment transaction to Gateway
             try {
-                $candidateName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Siswa'));
+                $candidateName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Murid'));
 
-                // Susun nama transaksi: {KODE_UNIT} {JENIS_BIAYA} {NAMA_SISWA} (Maksimal 24 Karakter SNAP BI)
+                // Susun nama transaksi: {KODE_UNIT} {JENIS_BIAYA} {NAMA_MURID} (Maksimal 24 Karakter SNAP BI)
                 $rawUnit = $registration->unit?->code ?: ($registration->unit?->name ?? 'SPMB');
                 $cleanUnit = preg_replace('/[^a-zA-Z0-9]/', '', $rawUnit);
                 $unitCode = strtoupper(substr($cleanUnit ?: 'SPMB', 0, 4));
@@ -721,7 +721,7 @@ class PaymentController extends Controller
                 if ($nData['type'] === 'dsp_full') {
                     \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                         'title' => 'Pembayaran DSP Lunas',
-                        'message' => 'Pembayaran Uang Pangkal (DSP) calon siswa "' . $reg->candidate_name . '" telah lunas (Total: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ').',
+                        'message' => 'Pembayaran Uang Pangkal (DSP) calon murid "' . $reg->candidate_name . '" telah lunas (Total: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ').',
                         'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
                         'type' => 'success',
                         'spmb_unit_id' => $reg->spmb_unit_id,
@@ -741,7 +741,7 @@ class PaymentController extends Controller
                 } elseif ($nData['type'] === 'dsp_partial') {
                     \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                         'title' => 'Pembayaran DSP Sebagian',
-                        'message' => 'Diterima pembayaran DSP sebagian untuk calon siswa "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' (Masuk: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ' / ' . number_format($nData['totalRequired'], 0, ',', '.') . ').',
+                        'message' => 'Diterima pembayaran DSP sebagian untuk calon murid "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' (Masuk: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ' / ' . number_format($nData['totalRequired'], 0, ',', '.') . ').',
                         'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
                         'type' => 'info',
                         'spmb_unit_id' => $reg->spmb_unit_id,
@@ -761,7 +761,7 @@ class PaymentController extends Controller
                 } elseif ($nData['type'] === 'form_fee') {
                     \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                         'title' => 'Pembayaran Formulir Sukses',
-                        'message' => 'Pembayaran formulir untuk calon siswa "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' telah lunas.',
+                        'message' => 'Pembayaran formulir untuk calon murid "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' telah lunas.',
                         'url' => route('admin.payments') . '?search=' . urlencode($reg->candidate_name),
                         'type' => 'success',
                         'spmb_unit_id' => $reg->spmb_unit_id,

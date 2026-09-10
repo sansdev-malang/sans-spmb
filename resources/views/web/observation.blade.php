@@ -192,9 +192,9 @@
                             {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
                         </div>
                         <div class="min-w-0">
-                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Siswa</span>
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Murid</span>
                             <h4 class="font-black text-sm sm:text-lg text-white tracking-tight leading-snug truncate">
-                                {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                                {{ $registration->candidate_name ?? 'Calon Murid' }}
                             </h4>
                         </div>
                     </div>
@@ -537,9 +537,9 @@
                                         </div>
                                     </div>
                                     <p class="font-bold text-center text-slate-800 dark:text-white uppercase tracking-wide border-b border-slate-200 dark:border-slate-800 pb-2 mb-3">SURAT PERNYATAAN KESANGGUPAN MEMATUHI PERATURAN & BIAYA PENDIDIKAN</p>
-                                    <p>Saya yang bertanda tangan di bawah ini selaku Orang Tua / Wali murid dari calon siswa:</p>
+                                    <p>Saya yang bertanda tangan di bawah ini selaku Orang Tua / Wali murid dari calon murid:</p>
                                     <div class="pl-4 space-y-1 font-semibold">
-                                        <p>Nama Calon Siswa : {{ $registration->candidate_name }}</p>
+                                        <p>Nama Calon Murid : {{ $registration->candidate_name }}</p>
                                         <p>Unit & Program : {{ $registration->unit->name }} - {{ $registration->grade->name }}</p>
                                     </div>
                                     <p>Menyatakan dengan sesungguhnya dan penuh kesadaran bahwa:</p>

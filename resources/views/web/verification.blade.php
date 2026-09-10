@@ -46,9 +46,9 @@
                             {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
                         </div>
                         <div class="min-w-0">
-                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Siswa</span>
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Murid</span>
                             <h4 class="font-black text-sm sm:text-lg text-white tracking-tight leading-snug truncate">
-                                {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                                {{ $registration->candidate_name ?? 'Calon Murid' }}
                             </h4>
                         </div>
                     </div>
@@ -138,8 +138,8 @@
                                         'spmb_class_program_id' => ['label' => 'Kategori Murid', 'step_id' => 1],
                                         'extra_services' => ['label' => 'Layanan Tambahan', 'step_id' => 1],
 
-                                        // Step 2: Informasi Calon Siswa
-                                        'candidate_name' => ['label' => 'Nama Lengkap Calon Siswa', 'step_id' => 2],
+                                        // Step 2: Informasi Calon Murid
+                                        'candidate_name' => ['label' => 'Nama Lengkap Calon Murid', 'step_id' => 2],
                                         'nickname' => ['label' => 'Nama Panggilan', 'step_id' => 2],
                                         'nik' => ['label' => 'NIK Anak', 'step_id' => 2],
                                         'family_card_no' => ['label' => 'Nomor Kartu Keluarga (KK)', 'step_id' => 2],

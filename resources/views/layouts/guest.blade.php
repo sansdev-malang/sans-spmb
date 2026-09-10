@@ -269,7 +269,7 @@
                             ✨ SPMB Online
                         </span>
                         <h1 class="guest-panel-title text-3xl lg:text-4xl font-black leading-tight">
-                            Penerimaan Siswa Baru Berbasis Karakter Islami
+                            Penerimaan Murid Baru Berbasis Karakter Islami
                         </h1>
                         <p class="guest-panel-text text-sm text-white/85 leading-relaxed font-medium">
                             Selamat datang di portal pendaftaran {{ $schoolName }}. Daftarkan putra-putri terbaik Anda untuk bergabung bersama kami.

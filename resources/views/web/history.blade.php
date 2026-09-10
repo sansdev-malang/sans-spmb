@@ -62,7 +62,7 @@
                     <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Pendaftaran Aktif</span>
                     <span class="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5 mt-1">
                         <i data-lucide="users" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                        {{ $registrations->count() }} Calon Siswa
+                        {{ $registrations->count() }} Calon Murid
                     </span>
                 </div>
             </div>
@@ -92,7 +92,7 @@
             <div class="space-y-2.5">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="user-check" class="w-4 h-4 text-brand-emerald"></i> Pilih Calon Siswa Yang Ditinjau:
+                        <i data-lucide="user-check" class="w-4 h-4 text-brand-emerald"></i> Pilih Calon Murid Yang Ditinjau:
                     </span>
                     <span class="text-[11px] text-slate-400 font-semibold">{{ $registrations->count() }} Pendaftaran Ditemukan</span>
                 </div>
@@ -791,7 +791,7 @@
                                 @if($status === 'completed')
                                     Selamat! Ananda <strong>{{ $reg->candidate_name }}</strong> telah resmi menjadi bagian dari keluarga besar {{ $reg->unit?->name ?? 'Sekolah Anak Saleh' }}. Seluruh tahapan pendaftaran dan administrasi telah selesai dengan lengkap.
                                 @else
-                                    Selesaikan seluruh tahapan yang masih berjalan agar ananda resmi terdaftar dan diterima sebagai siswa baru.
+                                    Selesaikan seluruh tahapan yang masih berjalan agar ananda resmi terdaftar dan diterima sebagai murid baru.
                                 @endif
                             </p>
                         </div>

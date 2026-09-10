@@ -59,7 +59,7 @@ class SyncPendingPaymentsCommand extends Command
         foreach ($pendingPayments as $payment) {
             $gatewayCode = $payment->payment_info['gateway'] ?? 'winpay';
             $reg = $payment->registration;
-            $candidateName = $reg ? ($reg->candidate_name ?: 'Calon Siswa') : '-';
+            $candidateName = $reg ? ($reg->candidate_name ?: 'Calon Murid') : '-';
 
             $this->line("-> Memeriksa Invoice: [{$payment->invoice_number}] ({$payment->payment_method} - {$candidateName})...");
 

@@ -164,7 +164,7 @@
             <div class="bg-red-50/50 dark:bg-red-950/10 rounded-2xl p-6 border border-red-100 dark:border-red-950/40 space-y-4">
                 <div>
                     <h3 class="text-xs font-bold text-red-650 dark:text-red-450 uppercase tracking-wide">Hapus Akun Permanen</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Setelah akun Anda dihapus, semua data calon siswa yang Anda daftarkan, riwayat pembayaran, serta berkas akan dihapus secara permanen dari basis data sistem Sekolah Anak Saleh.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Setelah akun Anda dihapus, semua data calon murid yang Anda daftarkan, riwayat pembayaran, serta berkas akan dihapus secara permanen dari basis data sistem Sekolah Anak Saleh.</p>
                 </div>
                 
                 <button type="button" id="toggleDeleteBtn" onclick="toggleDeleteForm()" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5">

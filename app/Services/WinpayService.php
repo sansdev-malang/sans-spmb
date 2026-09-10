@@ -247,8 +247,8 @@ class WinpayService implements PaymentGatewayInterface
      * @param float $amount Nominal transaksi
      * @param string $invoiceNo Nomor referensi invoice (misal: INV-SPMB-20260902-123)
      * @param string $method Kode kanal pembayaran (MANDIRI, BRI, BNI, BCA, QRIS, DANA, SHOPEEPAY, dll)
-     * @param string|null $customerName Nama siswa / pembayar
-     * @param string|null $customerPhone Nomor HP siswa / orang tua
+     * @param string|null $customerName Nama murid / pembayar
+     * @param string|null $customerPhone Nomor HP murid / orang tua
      * @return array ['success' => bool, 'data' => array, 'message' => string]
      */
     public function createPayment($amount, $invoiceNo, $method, $customerName = null, $customerPhone = null)
@@ -293,7 +293,7 @@ class WinpayService implements PaymentGatewayInterface
         $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
 
         // 2. Sanitasi nama pelanggan (Wajib Alfanumerik & Spasi, Panjang 5-24 karakter standar SNAP BI Winpay)
-        $rawName = trim($customerName ?: 'Calon Siswa SPMB');
+        $rawName = trim($customerName ?: 'Calon Murid SPMB');
         $cleanName = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $rawName);
         $cleanName = preg_replace('/\s+/', ' ', $cleanName);
         $cleanName = trim($cleanName);

@@ -10,7 +10,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800">Master Unit & Tingkatan</h1>
-            <p class="text-xs text-slate-500 mt-1">Kelola data master unit sekolah dan tingkatan kelas untuk penerimaan siswa baru.</p>
+            <p class="text-xs text-slate-500 mt-1">Kelola data master unit sekolah dan tingkatan kelas untuk penerimaan murid baru.</p>
         </div>
     </div>
 
@@ -205,7 +205,7 @@
                                 <th class="py-4 px-6">Kode Layanan</th>
                                 <th class="py-4 px-6">Unit Asal</th>
                                 <th class="py-4 px-6 text-center">Status</th>
-                                <th class="py-4 px-6 text-center">Jumlah Siswa</th>
+                                <th class="py-4 px-6 text-center">Jumlah Murid</th>
                                 <th class="py-4 px-6 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -345,7 +345,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">No. WhatsApp Admin Unit</label>
                         <input type="text" id="unitWhatsappInput" name="whatsapp_number" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: 081234567890">
-                        <span class="text-[10px] text-slate-400 mt-1 block">Nomor ini akan dihubungi oleh orang tua calon siswa unit ini.</span>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Nomor ini akan dihubungi oleh orang tua calon murid unit ini.</span>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Kontak / Petugas (Opsional)</label>

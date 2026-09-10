@@ -11,7 +11,7 @@
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
                 Manajemen Pengguna (User Data)
             </h1>
-            <p class="text-xs text-slate-500 mt-1">Kelola data login pengguna sistem SPMB Sekolah Anak Saleh (Admin dan Orang Tua/Calon Siswa).</p>
+            <p class="text-xs text-slate-500 mt-1">Kelola data login pengguna sistem SPMB Sekolah Anak Saleh (Admin dan Orang Tua/Calon Murid).</p>
         </div>
         <button onclick="openAddUserModal()" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
             <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah User Baru
@@ -25,7 +25,7 @@
             <span class="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-0.5">{{ $adminsCount }}</span>
         </button>
         <button onclick="switchUserTab('candidate_role')" id="userTabBtn-candidate_role" class="user-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
-            <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i> Orang Tua / Calon Siswa (Aktif)
+            <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i> Orang Tua / Calon Murid (Aktif)
             <span class="bg-slate-100 text-slate-700 text-[10px] px-2 py-0.5 rounded-full font-bold border border-slate-200 ml-0.5">{{ $candidatesCount }}</span>
         </button>
         <button onclick="switchUserTab('unregistered_role')" id="userTabBtn-unregistered_role" class="user-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50">
@@ -222,7 +222,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada user calon siswa yang telah melunasi formulir.</td>
+                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada user calon murid yang telah melunasi formulir.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -375,7 +375,7 @@
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Peran Pengguna (Role)*</label>
                 <select name="role" id="add-role-select" onchange="toggleAddUnitSelect()" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
                     <option value="admin">Panitia / Admin</option>
-                    <option value="candidate">Orang Tua / Calon Siswa</option>
+                    <option value="candidate">Orang Tua / Calon Murid</option>
                     @if(auth()->user()->isSuperAdmin())
                         <option value="super_admin">Developer / IT (Super Admin)</option>
                     @endif
@@ -435,7 +435,7 @@
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Peran Pengguna (Role)*</label>
                 <select id="edit-role" name="role" onchange="toggleEditUnitSelect()" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold">
                     <option value="admin">Panitia / Admin</option>
-                    <option value="candidate">Orang Tua / Calon Siswa</option>
+                    <option value="candidate">Orang Tua / Calon Murid</option>
                     @if(auth()->user()->isSuperAdmin())
                         <option value="super_admin">Developer / IT (Super Admin)</option>
                     @endif

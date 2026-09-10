@@ -103,6 +103,6 @@ class AdminResultController extends Controller
 
         $registration->save();
 
-        return back()->with('success', 'Status kelulusan siswa ' . $registration->candidate_name . ' berhasil diperbarui.');
+        return back()->with('success', 'Status kelulusan murid ' . $registration->candidate_name . ' berhasil diperbarui.');
     }
 }

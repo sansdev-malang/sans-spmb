@@ -153,7 +153,7 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-150 dark:border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/70 dark:bg-slate-950/50">
-                        <th class="py-4 px-6">Calon Siswa & No. Pendaftaran</th>
+                        <th class="py-4 px-6">Calon Murid & No. Pendaftaran</th>
                         <th class="py-4 px-6">Unit & Jenjang</th>
                         <th class="py-4 px-6">Jadwal Ta'aruf</th>
                         <th class="py-4 px-6">Lokasi & Penguji</th>
@@ -353,7 +353,7 @@
     </div>
 </div>
 
-<!-- Modal: Atur Jadwal Ta'aruf Calon Siswa -->
+<!-- Modal: Atur Jadwal Ta'aruf Calon Murid -->
 <div id="scheduleModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in">
         <form id="scheduleForm" method="POST" action="" class="space-y-0">
@@ -363,7 +363,7 @@
             <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
                 <div>
                     <h3 class="text-base font-extrabold text-slate-800 dark:text-white" id="modalTitle">Atur Jadwal Ta'aruf</h3>
-                    <p class="text-xs text-slate-400 mt-0.5" id="modalCandidateInfo">Nama Calon Siswa</p>
+                    <p class="text-xs text-slate-400 mt-0.5" id="modalCandidateInfo">Nama Calon Murid</p>
                 </div>
                 <button type="button" onclick="closeScheduleModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>

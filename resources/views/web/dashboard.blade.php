@@ -531,8 +531,8 @@
                                         'spmb_class_program_id' => ['label' => 'Kategori Murid', 'step_id' => 1],
                                         'extra_services' => ['label' => 'Layanan Tambahan', 'step_id' => 1],
 
-                                        // Step 2: Informasi Calon Siswa
-                                        'candidate_name' => ['label' => 'Nama Lengkap Calon Siswa', 'step_id' => 2],
+                                        // Step 2: Informasi Calon Murid
+                                        'candidate_name' => ['label' => 'Nama Lengkap Calon Murid', 'step_id' => 2],
                                         'nickname' => ['label' => 'Nama Panggilan', 'step_id' => 2],
                                         'nik' => ['label' => 'NIK Anak', 'step_id' => 2],
                                         'family_card_no' => ['label' => 'Nomor Kartu Keluarga (KK)', 'step_id' => 2],
@@ -621,14 +621,14 @@
         <!-- Kolom Kanan: Sidebar (Info Pendaftaran, Rincian Administrasi & Bantuan) -->
         <div class="space-y-6">
             
-            <!-- Card 1: Info Calon Siswa (Mini Profile) -->
+            <!-- Card 1: Info Calon Murid (Mini Profile) -->
             <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-150/80 dark:border-slate-800">
                 <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
                     <div class="h-10 w-10 bg-brand-emerald text-brand-yellow rounded-xl flex items-center justify-center font-black text-lg">
                         {{ substr($registration->candidate_name ?? 'A', 0, 1) }}
                     </div>
                     <div>
-                        <h3 class="font-extrabold text-slate-800 dark:text-white text-xs leading-tight text-left">{{ $registration->candidate_name ?? 'Draft Calon Siswa' }}</h3>
+                        <h3 class="font-extrabold text-slate-800 dark:text-white text-xs leading-tight text-left">{{ $registration->candidate_name ?? 'Draft Calon Murid' }}</h3>
                         <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5 text-left">
                             {{ $registration->unit->name ?? '-' }}@if(!empty($registration->grade->name)) • {{ $registration->grade->name }}@endif
                         </span>

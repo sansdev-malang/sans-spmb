@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Data Pendaftar (Aktif) - Admin Panel')
-@section('page_title', 'Data Pendaftar (Aktif)')
+@section('title', 'Data Calon Murid (Aktif) - Admin Panel')
+@section('page_title', 'Data Calon Murid')
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Summary Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800">Daftar Lengkap Pendaftar (Aktif)</h1>
-            <p class="text-xs text-slate-500 mt-1">Menampilkan data calon pendaftar aktif yang telah melakukan pembayaran biaya pendaftaran formulir Sekolah Anak Saleh.</p>
+            <h1 class="text-xl font-extrabold text-slate-800">Daftar Lengkap Calon Murid (Aktif)</h1>
+            <p class="text-xs text-slate-500 mt-1">Menampilkan data calon murid aktif yang telah menyelesaikan pembayaran biaya pendaftaran formulir Sekolah Anak Saleh.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
             <button type="button" onclick="showFeatureComingSoon('Ekspor Data Pendaftar (Excel)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
@@ -106,7 +106,7 @@
                             <div class="space-y-1">
                                 <div class="flex justify-between text-xs font-bold text-slate-650">
                                     <span>{{ $ws['name'] }}</span>
-                                    <span>{{ $ws['count'] }} Siswa ({{ $percent }}%)</span>
+                                    <span>{{ $ws['count'] }} Murid ({{ $percent }}%)</span>
                                 </div>
                                 <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                                     <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
@@ -132,7 +132,7 @@
                             <div class="space-y-1">
                                 <div class="flex justify-between text-xs font-bold text-slate-650">
                                     <span>{{ $ts['name'] }}</span>
-                                    <span>{{ $ts['count'] }} Siswa ({{ $percent }}%)</span>
+                                    <span>{{ $ts['count'] }} Murid ({{ $percent }}%)</span>
                                 </div>
                                 <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                                     <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
@@ -158,7 +158,7 @@
                             <div class="space-y-1">
                                 <div class="flex justify-between text-xs font-bold text-slate-650">
                                     <span>{{ $cps['name'] }}</span>
-                                    <span>{{ $cps['count'] }} Siswa ({{ $percent }}%)</span>
+                                    <span>{{ $cps['count'] }} Murid ({{ $percent }}%)</span>
                                 </div>
                                 <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                                     <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
@@ -607,7 +607,7 @@
                                                 ? ('Formulir Pendaftaran ' . ($cand->unit->name ?? ''))
                                                 : (!empty($p->payment_info['selected_items']) 
                                                     ? collect($p->payment_info['selected_items'])->pluck('name')->join(', ')
-                                                    : 'Biaya Masuk Siswa Baru');
+                                                    : 'Biaya Masuk Murid Baru');
 
                                             return [
                                                 'id' => $p->id,
@@ -627,7 +627,7 @@
                                             ];
                                         })->values()->all(),
 
-                                        // Pengelompokan Kategori Tarif & Biaya Dinamis Sesuai Unit & Layanan Siswa & Persetujuan Pernyataan
+                                        // Pengelompokan Kategori Tarif & Biaya Dinamis Sesuai Unit & Layanan Murid & Persetujuan Pernyataan
                                         ...((function() use ($cand, $feeCategories) {
                                             $candUnitId = $cand->spmb_unit_id;
                                             $candPayments = $cand->payments ?? collect();
@@ -798,7 +798,7 @@
                                         @php
                                             $dispCandidatePayload = [
                                                 'id' => $cand->id,
-                                                'candidate_name' => $cand->candidate_name ?? 'Calon Siswa',
+                                                'candidate_name' => $cand->candidate_name ?? 'Calon Murid',
                                                 'id_label' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
                                                 'unit_name' => $cand->unit->name ?? 'Unit',
                                                 'admission_level' => $cand->admission_level ?? '',
@@ -823,7 +823,7 @@
                     @empty
                         <tr>
                             <td colspan="7" class="py-12 px-6 text-center text-slate-400">
-                                Belum ada calon siswa yang melengkapi biodata.
+                                Belum ada calon murid yang melengkapi biodata.
                             </td>
                         </tr>
                     @endforelse
@@ -850,7 +850,7 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h3 id="modal-header-cand-name" class="font-extrabold text-base text-white">Detail Calon Siswa</h3>
+                        <h3 id="modal-header-cand-name" class="font-extrabold text-base text-white">Detail Calon Murid</h3>
                         <span id="det-status-chip" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-white/20 text-white border border-white/20">SUBMITTED</span>
                     </div>
                     <p id="det-id-label" class="text-xs text-emerald-200 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
@@ -906,7 +906,7 @@
                 <!-- Segment 1: Personal Information -->
                 <div class="space-y-4 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                     <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-700/80 pb-3">
-                        <i data-lucide="info" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Informasi Pribadi Calon Siswa
+                        <i data-lucide="info" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Informasi Pribadi Calon Murid
                     </h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                         <div>
@@ -918,7 +918,7 @@
                             <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">NIK Siswa</span>
+                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block">NIK Murid</span>
                             <span id="det-nik" class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
@@ -1050,7 +1050,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Pas Foto Murid</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Formal Siswa</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Formal Murid</span>
                             </div>
                         </div>
                         <a id="det-photo-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -1114,7 +1114,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">NISN / Kartu Pelajar</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Identitas Siswa</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-400">Identitas Murid</span>
                             </div>
                         </div>
                         <a id="det-nisn-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -1316,7 +1316,7 @@
             <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-300">
                 <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
                 <p class="leading-relaxed">
-                    Dengan menetapkan dispensasi ini, calon siswa akan <strong>langsung resmi berstatus DITERIMA (Completed)</strong> di sistem dan portal orang tua, meskipun biaya administrasi belum lunas. Sisa tagihan tetap tercatat sebagai piutang berjalan.
+                    Dengan menetapkan dispensasi ini, calon murid akan <strong>langsung resmi berstatus DITERIMA (Completed)</strong> di sistem dan portal orang tua, meskipun biaya administrasi belum lunas. Sisa tagihan tetap tercatat sebagai piutang berjalan.
                 </p>
             </div>
 
@@ -1383,7 +1383,7 @@
                 <div class="flex items-center justify-between">
                     <h4 class="font-extrabold text-[11px] text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-                        Status Progres Pendaftaran Calon Siswa
+                        Status Progres Pendaftaran Calon Murid
                     </h4>
                 </div>
                 <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-2 pt-1 pb-0.5">
@@ -1464,7 +1464,7 @@
 
         setText('det-id-label', 'ID: ' + (cand.id_label || '-'));
         setText('det-status-chip', cand.status || '-');
-        setText('modal-header-cand-name', cand.name || 'Detail Calon Siswa');
+        setText('modal-header-cand-name', cand.name || 'Detail Calon Murid');
         setText('det-period', cand.period);
         setText('det-wave', cand.wave);
         setText('det-type', cand.type);
@@ -1557,7 +1557,7 @@
         }
 
         // Set header elements
-        document.getElementById('modal-header-cand-name').innerText = cand.name || 'Detail Calon Siswa';
+        document.getElementById('modal-header-cand-name').innerText = cand.name || 'Detail Calon Murid';
         document.getElementById('det-status-chip').innerText = cand.status || '-';
 
         // ==========================================
@@ -1651,7 +1651,7 @@
                             <div class="text-xs space-y-0.5">
                                 <div class="font-extrabold text-amber-900 dark:text-amber-200">Surat Pernyataan Belum Disetujui</div>
                                 <p class="text-amber-700/90 dark:text-amber-400/90 leading-relaxed text-[11px]">
-                                    Tagihan <strong>Biaya Administrasi</strong> dan <strong>Biaya Tambahan</strong> akan otomatis aktif dan diterbitkan setelah orang tua/wali calon siswa menandatangani / menyetujui Surat Pernyataan Kesanggupan Tata Tertib & Biaya Pendidikan.
+                                    Tagihan <strong>Biaya Administrasi</strong> dan <strong>Biaya Tambahan</strong> akan otomatis aktif dan diterbitkan setelah orang tua/wali calon murid menandatangani / menyetujui Surat Pernyataan Kesanggupan Tata Tertib & Biaya Pendidikan.
                                 </p>
                             </div>
                         </div>
@@ -1800,7 +1800,7 @@
     window.openCandidateDispensationModal = function(cand) {
         currentCandDisp = cand;
 
-        document.getElementById('cand_disp_name').textContent = cand.candidate_name || 'Calon Siswa';
+        document.getElementById('cand_disp_name').textContent = cand.candidate_name || 'Calon Murid';
         document.getElementById('cand_disp_id_label').textContent = cand.id_label || ('ID: ' + cand.id);
         document.getElementById('cand_disp_unit').textContent = (cand.unit_name || 'Unit') + (cand.admission_level ? ' (' + cand.admission_level + ')' : '');
         document.getElementById('cand_disp_registration_id').value = cand.id;
@@ -1884,7 +1884,7 @@
         const regId = customId || (currentCandDisp ? currentCandDisp.id : null);
         if (!regId) return;
 
-        if (!confirm('Apakah Anda yakin ingin membatalkan status dispensasi calon siswa ini?')) {
+        if (!confirm('Apakah Anda yakin ingin membatalkan status dispensasi calon murid ini?')) {
             return;
         }
 

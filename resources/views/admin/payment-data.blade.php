@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Data Pembayaran & Billing Siswa - Admin Panel')
-@section('page_title', 'Data Pembayaran')
+@section('title', 'Tagihan & DSP Murid - Admin Panel')
+@section('page_title', 'Tagihan & DSP Murid')
 
 @section('content')
 <div class="space-y-6">
@@ -9,10 +9,10 @@
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 dark:text-white flex items-center">
-                Data Pembayaran & Billing Calon Siswa
+                Tagihan & DSP Calon Murid
             </h1>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Pusat pengelolaan tagihan pendaftaran, rincian biaya masuk, persetujuan keringanan/diskon, dan kebijakan cicilan calon siswa.
+                Pusat pengelolaan tagihan pendaftaran, rincian biaya masuk, persetujuan keringanan/diskon, dan kebijakan cicilan calon murid.
             </p>
         </div>
         <div class="flex gap-2 items-center">
@@ -33,7 +33,7 @@
         <!-- Card 1: Candidate Count -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between col-span-2 sm:col-span-1">
             <div>
-                <span class="text-[11px] text-slate-400 font-bold block uppercase tracking-wider">Total Siswa</span>
+                <span class="text-[11px] text-slate-400 font-bold block uppercase tracking-wider">Total Murid</span>
                 <span class="text-2xl font-black text-slate-800 dark:text-white block mt-1">{{ $stats['candidate_count'] }}</span>
                 <span class="text-[10px] text-emerald-600 font-extrabold mt-0.5 block">{{ $stats['lunas_count'] }} Lunas</span>
             </div>
@@ -280,7 +280,7 @@
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5 text-center">No.</th>
-                        <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">ID & Calon Siswa</th>
+                        <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">ID & Calon Murid</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Rincian Komponen Biaya</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Diskon / Keringanan</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Kebijakan Cicilan</th>
@@ -317,7 +317,7 @@
                                 {{ ($registrations->currentPage() - 1) * $registrations->perPage() + $loop->iteration }}
                             </td>
 
-                            <!-- ID & Calon Siswa -->
+                            <!-- ID & Calon Murid -->
                             <td class="border-b border-slate-200 dark:border-slate-700 px-4 py-4">
                                 <div class="flex items-start gap-2.5">
                                     <div class="h-8 w-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 border border-emerald-200 dark:border-emerald-800/60">
@@ -486,7 +486,7 @@
                                         $idLabelVal = $cand->id_label ?? ('SANS-' . $yearVal . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT));
                                         $candPayload = [
                                             'id' => $cand->id,
-                                            'candidate_name' => $cand->candidate_name ?? 'Calon Siswa',
+                                            'candidate_name' => $cand->candidate_name ?? 'Calon Murid',
                                             'id_label' => $idLabelVal,
                                             'total_gross' => (float) $gross,
                                             'total_discount' => (float) $discount,
@@ -515,7 +515,7 @@
                                     <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                                         <i data-lucide="inbox" class="w-6 h-6"></i>
                                     </div>
-                                    <p class="text-xs font-semibold">Tidak ada data pembayaran calon siswa yang ditemukan.</p>
+                                    <p class="text-xs font-semibold">Tidak ada data pembayaran calon murid yang ditemukan.</p>
                                 </div>
                             </td>
                         </tr>
@@ -534,7 +534,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL 1: PENGATURAN KERINGANAN (DISKON) & KEBIJAKAN CICILAN CALON SISWA  -->
+<!-- MODAL 1: PENGATURAN KERINGANAN (DISKON) & KEBIJAKAN CICILAN CALON MURID  -->
 <!-- ========================================================================= -->
 <div id="policy-modal" onclick="if(event.target === this) closePolicyModal()" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -576,7 +576,7 @@
                 <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600"></i>
             </div>
             <div>
-                <span class="font-extrabold block text-xs text-emerald-900 dark:text-emerald-100">Tagihan Calon Siswa Telah Lunas Sepenuhnya</span>
+                <span class="font-extrabold block text-xs text-emerald-900 dark:text-emerald-100">Tagihan Calon Murid Telah Lunas Sepenuhnya</span>
                 <span class="text-[11px] text-emerald-700 dark:text-emerald-300 font-normal">Seluruh komponen biaya telah dibayar (Rp 0 sisa tagihan). Kebijakan biaya terkunci dan tidak dapat diubah lagi.</span>
             </div>
         </div>
@@ -594,7 +594,7 @@
                             <i data-lucide="tag" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
                             1. Persetujuan Keringanan (Diskon)
                         </h4>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Tentukan jenis dan nominal potongan biaya untuk calon siswa ini.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Tentukan jenis dan nominal potongan biaya untuk calon murid ini.</p>
                     </div>
                 </div>
 
@@ -676,7 +676,7 @@
                         <i data-lucide="layers" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
                         2. Kebijakan Cicilan Pembayaran
                     </h4>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Atur apakah siswa diperbolehkan mencicil dan komponen mana saja yang dapat dicicil.</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Atur apakah murid diperbolehkan mencicil dan komponen mana saja yang dapat dicicil.</p>
                 </div>
 
                 <!-- Radio Mode Cicilan -->
@@ -731,7 +731,7 @@
             <!-- SECTION 3: LIVE SIMULATION CALCULATION CARD -->
             <div class="p-4 bg-emerald-950 text-white rounded-2xl space-y-3 shadow-md">
                 <span class="text-[10px] font-black uppercase tracking-widest text-emerald-300 block">
-                    Simulasi Ringkasan Keuangan Siswa
+                    Simulasi Ringkasan Keuangan Murid
                 </span>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div>
@@ -768,7 +768,7 @@
 </div>
 
 <!-- ========================================================================= -->
-<!-- MODAL 2: RIWAYAT TRANSAKSI & BUKTI KWITANSI PEMBAYARAN SISWA             -->
+<!-- MODAL 2: RIWAYAT TRANSAKSI & BUKTI KWITANSI PEMBAYARAN MURID             -->
 <!-- ========================================================================= -->
 <div id="transactions-modal" onclick="if(event.target === this) closeTransactionsModal()" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -847,7 +847,7 @@
 
         const isFullyPaid = (cand.remaining_balance <= 0 && cand.total_paid_final_fee > 0);
 
-        document.getElementById('modal-cand-name').textContent = cand.candidate_name || 'Calon Siswa';
+        document.getElementById('modal-cand-name').textContent = cand.candidate_name || 'Calon Murid';
         document.getElementById('modal-cand-id').textContent = cand.id_label || ('SANS-2027-' + String(cand.id).padStart(4, '0'));
         document.getElementById('modal-cand-unit').textContent = (cand.unit?.name || 'Unit') + (cand.admission_level ? ' (' + cand.admission_level + ')' : '');
         document.getElementById('modal_registration_id').value = cand.id;
@@ -1317,7 +1317,7 @@
     function openTransactionsModal(cand, payments, feeDetails) {
         document.body.classList.add('overflow-hidden');
         const idLabel = (cand && cand.id_label) ? cand.id_label : ('SANS-2027-' + String((cand && cand.id) ? cand.id : 1).padStart(4, '0'));
-        const candName = (cand && cand.candidate_name) ? cand.candidate_name : 'Calon Siswa';
+        const candName = (cand && cand.candidate_name) ? cand.candidate_name : 'Calon Murid';
 
         document.getElementById('tx-modal-name').textContent = candName;
         document.getElementById('tx-modal-id').textContent = idLabel;
@@ -1335,7 +1335,7 @@
                         <i data-lucide="receipt" class="w-7 h-7"></i>
                     </div>
                     <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Belum Ada Pembayaran Masuk</p>
-                    <p class="text-xs text-slate-400 mt-1">Calon siswa ini belum memiliki transaksi pembayaran yang berstatus lunas/berhasil.</p>
+                    <p class="text-xs text-slate-400 mt-1">Calon murid ini belum memiliki transaksi pembayaran yang berstatus lunas/berhasil.</p>
                 </div>
             `;
             document.getElementById('transactions-modal').classList.remove('hidden');

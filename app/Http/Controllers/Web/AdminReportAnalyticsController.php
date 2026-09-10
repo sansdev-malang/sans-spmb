@@ -124,52 +124,90 @@ class AdminReportAnalyticsController extends Controller
         }
 
         $candidates = $query->get();
+        $totalCandidates = $candidates->count();
 
-        // 1. Top Origin Schools
+        // 1. Top Origin Schools (Sekolah Asal)
         $schoolCounts = [];
+        $unfilledSchools = 0;
         foreach ($candidates as $c) {
             $prevSchool = trim($c->previous_school ?? '');
-            if (!empty($prevSchool) && strtolower($prevSchool) !== '-' && strtolower($prevSchool) !== 'tidak ada') {
+            if (!empty($prevSchool) && !in_array(strtolower($prevSchool), ['-', 'tidak ada', 'belum ada', 'belum sekolah', 'none'])) {
                 $prevSchool = ucwords(strtolower($prevSchool));
                 $schoolCounts[$prevSchool] = ($schoolCounts[$prevSchool] ?? 0) + 1;
             } else {
-                $schoolCounts['Belum Sekolah / Tidak Diisi'] = ($schoolCounts['Belum Sekolah / Tidak Diisi'] ?? 0) + 1;
+                $unfilledSchools++;
             }
         }
         arsort($schoolCounts);
         $topSchools = array_slice($schoolCounts, 0, 15, true);
+        $totalFilledSchools = $totalCandidates - $unfilledSchools;
 
-        // 2. City / District Distribution
+        // 2. City / Kabupaten Distribution
         $cityCounts = [];
+        $unfilledCities = 0;
         foreach ($candidates as $c) {
-            $city = trim($c->city ?? $c->district ?? '');
-            if (!empty($city)) {
+            $city = trim($c->city ?? '');
+            if (!empty($city) && !in_array(strtolower($city), ['-', 'tidak ada', 'belum diisi'])) {
                 $city = ucwords(strtolower($city));
                 $cityCounts[$city] = ($cityCounts[$city] ?? 0) + 1;
             } else {
-                $cityCounts['Kota Malang & Sekitarnya'] = ($cityCounts['Kota Malang & Sekitarnya'] ?? 0) + 1;
+                $unfilledCities++;
             }
         }
         arsort($cityCounts);
         $topCities = array_slice($cityCounts, 0, 10, true);
 
-        // 3. Information Sources (from additional_info JSON or default)
-        $sourceCounts = [];
+        // 3. District / Kecamatan Distribution
+        $districtCounts = [];
+        $unfilledDistricts = 0;
         foreach ($candidates as $c) {
-            $source = 'Media Sosial & Website';
-            if (!empty($c->additional_info) && is_array($c->additional_info) && !empty($c->additional_info['info_source'])) {
-                $source = $c->additional_info['info_source'];
+            $district = trim($c->kecamatan ?? '');
+            if (!empty($district) && !in_array(strtolower($district), ['-', 'tidak ada', 'belum diisi'])) {
+                $district = ucwords(strtolower($district));
+                $districtCounts[$district] = ($districtCounts[$district] ?? 0) + 1;
+            } else {
+                $unfilledDistricts++;
             }
-            $sourceCounts[$source] = ($sourceCounts[$source] ?? 0) + 1;
         }
+        arsort($districtCounts);
+        $topDistricts = array_slice($districtCounts, 0, 10, true);
+
+        // 4. Marketing Information Sources (Real survey responses if present)
+        $sourceCounts = [];
+        $totalSurveyResponses = 0;
+        foreach ($candidates as $c) {
+            $source = null;
+            if (!empty($c->additional_info) && is_array($c->additional_info)) {
+                $source = $c->additional_info['info_source'] 
+                    ?? $c->additional_info['sumber_informasi'] 
+                    ?? $c->additional_info['marketing_source'] 
+                    ?? null;
+            }
+            if (!empty($source) && !in_array(strtolower(trim($source)), ['-', 'tidak ada'])) {
+                $source = ucwords(strtolower(trim($source)));
+                $sourceCounts[$source] = ($sourceCounts[$source] ?? 0) + 1;
+                $totalSurveyResponses++;
+            }
+        }
+        arsort($sourceCounts);
 
         $selectedPeriod = SpmbPeriod::find($selectedPeriodId);
 
         return view('admin.reports-demographics', compact(
             'candidates',
+            'totalCandidates',
             'topSchools',
+            'schoolCounts',
+            'unfilledSchools',
+            'totalFilledSchools',
             'topCities',
+            'cityCounts',
+            'unfilledCities',
+            'topDistricts',
+            'districtCounts',
+            'unfilledDistricts',
             'sourceCounts',
+            'totalSurveyResponses',
             'units',
             'selectedPeriod'
         ));

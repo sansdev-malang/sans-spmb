@@ -347,8 +347,8 @@
             </tr>
             <tr>
                 <td style="width: 50%;">
-                    <span class="label">Nama Calon Siswa</span>
-                    <span class="value">{{ $registration->candidate_name ?? 'Calon Siswa' }}</span>
+                    <span class="label">Nama Calon Murid</span>
+                    <span class="value">{{ $registration->candidate_name ?? 'Calon Murid' }}</span>
                 </td>
                 <td style="width: 50%;">
                     <span class="label">Unit Pendidikan</span>

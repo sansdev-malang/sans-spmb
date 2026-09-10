@@ -12,7 +12,7 @@
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
                 Pengaturan Tahapan & Kolom Formulir (Form Settings)
             </h1>
-            <p class="text-xs text-slate-500 mt-1">Kelola tahapan wizard pendaftaran calon siswa beserta pertanyaan kolom input secara dinamis.</p>
+            <p class="text-xs text-slate-500 mt-1">Kelola tahapan wizard pendaftaran calon murid beserta pertanyaan kolom input secara dinamis.</p>
         </div>
         <!-- Unit Filter -->
         <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200/65 p-2.5 rounded-2xl shadow-inner">

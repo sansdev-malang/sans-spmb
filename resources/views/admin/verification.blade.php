@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Verifikasi Data Pendaftaran - Portal SPMB')
-@section('page_title', 'Verifikasi Data Pendaftaran')
+@section('title', 'Verifikasi Pendaftaran Calon Murid - Portal SPMB')
+@section('page_title', 'Verifikasi Pendaftaran')
 
 @section('content')
 <div class="space-y-8">
@@ -9,15 +9,15 @@
     <!-- Header Summary Card -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Verifikasi Data Pendaftaran</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola review formulir, status berkas, dan validasi data calon siswa dari satu tempat.</p>
+            <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Verifikasi Pendaftaran Calon Murid</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola review formulir, status berkas, dan validasi data calon murid dari satu tempat.</p>
         </div>
     </div>
 
     <!-- Candidate List Table -->
     <div id="candidate-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#candidate-card" hx-select="#candidate-card">
         <div class="bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Daftar Pendaftaran Calon Siswa</span>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Daftar Pendaftaran Calon Murid</span>
             
             <!-- Quick Filter Tabs with Counter Badges -->
             <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
@@ -112,7 +112,7 @@
                     <tr class="border-b border-slate-100 dark:border-slate-800 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-950/20">
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">No. Registrasi</th>
-                        <th class="py-4 px-6">Calon Siswa</th>
+                        <th class="py-4 px-6">Calon Murid</th>
                         <th class="py-4 px-6">Tingkat</th>
                         <th class="py-4 px-6">Berkas Upload</th>
                         <th class="py-4 px-6 text-center">Status Berkas</th>
@@ -382,7 +382,7 @@
                 <!-- Segment 1: Personal Information -->
                 <div class="space-y-3">
                     <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-                        <i data-lucide="info" class="w-4 h-4"></i> Biodata Calon Siswa
+                        <i data-lucide="info" class="w-4 h-4"></i> Biodata Calon Murid
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
@@ -682,7 +682,7 @@
 
         if (isVerificationMode && regId) {
             verifyForm.dataset.regId = regId;
-            titleLabel.innerText = 'Proses Verifikasi Data & Berkas Calon Siswa';
+            titleLabel.innerText = 'Proses Verifikasi Data & Berkas Calon Murid';
             btnApprove.classList.remove('hidden');
             btnReject.classList.remove('hidden');
             notesBlock.classList.remove('hidden');

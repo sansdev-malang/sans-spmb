@@ -74,9 +74,9 @@
                             {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
                         </div>
                         <div class="min-w-0">
-                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Siswa</span>
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Murid</span>
                             <h4 class="font-black text-sm sm:text-lg text-white tracking-tight leading-snug truncate">
-                                {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                                {{ $registration->candidate_name ?? 'Calon Murid' }}
                             </h4>
                         </div>
                     </div>
@@ -566,7 +566,7 @@
                     </h5>
                     <div class="instructions-body text-slate-600 dark:text-slate-400">
                         {!! $registration->unit?->re_registration_instructions_unpaid 
-                            ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut Bayar</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon siswa secara resmi terdaftar sebagai murid baru.</li></ul>') !!}
+                            ?: \App\Models\Setting::get('re_registration_instructions_unpaid', '<ul><li><strong>Pembayaran Fleksibel:</strong> Anda dapat mencentang satu atau beberapa komponen biaya di atas untuk diangsur/dilunasi terlebih dahulu sesuai kelonggaran finansial Anda.</li><li><strong>Batas Pelunasan:</strong> Seluruh biaya administrasi wajib dilunasi sepenuhnya sebelum tahun ajaran baru dimulai.</li><li><strong>Metode Pembayaran:</strong> Klik tombol <strong>Lanjut Bayar</strong> di bawah untuk memilih metode transfer Virtual Account Bank (BNI) atau pemindaian kode QRIS secara instan.</li><li><strong>Daftar Ulang Resmi:</strong> Setelah seluruh komponen biaya di atas terkonfirmasi <strong>Lunas</strong> oleh sistem, calon murid secara resmi terdaftar sebagai murid baru.</li></ul>') !!}
                     </div>
                 </div>
 

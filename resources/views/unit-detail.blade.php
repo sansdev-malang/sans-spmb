@@ -175,7 +175,7 @@
             <h3 class="text-xl font-extrabold text-slate-800 dark:text-white">Tertarik Mendaftarkan Ananda di Jenjang {{ $unit->name }}?</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
                 @auth
-                    Lanjutkan pendaftaran atau kelola data calon siswa ananda secara langsung melalui dashboard pendaftar.
+                    Lanjutkan pendaftaran atau kelola data calon murid ananda secara langsung melalui dashboard pendaftar.
                 @else
                     Klik tombol daftar di bawah untuk membuat akun dan melakukan pengisian formulir pendaftaran awal secara instan.
                 @endauth

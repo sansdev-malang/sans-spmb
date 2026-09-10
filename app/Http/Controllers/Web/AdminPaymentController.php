@@ -22,7 +22,7 @@ class AdminPaymentController extends Controller
                 ?? SpmbPeriod::value('id');
         });
         
-        // Base query for candidate billing (Khusus calon siswa yang telah lolos seleksi / masuk tahap daftar ulang DSP)
+        // Base query for candidate billing (Khusus calon murid yang telah lolos seleksi / masuk tahap daftar ulang DSP)
         $query = Registration::scopedByAdmin()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
             ->where('spmb_period_id', $selectedPeriodId)
@@ -247,7 +247,7 @@ class AdminPaymentController extends Controller
 
         $payments = $query->latest()->paginate($perPage)->withQueryString();
 
-        return view('admin.mock-payments', compact('payments'));
+        return view('admin.payment-history', compact('payments'));
     }
 
     /**

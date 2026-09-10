@@ -128,35 +128,35 @@ class WebDashboardController extends Controller
             case 'payment':
                 if ($formPaid && !in_array($status, ['draft', 'agreement_signed', 'completed'])) {
                     session(['active_candidate_id' => $registration->id]);
-                    return redirect()->route('dashboard')->with('error', 'Tidak ada tagihan pembayaran aktif untuk ' . ($registration->candidate_name ?? 'calon siswa') . '.');
+                    return redirect()->route('dashboard')->with('error', 'Tidak ada tagihan pembayaran aktif untuk ' . ($registration->candidate_name ?? 'calon murid') . '.');
                 }
                 return null;
 
             case 'form':
                 if (!$formPaid) {
                     session(['active_candidate_id' => $registration->id]);
-                    return redirect()->route('dashboard')->with('error', 'Menu Formulir untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.');
+                    return redirect()->route('dashboard')->with('error', 'Menu Formulir untuk ' . ($registration->candidate_name ?? 'calon murid') . ' masih terkunci. Selesaikan pembayaran biaya pendaftaran terlebih dahulu.');
                 }
                 return null;
 
             case 'verification':
                 if ($status === 'draft') {
                     session(['active_candidate_id' => $registration->id]);
-                    return redirect()->route('dashboard')->with('error', 'Menu Verifikasi Data untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.');
+                    return redirect()->route('dashboard')->with('error', 'Menu Verifikasi Data untuk ' . ($registration->candidate_name ?? 'calon murid') . ' masih terkunci. Lengkapi dan kirim formulir pendaftaran terlebih dahulu.');
                 }
                 return null;
 
             case 'observation':
                 if (!in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed'])) {
                     session(['active_candidate_id' => $registration->id]);
-                    return redirect()->route('dashboard')->with('error', 'Menu Ta\'aruf untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Berkas pendaftaran belum selesai diverifikasi oleh panitia.');
+                    return redirect()->route('dashboard')->with('error', 'Menu Ta\'aruf untuk ' . ($registration->candidate_name ?? 'calon murid') . ' masih terkunci. Berkas pendaftaran belum selesai diverifikasi oleh panitia.');
                 }
                 return null;
 
             case 'result':
                 if (!in_array($status, ['agreement_signed', 'completed'])) {
                     session(['active_candidate_id' => $registration->id]);
-                    return redirect()->route('dashboard')->with('error', 'Menu Administrasi untuk ' . ($registration->candidate_name ?? 'calon siswa') . ' masih terkunci. Selesaikan tahapan sebelumnya terlebih dahulu.');
+                    return redirect()->route('dashboard')->with('error', 'Menu Administrasi untuk ' . ($registration->candidate_name ?? 'calon murid') . ' masih terkunci. Selesaikan tahapan sebelumnya terlebih dahulu.');
                 }
                 return null;
         }
@@ -223,7 +223,7 @@ class WebDashboardController extends Controller
             $requestedReg = Registration::where('id', $request->query('id'))->where('user_id', $user->id)->first();
             if ($requestedReg && $requestedReg->registration_status !== 'completed') {
                 session(['active_candidate_id' => $requestedReg->id]);
-                return redirect()->route('dashboard')->with('error', 'Menu Status Akhir untuk ' . ($requestedReg->candidate_name ?? 'calon siswa') . ' masih terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.');
+                return redirect()->route('dashboard')->with('error', 'Menu Status Akhir untuk ' . ($requestedReg->candidate_name ?? 'calon murid') . ' masih terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.');
             }
         }
 
@@ -365,7 +365,7 @@ class WebDashboardController extends Controller
             ],
             'form_fill' => [
                 'label' => 'Pengisian Formulir',
-                'description' => 'Mengisi data lengkap calon siswa, orang tua, & dokumen.',
+                'description' => 'Mengisi data lengkap calon murid, orang tua, & dokumen.',
                 'status' => ($status !== 'draft') ? 'completed' : ($formPaid ? 'in_progress' : 'not_started'),
             ],
             'verification' => [
@@ -462,8 +462,8 @@ class WebDashboardController extends Controller
                 $admins = \App\Models\User::getAdminsForUnit($registration->spmb_unit_id);
                 $title = $isRevision ? 'Perbaikan Formulir Dikirim' : 'Formulir Pendaftaran Baru';
                 $message = $isRevision
-                    ? 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah mengirimkan perbaikan formulir & berkas untuk diverifikasi ulang.'
-                    : 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') baru saja mengirimkan formulir pendaftaran baru untuk diverifikasi.';
+                    ? 'Calon murid "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah mengirimkan perbaikan formulir & berkas untuk diverifikasi ulang.'
+                    : 'Calon murid "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') baru saja mengirimkan formulir pendaftaran baru untuk diverifikasi.';
 
                 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                     'title' => $title,
@@ -776,7 +776,10 @@ class WebDashboardController extends Controller
         
         if ($agreementTemplate) {
             $replacements = [
+                '{{nama_calon_murid}}' => $registration->candidate_name ?? '',
                 '{{nama_calon_siswa}}' => $registration->candidate_name ?? '',
+                '{{nama_murid}}' => $registration->candidate_name ?? '',
+                '{{nama_siswa}}' => $registration->candidate_name ?? '',
                 '{{nama_wali}}' => $registration->signature_name ?: ($registration->father_name ?: ($registration->mother_name ?: '')),
                 '{{nama_unit}}' => $registration->unit?->name ?? '',
                 '{{nama_kelas}}' => $registration->grade?->name ?? '',
@@ -787,7 +790,7 @@ class WebDashboardController extends Controller
             $agreementTemplate->content = str_replace(array_keys($replacements), array_values($replacements), $agreementTemplate->content);
             
             // Align colons in the metadata block using custom vanilla CSS grid rows
-            $metadataPattern = '/<p>(?:<[^>]+>)*(Nama Murid|Nama Calon Siswa|Nama Orangtua\/Wali|Nama Orang\s*Tua\s*\/\s*Wali|Tahun Ajaran|Layanan Pendidikan|Unit & Program)(?:<[^>]+>)*\s*:\s*(.*?)<\/p>/i';
+            $metadataPattern = '/<p>(?:<[^>]+>)*(Nama Murid|Nama Calon Murid|Nama Calon Siswa|Nama Orangtua\/Wali|Nama Orang\s*Tua\s*\/\s*Wali|Tahun Ajaran|Layanan Pendidikan|Unit & Program)(?:<[^>]+>)*\s*:\s*(.*?)<\/p>/i';
             $metadataReplacement = '<div class="metadata-row text-slate-750 dark:text-slate-300"><div>$1</div><div>:</div><div class="font-bold">$2</div></div>';
             $agreementTemplate->content = preg_replace($metadataPattern, $metadataReplacement, $agreementTemplate->content);
         }
@@ -842,7 +845,7 @@ class WebDashboardController extends Controller
             $admins = \App\Models\User::getAdminsForUnit($registration->spmb_unit_id);
             \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                 'title' => 'Surat Pernyataan Disetujui',
-                'message' => 'Surat pernyataan & rincian biaya masuk untuk calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah ditandatangani oleh ' . $request->signature_name . '.',
+                'message' => 'Surat pernyataan & rincian biaya masuk untuk calon murid "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah ditandatangani oleh ' . $request->signature_name . '.',
                 'url' => route('admin.payments.data') . '?search=' . urlencode($registration->candidate_name),
                 'type' => 'success',
                 'spmb_unit_id' => $registration->spmb_unit_id,
@@ -1043,8 +1046,8 @@ class WebDashboardController extends Controller
                 $admins = \App\Models\User::getAdminsForUnit($registration->spmb_unit_id);
                 $title = $isRevision ? 'Perbaikan Formulir Dikirim' : 'Formulir Pendaftaran Baru';
                 $message = $isRevision
-                    ? 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah mengirimkan perbaikan formulir & berkas untuk diverifikasi ulang.'
-                    : 'Calon siswa "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') baru saja mengirimkan formulir pendaftaran baru untuk diverifikasi.';
+                    ? 'Calon murid "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah mengirimkan perbaikan formulir & berkas untuk diverifikasi ulang.'
+                    : 'Calon murid "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') baru saja mengirimkan formulir pendaftaran baru untuk diverifikasi.';
 
                 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
                     'title' => $title,
@@ -1436,9 +1439,9 @@ class WebDashboardController extends Controller
 
             // Step 2: Request payment transaction to Gateway
             try {
-                $candidateName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Siswa'));
+                $candidateName = $registration->candidate_name ?: ($registration->student_name ?: ($registration->name ?: 'Calon Murid'));
 
-                // Susun nama transaksi: {KODE_UNIT} {JENIS_BIAYA} {NAMA_SISWA} (Maksimal 24 Karakter SNAP BI)
+                // Susun nama transaksi: {KODE_UNIT} {JENIS_BIAYA} {NAMA_MURID} (Maksimal 24 Karakter SNAP BI)
                 $rawUnit = $registration->unit?->code ?: ($registration->unit?->name ?? 'SPMB');
                 $cleanUnit = preg_replace('/[^a-zA-Z0-9]/', '', $rawUnit);
                 $unitCode = strtoupper(substr($cleanUnit ?: 'SPMB', 0, 4));

@@ -506,7 +506,7 @@
         </div>
  
         <!-- Navigation Menus -->
-        <nav class="flex-grow py-6 px-2 space-y-0.5 overflow-y-auto">
+        <nav id="sidebar-nav" class="flex-grow py-6 px-2 space-y-0.5 overflow-y-auto">
             <a href="{{ route('admin.dashboard') }}" 
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition {{ Route::is('admin.dashboard') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }} mb-3">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span class="sidebar-text">Dashboard</span>
@@ -519,26 +519,21 @@
                 <a href="{{ route('admin.verification') }}" 
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
                     {{ Route::is('admin.verification') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="check-square" class="w-4 h-4"></i> <span class="sidebar-text">Verifikasi Data Pendaftaran</span>
+                    <i data-lucide="check-square" class="w-4 h-4"></i> <span class="sidebar-text">Verifikasi Pendaftaran</span>
                 </a>
 
                 <a href="{{ route('admin.taaruf') }}" 
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
                     {{ Route::is('admin.taaruf') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="calendar-check" class="w-4 h-4"></i> <span class="sidebar-text">Jadwal Observasi / Ta'aruf</span>
+                    <i data-lucide="calendar-check" class="w-4 h-4"></i> <span class="sidebar-text">Jadwal Ta'aruf</span>
                 </a>
                 
                 <a href="{{ route('admin.candidates') }}" 
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
                     {{ Route::is('admin.candidates') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="users" class="w-4 h-4"></i> <span class="sidebar-text">Data Calon Siswa</span>
+                    <i data-lucide="users" class="w-4 h-4"></i> <span class="sidebar-text">Data Calon Murid</span>
                 </a>
 
-                <a href="{{ route('admin.results') }}" 
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.results') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="award" class="w-4 h-4"></i> <span class="sidebar-text">Pengumuman Kelulusan</span>
-                </a>
             </div>
 
             <!-- 2. Keuangan SPMB Category -->
@@ -548,7 +543,7 @@
                 <a href="{{ route('admin.payments.data') }}" 
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
                     {{ Route::is('admin.payments.data') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="wallet" class="w-4 h-4"></i> <span class="sidebar-text">Tagihan & DSP Siswa</span>
+                    <i data-lucide="wallet" class="w-4 h-4"></i> <span class="sidebar-text">Tagihan & DSP Murid</span>
                 </a>
 
                 <a href="{{ route('admin.payments') }}" 
@@ -566,7 +561,7 @@
                 <a href="{{ route('admin.finance.reports') }}" 
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
                     {{ Route::is('admin.finance.reports*') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="line-chart" class="w-4 h-4"></i> <span class="sidebar-text">Laporan Keuangan & Piutang</span>
+                    <i data-lucide="line-chart" class="w-4 h-4"></i> <span class="sidebar-text">Laporan Keuangan</span>
                 </a>
             </div>
 
@@ -577,7 +572,7 @@
                 <a href="{{ route('admin.reports.registrations') }}" 
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
                     {{ Route::is('admin.reports.registrations') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span class="sidebar-text">Rekap Pendaftaran & Kuota</span>
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span class="sidebar-text">Rekap Pendaftaran</span>
                 </a>
 
                 <a href="{{ route('admin.reports.demographics') }}" 
@@ -587,28 +582,98 @@
                 </a>
             </div>
 
-            {{-- 
-            <!-- 4. Komunikasi & Integrasi Category (Disembunyikan sementara) -->
-            <div class="menu-category-komunikasi mb-3">
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #0d9488;">Komunikasi & Integrasi</span>
+            <!-- 4. Konfigurasi (Pengaturan SPMB & Teknis) -->
+            @php
+                $isSpmbActive = Request::is('admin/spmb-settings/registration*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades*') || Request::is('admin/spmb-settings/form*') || Request::is('admin/spmb-settings/instructions*') || Request::is('admin/spmb-settings/agreements*') || Request::is('admin/spmb-settings/qrcode*') || Request::is('admin/spmb-settings/customer-service*') || Request::is('admin/spmb-settings/brochures*');
+                $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/payment-channels*') || Request::is('admin/ui-settings*') || Request::is('admin/users*') || Request::is('admin/settings*');
+            @endphp
+            <div class="menu-category-konfigurasi mb-3 space-y-1">
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #a855f7;">Konfigurasi</span>
                 
-                <a href="{{ route('admin.broadcasts') }}" 
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.broadcasts') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="message-square" class="w-4 h-4"></i> <span class="sidebar-text">Broadcast WhatsApp</span>
-                </a>
+                <!-- Pengaturan SPMB (Dropdown) -->
+                <button type="button" onclick="toggleSpmbDropdown()" 
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition duration-200 group {{ $isSpmbActive ? 'active bg-slate-800 text-white shadow-sm font-bold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
+                    <span class="flex items-center gap-3">
+                        <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-400 group-hover:text-white"></i>
+                        <span class="sidebar-text">Pengaturan SPMB</span>
+                    </span>
+                    <i data-lucide="chevron-down" id="spmbDropdownArrow" class="w-4 h-4 text-slate-400 group-hover:text-white sidebar-text transition-transform duration-300 {{ $isSpmbActive ? 'rotate-180 text-brand-yellow' : '' }}"></i>
+                </button>
+                <div id="spmbSubmenu" class="ml-4 pl-3.5 border-l border-slate-800/80 space-y-0.5 my-1.5 {{ $isSpmbActive ? '' : 'hidden' }}">
+                    @if(auth()->user()->isSuperAdmin())
+                        <a href="{{ route('admin.spmb-settings.registration') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.registration') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="toggle-left" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Aktivasi SPMB</span>
+                        </a>
+                        <a href="{{ route('admin.spmb-settings.units-grades') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.units-grades') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Struktur Sekolah</span>
+                        </a>
+                        <a href="{{ route('admin.spmb-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="git-branch" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Jalur & Gelombang</span>
+                        </a>
+                        <a href="{{ route('admin.spmb-settings.form') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.form') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Setting Formulir</span>
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.spmb-settings.instructions') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.instructions') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Instruksi Daftar</span>
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.agreements') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.agreements') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="file-signature" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Surat Pernyataan</span>
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.qrcode') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.qrcode') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="qr-code" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">QR Code SPMB</span>
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.cs') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.cs') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="headphones" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Customer Service</span>
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.brochures') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.brochures') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Brosur & Dokumen</span>
+                    </a>
+                </div>
 
-                <a href="{{ route('admin.handover') }}" 
-                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
-                    {{ Route::is('admin.handover*') ? 'active bg-brand-emerald text-white shadow' : 'hover:bg-slate-800/50 hover:text-white' }}">
-                    <i data-lucide="share-2" class="w-4 h-4"></i> <span class="sidebar-text">Handover Siswa ke Unit</span>
-                </a>
+                <!-- Pengaturan Teknis (Dropdown) -->
+                <button type="button" onclick="toggleTechDropdown()" 
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition duration-200 group {{ $isTechActive ? 'active bg-slate-800 text-white shadow-sm font-bold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
+                    <span class="flex items-center gap-3">
+                        <i data-lucide="settings" class="w-4 h-4 text-slate-400 group-hover:text-white"></i>
+                        <span class="sidebar-text">Pengaturan Teknis</span>
+                    </span>
+                    <i data-lucide="chevron-down" id="techDropdownArrow" class="w-4 h-4 text-slate-400 group-hover:text-white sidebar-text transition-transform duration-300 {{ $isTechActive ? 'rotate-180 text-brand-yellow' : '' }}"></i>
+                </button>
+                <div id="techSubmenu" class="ml-4 pl-3.5 border-l border-slate-800/80 space-y-0.5 my-1.5 {{ $isTechActive ? '' : 'hidden' }}">
+                    @if(auth()->user()->isSuperAdmin())
+                        <a href="{{ route('admin.ui-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.ui-settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Tampilan Portal</span>
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.users') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.users') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="users-round" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Manajemen User</span>
+                    </a>
+                    @if(auth()->user()->isSuperAdmin())
+                        <a href="{{ route('admin.api-integrations') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.api-integrations') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="blocks" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Integrasi API</span>
+                        </a>
+                        <a href="{{ route('admin.payment-gateways.index') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.payment-gateways.index') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="credit-card" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">CRUD Gateway</span>
+                        </a>
+                        <a href="{{ route('admin.payment-channels.index') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.payment-channels.index') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="shuffle" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">CRUD Channel</span>
+                        </a>
+                        @foreach($sidebarGateways as $sgw)
+                            <a href="{{ route('admin.payment-gateways.settings', $sgw->code) }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Request::is('admin/payment-gateways/' . $sgw->code . '/settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                                <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Set {{ $sgw->name }}</span>
+                            </a>
+                        @endforeach
+                        <a href="{{ route('admin.settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                            <i data-lucide="percent" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Biaya Admin</span>
+                        </a>
+                    @endif
+                </div>
             </div>
-            --}}
 
-            <!-- 5. Riwayat & Log Category -->
+            <!-- 6. Audit & Log Category -->
             <div class="menu-category-riwayat mb-3">
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #3b82f6;">Riwayat & Log</span>
+                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #3b82f6;">Audit & Log</span>
                 
                 <a href="{{ route('admin.history') }}" 
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide transition 
@@ -629,97 +694,6 @@
                         <i data-lucide="scroll-text" class="w-4 h-4"></i> <span class="sidebar-text">Log Sistem</span>
                     </a>
                 @endif
-            </div>
-
-            <!-- 6. Pengaturan SPMB (Dropdown) -->
-            @php
-                $isSpmbActive = Request::is('admin/spmb-settings/registration*') || Request::is('admin/spmb-settings') || Request::is('admin/spmb-settings/units-grades*') || Request::is('admin/spmb-settings/form*') || Request::is('admin/spmb-settings/instructions*') || Request::is('admin/spmb-settings/agreements*') || Request::is('admin/spmb-settings/qrcode*') || Request::is('admin/spmb-settings/customer-service*') || Request::is('admin/spmb-settings/brochures*');
-            @endphp
-            <div class="menu-category-konfigurasi mb-2 space-y-1">
-                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 block mb-2 category-section-header" style="--accent-color: #a855f7;">Konfigurasi</span>
-                <button type="button" onclick="toggleSpmbDropdown()" 
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition duration-200 group {{ $isSpmbActive ? 'active bg-slate-800 text-white shadow-sm font-bold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
-                    <span class="flex items-center gap-3">
-                        <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-400 group-hover:text-white"></i>
-                        <span class="sidebar-text">Pengaturan SPMB</span>
-                    </span>
-                    <i data-lucide="chevron-down" id="spmbDropdownArrow" class="w-4 h-4 text-slate-400 group-hover:text-white sidebar-text transition-transform duration-300 {{ $isSpmbActive ? 'rotate-180 text-brand-yellow' : '' }}"></i>
-                </button>
-                <div id="spmbSubmenu" class="ml-4 pl-3.5 border-l border-slate-800/80 space-y-0.5 my-1.5 {{ $isSpmbActive ? '' : 'hidden' }}">
-                    @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.spmb-settings.registration') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.registration') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="toggle-left" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Aktivasi SPMB</span>
-                        </a>
-                        <a href="{{ route('admin.spmb-settings.units-grades') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.units-grades') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Struktur Sekolah</span>
-                        </a>
-                        <a href="{{ route('admin.spmb-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="git-branch" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Jalur & Gelombang</span>
-                        </a>
-                        <a href="{{ route('admin.spmb-settings.form') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.form') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Setting Formulir</span>
-                        </a>
-                    @endif
-                    <a href="{{ route('admin.spmb-settings.instructions') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.instructions') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                        <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Instruksi Daftar</span>
-                    </a>
-                    <a href="{{ route('admin.spmb-settings.agreements') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.agreements') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                        <i data-lucide="file-signature" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Surat Pernyataan</span>
-                    </a>
-                    <a href="{{ route('admin.spmb-settings.qrcode') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.qrcode') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                        <i data-lucide="qr-code" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">QR Code SPMB</span>
-                    </a>
-                    <a href="{{ route('admin.spmb-settings.cs') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.cs') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                        <i data-lucide="headphones" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Customer Service</span>
-                    </a>
-                    <a href="{{ route('admin.spmb-settings.brochures') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.brochures') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                        <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Brosur & Dokumen</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- 7. Pengaturan Teknis (Dropdown) -->
-            @php
-                $isTechActive = Request::is('admin/api-integrations*') || Request::is('admin/payment-gateways*') || Request::is('admin/payment-channels*') || Request::is('admin/ui-settings*') || Request::is('admin/users*') || Request::is('admin/settings*');
-            @endphp
-            <div class="menu-category-konfigurasi mb-2 space-y-1">
-                <button type="button" onclick="toggleTechDropdown()" 
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition duration-200 group {{ $isTechActive ? 'active bg-slate-800 text-white shadow-sm font-bold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white' }}">
-                    <span class="flex items-center gap-3">
-                        <i data-lucide="settings" class="w-4 h-4 text-slate-400 group-hover:text-white"></i>
-                        <span class="sidebar-text">Pengaturan Teknis</span>
-                    </span>
-                    <i data-lucide="chevron-down" id="techDropdownArrow" class="w-4 h-4 text-slate-400 group-hover:text-white sidebar-text transition-transform duration-300 {{ $isTechActive ? 'rotate-180 text-brand-yellow' : '' }}"></i>
-                </button>
-                <div id="techSubmenu" class="ml-4 pl-3.5 border-l border-slate-800/80 space-y-0.5 my-1.5 {{ $isTechActive ? '' : 'hidden' }}">
-                    @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.ui-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.ui-settings') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Tampilan Portal</span>
-                        </a>
-                    @endif
-                    <a href="{{ route('admin.users') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.users') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                        <i data-lucide="users-round" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Manajemen User</span>
-                    </a>
-                    @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.api-integrations') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.api-integrations') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="blocks" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Integrasi API</span>
-                        </a>
-                        <a href="{{ route('admin.payment-gateways.index') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.payment-gateways.index') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="credit-card" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">CRUD Gateway</span>
-                        </a>
-                        <a href="{{ route('admin.payment-channels.index') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.payment-channels.index') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="shuffle" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">CRUD Channel</span>
-                        </a>
-                        @foreach($sidebarGateways as $sgw)
-                            <a href="{{ route('admin.payment-gateways.settings', $sgw->code) }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Request::is('admin/payment-gateways/' . $sgw->code . '/settings') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                                <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Set {{ $sgw->name }}</span>
-                            </a>
-                        @endforeach
-                        <a href="{{ route('admin.settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.settings') ? 'text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="percent" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Biaya Admin</span>
-                        </a>
-                    @endif
-                </div>
             </div>
         </nav>
 
@@ -913,6 +887,55 @@
             }
         });
 
+        // Sidebar Scroll Persistence & Active Element Viewport Helper
+        function handleSidebarNavScroll() {
+            const nav = document.getElementById('sidebar-nav');
+            if (nav) {
+                sessionStorage.setItem('sans_admin_sidebar_scroll', nav.scrollTop);
+            }
+        }
+
+        function restoreSidebarScroll() {
+            const nav = document.getElementById('sidebar-nav');
+            if (!nav) return;
+
+            const savedScroll = sessionStorage.getItem('sans_admin_sidebar_scroll');
+            if (savedScroll !== null) {
+                nav.scrollTop = parseInt(savedScroll, 10);
+            }
+
+            // Ensure the active item is clearly visible in the sidebar viewport
+            requestAnimationFrame(() => {
+                const activeItem = nav.querySelector('a.active, a.text-brand-yellow, nav a[class*="text-brand-yellow"], nav a[class*="bg-brand-emerald"]');
+                if (activeItem) {
+                    const navRect = nav.getBoundingClientRect();
+                    const itemRect = activeItem.getBoundingClientRect();
+
+                    // If item is outside or near the edge of visible bounds, scroll it into view smoothly
+                    if (itemRect.top < navRect.top + 20 || itemRect.bottom > navRect.bottom - 20) {
+                        activeItem.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+                    }
+                }
+            });
+        }
+
+        function initSidebarScrollPersistence() {
+            const nav = document.getElementById('sidebar-nav');
+            if (!nav) return;
+
+            nav.removeEventListener('scroll', handleSidebarNavScroll);
+            nav.addEventListener('scroll', handleSidebarNavScroll, { passive: true });
+
+            // Record scroll position on sidebar link clicks
+            nav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function() {
+                    sessionStorage.setItem('sans_admin_sidebar_scroll', nav.scrollTop);
+                });
+            });
+
+            restoreSidebarScroll();
+        }
+
         // Sidebar State Controller
         function restoreSidebarState() {
             const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
@@ -947,6 +970,8 @@
             if (window.lucide) {
                 lucide.createIcons();
             }
+
+            initSidebarScrollPersistence();
         }
 
         // Sidebar collapse toggle functionality

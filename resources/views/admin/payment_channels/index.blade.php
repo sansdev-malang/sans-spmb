@@ -13,7 +13,7 @@
                 Kelola Channel Pembayaran
             </h2>
             <p class="text-xs text-slate-500">
-                Sekolah Anak Saleh • Metode Pembayaran Siswa
+                Sekolah Anak Saleh • Metode Pembayaran Murid
             </p>
         </div>
         <div class="mt-4 flex md:mt-0 md:ml-4 gap-3">

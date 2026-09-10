@@ -117,7 +117,7 @@
         <!-- Submit Panel -->
         <div class="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 sm:px-8 py-5 flex items-center justify-between">
             <span class="text-[11px] text-slate-400 hidden sm:inline-block">
-                * Perubahan biaya akan langsung aktif pada kalkulasi pendaftaran & pembayaran siswa.
+                * Perubahan biaya akan langsung aktif pada kalkulasi pendaftaran & pembayaran murid.
             </span>
             <button type="submit" class="bg-brand-emerald hover-emerald text-white px-6 py-3.5 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 ml-auto">
                 <i data-lucide="save" class="w-4 h-4 text-brand-yellow"></i>

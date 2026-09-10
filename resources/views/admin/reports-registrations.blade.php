@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Rekapitulasi Pendaftaran & Kuota - Admin Panel')
+@section('title', 'Rekapitulasi Pendaftaran Calon Murid - Admin Panel')
 @section('page_title', 'Rekap Pendaftaran')
 
 @section('content')
@@ -9,8 +9,8 @@
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex items-center gap-2.5">
             <div>
-                <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Rekapitulasi Pendaftaran & Kuota Kelas</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Statistik alur konversi calon siswa, distribusi gender, dan ketercapaian kuota per unit.</p>
+                <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Rekapitulasi Pendaftaran Calon Murid</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Statistik alur konversi calon murid, distribusi gender, dan ketercapaian kuota per unit.</p>
             </div>
         </div>
     </div>
@@ -59,7 +59,7 @@
                 </div>
             </div>
             <div class="text-2xl font-black text-slate-800 dark:text-white mt-2">{{ $totalRegistered }}</div>
-            <span class="text-[10px] text-slate-400 font-semibold mt-1 block">Total akun calon siswa</span>
+            <span class="text-[10px] text-slate-400 font-semibold mt-1 block">Total akun calon murid</span>
         </div>
 
         <!-- 2. Terverifikasi -->
@@ -111,7 +111,7 @@
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 space-y-4">
             <h2 class="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
                 <i data-lucide="users" class="w-4 h-4 text-brand-emerald"></i>
-                Komposisi Gender Siswa
+                Komposisi Gender Murid
             </h2>
             <div class="space-y-3 pt-2">
                 <div>

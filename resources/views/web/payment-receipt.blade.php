@@ -216,9 +216,9 @@
                     </span>
                 </div>
                 <div>
-                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Nama Calon Siswa</span>
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Nama Calon Murid</span>
                     <span class="font-bold text-slate-850 mt-0.5 block">
-                        {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                        {{ $registration->candidate_name ?? 'Calon Murid' }}
                     </span>
                 </div>
                 <div>

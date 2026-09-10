@@ -31,7 +31,7 @@
             </div>
 
             <!-- Full-width subtitle -->
-            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Lengkapi biodata calon siswa, data orang tua, dan unggah dokumen persyaratan.</p>
+            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Lengkapi biodata calon murid, data orang tua, dan unggah dokumen persyaratan.</p>
 
             <!-- Integrated Candidate Context Info -->
             <div class="bg-black/20 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/15 shadow-sm space-y-3.5">
@@ -42,9 +42,9 @@
                             {{ strtoupper(substr(trim($registration->candidate_name ?? 'A'), 0, 1)) }}
                         </div>
                         <div class="min-w-0">
-                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Siswa</span>
+                            <span class="text-[10px] font-bold text-white/60 uppercase tracking-wider block leading-tight">Calon Murid</span>
                             <h4 class="font-black text-sm sm:text-lg text-white tracking-tight leading-snug truncate">
-                                {{ $registration->candidate_name ?? 'Calon Siswa' }}
+                                {{ $registration->candidate_name ?? 'Calon Murid' }}
                             </h4>
                         </div>
                     </div>

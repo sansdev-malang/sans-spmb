@@ -8,7 +8,7 @@
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h1 class="text-xl font-extrabold text-slate-800">Manajemen Biaya Pendaftaran (SPMB)</h1>
-        <p class="text-xs text-slate-500 mt-1">Mengatur jenis-jenis kategori biaya dan nominal biaya pendaftaran calon siswa baru.</p>
+        <p class="text-xs text-slate-500 mt-1">Mengatur jenis-jenis kategori biaya dan nominal biaya pendaftaran calon murid baru.</p>
     </div>
 
     <!-- Tab Navigation Pills -->

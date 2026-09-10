@@ -11,7 +11,7 @@
             <div class="flex items-center gap-2.5">
                 <div>
                     <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Hasil Seleksi & Pengumuman Kelulusan</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Penetapan status kelulusan calon siswa pasca observasi Ta'aruf dan penerbitan Surat Keputusan Diterima.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Penetapan status kelulusan calon murid pasca observasi Ta'aruf dan penerbitan Surat Keputusan Diterima.</p>
                 </div>
             </div>
         </div>
@@ -64,7 +64,7 @@
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
         <form method="GET" action="{{ route('admin.results') }}" class="flex flex-wrap items-center gap-3">
             <div class="flex-1 min-w-[240px]">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama siswa, no daftar, no HP..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama murid, no daftar, no HP..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald">
             </div>
 
             <div class="flex items-center gap-2">
@@ -103,7 +103,7 @@
             <table class="w-full text-xs text-left">
                 <thead>
                     <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 text-slate-400 font-bold uppercase tracking-wider">
-                        <th class="px-5 py-3.5">Calon Siswa</th>
+                        <th class="px-5 py-3.5">Calon Murid</th>
                         <th class="px-5 py-3.5">Unit / Jenjang</th>
                         <th class="px-5 py-3.5">Jalur & Gelombang</th>
                         <th class="px-5 py-3.5">Status Seleksi</th>

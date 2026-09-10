@@ -23,9 +23,9 @@
             </p>
             <p class="text-xs text-emerald-100 max-w-xl font-medium leading-relaxed mt-2">
                 @if(auth()->user()->isSuperAdmin())
-                    Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru, penerimaan kas, dan rincian biaya transaksi payment gateway secara real-time. Kelola verifikasi berkas secara berkala.
+                    Berikut adalah rangkuman performa statistik pendaftaran calon murid baru, penerimaan kas, dan rincian biaya transaksi payment gateway secara real-time. Kelola verifikasi berkas secara berkala.
                 @else
-                    Berikut adalah rangkuman performa statistik pendaftaran calon siswa baru, penerimaan kas, dan rincian transaksi pada unit {{ auth()->user()->spmbUnit->name ?? 'Unit' }} secara real-time.
+                    Berikut adalah rangkuman performa statistik pendaftaran calon murid baru, penerimaan kas, dan rincian transaksi pada unit {{ auth()->user()->spmbUnit->name ?? 'Unit' }} secara real-time.
                 @endif
             </p>
         </div>
@@ -46,7 +46,7 @@
             <div>
                 <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Pendaftar</span>
                 <span class="text-2xl font-black text-slate-800 dark:text-white block mt-1 stat-counter" data-target="{{ $totalCandidates }}">{{ number_format($totalCandidates, 0, ',', '.') }}</span>
-                <span class="text-[11px] text-slate-400 font-medium block mt-0.5">Calon Siswa Terdata</span>
+                <span class="text-[11px] text-slate-400 font-medium block mt-0.5">Calon Murid Terdata</span>
             </div>
             <div class="h-11 w-11 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center flex-shrink-0">
                 <i data-lucide="users" class="w-5 h-5"></i>
@@ -201,7 +201,7 @@
                 
                 <div class="space-y-1.5 text-xs">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">Formulir ({{ $formFeeTrxCount }})</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">{{ $registrationFeeLabel }} ({{ $formFeeTrxCount }})</span>
                         <span class="font-extrabold text-purple-700 dark:text-purple-400">Rp {{ number_format($formFeeNet, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between items-center text-[10px] text-slate-400">
@@ -210,7 +210,7 @@
                     </div>
 
                     <div class="flex justify-between items-center pt-1 border-t border-purple-100 dark:border-purple-900/40">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">Biaya Masuk/DSP ({{ $dspFeeTrxCount }})</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">{{ $finalFeeLabel }} ({{ $dspFeeTrxCount }})</span>
                         <span class="font-extrabold text-emerald-700 dark:text-emerald-400">Rp {{ number_format($dspFeeNet, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between items-center text-[10px] text-slate-400">
@@ -239,7 +239,7 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200/80 dark:border-slate-800 text-[11px] text-slate-400 font-bold uppercase tracking-wider bg-white/60 dark:bg-slate-900/60">
-                                <th class="py-2.5 px-3">Calon Siswa & Unit</th>
+                                <th class="py-2.5 px-3">Calon Murid & Unit</th>
                                 <th class="py-2.5 px-3">Kanal Bayar</th>
                                 <th class="py-2.5 px-3 text-right">Pokok Bersih</th>
                                 <th class="py-2.5 px-3 text-right">Fee PG</th>
@@ -257,7 +257,7 @@
                                 <tr class="hover:bg-white/80 dark:hover:bg-slate-800/70 transition">
                                     <td class="py-2.5 px-3">
                                         <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                            {{ $payment->registration->candidate_name ?? 'Calon Siswa #' . $payment->registration_id }}
+                                            {{ $payment->registration->candidate_name ?? 'Calon Murid #' . $payment->registration_id }}
                                         </div>
                                         <div class="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
                                             <span class="font-semibold text-slate-500 dark:text-slate-400">{{ strtoupper($payment->registration->unit->name ?? '-') }}</span>
@@ -445,7 +445,7 @@
                         <div class="space-y-1 text-xs">
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Pendaftar:</span>
-                                <span class="font-bold text-slate-700 dark:text-slate-200">{{ $unitStat['reg_count'] }} Siswa</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200">{{ $unitStat['reg_count'] }} Murid</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-slate-400">Kas Bersih:</span>
@@ -485,7 +485,7 @@
                     <div class="space-y-1">
                         <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                             <span>{{ $stat->level_name }}</span>
-                            <span>{{ $stat->count }} Siswa ({{ $percentage }}%)</span>
+                            <span>{{ $stat->count }} Murid ({{ $percentage }}%)</span>
                         </div>
                         <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
                             <div class="bg-brand-emerald h-full rounded-full progress-bar" data-width="{{ $percentage }}" style="width: {{ $percentage }}%"></div>
@@ -513,7 +513,7 @@
                                 <span class="h-2 w-2 rounded-full {{ $stage['dot'] }}"></span>
                                 {{ $stage['label'] }}
                             </span>
-                            <span>{{ $stage['count'] }} Siswa ({{ $stage['percentage'] }}%)</span>
+                            <span>{{ $stage['count'] }} Murid ({{ $stage['percentage'] }}%)</span>
                         </div>
                         <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                             <div class="{{ $stage['color'] }} h-full rounded-full progress-bar" data-width="{{ $stage['percentage'] }}" style="width: {{ $stage['percentage'] }}%"></div>
@@ -584,7 +584,7 @@
                     <thead>
                         <tr class="border-b border-slate-100 dark:border-slate-800 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/50">
                             <th class="py-3 px-4 text-center w-10">No.</th>
-                            <th class="py-3 px-4">Calon Siswa</th>
+                            <th class="py-3 px-4">Calon Murid</th>
                             <th class="py-3 px-4">Unit</th>
                             <th class="py-3 px-4 text-center">Status</th>
                             <th class="py-3 px-4 text-right">Aksi</th>

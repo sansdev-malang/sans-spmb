@@ -515,7 +515,7 @@ class SpmbSettingsController extends Controller
             'spmb_cs_hours' => Setting::get('spmb_cs_hours', 'Senin - Jumat, 08:00 - 15:00 WIB'),
             'spmb_cs_card_title' => Setting::get('spmb_cs_card_title', 'Pusat Bantuan & Konsultasi SPMB'),
             'spmb_cs_card_desc' => Setting::get('spmb_cs_card_desc', 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.'),
-            'spmb_cs_message' => Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.'),
+            'spmb_cs_message' => Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran murid baru.'),
         ];
 
         return view('admin.settings-spmb-cs', compact('units', 'settings', 'isSuperAdmin'));
@@ -540,7 +540,7 @@ class SpmbSettingsController extends Controller
             Setting::set('spmb_cs_hours', $request->spmb_cs_hours ?: 'Senin - Jumat, 08:00 - 15:00 WIB');
             Setting::set('spmb_cs_card_title', $request->spmb_cs_card_title ?: 'Pusat Bantuan & Konsultasi SPMB');
             Setting::set('spmb_cs_card_desc', $request->spmb_cs_card_desc ?: 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
-            Setting::set('spmb_cs_message', $request->spmb_cs_message ?: 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran siswa baru.');
+            Setting::set('spmb_cs_message', $request->spmb_cs_message ?: 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran murid baru.');
         }
 
         if ($request->has('units') && is_array($request->units)) {

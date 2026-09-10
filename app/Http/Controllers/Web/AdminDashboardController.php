@@ -10,6 +10,7 @@ use App\Models\SpmbPeriod;
 use App\Models\SpmbUnit;
 use App\Models\SpmbWave;
 use App\Models\SpmbActivityLog;
+use App\Models\SpmbFeeCategory;
 use App\Models\User;
 
 class AdminDashboardController extends Controller
@@ -129,6 +130,8 @@ class AdminDashboardController extends Controller
             'recentLogs' => $recentLogs,
             'activeWaves' => $activeWaves,
             'totalGuardiansCount' => $totalGuardiansCount,
+            'registrationFeeLabel' => SpmbFeeCategory::getRegistrationCategoryName(),
+            'finalFeeLabel' => SpmbFeeCategory::getTuitionCategoryName(),
         ], $financialData));
     }
 
@@ -445,7 +448,7 @@ class AdminDashboardController extends Controller
             \Illuminate\Support\Facades\Log::error('Failed to send candidate taaruf completion notification', ['error' => $e->getMessage()]);
         }
 
-        return redirect()->back()->with('success', 'Status Ta\'aruf calon siswa berhasil diselesaikan.');
+        return redirect()->back()->with('success', 'Status Ta\'aruf calon murid berhasil diselesaikan.');
     }
 
     public function activityLogs(Request $request)
@@ -484,10 +487,10 @@ class AdminDashboardController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tagihan calon siswa ini telah lunas sepenuhnya. Pengaturan keringanan & cicilan sudah terkunci dan tidak dapat diubah lagi.'
+                    'message' => 'Tagihan calon murid ini telah lunas sepenuhnya. Pengaturan keringanan & cicilan sudah terkunci dan tidak dapat diubah lagi.'
                 ], 422);
             }
-            return redirect()->back()->with('error', 'Tagihan calon siswa ini telah lunas sepenuhnya dan terkunci.');
+            return redirect()->back()->with('error', 'Tagihan calon murid ini telah lunas sepenuhnya dan terkunci.');
         }
 
         $validated = $request->validate([
@@ -562,7 +565,7 @@ class AdminDashboardController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Pengaturan keringanan & kebijakan cicilan calon siswa berhasil disimpan.',
+                'message' => 'Pengaturan keringanan & kebijakan cicilan calon murid berhasil disimpan.',
                 'data' => [
                     'id' => $registration->id,
                     'discount_mode' => $registration->discount_mode,
@@ -583,7 +586,7 @@ class AdminDashboardController extends Controller
             ]);
         }
 
-        return redirect()->back()->with('success', 'Pengaturan keringanan & kebijakan cicilan calon siswa berhasil disimpan.');
+        return redirect()->back()->with('success', 'Pengaturan keringanan & kebijakan cicilan calon murid berhasil disimpan.');
     }
 
     /**

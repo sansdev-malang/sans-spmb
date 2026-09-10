@@ -237,7 +237,7 @@
         <!-- Student Table -->
         <table class="student-table">
             <tr>
-                <td class="label">Nama Calon Siswa</td>
+                <td class="label">Nama Calon Murid</td>
                 <td class="value">{{ $registration->candidate_name }}</td>
             </tr>
             <tr>
@@ -264,7 +264,7 @@
         </div>
 
         <p class="closing-text">
-            Sebagai siswa resmi di {{ $registration->unit->name ?? 'Sekolah Anak Saleh' }}. Selamat bergabung menjadi bagian dari keluarga besar Sekolah Anak Saleh. Semoga ananda senantiasa dirahmat Allah SWT dan dapat tumbuh kembang secara optimal untuk menjadi generasi shalih, cerdas, dan mandiri.
+            Sebagai murid resmi di {{ $registration->unit->name ?? 'Sekolah Anak Saleh' }}. Selamat bergabung menjadi bagian dari keluarga besar Sekolah Anak Saleh. Semoga ananda senantiasa dirahmat Allah SWT dan dapat tumbuh kembang secara optimal untuk menjadi generasi shalih, cerdas, dan mandiri.
         </p>
 
         <!-- Signatures -->

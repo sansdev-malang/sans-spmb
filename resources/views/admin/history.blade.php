@@ -380,7 +380,7 @@
                                                 ? ('Formulir Pendaftaran ' . ($cand->unit->name ?? ''))
                                                 : (!empty($p->payment_info['selected_items']) 
                                                     ? collect($p->payment_info['selected_items'])->pluck('name')->join(', ')
-                                                    : 'Biaya Masuk Siswa Baru');
+                                                    : 'Biaya Masuk Murid Baru');
 
                                             return [
                                                 'id' => $p->id,
@@ -400,7 +400,7 @@
                                             ];
                                         })->values()->all(),
 
-                                        // Pengelompokan Kategori Tarif & Biaya Dinamis Sesuai Unit & Layanan Siswa & Persetujuan Pernyataan
+                                        // Pengelompokan Kategori Tarif & Biaya Dinamis Sesuai Unit & Layanan Murid & Persetujuan Pernyataan
                                         ...((function() use ($cand, $feeCategories) {
                                             $candUnitId = $cand->spmb_unit_id;
                                             $candPayments = $cand->payments ?? collect();
@@ -572,7 +572,7 @@
                     @empty
                         <tr>
                             <td colspan="7" class="py-12 px-6 text-center text-slate-400">
-                                Belum ada calon siswa yang melengkapi biodata.
+                                Belum ada calon murid yang melengkapi biodata.
                             </td>
                         </tr>
                     @endforelse
@@ -599,7 +599,7 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h3 id="modal-header-cand-name" class="font-extrabold text-base text-white">Detail Calon Siswa</h3>
+                        <h3 id="modal-header-cand-name" class="font-extrabold text-base text-white">Detail Calon Murid</h3>
                         <span id="det-status-chip" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase bg-white/20 text-white border border-white/20">SUBMITTED</span>
                     </div>
                     <p id="det-id-label" class="text-xs text-emerald-200 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
@@ -655,7 +655,7 @@
                 <!-- Segment 1: Personal Information -->
                 <div class="space-y-4 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                     <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-700/80 pb-3">
-                        <i data-lucide="info" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Informasi Pribadi Calon Siswa
+                        <i data-lucide="info" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Informasi Pribadi Calon Murid
                     </h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                         <div>
@@ -667,7 +667,7 @@
                             <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">NIK Siswa</span>
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase block">NIK Murid</span>
                             <span id="det-nik" class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
                         </div>
                         <div>
@@ -801,7 +801,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">Pas Foto Murid</span>
-                                <span class="text-xs text-slate-400 dark:text-slate-400">Formal Siswa</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Formal Murid</span>
                             </div>
                         </div>
                         <a id="det-photo-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -865,7 +865,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 block">NISN / Kartu Pelajar</span>
-                                <span class="text-xs text-slate-400 dark:text-slate-400">Identitas Siswa</span>
+                                <span class="text-xs text-slate-400 dark:text-slate-400">Identitas Murid</span>
                             </div>
                         </div>
                         <a id="det-nisn-link" href="#" target="_blank" class="w-full text-center bg-brand-emerald hover-emerald text-white py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5">
@@ -1046,7 +1046,7 @@
                 <div class="flex items-center justify-between">
                     <h4 class="font-extrabold text-[11px] text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                         <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-                        Status Progres Pendaftaran Calon Siswa
+                        Status Progres Pendaftaran Calon Murid
                     </h4>
                 </div>
                 <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-2 pt-1 pb-0.5">
@@ -1127,7 +1127,7 @@
 
         setText('det-id-label', 'ID: ' + (cand.id_label || '-'));
         setText('det-status-chip', cand.status || '-');
-        setText('modal-header-cand-name', cand.name || 'Detail Calon Siswa');
+        setText('modal-header-cand-name', cand.name || 'Detail Calon Murid');
         setText('det-period', cand.period);
         setText('det-wave', cand.wave);
         setText('det-type', cand.type);
@@ -1272,7 +1272,7 @@
         }
 
         // Set header elements
-        document.getElementById('modal-header-cand-name').innerText = cand.name || 'Detail Calon Siswa';
+        document.getElementById('modal-header-cand-name').innerText = cand.name || 'Detail Calon Murid';
         document.getElementById('det-status-chip').innerText = cand.status || '-';
         
         // Update Tab 3 pill badge (Policy & Discount)

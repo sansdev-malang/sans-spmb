@@ -125,7 +125,7 @@ class PaymentSettlementService
                     if ($admins->isNotEmpty()) {
                         Notification::send($admins, new SpmbNotification([
                             'title' => 'Pembayaran DSP Lunas',
-                            'message' => 'Pembayaran Uang Pangkal (DSP) calon siswa "' . $reg->candidate_name . '" telah lunas (Total: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ').',
+                            'message' => 'Pembayaran Uang Pangkal (DSP) calon murid "' . $reg->candidate_name . '" telah lunas (Total: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ').',
                             'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
                             'type' => 'success',
                             'spmb_unit_id' => $reg->spmb_unit_id,
@@ -147,7 +147,7 @@ class PaymentSettlementService
                     if ($admins->isNotEmpty()) {
                         Notification::send($admins, new SpmbNotification([
                             'title' => 'Pembayaran DSP Sebagian',
-                            'message' => 'Diterima pembayaran DSP sebagian untuk calon siswa "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' (Masuk: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ' / ' . number_format($nData['totalRequired'], 0, ',', '.') . ').',
+                            'message' => 'Diterima pembayaran DSP sebagian untuk calon murid "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' (Masuk: Rp ' . number_format($nData['totalPaid'], 0, ',', '.') . ' / ' . number_format($nData['totalRequired'], 0, ',', '.') . ').',
                             'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
                             'type' => 'info',
                             'spmb_unit_id' => $reg->spmb_unit_id,
@@ -169,7 +169,7 @@ class PaymentSettlementService
                     if ($admins->isNotEmpty()) {
                         Notification::send($admins, new SpmbNotification([
                             'title' => 'Pembayaran Formulir Sukses',
-                            'message' => 'Pembayaran formulir untuk calon siswa "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' telah lunas.',
+                            'message' => 'Pembayaran formulir untuk calon murid "' . $reg->candidate_name . '" sebesar Rp ' . number_format($nData['paymentAmount'], 0, ',', '.') . ' telah lunas.',
                             'url' => route('admin.payments') . '?search=' . urlencode($reg->candidate_name),
                             'type' => 'success',
                             'spmb_unit_id' => $reg->spmb_unit_id,

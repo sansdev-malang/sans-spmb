@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Sekolah Anak Saleh - Penerimaan Siswa Baru')
+@section('title', 'Sekolah Anak Saleh - Penerimaan Murid Baru')
 
 @section('content')
 @php
@@ -104,7 +104,7 @@
                     <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                 </span>
                 <span class="text-amber-500 font-black text-xs">✦</span>
-                <span class="uppercase tracking-wider">PENERIMAAN SISWA BARU {{ $activePeriodYear }}</span>
+                <span class="uppercase tracking-wider">PENERIMAAN MURID BARU {{ $activePeriodYear }}</span>
                 <span class="h-3.5 w-px bg-emerald-200 dark:bg-emerald-700 flex-shrink-0"></span>
                 <span class="text-emerald-600 dark:text-emerald-500 font-extrabold">Pendaftaran Dibuka</span>
             </div>
@@ -157,7 +157,7 @@
                     @else
                         {{-- Fallback default image --}}
                         <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=800"
-                             alt="Siswa Sekolah"
+                             alt="Murid Sekolah"
                              class="absolute inset-0 w-full h-full object-cover" />
                     @endif
 
@@ -421,7 +421,7 @@
         <div class="text-center max-w-2xl mx-auto space-y-3 mb-16 md:mb-20">
             <h2 class="text-3xl md:text-4xl font-black text-custom-primary dark:text-emerald-400 tracking-tight">Kata Mereka Tentang Kami</h2>
             <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                Cerita dan testimoni dari orang tua wali siswa yang mempercayakan masa depan ananda di {{ $schoolName }}.
+                Cerita dan testimoni dari orang tua wali murid yang mempercayakan masa depan ananda di {{ $schoolName }}.
             </p>
         </div>
 
@@ -443,7 +443,7 @@
                     </div>
                     <div>
                         <h4 class="font-black text-xs text-slate-800 dark:text-slate-100">Bunda Sarah</h4>
-                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Siswa SD Anak Saleh</p>
+                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Murid SD Anak Saleh</p>
                     </div>
                 </div>
             </div>
@@ -464,7 +464,7 @@
                     </div>
                     <div>
                         <h4 class="font-black text-xs text-slate-800 dark:text-slate-100">Ayah Hendra</h4>
-                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Siswa SMP Anak Saleh</p>
+                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Murid SMP Anak Saleh</p>
                     </div>
                 </div>
             </div>
@@ -485,7 +485,7 @@
                     </div>
                     <div>
                         <h4 class="font-black text-xs text-slate-800 dark:text-slate-100">Bunda Fatimah</h4>
-                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Siswa PAUD Anak Saleh</p>
+                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Murid PAUD Anak Saleh</p>
                     </div>
                 </div>
             </div>

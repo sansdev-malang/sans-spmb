@@ -161,7 +161,7 @@ class RegistrationController extends Controller
             ],
             'form_fill' => [
                 'label' => 'Pengisian Formulir',
-                'description' => 'Mengisi data lengkap calon siswa, orang tua, & dokumen.',
+                'description' => 'Mengisi data lengkap calon murid, orang tua, & dokumen.',
                 'status' => ($status !== 'draft') ? 'completed' : ($formPaid ? 'in_progress' : 'not_started'),
             ],
             'verification' => [

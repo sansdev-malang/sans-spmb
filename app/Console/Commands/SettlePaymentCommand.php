@@ -50,10 +50,10 @@ class SettlePaymentCommand extends Command
         }
 
         $reg = $payment->registration;
-        $candidateName = $reg ? ($reg->candidate_name ?: 'Calon Siswa') : '-';
+        $candidateName = $reg ? ($reg->candidate_name ?: 'Calon Murid') : '-';
 
         $this->table(
-            ['ID', 'Invoice Number', 'Metode', 'Nominal', 'Status Saat Ini', 'Jenis Biaya', 'Nama Siswa'],
+            ['ID', 'Invoice Number', 'Metode', 'Nominal', 'Status Saat Ini', 'Jenis Biaya', 'Nama Murid'],
             [[
                 $payment->id,
                 $payment->invoice_number,
@@ -111,8 +111,8 @@ class SettlePaymentCommand extends Command
             DB::commit();
             $this->info("✓ Transaksi '{$payment->invoice_number}' BERHASIL dilunaskan!");
             $this->info("  - Status Payment: " . $payment->fresh()->status);
-            $this->info("  - Status Pembayaran Siswa: " . ($reg ? $reg->fresh()->payment_status : '-'));
-            $this->info("  - Status Pendaftaran Siswa: " . ($reg ? $reg->fresh()->registration_status : '-'));
+            $this->info("  - Status Pembayaran Murid: " . ($reg ? $reg->fresh()->payment_status : '-'));
+            $this->info("  - Status Pendaftaran Murid: " . ($reg ? $reg->fresh()->registration_status : '-'));
 
             // Notifikasi
             if ($reg) {
@@ -121,7 +121,7 @@ class SettlePaymentCommand extends Command
                     if ($admins->isNotEmpty()) {
                         Notification::send($admins, new SpmbNotification([
                             'title' => 'Pembayaran Berhasil Diverifikasi',
-                            'message' => 'Pembayaran ' . ($payment->payment_type === 'final_fee' ? 'DSP/Administrasi Akhir' : 'Formulir') . ' untuk calon siswa "' . $reg->candidate_name . '" telah berhasil diverifikasi (Invoice: ' . $payment->invoice_number . ').',
+                            'message' => 'Pembayaran ' . ($payment->payment_type === 'final_fee' ? 'DSP/Administrasi Akhir' : 'Formulir') . ' untuk calon murid "' . $reg->candidate_name . '" telah berhasil diverifikasi (Invoice: ' . $payment->invoice_number . ').',
                             'url' => route('admin.payments.data') . '?search=' . urlencode($reg->candidate_name),
                             'type' => 'success',
                             'spmb_unit_id' => $reg->spmb_unit_id,

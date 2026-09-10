@@ -53,13 +53,13 @@ class SpmbPeriodWaveTypeSeeder extends Seeder
         // 3. Types / Jalur Pendaftaran
         $types = [
             [
-                'name' => 'Siswa Baru (Reguler)',
-                'description' => 'Jalur umum pendaftaran bagi calon siswa baru',
+                'name' => 'Murid Baru (Reguler)',
+                'description' => 'Jalur umum pendaftaran bagi calon murid baru',
                 'is_active' => 1,
             ],
             [
                 'name' => 'Mutasi Masuk / Pindahan',
-                'description' => 'Jalur pendaftaran bagi siswa mutasi atau pindahan dari sekolah lain',
+                'description' => 'Jalur pendaftaran bagi murid mutasi atau pindahan dari sekolah lain',
                 'is_active' => 1,
             ],
             [

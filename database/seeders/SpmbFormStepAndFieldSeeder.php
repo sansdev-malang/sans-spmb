@@ -22,7 +22,7 @@ class SpmbFormStepAndFieldSeeder extends Seeder
         // 1. Form Steps
         $formSteps = [
             ['id' => 1, 'title' => 'Program & Layanan', 'order' => 1, 'is_active' => 1],
-            ['id' => 2, 'title' => 'Informasi Calon Siswa', 'order' => 2, 'is_active' => 1],
+            ['id' => 2, 'title' => 'Informasi Calon Murid', 'order' => 2, 'is_active' => 1],
             ['id' => 3, 'title' => 'Tempat Tinggal', 'order' => 3, 'is_active' => 1],
             ['id' => 4, 'title' => 'Data Orang Tua', 'order' => 4, 'is_active' => 1],
             ['id' => 5, 'title' => 'Data Wali (Opsional)', 'order' => 5, 'is_active' => 1],
@@ -42,7 +42,7 @@ class SpmbFormStepAndFieldSeeder extends Seeder
             ['form_step_id' => 1, 'label' => 'Kategori Murid', 'field_name' => 'spmb_class_program_id', 'type' => 'select', 'options' => null, 'is_required' => 1, 'order' => 4],
             ['form_step_id' => 1, 'label' => 'Layanan Non-Formal', 'field_name' => 'extra_services', 'type' => 'select', 'options' => null, 'is_required' => 0, 'order' => 5],
 
-            // STEP 2: Informasi Calon Siswa
+            // STEP 2: Informasi Calon Murid
             ['form_step_id' => 2, 'label' => 'Nama Lengkap (Sesuai Akte)', 'field_name' => 'candidate_name', 'type' => 'text', 'options' => null, 'is_required' => 1, 'order' => 1],
             ['form_step_id' => 2, 'label' => 'Nama Panggilan', 'field_name' => 'nickname', 'type' => 'text', 'options' => null, 'is_required' => 0, 'order' => 2],
             ['form_step_id' => 2, 'label' => 'NIK (Nomor Induk Kependudukan)', 'field_name' => 'nik', 'type' => 'number', 'options' => null, 'is_required' => 0, 'order' => 3],

@@ -154,7 +154,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Kategori Jenis Pendaftaran</h3>
-                    <p class="text-[11px] text-slate-400">Kelola jenis penerimaan (contoh: Siswa Baru, Pindahan Mutasi, dll).</p>
+                    <p class="text-[11px] text-slate-400">Kelola jenis penerimaan (contoh: Murid Baru, Pindahan Mutasi, dll).</p>
                 </div>
                 <button onclick="openModal('jenis', '', '', '{{ route('admin.spmb-settings.types.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Kategori
