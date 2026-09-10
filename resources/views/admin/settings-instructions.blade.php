@@ -53,14 +53,14 @@
     </div>
 
     <!-- Main Content Form -->
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+    
         <form method="POST" action="{{ route('admin.spmb-settings.instructions.save') }}" id="instructions-form" hx-boost="false" class="space-y-6">
             @csrf
             <input type="hidden" name="unit_id" value="{{ $selectedUnitId }}">
 
             <!-- Unit Selector Tabs (Only for Super Admin) -->
             @if($isSuperAdmin)
-                <div class="flex flex-wrap gap-2 border-b border-slate-150 pb-4">
+                <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
                     @foreach($units as $unit)
                         <button type="button" 
                             hx-get="{{ route('admin.spmb-settings.instructions') }}?unit_id={{ $unit->id }}" 
@@ -68,8 +68,8 @@
                             hx-select="#instructions-settings-container" 
                             hx-push-url="true"
                             class="px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $selectedUnitId == $unit->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
-                            <i data-lucide="graduation-cap" class="w-4 h-4"></i>
-                            {{ strtoupper($unit->name) }}
+                            <i data-lucide="school" class="w-4 h-4"></i>
+                            {{ $unit->name }}
                         </button>
                     @endforeach
                 </div>
@@ -86,6 +86,8 @@
                     </div>
                 </div>
             @endif
+
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
             
             <div class="grid grid-cols-1 gap-6">
                 <!-- 1. Instruksi Belum Lunas -->

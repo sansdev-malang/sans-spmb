@@ -186,20 +186,20 @@
                     </p>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
                         <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
-                            <code class="text-[10px] text-brand-emerald font-bold">@{{ nama_calon_siswa }}</code>
-                            <span class="block text-[9px] text-slate-400 mt-0.5">Nama Anak</span>
+                            <code class="text-xs text-brand-emerald font-bold">@{{ nama_calon_siswa }}</code>
+                            <span class="block text-[10px] text-slate-400 mt-0.5">Nama Anak</span>
                         </div>
                         <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
-                            <code class="text-[10px] text-brand-emerald font-bold">@{{ nama_unit }}</code>
-                            <span class="block text-[9px] text-slate-400 mt-0.5">Nama Unit</span>
+                            <code class="text-xs text-brand-emerald font-bold">@{{ nama_unit }}</code>
+                            <span class="block text-[10px] text-slate-400 mt-0.5">Nama Unit</span>
                         </div>
                         <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
-                            <code class="text-[10px] text-brand-emerald font-bold">@{{ nama_kelas }}</code>
-                            <span class="block text-[9px] text-slate-400 mt-0.5">Tingkat Kelas</span>
+                            <code class="text-xs text-brand-emerald font-bold">@{{ nama_kelas }}</code>
+                            <span class="block text-[10px] text-slate-400 mt-0.5">Tingkat Kelas</span>
                         </div>
                         <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
-                            <code class="text-[10px] text-brand-emerald font-bold">@{{ tahun_ajaran }}</code>
-                            <span class="block text-[9px] text-slate-400 mt-0.5">Tahun Ajaran</span>
+                            <code class="text-xs text-brand-emerald font-bold">@{{ tahun_ajaran }}</code>
+                            <span class="block text-[10px] text-slate-400 mt-0.5">Tahun Ajaran</span>
                         </div>
                     </div>
                 </div>

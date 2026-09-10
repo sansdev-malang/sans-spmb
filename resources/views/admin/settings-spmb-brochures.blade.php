@@ -7,16 +7,16 @@
 <div id="spmb-brochures-container" class="w-full space-y-8">
     
     <!-- Top Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-extrabold text-slate-850 dark:text-white">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div  class="flex flex-col gap-1">
+            <h1 class="text-xl font-extrabold text-slate-800">
                 @if($isSuperAdmin)
                     Brosur & Dokumen SPMB
                 @else
                     Brosur & Dokumen SPMB — {{ $units->first()?->name }}
                 @endif
             </h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p class="text-xs text-slate-500">
                 @if($isSuperAdmin)
                     Kelola file brosur cetak dan berkas lampiran persyaratan yang dapat diunduh oleh calon orang tua murid pada masing-masing unit sekolah.
                 @else
@@ -48,8 +48,8 @@
                     <div class="space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                             <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-md shadow-emerald-600/20">
-                                    {{ strtoupper($u->code) }}
+                                <div class="h-10 w-10 rounded-2xl text-white flex items-center justify-center font-black text-xs shadow-md shadow-emerald-600/20">
+                                    <img src="{{ asset('logo/' . strtolower($u->code) . '.svg') }}" alt="{{ $u->name }}">
                                 </div>
                                 <div>
                                     <h3 class="font-extrabold text-slate-850 dark:text-white text-sm">{{ $u->name }}</h3>

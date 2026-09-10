@@ -7,16 +7,16 @@
 <div id="spmb-cs-container" class="w-full space-y-8">
     
     <!-- Top Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-extrabold text-slate-850 dark:text-white">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex flex-col gap-1">
+            <h1 class="text-xl font-extrabold text-slate-800">
                 @if($isSuperAdmin)
                     Customer Service & Kontak Panitia
                 @else
                     Kontak Admin Panitia — {{ $units->first()?->name }}
                 @endif
             </h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p class="text-xs text-slate-500">
                 @if($isSuperAdmin)
                     Kelola nomor WhatsApp layanan Customer Service pusat dan kontak admin masing-masing unit sekolah.
                 @else
@@ -46,7 +46,7 @@
                     <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-5">
                         <div class="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-4">
                             <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                                <i data-lucide="headphones" class="w-4.5 h-4.5"></i>
+                                <i data-lucide="headphones" class="w-4 h-4"></i>
                             </div>
                             <div>
                                 <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">Customer Service Pusat (Umum)</h3>
@@ -111,7 +111,7 @@
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                         <div class="flex items-center gap-2.5">
                             <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                                <i data-lucide="building-2" class="w-4.5 h-4.5"></i>
+                                <i data-lucide="building-2" class="w-4 h-4"></i>
                             </div>
                             <div>
                                 <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">
@@ -176,7 +176,9 @@
                 <div class="sticky top-8 space-y-6">
                     <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
                         <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                            <i data-lucide="eye" class="w-4 h-4 text-emerald-600"></i>
+                            <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <i data-lucide="eye" class="w-4 h-4 text-emerald-600"></i>
+                            </div>
                             <h4 class="font-extrabold text-slate-800 dark:text-white text-xs uppercase tracking-wider">
                                 @if($isSuperAdmin)
                                     Live Preview di Portal Pendaftar

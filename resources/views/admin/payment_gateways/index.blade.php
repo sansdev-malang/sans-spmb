@@ -7,12 +7,12 @@
 <div id="gateway-settings-container" class="space-y-8">
     
     <!-- Header -->
-    <div class="md:flex md:items-center md:justify-between mb-8">
-        <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-extrabold leading-7 text-slate-900 sm:text-3xl sm:truncate dark:text-white">
+    <div class="md:flex md:items-center md:justify-between bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-xl font-extrabold text-slate-800">
                 Kelola Payment Gateways
             </h2>
-            <p class="text-xs text-brand-emerald font-semibold uppercase tracking-wider mt-1">
+            <p class="text-xs text-slate-500">
                 Sekolah Anak Saleh • Integrasi Pembayaran
             </p>
         </div>

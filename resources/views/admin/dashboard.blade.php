@@ -273,8 +273,8 @@
                                         @endphp
                                         <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
                                             @if($paymentLogo)
-                                                <span class="w-5 h-4 flex items-center justify-center flex-shrink-0 bg-white dark:bg-slate-700/80 rounded px-0.5 py-0.5 border border-slate-200/60 dark:border-slate-700">
-                                                    <img src="{{ $paymentLogo }}" alt="{{ $payment->channel_display_name }}" class="h-4 w-4 object-contain">
+                                                <span class="w-10 h-8 flex items-center justify-center flex-shrink-0 bg-white dark:bg-slate-700/80 rounded px-0.5 py-0.5 border border-slate-200/60 dark:border-slate-700">
+                                                    <img src="{{ $paymentLogo }}" alt="{{ $payment->channel_display_name }}" class="h-8 w-8 object-contain">
                                                 </span>
                                             @else
                                                 <i data-lucide="credit-card" class="w-3 h-3 text-slate-400"></i>
@@ -347,8 +347,8 @@
                                 <div class="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                                     <span class="flex items-center gap-1.5">
                                         @if(!empty($stat['logo_url']))
-                                            <span class="w-5 h-4 flex items-center justify-center flex-shrink-0 bg-white dark:bg-slate-700/80 rounded px-0.5 py-0.5 border border-slate-200/60 dark:border-slate-700">
-                                                <img src="{{ $stat['logo_url'] }}" alt="{{ $stat['channel'] }}" class="max-h-full max-w-full object-contain">
+                                            <span class="w-10 h-8 flex items-center justify-center flex-shrink-0 bg-white dark:bg-slate-700/80 rounded px-0.5 py-0.5 border border-slate-200/60 dark:border-slate-700">
+                                                <img src="{{ $stat['logo_url'] }}" alt="{{ $stat['channel'] }}" class="w-8 h-8 object-contain">
                                             </span>
                                         @else
                                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>

@@ -27,9 +27,6 @@
 <!-- Header Hero Banner for the Unit -->
 <div class="relative bg-slate-50 dark:bg-slate-950 overflow-hidden py-10 md:py-12 border-b border-slate-100 dark:border-slate-800 transition">
     <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center space-y-3.5">
-        <div class="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 text-brand-emerald dark:text-emerald-400 font-extrabold text-[10px] uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-2xs border border-emerald-200/50 dark:border-emerald-800/50">
-            <i data-lucide="{{ $iconName }}" class="w-3.5 h-3.5"></i> Program Pendidikan
-        </div>
         
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
             <span class="block text-slate-800 dark:text-white">Informasi & Pendaftaran</span>

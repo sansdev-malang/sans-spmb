@@ -9,10 +9,9 @@
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <i data-lucide="percent" class="w-5 h-5 text-brand-emerald"></i>
                 Biaya Admin Transaksi Gateway
             </h1>
-            <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">
+            <p class="text-xs text-slate-500 mt-1">
                 Konfigurasi skema & nominal biaya transaksi per kategori channel pembayaran
             </p>
         </div>

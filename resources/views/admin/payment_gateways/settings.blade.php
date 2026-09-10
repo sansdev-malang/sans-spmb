@@ -7,12 +7,12 @@
 <div id="gateway-settings-container" class="space-y-8">
     
     <!-- Header -->
-    <div class="md:flex md:items-center md:justify-between mb-8">
-        <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-extrabold leading-7 text-slate-900 sm:text-3xl sm:truncate dark:text-white text-left">
+    <div class="md:flex md:items-center md:justify-between bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-xl font-extrabold text-slate-800text-xl font-extrabold text-slate-800">
                 Konfigurasi {{ $gateway->name }}
             </h2>
-            <p class="text-xs text-brand-emerald font-semibold uppercase tracking-wider mt-1 text-left">
+            <p class="text-xs text-slate-500">
                 Kode Gateway: {{ $gateway->code }} • Kelola Kunci & Kredensial API
             </p>
         </div>
@@ -42,7 +42,7 @@
             <h3 class="font-extrabold text-slate-800 dark:text-white text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-3">Mode Lingkungan (Environment Mode)</h3>
             <div class="w-72">
                 <label for="mode" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Mode Aktif Saat Ini</label>
-                <select id="mode" name="mode" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
+                <select id="mode" name="mode" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs">
                     <option value="simulator" {{ $gatewayMode === 'simulator' ? 'selected' : '' }}>Simulator (Pengujian Lokal)</option>
                     <option value="sandbox" {{ $gatewayMode === 'sandbox' ? 'selected' : '' }}>Sandbox (API Testing)</option>
                     <option value="production" {{ $gatewayMode === 'production' ? 'selected' : '' }}>Production (Pembayaran Riil Live)</option>

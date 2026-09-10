@@ -7,12 +7,12 @@
 <div id="channels-settings-container" class="space-y-6">
     
     <!-- Header -->
-    <div class="md:flex md:items-center md:justify-between">
-        <div class="flex-1 min-w-0">
-            <h2 class="text-2xl font-extrabold leading-7 text-slate-900 sm:text-3xl sm:truncate dark:text-white">
+    <div class="md:flex md:items-center md:justify-between bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-xl font-extrabold text-slate-800text-xl font-extrabold text-slate-800">
                 Kelola Channel Pembayaran
             </h2>
-            <p class="text-xs text-brand-emerald font-semibold uppercase tracking-wider mt-1">
+            <p class="text-xs text-slate-500">
                 Sekolah Anak Saleh • Metode Pembayaran Siswa
             </p>
         </div>
@@ -133,7 +133,7 @@
                                             </span>
                                         @endif
                                     </div>
-                                    <div class="font-extrabold text-slate-800 dark:text-slate-200">{{ $channel->name }}</div>
+                                    <div class="font-extrabold text-xs text-slate-800 dark:text-slate-200">{{ $channel->name }}</div>
                                 </div>
                             </td>
                             <td class="py-4 px-6 font-mono text-xs text-brand-emerald dark:text-emerald-450 font-bold">
@@ -193,11 +193,11 @@
                             </td>
                             <td class="py-4 px-6 text-right">
                                 <div class="flex justify-end items-center gap-1.5">
-                                    <button onclick="openEditModal({{ json_encode($channel) }})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
-                                        Edit
+                                    <button onclick="openEditModal({{ json_encode($channel) }})" class="bg-brand-emerald hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
+                                        <i data-lucide="edit" class="w-4 h-4"></i> Edit
                                     </button>
                                     <button type="button" onclick="confirmDelete('{{ route('admin.payment-channels.destroy', $channel->id) }}' + window.location.search, 'Apakah Anda yakin ingin menghapus channel {{ $channel->name }} ini?')" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
-                                        Hapus
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
                                     </button>
                                 </div>
                             </td>
