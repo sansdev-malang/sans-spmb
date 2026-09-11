@@ -87,7 +87,7 @@
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Salin Tautan</label>
                     <div class="flex items-center border border-slate-300 rounded-xl overflow-hidden bg-white">
                         <input type="text" readonly id="displayUrlInput" value="{{ $qrcodeUrl }}" class="w-full border-none bg-transparent px-3 py-2 text-[11px] font-mono text-slate-650 focus:ring-0 focus:outline-none">
-                        <button onclick="copyToClipboard()" type="button" class="bg-slate-100 hover:bg-slate-200 px-3 py-2 text-[10px] font-bold text-slate-700 transition border-l border-slate-300">
+                        <button onclick="copyQrLink()" type="button" class="bg-slate-100 hover:bg-slate-200 px-3 py-2 text-[10px] font-bold text-slate-700 transition border-l border-slate-300">
                             Salin
                         </button>
                     </div>
@@ -127,12 +127,15 @@
         document.getElementById('displayUrlInput').value = url;
     });
 
-    function copyToClipboard() {
+    function copyQrLink() {
         const input = document.getElementById('displayUrlInput');
-        input.select();
-        input.setSelectionRange(0, 99999); // for mobile
-        navigator.clipboard.writeText(input.value);
-        showToast('Tautan disalin ke papan klip!', 'success');
+        if (typeof window.copyToClipboard === 'function') {
+            window.copyToClipboard(input.value, 'Tautan disalin ke papan klip!');
+        } else {
+            input.select();
+            document.execCommand('copy');
+            if (typeof showToast === 'function') showToast('Tautan disalin ke papan klip!', 'success');
+        }
     }
 
     function downloadQrWithLogo() {

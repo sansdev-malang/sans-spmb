@@ -1432,6 +1432,51 @@
             warning: (msg) => showToast(msg, 'warning')
         };
 
+        // Universal Clipboard Copy with Fallback (for HTTP, non-secure contexts, and mobile)
+        window.copyToClipboard = function(text, successMsg = 'Teks berhasil disalin') {
+            if (!text) return;
+
+            const onDone = () => {
+                if (typeof showToast === 'function') {
+                    showToast(successMsg, 'success');
+                } else if (window.toastr && typeof window.toastr.success === 'function') {
+                    window.toastr.success(successMsg);
+                }
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(onDone).catch(() => {
+                    fallbackCopy(text, onDone);
+                });
+            } else {
+                fallbackCopy(text, onDone);
+            }
+        };
+
+        function fallbackCopy(text, onSuccess) {
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.top = '-9999px';
+                textArea.style.left = '-9999px';
+                textArea.setAttribute('readonly', '');
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                textArea.setSelectionRange(0, 99999);
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (successful) {
+                    onSuccess();
+                } else {
+                    prompt('Salin teks secara manual (Ctrl+C / Cmd+C):', text);
+                }
+            } catch (err) {
+                prompt('Salin teks secara manual (Ctrl+C / Cmd+C):', text);
+            }
+        }
+
         // Coming Soon Feature Notifier
         function showFeatureComingSoon(featureName = 'Fitur') {
             const container = document.getElementById('toastContainer');
