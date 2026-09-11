@@ -288,76 +288,88 @@
             @foreach($units as $unit)
                 @php $code = strtolower($unit->code); @endphp
                 <div id="tab-content-unit-{{ $code }}" class="tab-panel space-y-6 {{ $currentTab === 'unit-' . $code ? '' : 'hidden' }}">
-                    <div class="bg-slate-50/50 p-6 rounded-2xl border border-slate-150 space-y-6">
-                        <h4 class="text-xs font-extrabold text-brand-emerald uppercase tracking-wider">Pengaturan Jenjang {{ $unit->name }}</h4>
+                    <div class="bg-slate-50/50 dark:bg-slate-900/60 p-6 rounded-2xl border border-slate-150 dark:border-slate-800 space-y-6">
+                        <h4 class="text-xs font-extrabold text-brand-emerald dark:text-emerald-400 uppercase tracking-wider">Pengaturan Jenjang {{ $unit->name }}</h4>
                         
                         <div class="grid grid-cols-1 gap-6">
                             <!-- 1. Deskripsi Singkat -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2">Deskripsi Singkat Jenjang</label>
-                                <textarea name="unit_{{ $code }}_desc" rows="2" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald">{{ $settings['unit_' . $code . '_desc'] }}</textarea>
+                            <div class="space-y-1.5">
+                                <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Deskripsi Singkat Jenjang</label>
+                                <textarea name="unit_{{ $code }}_desc" rows="4" required class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-medium leading-relaxed" placeholder="Tuliskan gambaran umum dan visi jenjang ini...">{{ $settings['unit_' . $code . '_desc'] }}</textarea>
                             </div>
 
-                            <!-- 2. Terdiri Dari Apa Saja -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2">Terdiri Dari Apa Saja (Program / Kelas - Pisahkan dengan koma)</label>
-                                <textarea name="unit_{{ $code }}_content" rows="2" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald" placeholder="Contoh: Sentra Bermain, Kelompok Bermain A (3-4 Tahun), Kelompok Bermain B (4-5 Tahun)">{{ $settings['unit_' . $code . '_content'] }}</textarea>
+                            <!-- 2. Kurikulum & Layanan Pendidikan -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Kurikulum & Layanan Pendidikan</label>
+                                    <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 item per baris (tekan Enter)</span>
+                                </div>
+                                <textarea name="unit_{{ $code }}_content" rows="4" required class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-medium leading-relaxed" placeholder="Contoh:&#10;Special Curriculum of Anak Saleh: Kurikulum Panca Karakter Anak Saleh (ecological system Approach...)&#10;International Curriculum: Cambridge&#10;National Curriculum: From Kemendikdasmen RI&#10;Islamic Curriculum: Madrasah Dinniyah">{{ $settings['unit_' . $code . '_content'] }}</textarea>
+                                <p class="text-[9px] text-slate-400 dark:text-slate-500">💡 Anda bisa menyertakan judul dan penjelasan dengan tanda titik dua (contoh: <code>Nama Kurikulum: Penjelasan...</code>).</p>
                             </div>
 
                             <!-- 3. Program Unggulan -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2">Program Unggulan (Pisahkan dengan koma)</label>
-                                <input type="text" name="unit_{{ $code }}_features" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald" 
-                                    value="{{ $settings['unit_' . $code . '_features'] }}" placeholder="Contoh: Tahfidz Juz 30, Bilingual Program, Lab Komputer" />
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Program Unggulan Utama</label>
+                                    <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 program per baris (tekan Enter)</span>
+                                </div>
+                                <textarea name="unit_{{ $code }}_features" rows="6" required class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-medium leading-relaxed" placeholder="Contoh:&#10;Panca Karakter Anak Saleh (Five Good Characters of Anak Saleh)&#10;Homebase System&#10;Multilingual School (Bahasa, English, Arabic)&#10;IT and Coding Program">{{ $settings['unit_' . $code . '_features'] }}</textarea>
                             </div>
 
                             <!-- 4. Syarat Pendaftaran -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2">Syarat Pendaftaran (Pisahkan dengan koma)</label>
-                                <textarea name="unit_{{ $code }}_requirements" rows="2" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald" placeholder="Contoh: Mengisi Form Online, Fotokopi Akta Lahir & KK, Pasfoto 3x4 (2 lembar)">{{ $settings['unit_' . $code . '_requirements'] }}</textarea>
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Syarat & Ketentuan Pendaftaran</label>
+                                    <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 syarat per baris (tekan Enter)</span>
+                                </div>
+                                <textarea name="unit_{{ $code }}_requirements" rows="4" required class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-medium leading-relaxed" placeholder="Contoh:&#10;Mengisi Formulir Pendaftaran Online Lengkap di Portal SPMB&#10;Pas Foto Formal Calon Murid (Background Polos)&#10;Scan / Foto Akta Kelahiran Calon Murid&#10;Scan / Foto Kartu Keluarga (KK)&#10;Ijazah / Surat Keterangan dari Sekolah Asal (Dapat Menyusul)&#10;NISN / Kartu Identitas Anak (KIA) / Kartu Pelajar (Opsional)&#10;Dokumen Asesmen Kebutuhan Khusus / Psikologi (Jika Ada)">{{ $settings['unit_' . $code . '_requirements'] }}</textarea>
                             </div>
 
                             <!-- 5. Alur Pendaftaran -->
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-2">Alur Pendaftaran (Pisahkan dengan koma)</label>
-                                <textarea name="unit_{{ $code }}_flow" rows="2" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald" placeholder="Contoh: 1. Isi Form Pendaftaran, 2. Bayar Uang Pendaftaran, 3. Mengikuti Observasi, 4. Daftar Ulang">{{ $settings['unit_' . $code . '_flow'] }}</textarea>
-                                <p class="text-[9px] text-slate-400 mt-2 font-medium">💡 Pisahkan butir informasi/keunggulan/persyaratan di atas menggunakan tanda koma ( , ) agar otomatis diubah menjadi checklist/list terformat di portal pendaftar.</p>
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Tahapan Alur Pendaftaran & Seleksi</label>
+                                    <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">1 tahapan per baris (tekan Enter)</span>
+                                </div>
+                                <textarea name="unit_{{ $code }}_flow" rows="4" required class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-medium leading-relaxed" placeholder="Contoh:&#10;Pembuatan Akun & Registrasi Awal di Portal SPMB&#10;Pembayaran Biaya Awal Pendaftaran (Enrollment Fee)&#10;Pengisian Formulir Lengkap & Unggah Dokumen Berkas&#10;Verifikasi & Validasi Berkas oleh Panitia SPMB&#10;Assessment Siswa & Sesi Ta'aruf&#10;Pengumuman Hasil Seleksi & Persetujuan Pernyataan&#10;Daftar Ulang & Penyelesaian Administrasi Akhir">{{ $settings['unit_' . $code . '_flow'] }}</textarea>
+                                <p class="text-[9px] text-slate-400 dark:text-slate-500">💡 Tuliskan setiap butir poin di baris baru (tekan Enter). Anda bebas menggunakan tanda koma di dalam kalimat tanpa khawatir teks terpotong.</p>
                             </div>
 
                             <!-- 6. Brosur & Lampiran Uploads -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200 dark:border-slate-800">
                                 <!-- Brochure file input -->
-                                <div class="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
-                                    <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">File Brosur Unit (PDF/Gambar)</label>
+                                <div class="space-y-3 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">File Brosur Unit (PDF/Gambar)</label>
                                     
                                     @if(!empty($settings['unit_' . $code . '_brochure_url']))
-                                        <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                            <a href="{{ $settings['unit_' . $code . '_brochure_url'] }}" target="_blank" class="text-[10px] text-brand-emerald hover:underline font-extrabold truncate max-w-[180px]">📄 Lihat Brosur Aktif</a>
-                                            <label class="flex items-center gap-1 text-[9px] text-red-650 font-bold cursor-pointer hover:text-red-700">
+                                        <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                            <a href="{{ $settings['unit_' . $code . '_brochure_url'] }}" target="_blank" class="text-[10px] text-brand-emerald dark:text-emerald-400 hover:underline font-extrabold truncate max-w-[180px]">📄 Lihat Brosur Aktif</a>
+                                            <label class="flex items-center gap-1 text-[9px] text-red-600 dark:text-red-400 font-bold cursor-pointer hover:text-red-700">
                                                 <input type="checkbox" name="delete_unit_{{ $code }}_brochure" value="1" class="rounded text-red-600 focus:ring-red-500 w-3 h-3"> Hapus
                                             </label>
                                         </div>
                                     @endif
 
-                                    <input type="file" name="unit_{{ $code }}_brochure" accept="application/pdf,image/*" class="text-[10px] text-slate-500 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
-                                    <p class="text-[9px] text-slate-400 font-medium">PDF atau Gambar (Maks 4MB)</p>
+                                    <input type="file" name="unit_{{ $code }}_brochure" accept="application/pdf,image/*" class="text-[10px] text-slate-500 dark:text-slate-400 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-100 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 cursor-pointer" />
+                                    <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">PDF atau Gambar (Maks 4MB)</p>
                                 </div>
 
                                 <!-- Attachment file input -->
-                                <div class="space-y-3 bg-white p-4 rounded-xl border border-slate-200">
-                                    <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">File Lampiran/Pendukung (PDF/Zip/Doc)</label>
+                                <div class="space-y-3 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">File Lampiran/Pendukung (PDF/Zip/Doc)</label>
                                     
                                     @if(!empty($settings['unit_' . $code . '_attachment_url']))
-                                        <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                            <a href="{{ $settings['unit_' . $code . '_attachment_url'] }}" target="_blank" class="text-[10px] text-brand-emerald hover:underline font-extrabold truncate max-w-[180px]">📄 Lihat Lampiran Aktif</a>
-                                            <label class="flex items-center gap-1 text-[9px] text-red-650 font-bold cursor-pointer hover:text-red-700">
+                                        <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                            <a href="{{ $settings['unit_' . $code . '_attachment_url'] }}" target="_blank" class="text-[10px] text-brand-emerald dark:text-emerald-400 hover:underline font-extrabold truncate max-w-[180px]">📄 Lihat Lampiran Aktif</a>
+                                            <label class="flex items-center gap-1 text-[9px] text-red-600 dark:text-red-400 font-bold cursor-pointer hover:text-red-700">
                                                 <input type="checkbox" name="delete_unit_{{ $code }}_attachment" value="1" class="rounded text-red-600 focus:ring-red-500 w-3 h-3"> Hapus
                                             </label>
                                         </div>
                                     @endif
 
-                                    <input type="file" name="unit_{{ $code }}_attachment" accept="application/pdf,application/zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="text-[10px] text-slate-500 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
-                                    <p class="text-[9px] text-slate-400 font-medium">PDF, Zip, Word, Excel (Maks 5MB)</p>
+                                    <input type="file" name="unit_{{ $code }}_attachment" accept="application/pdf,application/zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="text-[10px] text-slate-500 dark:text-slate-400 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-100 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 cursor-pointer" />
+                                    <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">PDF, Zip, Word, Excel (Maks 5MB)</p>
                                 </div>
                             </div>
                         </div>

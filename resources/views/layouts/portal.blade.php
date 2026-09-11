@@ -1095,7 +1095,7 @@
             @elseif(session('error'))
                 showToast("{{ session('error') }}", 'error');
                 try { sessionStorage.removeItem('pendingToast'); } catch(e) {}
-            @elseif($errors->any())
+            @elseif(isset($errors) && $errors->any())
                 @foreach($errors->all() as $error)
                     showToast("{{ $error }}", 'error');
                 @endforeach

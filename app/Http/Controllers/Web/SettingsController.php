@@ -435,7 +435,7 @@ class SettingsController extends Controller
         } elseif ($code === 'sd') {
             return 'Membentuk habituasi ibadah, penguasaan literasi & numerasi, serta pengembangan minat bakat murid.';
         } elseif ($code === 'smp') {
-            return 'Mempersiapkan remaja yang mandiri, kritis, dan memiliki pemahaman agama yang kokoh untuk menghadapi tantangan global.';
+            return "Institusi pendidikan yang mencetak fitrah remaja yang mendorong kemandirian (independence), resilience, dan rasa tanggung jawab, sehingga murid diproses menjadi calon pemimpin masa depan yang kuat, berkepribadian, visioner, inspiratif, dan humanis.\n\nPembentukan karakter murid didasarkan ekosistem ramah anak (childfriendly ecosystem approach) dengan fokus pada perbedaan individu murid (student individual differences).\n\nMencetak generasi yang berwawasan dan berkemampuan global, berdaya saing dan kolaboratif, serta berkarakter Islami (adab akhlaq al-karimah) berbasis Panca Karakter Anak Saleh.";
         }
         return '';
     }
@@ -443,11 +443,11 @@ class SettingsController extends Controller
     private function getDefaultUnitContent($code)
     {
         if ($code === 'paud') {
-            return 'Sentra Bermain, Kelompok Bermain A (Usia 3-4 Tahun), Kelompok Bermain B (Usia 4-5 Tahun)';
+            return "Sentra Bermain & Kreativitas\nKelompok Bermain A (Usia 3-4 Tahun)\nKelompok Bermain B (Usia 4-5 Tahun)\nPengenalan Dasar Adab & Doa Harian";
         } elseif ($code === 'sd') {
-            return 'Kelas Reguler (Kelas 1-6), Bilingual Program (Kelas 1-3), Program Akselerasi (Khusus)';
+            return "Kelas Reguler (Kelas 1-6)\nBilingual Program (Kelas 1-3)\nProgram Akselerasi & Pendampingan Khusus\nPenguatan Literasi & Numerasi Dasar";
         } elseif ($code === 'smp') {
-            return 'Kelas Akademik Unggulan, Program Tahfidz Intensif, Ekstrakurikuler Wajib & Pilihan';
+            return "Special Curriculum of Anak Saleh: Kurikulum Panca Karakter Anak Saleh (ecological system Approach for Socio-Religio-Personality based on Al Qur'an, Hadits, Ijma', and Qiyas)\nInternational curriculum: Cambridge\nNational Curriculum: From Kemendikdasmen RI\nIslamic curriculum: Berbasis standar Madrasah Dinniyah (Kajian Keislaman berbasis praktis ibadah, Aqidah Akhlak, Ibadah Ta'alimul Qur'an wa Tahfidz)";
         }
         return '';
     }
@@ -455,37 +455,23 @@ class SettingsController extends Controller
     private function getDefaultUnitFeatures($code)
     {
         if ($code === 'paud') {
-            return 'Usia 3-6 Tahun, Sentra Bermain Interaktif, Pembiasaan Adab Harian';
+            return "Usia 3-6 Tahun\nSentra Bermain Interaktif\nPembiasaan Adab Harian\nStimulasi Motorik & Sensorik";
         } elseif ($code === 'sd') {
-            return 'Tahfidz Juz 30, Bilingual Program, Kunjungan Edukasi Berkala';
+            return "Tahfidz Juz 30 & Tilawah\nBilingual Program (English & Bahasa)\nKunjungan Edukasi & Outing Class\nPembinaan Karakter Islami Holistik";
         } elseif ($code === 'smp') {
-            return 'Leadership Camp, Coding & Robotic, Bina Karakter Remaja Muslim';
+            return "Panca Karakter Anak Saleh (Five Good Characters of Anak Saleh)\nHomebase System\nIntra-School Organization\nDigital School Ecosystem\nIT and Coding Program\nProject Based Learning\nCooperative Based Learning\nStudent Active Learning\nSTEAM Learning\nFamily Inn Learning\nMultilingual School (Bahasa, English, Arabic)\nInternational Program (VISA: Visiting International School Abroad)";
         }
         return '';
     }
 
     private function getDefaultUnitRequirements($code)
     {
-        if ($code === 'paud') {
-            return 'Mengisi Formulir Pendaftaran, Fotokopi Akta Kelahiran & KK, Pasfoto 3x4 (2 lembar)';
-        } elseif ($code === 'sd') {
-            return 'Mengisi Formulir Pendaftaran, Fotokopi Akta Lahir & KK, Fotokopi KTP Orang Tua, Surat Keterangan dari TK Asal';
-        } elseif ($code === 'smp') {
-            return 'Mengisi Formulir Pendaftaran, Fotokopi Akta Lahir & KK, Rapor SD Kelas 4-6, Fotokopi Ijazah SD (bisa menyusul)';
-        }
-        return '';
+        return "Mengisi Formulir Pendaftaran Online Lengkap di Portal SPMB\nPas Foto Formal Calon Murid (Background Polos)\nScan / Foto Akta Kelahiran Calon Murid\nScan / Foto Kartu Keluarga (KK)\nIjazah / Surat Keterangan dari Sekolah Asal (Dapat Menyusul)\nNISN / Kartu Identitas Anak (KIA) / Kartu Pelajar (Opsional)\nDokumen Asesmen Kebutuhan Khusus / Psikologi (Jika Ada)";
     }
 
     private function getDefaultUnitFlow($code)
     {
-        if ($code === 'paud') {
-            return '1. Mengisi Formulir Pendaftaran Awal, 2. Melakukan Pembayaran Seleksi Masuk, 3. Mengikuti Observasi & Wawancara Wali, 4. Pengumuman & Registrasi Ulang';
-        } elseif ($code === 'sd') {
-            return '1. Registrasi Instan & Pembuatan Akun, 2. Pengisian Formulir Lengkap & Upload Berkas, 3. Uji Kesiapan Belajar & Wawancara Orang Tua, 4. Hasil Seleksi & Pelunasan Biaya Masuk';
-        } elseif ($code === 'smp') {
-            return '1. Pendaftaran Online / Mandiri, 2. Pelunasan Biaya Seleksi, 3. Ujian Tes Akademik & Baca Al-Qur\'an, 4. Wawancara Murid & Orang Tua, 5. Pengumuman Kelulusan';
-        }
-        return '';
+        return "Pembuatan Akun & Registrasi Awal di Portal SPMB\nPembayaran Biaya Awal Pendaftaran (Enrollment Fee)\nPengisian Formulir Lengkap & Unggah Dokumen Berkas\nVerifikasi & Validasi Berkas oleh Panitia SPMB\nAssessment Siswa & Sesi Ta'aruf\nPengumuman Hasil Seleksi & Persetujuan Pernyataan\nDaftar Ulang & Penyelesaian Administrasi Akhir";
     }
 
     public function saveUiSettings(Request $request)

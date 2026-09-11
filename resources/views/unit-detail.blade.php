@@ -9,10 +9,24 @@
     $uCode = strtolower($unit->code);
     $schoolName = \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh');
     $uDesc = \App\Models\Setting::get('unit_' . $uCode . '_desc', '');
-    $uContent = array_filter(explode(',', \App\Models\Setting::get('unit_' . $uCode . '_content', '')));
-    $uFeatures = array_filter(explode(',', \App\Models\Setting::get('unit_' . $uCode . '_features', '')));
-    $uRequirements = array_filter(explode(',', \App\Models\Setting::get('unit_' . $uCode . '_requirements', '')));
-    $uFlow = array_filter(explode(',', \App\Models\Setting::get('unit_' . $uCode . '_flow', '')));
+    
+    $parseList = function($raw) {
+        if (empty($raw)) return [];
+        $lines = str_contains($raw, "\n") ? preg_split('/\r\n|\r|\n/', $raw) : explode(',', $raw);
+        $res = [];
+        foreach ($lines as $l) {
+            $t = trim(preg_replace('/^(\d+[\.\)]\s*|[\-\*\•\–]\s*)/u', '', trim($l)));
+            if ($t !== '') {
+                $res[] = str_replace('&#44;', ',', $t);
+            }
+        }
+        return $res;
+    };
+
+    $uContent = $parseList(\App\Models\Setting::get('unit_' . $uCode . '_content', ''));
+    $uFeatures = $parseList(\App\Models\Setting::get('unit_' . $uCode . '_features', ''));
+    $uRequirements = $parseList(\App\Models\Setting::get('unit_' . $uCode . '_requirements', ''));
+    $uFlow = $parseList(\App\Models\Setting::get('unit_' . $uCode . '_flow', ''));
     $uBrochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url', '');
     $uAttachmentUrl = \App\Models\Setting::get('unit_' . $uCode . '_attachment_url', '');
     
@@ -64,9 +78,20 @@
                     </h3>
                     <ul class="space-y-3 text-xs text-slate-600 dark:text-slate-350 font-medium">
                         @foreach($uContent as $item)
-                            <li class="flex items-start gap-3">
+                            @php
+                                $parts = explode(':', $item, 2);
+                                $hasDesc = count($parts) === 2 && trim($parts[1]) !== '';
+                                $title = trim($parts[0]);
+                                $desc = $hasDesc ? trim($parts[1]) : '';
+                            @endphp
+                            <li class="flex items-start gap-3 bg-white/80 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800/80">
                                 <span class="h-2 w-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></span>
-                                <span>{{ trim($item) }}</span>
+                                <div class="space-y-1">
+                                    <span class="font-bold text-slate-800 dark:text-slate-100 text-xs">{{ $title }}</span>
+                                    @if($hasDesc)
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-normal leading-relaxed">{{ $desc }}</p>
+                                    @endif
+                                </div>
                             </li>
                         @endforeach
                     </ul>
@@ -77,11 +102,11 @@
                     <h3 class="text-sm font-extrabold text-custom-primary dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                         <i data-lucide="sparkles" class="w-4.5 h-4.5 text-emerald-600"></i> Program Unggulan Utama
                     </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-slate-600 dark:text-slate-350 font-semibold">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-350 font-semibold">
                         @foreach($uFeatures as $feat)
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
-                                <span>{{ trim($feat) }}</span>
+                            <div class="flex items-start gap-2 bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-200/40 dark:border-slate-800/60">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                                <span class="leading-relaxed">{{ trim($feat) }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -117,16 +142,16 @@
                             @php $isLast = $loop->last; @endphp
                             <div class="flex items-start gap-3.5">
                                 <!-- Timeline vertical pillar -->
-                                <div class="flex flex-col items-center flex-shrink-0">
-                                    <div class="w-5 h-5 rounded-full bg-emerald-500 text-white font-black text-[10px] flex items-center justify-center shadow-xs">
+                                <div class="flex flex-col items-center flex-shrink-0 self-stretch">
+                                    <div class="w-6 h-6 rounded-full bg-emerald-500 text-white font-black text-[10px] flex items-center justify-center shadow-xs flex-shrink-0">
                                         {{ $flowIndex + 1 }}
                                     </div>
                                     @if(!$isLast)
-                                        <div class="w-0.5 bg-slate-200 dark:bg-slate-700 h-7 my-1"></div>
+                                        <div class="w-0.5 bg-slate-200 dark:bg-slate-700 flex-1 my-1 min-h-[16px]"></div>
                                     @endif
                                 </div>
                                 <!-- Content -->
-                                <div class="{{ !$isLast ? 'pb-3' : '' }} pt-0.5">
+                                <div class="{{ !$isLast ? 'pb-3.5' : '' }} pt-0.5">
                                     <p class="text-xs text-slate-700 dark:text-slate-350 font-bold leading-relaxed">
                                         {{ trim($step) }}
                                     </p>

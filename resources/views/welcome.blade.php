@@ -205,11 +205,25 @@
 
         <!-- Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            @php
+                $parseList = function($raw) {
+                    if (empty($raw)) return [];
+                    $lines = str_contains($raw, "\n") ? preg_split('/\r\n|\r|\n/', $raw) : explode(',', $raw);
+                    $res = [];
+                    foreach ($lines as $l) {
+                        $t = trim(preg_replace('/^(\d+[\.\)]\s*|[\-\*\•\–]\s*)/u', '', trim($l)));
+                        if ($t !== '') {
+                            $res[] = str_replace('&#44;', ',', $t);
+                        }
+                    }
+                    return $res;
+                };
+            @endphp
             @foreach($activeUnits as $u)
                 @php
                     $uCode = strtolower($u->code);
                     $uDesc = \App\Models\Setting::get('unit_' . $uCode . '_desc', '');
-                    $uFeatures = array_filter(explode(',', \App\Models\Setting::get('unit_' . $uCode . '_features', '')));
+                    $uFeatures = $parseList(\App\Models\Setting::get('unit_' . $uCode . '_features', ''));
                     
                     // Assign icon based on education level
                     $iconName = 'book-open';
@@ -227,7 +241,7 @@
                             </div>
                             <div class="space-y-2">
                                 <h3 class="font-black text-xl text-slate-800 dark:text-white">{{ $u->name }}</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-3 min-h-[3.6rem]" title="{{ $uDesc }}">
                                     {{ $uDesc }}
                                 </p>
                             </div>
@@ -235,7 +249,8 @@
                         <div class="space-y-3 pt-4 border-t border-slate-150 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-450">
                             @foreach(array_slice($uFeatures, 0, 2) as $feat)
                                 <div class="flex items-center gap-2">
-                                    <i data-lucide="check" class="w-4 h-4 text-emerald-600"></i> <span>{{ trim($feat) }}</span>
+                                    <i data-lucide="check" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                    <span class="truncate" title="{{ trim($feat) }}">{{ trim($feat) }}</span>
                                 </div>
                             @endforeach
                             <a href="{{ route('unit.detail', $uCode) }}" class="text-[10px] text-custom-primary dark:text-emerald-400 font-extrabold underline block mt-2 text-left">
