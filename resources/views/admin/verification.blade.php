@@ -304,13 +304,21 @@
                                             </a>
                                         @else
                                             <!-- Sudah dijadwalkan: Tampilkan tombol Selesaikan Ta'aruf -->
-                                            <form action="{{ route('admin.registrations.complete-taaruf', $reg->id) }}" method="POST" hx-boost="false" class="inline" onsubmit="return confirm('Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}?');">
-                                                @csrf
-                                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Selesaikan Sesi Ta'aruf">
-                                                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
-                                                    <span>Selesaikan Ta'aruf</span>
-                                                </button>
-                                            </form>
+                                            <button type="button" 
+                                                onclick="showConfirmDialog({
+                                                    title: 'Selesaikan Sesi Ta\'aruf',
+                                                    message: 'Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.',
+                                                    confirmText: 'Ya, Selesaikan',
+                                                    type: 'blue',
+                                                    icon: 'check-check',
+                                                    formAction: '{{ route('admin.registrations.complete-taaruf', $reg->id) }}',
+                                                    formMethod: 'POST'
+                                                })" 
+                                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1 cursor-pointer" 
+                                                title="Selesaikan Sesi Ta'aruf">
+                                                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                                                <span>Selesaikan Ta'aruf</span>
+                                            </button>
                                         @endif
                                     @endif
                                 </div>

@@ -829,22 +829,27 @@
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[9999] space-y-3 pointer-events-none"></div>
 
-    <!-- Global Delete Confirmation Modal -->
-    <div id="confirmDeleteModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-xl transform scale-95 transition-all duration-100 p-6 space-y-4" id="confirmDeleteModalBody">
-            <div class="flex items-center gap-3 text-rose-600">
-                <div class="h-10 w-10 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600"></i>
+    <!-- Global Action & Delete Confirmation Modal -->
+    <div id="globalConfirmModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/80 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-200">
+        <div class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 w-full max-w-md mx-4 rounded-3xl shadow-2xl transform scale-95 transition-all duration-200 p-6 space-y-4" id="globalConfirmModalBody">
+            <div class="flex items-start gap-4">
+                <div id="globalConfirmIconContainer" class="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                    <i id="globalConfirmIcon" data-lucide="help-circle" class="w-6 h-6"></i>
                 </div>
-                <h3 class="text-base font-extrabold text-slate-800">Konfirmasi Hapus</h3>
+                <div class="flex-1 min-w-0 pt-0.5">
+                    <h3 id="globalConfirmTitle" class="text-base font-extrabold text-slate-800 dark:text-white leading-tight">Konfirmasi Tindakan</h3>
+                    <p id="globalConfirmMessage" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium mt-1.5 break-words">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+                </div>
             </div>
-            <p id="confirmDeleteMessage" class="text-xs text-slate-500 leading-relaxed font-semibold">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold transition">Batal</button>
-                <form id="confirmDeleteForm" method="POST" action="" hx-boost="false" class="inline-block">
+            <div class="flex justify-end items-center gap-2.5 pt-2">
+                <button type="button" onclick="closeConfirmDialog()" id="globalConfirmCancelBtn" class="px-4 py-2.5 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer">Batal</button>
+                
+                <form id="globalConfirmForm" method="POST" action="" hx-boost="false" class="inline-block m-0 p-0">
                     @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-sm">Ya, Hapus</button>
+                    <input type="hidden" name="_method" id="globalConfirmFormMethod" value="POST">
+                    <button type="button" id="globalConfirmSubmitBtn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <span id="globalConfirmBtnText">Ya, Lanjutkan</span>
+                    </button>
                 </form>
             </div>
         </div>
@@ -852,37 +857,151 @@
 
     <!-- Script triggers and controllers -->
     <script>
-        // Custom Delete Confirmation Modal Controllers
-        function confirmDelete(actionUrl, message = 'Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.') {
-            const modal = document.getElementById('confirmDeleteModal');
-            const modalBody = document.getElementById('confirmDeleteModalBody');
-            const form = document.getElementById('confirmDeleteForm');
-            const messageEl = document.getElementById('confirmDeleteMessage');
+        let globalConfirmCallback = null;
 
-            form.action = actionUrl;
-            messageEl.innerText = message;
+        // Custom Universal Confirmation Modal Controller
+        window.showConfirmDialog = function(options = {}) {
+            const {
+                title = 'Konfirmasi Tindakan',
+                message = 'Apakah Anda yakin ingin melanjutkan tindakan ini?',
+                confirmText = 'Ya, Lanjutkan',
+                cancelText = 'Batal',
+                type = 'blue', // 'blue', 'primary', 'success', 'emerald', 'danger', 'rose', 'warning', 'amber'
+                icon = 'help-circle',
+                formAction = '',
+                formMethod = 'POST',
+                onConfirm = null
+            } = options;
+
+            globalConfirmCallback = onConfirm;
+
+            const modal = document.getElementById('globalConfirmModal');
+            const modalBody = document.getElementById('globalConfirmModalBody');
+            const titleEl = document.getElementById('globalConfirmTitle');
+            const messageEl = document.getElementById('globalConfirmMessage');
+            const iconContainer = document.getElementById('globalConfirmIconContainer');
+            const iconEl = document.getElementById('globalConfirmIcon');
+            const cancelBtn = document.getElementById('globalConfirmCancelBtn');
+            const submitBtn = document.getElementById('globalConfirmSubmitBtn');
+            const btnText = document.getElementById('globalConfirmBtnText');
+            const form = document.getElementById('globalConfirmForm');
+            const formMethodInput = document.getElementById('globalConfirmFormMethod');
+
+            if (!modal) return;
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            cancelBtn.textContent = cancelText;
+            btnText.textContent = confirmText;
+
+            // Reset classes
+            submitBtn.className = 'px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 text-white cursor-pointer';
+            iconContainer.className = 'h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0';
+
+            let selectedIcon = icon;
+
+            if (type === 'danger' || type === 'rose' || type === 'red') {
+                iconContainer.classList.add('bg-rose-50', 'dark:bg-rose-950/60', 'text-rose-600', 'dark:text-rose-400');
+                submitBtn.classList.add('bg-rose-600', 'hover:bg-rose-700', 'shadow-rose-600/20');
+                if (selectedIcon === 'help-circle') selectedIcon = 'alert-triangle';
+            } else if (type === 'warning' || type === 'amber') {
+                iconContainer.classList.add('bg-amber-50', 'dark:bg-amber-950/60', 'text-amber-600', 'dark:text-amber-400');
+                submitBtn.classList.add('bg-amber-500', 'hover:bg-amber-600', 'shadow-amber-500/20');
+                if (selectedIcon === 'help-circle') selectedIcon = 'alert-circle';
+            } else if (type === 'success' || type === 'emerald') {
+                iconContainer.classList.add('bg-emerald-50', 'dark:bg-emerald-950/60', 'text-brand-emerald', 'dark:text-emerald-400');
+                submitBtn.classList.add('bg-brand-emerald', 'hover-emerald', 'shadow-emerald-600/20');
+                if (selectedIcon === 'help-circle') selectedIcon = 'check-circle-2';
+            } else {
+                // Default blue / primary
+                iconContainer.classList.add('bg-blue-50', 'dark:bg-blue-950/60', 'text-blue-600', 'dark:text-blue-400');
+                submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-600/20');
+                if (selectedIcon === 'help-circle') selectedIcon = 'check-check';
+            }
+
+            iconEl.setAttribute('data-lucide', selectedIcon);
+
+            if (formAction) {
+                form.action = formAction;
+                const upperMethod = (formMethod || 'POST').toUpperCase();
+                if (upperMethod === 'GET') {
+                    form.method = 'GET';
+                    formMethodInput.value = 'GET';
+                } else {
+                    form.method = 'POST';
+                    formMethodInput.value = upperMethod;
+                }
+            } else {
+                form.action = '';
+            }
 
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
-            
+
             if (window.lucide) {
                 lucide.createIcons();
             }
-        }
+        };
 
-        function closeDeleteModal() {
-            const modal = document.getElementById('confirmDeleteModal');
-            const modalBody = document.getElementById('confirmDeleteModalBody');
+        window.closeConfirmDialog = function() {
+            const modal = document.getElementById('globalConfirmModal');
+            const modalBody = document.getElementById('globalConfirmModalBody');
+            if (!modal) return;
+            
             modal.classList.add('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-100');
             modalBody.classList.add('scale-95');
-        }
+            globalConfirmCallback = null;
+        };
 
-        document.getElementById('confirmDeleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDeleteModal();
+        // Backwards compatibility for confirmDelete
+        window.confirmDelete = function(actionUrl, message = 'Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.') {
+            showConfirmDialog({
+                title: 'Konfirmasi Hapus',
+                message: message,
+                confirmText: 'Ya, Hapus',
+                type: 'danger',
+                icon: 'trash-2',
+                formAction: actionUrl,
+                formMethod: 'DELETE'
+            });
+        };
+        window.closeDeleteModal = window.closeConfirmDialog;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitBtn = document.getElementById('globalConfirmSubmitBtn');
+            const form = document.getElementById('globalConfirmForm');
+            const modal = document.getElementById('globalConfirmModal');
+
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function(e) {
+                    if (typeof globalConfirmCallback === 'function') {
+                        e.preventDefault();
+                        const callback = globalConfirmCallback;
+                        closeConfirmDialog();
+                        callback();
+                    } else if (form && form.action && form.action !== '' && form.action !== window.location.href) {
+                        form.submit();
+                    } else {
+                        closeConfirmDialog();
+                    }
+                });
             }
+
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeConfirmDialog();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeConfirmDialog();
+                }
+            });
         });
 
         // Sidebar Scroll Persistence & Active Element Viewport Helper

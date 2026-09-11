@@ -14,12 +14,19 @@
             <p class="text-xs text-slate-500 mt-1">Pantau callback gateway, error exceptions, dan rekonsiliasi data transaksi langsung dari server.</p>
         </div>
         
-        <form action="{{ route('admin.logs.clear') }}" method="POST" hx-boost="false" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh log sistem? File laravel.log akan dikosongkan.');">
-            @csrf
-            <button type="submit" class="bg-red-650 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-red-200 shadow-sm">
-                <i data-lucide="trash-2" class="w-4 h-4"></i> Bersihkan Log
-            </button>
-        </form>
+        <button type="button" 
+            onclick="showConfirmDialog({
+                title: 'Bersihkan Log Sistem',
+                message: 'Apakah Anda yakin ingin menghapus seluruh log sistem? File laravel.log akan dikosongkan.',
+                confirmText: 'Ya, Bersihkan Log',
+                type: 'danger',
+                icon: 'trash-2',
+                formAction: '{{ route('admin.logs.clear') }}',
+                formMethod: 'POST'
+            })"
+            class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-red-200 shadow-sm cursor-pointer">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> Bersihkan Log
+        </button>
     </div>
 
     <!-- Filters & Search -->

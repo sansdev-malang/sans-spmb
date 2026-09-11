@@ -1914,51 +1914,56 @@
         }
     };
 
-    window.revertCandidateDispensation = async function(customId) {
+    window.revertCandidateDispensation = function(customId) {
         const regId = customId || (currentCandDisp ? currentCandDisp.id : null);
         if (!regId) return;
 
-        if (!confirm('Apakah Anda yakin ingin membatalkan status dispensasi calon murid ini?')) {
-            return;
-        }
+        showConfirmDialog({
+            title: 'Batalkan Dispensasi',
+            message: 'Apakah Anda yakin ingin membatalkan status dispensasi calon murid ini?',
+            confirmText: 'Ya, Batalkan Dispensasi',
+            type: 'danger',
+            icon: 'rotate-ccw',
+            onConfirm: async () => {
+                try {
+                    const formData = new FormData();
+                    formData.append('_token', '{{ csrf_token() }}');
 
-        try {
-            const formData = new FormData();
-            formData.append('_token', '{{ csrf_token() }}');
+                    const res = await fetch(`/admin/candidates/${regId}/revert-manual-accept`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
 
-            const res = await fetch(`/admin/candidates/${regId}/revert-manual-accept`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                body: formData
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                window.closeCandidateDispensationModal();
-                if (typeof showToast === 'function') {
-                    showToast(data.message || 'Dispensasi berhasil dibatalkan.', 'success');
-                }
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
-            } else {
-                if (typeof showToast === 'function') {
-                    showToast('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'), 'error');
-                } else {
-                    alert('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+                    const data = await res.json();
+                    if (data.success) {
+                        window.closeCandidateDispensationModal();
+                        if (typeof showToast === 'function') {
+                            showToast(data.message || 'Dispensasi berhasil dibatalkan.', 'success');
+                        }
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
+                        if (typeof showToast === 'function') {
+                            showToast('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'), 'error');
+                        } else {
+                            alert('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    if (typeof showToast === 'function') {
+                        showToast('Terjadi kesalahan jaringan.', 'error');
+                    } else {
+                        alert('Terjadi kesalahan jaringan.');
+                    }
                 }
             }
-        } catch (err) {
-            console.error(err);
-            if (typeof showToast === 'function') {
-                showToast('Terjadi kesalahan jaringan.', 'error');
-            } else {
-                alert('Terjadi kesalahan jaringan.');
-            }
-        }
+        });
     };
 
     // Update Tab 4 (Data & Riwayat Pembayaran) dynamically
