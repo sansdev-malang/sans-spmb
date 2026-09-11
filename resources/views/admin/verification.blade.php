@@ -201,13 +201,21 @@
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->candidate_name ?? 'Draft' }}</div>
                                 @php
+                                    $parentName = $reg->father_name 
+                                        ?: ($reg->mother_name 
+                                        ?: ($reg->guardian_name 
+                                        ?: ($reg->user->name ?? '-')));
+
                                     $parentContact = $reg->parent_phone 
+                                        ?: ($reg->father_phone 
+                                        ?: ($reg->mother_phone 
+                                        ?: ($reg->guardian_phone 
                                         ?: ($reg->getFieldValue('father_phone') 
                                         ?: ($reg->getFieldValue('mother_phone') 
-                                        ?: ($reg->getFieldValue('guardian_phone') ?: null)));
+                                        ?: ($reg->getFieldValue('guardian_phone') ?: null))))));
                                 @endphp
                                 <div class="text-xs text-slate-400 flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-                                    <span>Ortu: {{ $reg->user->name }}</span>
+                                    <span>Ortu: {{ $parentName }}</span>
                                     @if($parentContact)
                                         <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
                                             <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>

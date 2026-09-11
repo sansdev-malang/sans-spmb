@@ -596,7 +596,10 @@
                                 <td class="py-3 px-4 text-center text-slate-400 font-bold">{{ $loop->iteration }}</td>
                                 <td class="py-3 px-4">
                                     <div class="font-bold text-slate-800 dark:text-slate-100">{{ $reg->candidate_name }}</div>
-                                    <div class="text-xs text-slate-400 mt-0.5">Wali: {{ $reg->father_name ?? $reg->mother_name ?? '-' }}</div>
+                                    @php
+                                        $parentName = $reg->father_name ?: ($reg->mother_name ?: ($reg->guardian_name ?: ($reg->user->name ?? '-')));
+                                    @endphp
+                                    <div class="text-xs text-slate-400 mt-0.5">Wali: {{ $parentName }}</div>
                                 </td>
                                 <td class="py-3 px-4 font-bold text-slate-650 dark:text-slate-300">{{ strtoupper($reg->unit->name ?? '-') }}</td>
                                 <td class="py-3 px-4 text-center">
