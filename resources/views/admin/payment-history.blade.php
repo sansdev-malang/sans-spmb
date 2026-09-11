@@ -386,13 +386,18 @@
                                                 <span>Cek Status</span>
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.payments.cancel', $pay->id) }}" method="POST" class="inline" hx-boost="false" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan tagihan invoice {{ $pay->invoice_number }} ini? Sesi pembayaran di Winpay/Bank akan ditutup.')">
-                                            @csrf
-                                            <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition duration-200 shadow-2xs cursor-pointer" title="Batalkan Tagihan Pembayaran">
-                                                <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
-                                                <span>Batalkan</span>
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="showConfirmDialog({
+                                            title: 'Batalkan Tagihan Pembayaran',
+                                            message: 'Apakah Anda yakin ingin membatalkan tagihan invoice {{ $pay->invoice_number }} ({{ addslashes($pay->registration->candidate_name ?? 'Calon Murid') }})? Sesi pembayaran di Winpay/Bank akan ditutup permanen.',
+                                            confirmText: 'Ya, Batalkan',
+                                            type: 'danger',
+                                            icon: 'x-circle',
+                                            formAction: '{{ route('admin.payments.cancel', $pay->id) }}',
+                                            formMethod: 'POST'
+                                        })" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800 transition duration-200 shadow-2xs cursor-pointer" title="Batalkan Tagihan Pembayaran">
+                                            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                            <span>Batalkan</span>
+                                        </button>
                                     </div>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-600 text-xs font-medium">-</span>
