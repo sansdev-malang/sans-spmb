@@ -225,7 +225,7 @@
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-1.5">
                                     <span class="font-mono text-xs font-bold text-slate-800 dark:text-slate-100 select-all tracking-tight">{{ $pay->invoice_number }}</span>
-                                    <button onclick="navigator.clipboard.writeText('{{ $pay->invoice_number }}'); toastr.success('Nomor Invoice disalin')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin Invoice">
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $pay->invoice_number }}'); showToast('Nomor Invoice disalin', 'success')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin Invoice">
                                         <i data-lucide="copy" class="w-3 h-3"></i>
                                     </button>
                                 </div>
@@ -266,7 +266,7 @@
                                     @if($displayWinpayId)
                                         <div class="flex items-center gap-1">
                                             <span class="font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300 select-all" title="{{ $numericWinpayId ? 'ID Transaksi Winpay' : 'Contract ID Winpay' }}">{{ $displayWinpayId }}</span>
-                                            <button type="button" onclick="navigator.clipboard.writeText('{{ $displayWinpayId }}'); toastr.success('ID Winpay disalin')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin ID Winpay">
+                                            <button type="button" onclick="navigator.clipboard.writeText('{{ $displayWinpayId }}'); showToast('ID Transaksi disalin', 'success')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin ID Transaksi">
                                                 <i data-lucide="copy" class="w-2.5 h-2.5"></i>
                                             </button>
                                         </div>
@@ -338,7 +338,7 @@
                                         <span class="font-mono text-[10px] text-slate-600 dark:text-slate-300 font-bold select-all bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 px-1.5 py-0.5 rounded">
                                             VA: {{ $pay->payment_info['virtualAccountNo'] }}
                                         </span>
-                                        <button onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); toastr.success('Nomor VA disalin')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin Nomor VA">
+                                        <button type="button" onclick="navigator.clipboard.writeText('{{ $pay->payment_info['virtualAccountNo'] }}'); showToast('Nomor VA disalin', 'success')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin Nomor VA">
                                             <i data-lucide="copy" class="w-2.5 h-2.5"></i>
                                         </button>
                                     </div>

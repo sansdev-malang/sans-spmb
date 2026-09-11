@@ -1424,6 +1424,14 @@
             }, 3500);
         }
 
+        // Global Toastr Compatibility Bridge
+        window.toastr = {
+            success: (msg) => showToast(msg, 'success'),
+            error: (msg) => showToast(msg, 'error'),
+            info: (msg) => showToast(msg, 'info'),
+            warning: (msg) => showToast(msg, 'warning')
+        };
+
         // Coming Soon Feature Notifier
         function showFeatureComingSoon(featureName = 'Fitur') {
             const container = document.getElementById('toastContainer');
