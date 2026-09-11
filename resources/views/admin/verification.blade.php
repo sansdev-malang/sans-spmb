@@ -195,8 +195,16 @@
                             <td class="py-4 px-6 text-center text-slate-500 font-bold text-xs">
                                 {{ ($registrations->currentPage() - 1) * $registrations->perPage() + $loop->iteration }}
                             </td>
-                            <td class="py-4 px-6 font-mono text-xs text-slate-500">
-                                SANS-{{ substr($reg->period->year ?? '2026', 0, 4) }}-{{ str_pad($reg->id, 4, '0', STR_PAD_LEFT) }}
+                            <td class="py-4 px-6">
+                                <div class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    SANS-{{ substr($reg->period->year ?? '2026', 0, 4) }}-{{ str_pad($reg->id, 4, '0', STR_PAD_LEFT) }}
+                                </div>
+                                @if($reg->created_at)
+                                    <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1 font-medium whitespace-nowrap">
+                                        <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i>
+                                        <span>{{ $reg->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->candidate_name ?? 'Draft' }}</div>
