@@ -151,6 +151,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
         Route::post('/admin/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password');
 
+        // Tampilan Portal (Accessible to Super Admin and Unit Admin with scoping)
+        Route::get('/admin/ui-settings', [SettingsController::class, 'uiSettings'])->name('admin.ui-settings');
+        Route::post('/admin/ui-settings', [SettingsController::class, 'saveUiSettings'])->name('admin.ui-settings.save');
+
         // Admin Profile & Password Management
         Route::get('/admin/profile', [ProfileController::class, 'editAdminProfile'])->name('admin.profile.edit');
         Route::post('/admin/profile', [ProfileController::class, 'updateAdminProfile'])->name('admin.profile.update');
@@ -178,10 +182,6 @@ Route::middleware('auth')->group(function () {
             Route::delete('/admin/payment-channels/{id}', [PaymentChannelController::class, 'destroy'])->name('admin.payment-channels.destroy');
             Route::post('/admin/payment-channels/{id}/toggle', [PaymentChannelController::class, 'toggle'])->name('admin.payment-channels.toggle');
             Route::post('/admin/payment-channels/sync', [PaymentChannelController::class, 'sync'])->name('admin.payment-channels.sync');
-
-            // New Config Pages
-            Route::get('/admin/ui-settings', [SettingsController::class, 'uiSettings'])->name('admin.ui-settings');
-            Route::post('/admin/ui-settings', [SettingsController::class, 'saveUiSettings'])->name('admin.ui-settings.save');
 
             Route::get('/admin/api-integrations', function () {
                 return view('admin.settings-api-integrations');

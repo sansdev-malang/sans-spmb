@@ -641,11 +641,9 @@
                     <i data-lucide="chevron-down" id="techDropdownArrow" class="w-4 h-4 text-slate-400 group-hover:text-white sidebar-text transition-transform duration-300 {{ $isTechActive ? 'rotate-180 text-brand-yellow' : '' }}"></i>
                 </button>
                 <div id="techSubmenu" class="ml-4 pl-3.5 border-l border-slate-800/80 space-y-0.5 my-1.5 {{ $isTechActive ? '' : 'hidden' }}">
-                    @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.ui-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.ui-settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Tampilan Portal</span>
-                        </a>
-                    @endif
+                    <a href="{{ route('admin.ui-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.ui-settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Tampilan Portal</span>
+                    </a>
                     <a href="{{ route('admin.users') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.users') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                         <i data-lucide="users-round" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Manajemen User</span>
                     </a>

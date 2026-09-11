@@ -362,7 +362,16 @@ class SettingsController extends Controller
 
     public function uiSettings()
     {
-        $units = \App\Models\SpmbUnit::all();
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+
+        if (!$isSuperAdmin) {
+            $units = \App\Models\SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
+            if ($units->isEmpty()) {
+                abort(403, 'Akses ditolak. Akun Anda belum terhubung dengan unit sekolah manapun.');
+            }
+        } else {
+            $units = \App\Models\SpmbUnit::all();
+        }
 
         $settings = [
             'school_name' => Setting::get('school_name', 'Sekolah Anak Saleh'),
@@ -395,7 +404,13 @@ class SettingsController extends Controller
             $settings['unit_' . $code . '_attachment_url'] = Setting::get('unit_' . $code . '_attachment_url', '');
         }
 
-        return view('admin.settings-ui', compact('settings', 'units'));
+        $defaultTab = $isSuperAdmin ? 'global' : ('unit-' . strtolower($units->first()->code));
+        $activeTab = request()->get('tab', $defaultTab);
+        if (!$isSuperAdmin && !str_starts_with($activeTab, 'unit-')) {
+            $activeTab = $defaultTab;
+        }
+
+        return view('admin.settings-ui', compact('settings', 'units', 'isSuperAdmin', 'activeTab'));
     }
 
     private function getDefaultUnitDesc($code)
@@ -460,6 +475,62 @@ class SettingsController extends Controller
 
     public function saveUiSettings(Request $request)
     {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+
+        if (!$isSuperAdmin) {
+            $units = \App\Models\SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
+            if ($units->isEmpty()) {
+                abort(403, 'Akses ditolak.');
+            }
+
+            $rules = [];
+            foreach ($units as $unit) {
+                $code = strtolower($unit->code);
+                $rules['unit_' . $code . '_desc'] = 'required|string';
+                $rules['unit_' . $code . '_content'] = 'required|string';
+                $rules['unit_' . $code . '_features'] = 'required|string';
+                $rules['unit_' . $code . '_requirements'] = 'required|string';
+                $rules['unit_' . $code . '_flow'] = 'required|string';
+                $rules['unit_' . $code . '_brochure'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096';
+                $rules['unit_' . $code . '_attachment'] = 'nullable|file|mimes:pdf,zip,doc,docx,xls,xlsx|max:5120';
+            }
+
+            $request->validate($rules);
+
+            foreach ($units as $unit) {
+                $code = strtolower($unit->code);
+                Setting::set('unit_' . $code . '_desc', $request->input('unit_' . $code . '_desc', ''));
+                Setting::set('unit_' . $code . '_content', $request->input('unit_' . $code . '_content', ''));
+                Setting::set('unit_' . $code . '_features', $request->input('unit_' . $code . '_features', ''));
+                Setting::set('unit_' . $code . '_requirements', $request->input('unit_' . $code . '_requirements', ''));
+                Setting::set('unit_' . $code . '_flow', $request->input('unit_' . $code . '_flow', ''));
+
+                // Process brochure upload
+                if ($request->hasFile('unit_' . $code . '_brochure')) {
+                    $path = $request->file('unit_' . $code . '_brochure')->store('documents', 'public');
+                    Setting::set('unit_' . $code . '_brochure_url', \Illuminate\Support\Facades\Storage::url($path));
+                }
+
+                // Process attachment upload
+                if ($request->hasFile('unit_' . $code . '_attachment')) {
+                    $path = $request->file('unit_' . $code . '_attachment')->store('documents', 'public');
+                    Setting::set('unit_' . $code . '_attachment_url', \Illuminate\Support\Facades\Storage::url($path));
+                }
+
+                // Process deletions
+                if ($request->input('delete_unit_' . $code . '_brochure') == '1') {
+                    Setting::set('unit_' . $code . '_brochure_url', '');
+                }
+                if ($request->input('delete_unit_' . $code . '_attachment') == '1') {
+                    Setting::set('unit_' . $code . '_attachment_url', '');
+                }
+            }
+
+            $activeTab = 'unit-' . strtolower($units->first()->code);
+            return redirect()->route('admin.ui-settings', ['tab' => $activeTab])->with('success', 'Pengaturan tampilan unit berhasil disimpan!');
+        }
+
+        // Super Admin Flow (full validation and save)
         $units = \App\Models\SpmbUnit::all();
         $rules = [
             'school_name' => 'required|string|max:255',

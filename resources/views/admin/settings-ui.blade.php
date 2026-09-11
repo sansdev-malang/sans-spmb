@@ -39,32 +39,40 @@
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h1 class="text-xl font-extrabold text-slate-800">Pengaturan Tampilan Portal Pendaftaran (UI Portal)</h1>
-        <p class="text-xs text-slate-500 mt-1">Mengustomisasi logo, warna, judul, banner slider, dan konten informasi per jenjang sekolah.</p>
+        <p class="text-xs text-slate-500 mt-1">
+            @if($isSuperAdmin)
+                Mengustomisasi logo yayasan, warna tema, banner slider, tautan footer, dan konten informasi seluruh jenjang sekolah.
+            @else
+                Mengustomisasi deskripsi, keunggulan, persyaratan masuk, alur pendaftaran, dan berkas brosur/lampiran untuk Jenjang {{ $units->first()->name ?? '' }}.
+            @endif
+        </p>
     </div>
 
     <!-- Form Configuration -->
     <form id="ui-settings-form" action="{{ route('admin.ui-settings.save') }}" method="POST" enctype="multipart/form-data" hx-boost="false" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         @csrf
         @php
-            $activeTab = request()->get('tab', 'global');
+            $currentTab = $activeTab ?? request()->get('tab', $isSuperAdmin ? 'global' : ('unit-' . strtolower($units->first()->code ?? '')));
         @endphp
-        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ $activeTab }}">
+        <input type="hidden" name="active_tab" id="active-tab-input" value="{{ $currentTab }}">
         
         <!-- Navigation Tabs -->
         <div class="bg-slate-50/75 border-b border-slate-100 px-6 flex flex-wrap gap-1">
-            <button type="button" onclick="switchSettingsTab('global')" id="tab-btn-global" 
-                class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $activeTab === 'global' ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
-                Global / Banner
-            </button>
-            <button type="button" onclick="switchSettingsTab('identity')" id="tab-btn-identity" 
-                class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $activeTab === 'identity' ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
-                Identitas Sekolah
-            </button>
+            @if($isSuperAdmin)
+                <button type="button" onclick="switchSettingsTab('global')" id="tab-btn-global" 
+                    class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $currentTab === 'global' ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
+                    Global / Banner
+                </button>
+                <button type="button" onclick="switchSettingsTab('identity')" id="tab-btn-identity" 
+                    class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $currentTab === 'identity' ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
+                    Identitas Sekolah
+                </button>
+            @endif
 
             @foreach($units as $unit)
                 @php $unitCode = strtolower($unit->code); @endphp
                 <button type="button" onclick="switchSettingsTab('unit-{{ $unitCode }}')" id="tab-btn-unit-{{ $unitCode }}" 
-                    class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $activeTab === 'unit-' . $unitCode ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
+                    class="tab-button border-b-2 py-4 px-6 text-xs transition focus:outline-none {{ $currentTab === 'unit-' . $unitCode ? 'border-brand-emerald text-brand-emerald font-extrabold' : 'border-transparent text-slate-500 hover:text-slate-700 font-bold' }}">
                     Jenjang {{ $unit->name }}
                 </button>
             @endforeach
@@ -73,8 +81,9 @@
         <!-- Tabs Content Container -->
         <div class="p-8">
             
+            @if($isSuperAdmin)
             <!-- TAB 1: GLOBAL / BANNER -->
-            <div id="tab-content-global" class="tab-panel space-y-6 {{ $activeTab === 'global' ? '' : 'hidden' }}">
+            <div id="tab-content-global" class="tab-panel space-y-6 {{ $currentTab === 'global' ? '' : 'hidden' }}">
                 <!-- Section 1: Hero Banner Text -->
                 <div class="space-y-4">
                     <h3 class="text-xs font-extrabold text-brand-emerald uppercase tracking-wider">A. Konten Teks Hero</h3>
@@ -163,12 +172,12 @@
             </div>
 
             <!-- TAB 2: IDENTITAS SEKOLAH -->
-            <div id="tab-content-identity" class="tab-panel space-y-6 {{ $activeTab === 'identity' ? '' : 'hidden' }}">
+            <div id="tab-content-identity" class="tab-panel space-y-6 {{ $currentTab === 'identity' ? '' : 'hidden' }}">
                 <!-- School Name & Tagline -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama Instansi Sekolah / Brand</label>
-                        <input type="text" name="school_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold"
+                        <input type="text" name="school_name" {{ $isSuperAdmin ? 'required' : '' }} class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-bold"
                             value="{{ $settings['school_name'] }}">
                     </div>
                     <div class="space-y-2">
@@ -266,11 +275,12 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- DYNAMIC UNITS TABS -->
             @foreach($units as $unit)
                 @php $code = strtolower($unit->code); @endphp
-                <div id="tab-content-unit-{{ $code }}" class="tab-panel space-y-6 {{ $activeTab === 'unit-' . $code ? '' : 'hidden' }}">
+                <div id="tab-content-unit-{{ $code }}" class="tab-panel space-y-6 {{ $currentTab === 'unit-' . $code ? '' : 'hidden' }}">
                     <div class="bg-slate-50/50 p-6 rounded-2xl border border-slate-150 space-y-6">
                         <h4 class="text-xs font-extrabold text-brand-emerald uppercase tracking-wider">Pengaturan Jenjang {{ $unit->name }}</h4>
                         
@@ -455,9 +465,16 @@
         // Restore active tab
         (function() {
             const activeTabInput = document.getElementById('active-tab-input');
-            const savedTab = activeTabInput ? activeTabInput.value : (localStorage.getItem('spmb_ui_active_tab') || 'global');
-            if (savedTab && document.getElementById('tab-btn-' + savedTab)) {
-                switchSettingsTab(savedTab);
+            const initialTab = '{{ $currentTab }}';
+            let targetTab = initialTab;
+
+            const candidateTab = activeTabInput?.value || localStorage.getItem('spmb_ui_active_tab');
+            if (candidateTab && document.getElementById('tab-btn-' + candidateTab)) {
+                targetTab = candidateTab;
+            }
+
+            if (targetTab && document.getElementById('tab-btn-' + targetTab)) {
+                switchSettingsTab(targetTab);
             }
         })();
     </script>
