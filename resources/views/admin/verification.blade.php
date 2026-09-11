@@ -340,7 +340,7 @@
 <div id="detailModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
         
-        <form id="verifyForm" method="POST" action="" class="flex flex-col h-full overflow-hidden">
+        <form id="verifyForm" method="POST" action="" hx-boost="false" class="flex flex-col h-full overflow-hidden">
             @csrf
             <!-- Hidden inputs -->
             <input type="hidden" id="invalid_fields_input" name="invalid_fields" value="[]">
