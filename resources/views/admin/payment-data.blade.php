@@ -189,8 +189,8 @@
                         <!-- Filter Level / Unit -->
                         <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jenjang</option>
-                            @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
-                                <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code ?: $unit->name) }}{{ !$unit->is_active ? ' (Nonaktif)' : '' }}</option>
                             @endforeach
                         </select>
                     @endif
@@ -232,8 +232,21 @@
             </div>
 
             <!-- Advanced Filters Collapsible Section -->
-            <div id="adv-filters" class="{{ request()->hasAny(['discount_mode', 'installment_mode']) ? '' : 'hidden' }} pt-4 border-t border-slate-200/80 dark:border-slate-700/80">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div id="adv-filters" class="{{ request()->hasAny(['discount_mode', 'installment_mode', 'wave_id']) ? '' : 'hidden' }} pt-4 border-t border-slate-200/80 dark:border-slate-700/80">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Filter Gelombang -->
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Gelombang
+                        </label>
+                        <select name="wave_id" onchange="this.form.submit()" class="w-full py-2 px-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Gelombang</option>
+                            @foreach($waves as $w)
+                                <option value="{{ $w->id }}" {{ request('wave_id') == $w->id ? 'selected' : '' }}>{{ $w->name }}{{ !$w->is_active ? ' (Ditutup)' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <!-- Filter Mode Diskon -->
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">
@@ -262,9 +275,9 @@
 
                     <!-- Reset Filters Button -->
                     <div class="flex items-end">
-                        @if(request()->hasAny(['search', 'discount_mode', 'installment_mode', 'status', 'unit_id']))
+                        @if(request()->hasAny(['search', 'discount_mode', 'installment_mode', 'status', 'unit_id', 'wave_id']))
                             <a href="{{ route('admin.payments.data') }}" 
-                               class="inline-flex py-2 px-3.5 items-center gap-1.5 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/60 text-xs font-bold text-rose-600 dark:text-rose-300 transition hover:bg-rose-100 shadow-2xs">
+                                class="inline-flex py-2 px-3.5 items-center gap-1.5 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/60 text-xs font-bold text-rose-600 dark:text-rose-300 transition hover:bg-rose-100 shadow-2xs">
                                 <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                                 <span>Reset Semua Filter</span>
                             </a>

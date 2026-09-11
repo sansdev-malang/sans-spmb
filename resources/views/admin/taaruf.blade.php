@@ -36,7 +36,7 @@
                 <a href="{{ route('admin.taaruf', array_merge(request()->query(), ['unit_id' => $u->id])) }}" 
                    class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap {{ $isActiveUnit ? 'bg-brand-emerald text-white shadow-sm shadow-emerald-500/20' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800' }}">
                     <i data-lucide="building" class="w-3.5 h-3.5 {{ $isActiveUnit ? 'text-brand-yellow' : 'text-slate-400' }}"></i>
-                    <span>{{ $u->name }}</span>
+                    <span>{{ $u->name }}{{ !$u->is_active ? ' (Nonaktif)' : '' }}</span>
                 </a>
             @endforeach
         </div>

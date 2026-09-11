@@ -68,15 +68,16 @@ class SpmbSettingsController extends Controller
     {
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         $qrcodeUrl = Setting::get('spmb_qrcode_url', url('/register'));
-        $schoolLogo = Setting::get('school_logo');
-        
-        $brandingPath = 'storage/branding/whsokYPk9uLYyz6SCRmuMTQgD2UxVTqmTEMoz36r.png';
-        if ($schoolLogo && file_exists(public_path('storage/' . ltrim($schoolLogo, '/')))) {
+        $schoolLogo = Setting::get('school_logo_url') ?: Setting::get('school_logo');
+        $logoUrl = null;
+        if ($schoolLogo && (filter_var($schoolLogo, FILTER_VALIDATE_URL) || str_starts_with($schoolLogo, 'http'))) {
+            $logoUrl = $schoolLogo;
+        } elseif ($schoolLogo && file_exists(public_path(ltrim($schoolLogo, '/')))) {
+            $logoUrl = asset(ltrim($schoolLogo, '/'));
+        } elseif ($schoolLogo && file_exists(public_path('storage/' . ltrim($schoolLogo, '/')))) {
             $logoUrl = asset('storage/' . ltrim($schoolLogo, '/'));
-        } elseif (file_exists(public_path($brandingPath))) {
-            $logoUrl = asset($brandingPath);
         } else {
-            $logoUrl = asset('storage/branding/whsokYPk9uLYyz6SCRmuMTQgD2UxVTqmTEMoz36r.png');
+            $logoUrl = file_exists(public_path('logo/paud.png')) ? asset('logo/paud.png') : null;
         }
 
         return view('admin.settings-spmb-qrcode', compact('qrcodeUrl', 'isSuperAdmin', 'logoUrl'));

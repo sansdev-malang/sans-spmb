@@ -27,7 +27,7 @@ class AdminTaarufController extends Controller
             $units = SpmbUnit::where('id', $user->spmb_unit_id)->get();
             $currentUnitId = $user->spmb_unit_id;
         } else {
-            $units = SpmbUnit::where('is_active', true)->get();
+            $units = SpmbUnit::orderBy('id', 'asc')->get();
             $currentUnitId = $request->get('unit_id');
             if (!$currentUnitId && $units->isNotEmpty()) {
                 $currentUnitId = $units->first()->id;

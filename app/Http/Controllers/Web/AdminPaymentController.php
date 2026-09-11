@@ -9,6 +9,9 @@ use App\Models\Payment;
 use App\Models\SpmbPeriod;
 use App\Models\SpmbFeeCategory;
 use App\Models\SpmbFee;
+use App\Models\SpmbUnit;
+use App\Models\SpmbWave;
+use App\Models\SpmbPaymentChannel;
 
 class AdminPaymentController extends Controller
 {
@@ -103,6 +106,12 @@ class AdminPaymentController extends Controller
             }
         }
 
+        // Filter by Wave
+        if ($request->filled('wave_id')) {
+            $baseStatsQuery->where('spmb_wave_id', $request->wave_id);
+            $query->where('spmb_wave_id', $request->wave_id);
+        }
+
         // Filter by Kebijakan Diskon
         if ($request->filled('discount_mode')) {
             $query->where('discount_mode', $request->discount_mode);
@@ -121,7 +130,13 @@ class AdminPaymentController extends Controller
 
         $registrations = $query->latest()->paginate($perPage)->withQueryString();
 
-        return view('admin.payment-data', compact('registrations', 'stats'));
+        $units = SpmbUnit::orderBy('id', 'asc')->get();
+        if (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $units = $units->where('id', auth()->user()->spmb_unit_id);
+        }
+        $waves = SpmbWave::orderBy('id', 'asc')->get();
+
+        return view('admin.payment-data', compact('registrations', 'stats', 'units', 'waves'));
     }
 
     /**
@@ -239,6 +254,13 @@ class AdminPaymentController extends Controller
             }
         }
 
+        // Filter by Wave
+        if ($request->filled('wave_id')) {
+            $query->whereHas('registration', function($q) use ($request) {
+                $q->where('spmb_wave_id', $request->wave_id);
+            });
+        }
+
         // Per page limit
         $perPage = intval($request->get('per_page', 10));
         if (!in_array($perPage, [10, 25, 50, 100])) {
@@ -247,7 +269,14 @@ class AdminPaymentController extends Controller
 
         $payments = $query->latest()->paginate($perPage)->withQueryString();
 
-        return view('admin.payment-history', compact('payments'));
+        $units = SpmbUnit::orderBy('id', 'asc')->get();
+        if (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $units = $units->where('id', auth()->user()->spmb_unit_id);
+        }
+        $waves = SpmbWave::orderBy('id', 'asc')->get();
+        $channels = \App\Models\SpmbPaymentChannel::orderBy('id', 'asc')->get();
+
+        return view('admin.payment-history', compact('payments', 'units', 'waves', 'channels'));
     }
 
     /**

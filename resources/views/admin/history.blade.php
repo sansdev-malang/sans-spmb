@@ -127,7 +127,7 @@
                         <select name="wave_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Gelombang</option>
                             @foreach(\App\Models\SpmbWave::all() as $wave)
-                                <option value="{{ $wave->id }}" {{ request('wave_id') == $wave->id ? 'selected' : '' }}>{{ $wave->name }}</option>
+                                <option value="{{ $wave->id }}" {{ request('wave_id') == $wave->id ? 'selected' : '' }}>{{ $wave->name }}{{ !$wave->is_active ? ' (Ditutup)' : '' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -137,7 +137,7 @@
                         <select name="type_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                             <option value="">Semua Jalur</option>
                             @foreach(\App\Models\SpmbType::all() as $type)
-                                <option value="{{ $type->id }}" {{ request('type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                                <option value="{{ $type->id }}" {{ request('type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}{{ !$type->is_active ? ' (Nonaktif)' : '' }}</option>
                             @endforeach
                         </select>
                     </div>

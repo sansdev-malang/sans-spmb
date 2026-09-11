@@ -21,7 +21,6 @@ use App\Http\Controllers\Web\PaymentChannelController;
 use App\Http\Controllers\Web\AdminTaarufController;
 use App\Http\Controllers\Web\AdminFinanceReportController;
 use App\Http\Controllers\Web\AdminReportAnalyticsController;
-use App\Http\Controllers\Web\AdminResultController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,10 +109,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/taaruf/{id}/complete', [AdminTaarufController::class, 'completeTaaruf'])->name('admin.taaruf.complete');
         Route::post('/admin/taaruf/{id}/revert', [AdminTaarufController::class, 'revertTaaruf'])->name('admin.taaruf.revert');
         Route::post('/admin/taaruf/units/{unitId}/settings', [AdminTaarufController::class, 'updateUnitSettings'])->name('admin.taaruf.units.settings');
-
-        // Admin Admission Results & Graduation Management
-        Route::get('/admin/results', [AdminResultController::class, 'index'])->name('admin.results');
-        Route::post('/admin/results/{id}/status', [AdminResultController::class, 'updateStatus'])->name('admin.results.status');
 
         // Admin Billing & Payment Transaction Pages
         Route::get('/admin/payments/data', [AdminPaymentController::class, 'data'])->name('admin.payments.data');

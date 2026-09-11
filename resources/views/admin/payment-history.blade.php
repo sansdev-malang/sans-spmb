@@ -87,30 +87,41 @@
             </div>
 
             <!-- Slide-down Advanced Filters Panel -->
-            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id')) ? '' : 'hidden' }} border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4 transition-all duration-300">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <!-- Date Range: Start -->
+            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id') || request('wave_id') || request('unit_id')) ? '' : 'hidden' }} border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4 transition-all duration-300">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- Filter: Unit Sekolah -->
                     <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Mulai</label>
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
-                    </div>
-                    <!-- Date Range: End -->
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Selesai</label>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
-                    </div>
-                    <!-- Filter: Metode Pembayaran -->
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Metode</label>
-                        <select name="method" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">Semua Metode</option>
-                            @foreach(\App\Models\SpmbPaymentChannel::where('is_active', true)->get() as $channel)
-                                <option value="{{ $channel->code }}" {{ request('method') === $channel->code ? 'selected' : '' }}>{{ $channel->name }}</option>
+                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Unit Sekolah</label>
+                        <select name="unit_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Unit</option>
+                            @foreach($units as $u)
+                                <option value="{{ $u->id }}" {{ request('unit_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}{{ !$u->is_active ? ' (Nonaktif)' : '' }}</option>
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Filter: Gelombang -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Gelombang</label>
+                        <select name="wave_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Gelombang</option>
+                            @foreach($waves as $w)
+                                <option value="{{ $w->id }}" {{ request('wave_id') == $w->id ? 'selected' : '' }}>{{ $w->name }}{{ !$w->is_active ? ' (Ditutup)' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Filter: Metode Pembayaran -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Metode Pembayaran</label>
+                        <select name="method" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Metode</option>
+                            @foreach($channels as $channel)
+                                <option value="{{ $channel->code }}" {{ request('method') === $channel->code ? 'selected' : '' }}>{{ $channel->name }}{{ !$channel->is_active ? ' (Nonaktif)' : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <!-- Filter: Jenis Biaya -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Jenis Biaya</label>
@@ -121,6 +132,7 @@
                             @endforeach
                         </select>
                     </div>
+
                     <!-- Filter: Nama Biaya -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Nama Biaya</label>
@@ -130,6 +142,20 @@
                                 <option value="{{ $fee->id }}" {{ request('fee_id') == $fee->id ? 'selected' : '' }}>{{ $fee->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <!-- Date Range: Start -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Mulai</label>
+                        <input type="date" name="start_date" value="{{ request('start_date') }}" 
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
+                    </div>
+
+                    <!-- Date Range: End -->
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Tanggal Selesai</label>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" 
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald focus:border-transparent">
                     </div>
                 </div>
                 <!-- Action Buttons in Advanced Filter -->

@@ -23,7 +23,7 @@ class AdminReportAnalyticsController extends Controller
                 ?? SpmbPeriod::value('id');
         });
 
-        $units = SpmbUnit::where('is_active', true)->get();
+        $units = SpmbUnit::orderBy('id', 'asc')->get();
         if (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
             $units = $units->where('id', auth()->user()->spmb_unit_id);
         }
@@ -82,7 +82,7 @@ class AdminReportAnalyticsController extends Controller
             ];
         }
 
-        $waves = SpmbWave::where('is_active', true)->get();
+        $waves = SpmbWave::orderBy('id', 'asc')->get();
         $selectedPeriod = SpmbPeriod::find($selectedPeriodId);
 
         return view('admin.reports-registrations', compact(
@@ -110,7 +110,7 @@ class AdminReportAnalyticsController extends Controller
                 ?? SpmbPeriod::value('id');
         });
 
-        $units = SpmbUnit::where('is_active', true)->get();
+        $units = SpmbUnit::orderBy('id', 'asc')->get();
         if (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
             $units = $units->where('id', auth()->user()->spmb_unit_id);
         }
