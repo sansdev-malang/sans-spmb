@@ -388,21 +388,32 @@
                     </div>
                 </div>
 
-                <!-- Unit Filter Pills -->
-                <div class="flex items-center gap-2 overflow-x-auto pb-1">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Filter Jenjang:</span>
-                    <button type="button" onclick="filterTestimonialCards('all', this)" class="testimonial-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-brand-emerald text-white shadow-xs cursor-pointer">
-                        Semua ({{ $testimonials->count() }})
-                    </button>
-                    <button type="button" onclick="filterTestimonialCards('general', this)" class="testimonial-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
-                        Umum / Semua Jenjang ({{ $testimonials->whereNull('spmb_unit_id')->count() }})
-                    </button>
-                    @foreach($allUnits as $u)
-                        <button type="button" onclick="filterTestimonialCards('{{ $u->id }}', this)" class="testimonial-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
-                            {{ $u->name }} ({{ $testimonials->where('spmb_unit_id', $u->id)->count() }})
+                @if($isSuperAdmin)
+                    <!-- Unit Filter Pills -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Filter Jenjang:</span>
+                        <button type="button" onclick="filterTestimonialCards('all', this)" class="testimonial-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-brand-emerald text-white shadow-xs cursor-pointer">
+                            Semua ({{ $testimonials->count() }})
                         </button>
-                    @endforeach
-                </div>
+                        <button type="button" onclick="filterTestimonialCards('general', this)" class="testimonial-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
+                            Umum / Semua Jenjang ({{ $testimonials->whereNull('spmb_unit_id')->count() }})
+                        </button>
+                        @foreach($allUnits as $u)
+                            <button type="button" onclick="filterTestimonialCards('{{ $u->id }}', this)" class="testimonial-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
+                                {{ $u->name }} ({{ $testimonials->where('spmb_unit_id', $u->id)->count() }})
+                            </button>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="flex items-center justify-between pb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unit:</span>
+                            <span class="px-3 py-1 text-xs font-bold rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-brand-emerald dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80">
+                                Jenjang {{ $units->first()->name ?? 'Unit Anda' }} ({{ $testimonials->count() }} Testimoni)
+                            </span>
+                        </div>
+                    </div>
+                @endif
 
                 <!-- Testimonials Grid / List -->
                 @if($testimonials->isEmpty())
@@ -901,12 +912,20 @@
                     <!-- Jenjang Terkait -->
                     <div class="space-y-1.5">
                         <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kategori Jenjang</label>
-                        <select name="spmb_unit_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-semibold cursor-pointer">
-                            <option value="">Semua Jenjang / Umum</option>
-                            @foreach($allUnits as $u)
-                                <option value="{{ $u->id }}" {{ old('spmb_unit_id') == $u->id ? 'selected' : '' }}>Jenjang {{ $u->name }}</option>
-                            @endforeach
-                        </select>
+                        @if($isSuperAdmin)
+                            <select name="spmb_unit_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-semibold cursor-pointer">
+                                <option value="">Semua Jenjang / Umum</option>
+                                @foreach($allUnits as $u)
+                                    <option value="{{ $u->id }}" {{ old('spmb_unit_id') == $u->id ? 'selected' : '' }}>Jenjang {{ $u->name }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input type="hidden" name="spmb_unit_id" value="{{ auth()->user()->spmb_unit_id }}">
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold flex items-center justify-between">
+                                <span>Jenjang {{ $units->first()->name ?? 'Unit Anda' }}</span>
+                                <span class="text-[9px] px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-md font-black">Terkunci (Unit Anda)</span>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Rating & Urutan -->
@@ -1026,12 +1045,20 @@
                     <!-- Jenjang Terkait -->
                     <div class="space-y-1.5">
                         <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kategori Jenjang</label>
-                        <select name="spmb_unit_id" id="edit_spmb_unit_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-semibold cursor-pointer">
-                            <option value="">Semua Jenjang / Umum</option>
-                            @foreach($allUnits as $u)
-                                <option value="{{ $u->id }}">Jenjang {{ $u->name }}</option>
-                            @endforeach
-                        </select>
+                        @if($isSuperAdmin)
+                            <select name="spmb_unit_id" id="edit_spmb_unit_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500 font-semibold cursor-pointer">
+                                <option value="">Semua Jenjang / Umum</option>
+                                @foreach($allUnits as $u)
+                                    <option value="{{ $u->id }}">Jenjang {{ $u->name }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input type="hidden" name="spmb_unit_id" id="edit_spmb_unit_id" value="{{ auth()->user()->spmb_unit_id }}">
+                            <div class="w-full bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-bold flex items-center justify-between">
+                                <span>Jenjang {{ $units->first()->name ?? 'Unit Anda' }}</span>
+                                <span class="text-[9px] px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-md font-black">Terkunci (Unit Anda)</span>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Rating & Urutan -->

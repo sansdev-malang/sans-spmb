@@ -412,16 +412,14 @@ class SettingsController extends Controller
             $activeTab = $defaultTab;
         }
 
-        $allUnits = \App\Models\SpmbUnit::where('is_active', true)->orderBy('id', 'asc')->get();
-
         if ($isSuperAdmin) {
+            $allUnits = \App\Models\SpmbUnit::where('is_active', true)->orderBy('id', 'asc')->get();
             $testimonials = SpmbTestimonial::with('unit')->orderBy('order', 'asc')->orderBy('id', 'asc')->get();
         } else {
             $myUnitId = auth()->user()->spmb_unit_id;
+            $allUnits = \App\Models\SpmbUnit::where('id', $myUnitId)->get();
             $testimonials = SpmbTestimonial::with('unit')
-                ->where(function ($q) use ($myUnitId) {
-                    $q->where('spmb_unit_id', $myUnitId)->orWhereNull('spmb_unit_id');
-                })
+                ->where('spmb_unit_id', $myUnitId)
                 ->orderBy('order', 'asc')
                 ->orderBy('id', 'asc')
                 ->get();
@@ -756,10 +754,7 @@ class SettingsController extends Controller
         }
 
         $unitId = $request->spmb_unit_id;
-        if (!$isSuperAdmin && !empty($unitId) && $unitId != auth()->user()->spmb_unit_id) {
-            abort(403, 'Akses ditolak.');
-        }
-        if (!$isSuperAdmin && empty($unitId)) {
+        if (!$isSuperAdmin) {
             $unitId = auth()->user()->spmb_unit_id;
         }
 
@@ -794,7 +789,7 @@ class SettingsController extends Controller
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         $testimonial = SpmbTestimonial::findOrFail($id);
 
-        if (!$isSuperAdmin && !empty($testimonial->spmb_unit_id) && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
+        if (!$isSuperAdmin && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -833,8 +828,8 @@ class SettingsController extends Controller
         }
 
         $unitId = $request->spmb_unit_id;
-        if (!$isSuperAdmin && !empty($unitId) && $unitId != auth()->user()->spmb_unit_id) {
-            abort(403, 'Akses ditolak.');
+        if (!$isSuperAdmin) {
+            $unitId = auth()->user()->spmb_unit_id;
         }
 
         $avatarUrl = $testimonial->avatar_url;
@@ -874,7 +869,7 @@ class SettingsController extends Controller
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         $testimonial = SpmbTestimonial::findOrFail($id);
 
-        if (!$isSuperAdmin && !empty($testimonial->spmb_unit_id) && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
+        if (!$isSuperAdmin && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -893,7 +888,7 @@ class SettingsController extends Controller
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         $testimonial = SpmbTestimonial::findOrFail($id);
 
-        if (!$isSuperAdmin && !empty($testimonial->spmb_unit_id) && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
+        if (!$isSuperAdmin && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
             abort(403, 'Akses ditolak.');
         }
 
