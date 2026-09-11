@@ -236,13 +236,8 @@
                         @endphp
                         <div class="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-850/40 transition">
                             <div class="space-y-0.5 min-w-0">
-                                <div class="flex items-center gap-1.5 flex-wrap">
+                                <div>
                                     <span class="font-extrabold text-slate-800 dark:text-white text-xs sm:text-sm block truncate">{{ $docField->label }}</span>
-                                    @if($docField->is_required)
-                                        <span class="text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">Wajib</span>
-                                    @else
-                                        <span class="text-[9px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Opsional</span>
-                                    @endif
                                 </div>
                                 @if($val)
                                     <a href="{{ Storage::url($val) }}" target="_blank" class="text-brand-emerald dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 text-[11px]">
@@ -275,7 +270,7 @@
                                     @endif
                                 @else
                                     <span class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 shadow-xs whitespace-nowrap">
-                                        {{ $docField->is_required ? 'Belum Ada Berkas' : 'Tidak Diunggah' }}
+                                        Tidak Diunggah
                                     </span>
                                 @endif
                             </div>

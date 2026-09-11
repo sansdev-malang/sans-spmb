@@ -639,23 +639,18 @@
                     actionHtml = `<span class="text-[9px] font-semibold text-slate-400 italic shrink-0">Belum diunggah</span>`;
                 }
 
-                const reqBadge = doc.is_required 
-                    ? `<span class="text-[8px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">Wajib</span>`
-                    : `<span class="text-[8px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Opsional</span>`;
-
                 box.innerHTML = `
-                    <div class="flex items-center gap-2 min-w-0 pr-2">
+                    <div class="flex items-center gap-2.5 min-w-0 pr-2">
                         <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald shrink-0"></i>
                         <div class="min-w-0">
-                            <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                            <div class="flex items-center gap-2 mb-0.5 flex-wrap">
                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate" title="${doc.label}">${doc.label}</span>
-                                ${reqBadge}
                                 <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check ${isVerificationMode ? '' : 'hidden'}">
                                     <input type="checkbox" data-field="${doc.field_name}" data-label="${doc.label}" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
                                     <span>OK</span>
                                 </label>
                             </div>
-                            <span class="text-[9px] text-slate-400 block truncate">${doc.url ? 'File Terlampir' : (doc.is_required ? 'Berkas Belum Diunggah' : 'Tidak Wajib')}</span>
+                            <span class="text-[9px] text-slate-400 block truncate">${doc.url ? 'File Terlampir' : 'Berkas Belum Diunggah'}</span>
                         </div>
                     </div>
                     ${actionHtml}
