@@ -342,11 +342,8 @@
                                         <span>{{ $cand->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
                                     </div>
                                 @endif
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
-                                    {{ $cand->unit->name ?? 'PAUD/TK' }}
-                                    @if(!empty($cand->admission_level))
-                                        ({{ $cand->admission_level }})
-                                    @endif
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-1">
+                                    {{ strtoupper($cand->unit?->code ?: ($cand->unit?->name ?? '')) }}@if(!empty($cand->admission_level)) ({{ $cand->admission_level }})@endif
                                 </div>
                             </td>
 
