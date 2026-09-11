@@ -149,10 +149,12 @@
                                 // Data Orang Tua
                                 'father_name' => $reg->father_name ?? '-',
                                 'father_nik' => $reg->getFieldValue('father_nik') ?? '-',
+                                'father_job' => $reg->getFieldValue('father_job') ?? '-',
                                 'father_address' => $reg->getFieldValue('father_address') ?? '-',
                                 'father_phone' => $reg->getFieldValue('father_phone') ?? $reg->parent_phone ?? '-',
                                 'mother_name' => $reg->mother_name ?? '-',
                                 'mother_nik' => $reg->getFieldValue('mother_nik') ?? '-',
+                                'mother_job' => $reg->getFieldValue('mother_job') ?? '-',
                                 'mother_address' => $reg->getFieldValue('mother_address') ?? '-',
                                 'mother_phone' => $reg->getFieldValue('mother_phone') ?? '-',
                                 'parent_phone' => $reg->parent_phone ?? '-',
@@ -160,6 +162,7 @@
                                 // Data Wali
                                 'guardian_name' => $reg->getFieldValue('guardian_name') ?? '-',
                                 'guardian_nik' => $reg->getFieldValue('guardian_nik') ?? '-',
+                                'guardian_job' => $reg->getFieldValue('guardian_job') ?? '-',
                                 'guardian_address' => $reg->getFieldValue('guardian_address') ?? '-',
                                 'guardian_phone' => $reg->getFieldValue('guardian_phone') ?? '-',
 
@@ -182,7 +185,8 @@
                                 'special_needs' => $reg->getFieldValue('special_needs_assessment_path') ? asset('storage/' . $reg->getFieldValue('special_needs_assessment_path')) : null,
                                 'payment_receipt' => $reg->getFieldValue('payment_receipt_path') ? asset('storage/' . $reg->getFieldValue('payment_receipt_path')) : null,
 
-                                'created_at_label' => $reg->created_at->format('d M Y, H:i') . ' WIB',
+                                'full_address' => $reg->getFullCandidateAddress() ?: '-',
+                                'created_at_label' => $reg->created_at ? $reg->created_at->translatedFormat('d M Y, H:i') . ' WIB' : '-',
                                 'status' => strtoupper($reg->registration_status),
                                 'payment_status' => strtoupper($reg->payment_status),
                                 'period' => $reg->period->year ?? '-',
@@ -353,8 +357,8 @@
 </div>
 
 <!-- Modal: Candidate Detail & Verification Modal Overlay -->
-<div id="detailModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col">
+<div id="detailModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[92vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col animate-in fade-in zoom-in duration-150">
         
         <form id="verifyForm" method="POST" action="" hx-boost="false" class="flex flex-col h-full overflow-hidden">
             @csrf
@@ -362,239 +366,673 @@
             <input type="hidden" id="invalid_fields_input" name="invalid_fields" value="[]">
 
             <!-- Modal Header -->
-            <div class="bg-brand-emerald text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
-                <div>
-                    <h3 class="font-extrabold text-base flex items-center gap-2">
-                        <i data-lucide="user" class="w-5 h-5 text-brand-yellow"></i>
-                        <span id="det-title-label">Detail Data Pendaftar</span>
-                    </h3>
-                    <p id="det-id-label" class="text-xs text-emerald-100 font-mono mt-0.5">ID: SANS-YYYY-XXXX</p>
-                </div>
-                <button type="button" onclick="closeDetailModal()" class="text-white hover:text-brand-yellow font-bold text-lg">&times;</button>
-            </div>
-
-            <!-- Modal Body (Scrollable) -->
-            <div class="p-6 space-y-6 overflow-y-auto flex-grow text-xs text-slate-700 dark:text-slate-300 text-left">
-                
-                <!-- Grid: SPMB Admission Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800">
-                    <div class="verify-field-container p-1 rounded-lg border border-transparent">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Periode</span>
-                            <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                <input type="checkbox" data-field="spmb_period_id" data-label="Tahun Ajaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                <span>OK</span>
-                            </label>
-                        </div>
-                        <span id="det-period" class="font-bold text-slate-700 dark:text-slate-300">-</span>
-                    </div>
-                    <div class="verify-field-container p-1 rounded-lg border border-transparent">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Gelombang</span>
-                            <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                <input type="checkbox" data-field="spmb_wave_id" data-label="Gelombang" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                <span>OK</span>
-                            </label>
-                        </div>
-                        <span id="det-wave" class="font-bold text-slate-700 dark:text-slate-300">-</span>
-                    </div>
-                    <div class="verify-field-container p-1 rounded-lg border border-transparent">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase block">Jalur Masuk</span>
-                            <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                <input type="checkbox" data-field="spmb_type_id" data-label="Jalur Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                <span>OK</span>
-                            </label>
-                        </div>
-                        <span id="det-type" class="font-bold text-slate-700 dark:text-slate-300">-</span>
+            <div class="text-white px-6 py-4 flex items-center justify-between flex-shrink-0 border-b border-emerald-900/40 shadow-sm" style="background-color: #064e3b;">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-amber-300 font-bold border border-white/20 shrink-0 shadow-inner">
+                        <i data-lucide="clipboard-check" class="w-5 h-5 text-amber-300"></i>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase block">Status Berkas</span>
-                        <span id="det-status" class="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase">SUBMITTED</span>
-                    </div>
-                </div>
-
-                <!-- Segment 1: Personal Information -->
-                <div class="space-y-3">
-                    <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-                        <i data-lucide="info" class="w-4 h-4"></i> Biodata Calon Murid
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Lengkap</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="candidate_name" data-label="Nama Lengkap" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-name" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Panggilan</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="nickname" data-label="Nama Panggilan" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">NIK (Nomor Induk Kependudukan)</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="nik" data-label="NIK" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-nik" class="font-mono text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Jenis Kelamin</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="gender" data-label="Jenis Kelamin" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-gender" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Tempat, Tanggal Lahir</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="birth_place" data-label="Tempat/Tanggal Lahir" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-birth" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Agama</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="religion" data-label="Agama" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-religion" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Asal Sekolah (TK/PAUD)</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="previous_school" data-label="Asal Sekolah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Tingkat Pendaftaran</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="admission_level" data-label="Tingkat Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-level" class="font-bold text-slate-800 dark:text-slate-200">-</span>
-                        </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Kategori Murid</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="spmb_class_program_id" data-label="Kategori Murid" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-program" class="font-bold text-brand-emerald dark:text-emerald-400">-</span>
-                        </div>
-                        <div class="md:col-span-2 bg-slate-50 dark:bg-slate-950/20 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 verify-field-container">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Layanan Tambahan (Non-Formal)</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="extra_services" data-label="Layanan Tambahan" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-extras" class="font-bold text-slate-800 dark:text-slate-200">-</span>
+                        <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                            <span id="det-title-label">Detail Data Pendaftar</span>
+                        </h3>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span id="det-id-label" class="text-xs text-emerald-100 font-mono font-bold tracking-wider">ID: SANS-YYYY-XXXX</span>
+                            <span class="text-white/40">•</span>
+                            <span id="det-status" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/25">SUBMITTED</span>
                         </div>
                     </div>
                 </div>
+                <button type="button" onclick="closeDetailModal()" class="text-white hover:text-emerald-100 bg-white/15 hover:bg-white/25 p-2 rounded-xl transition flex items-center justify-center cursor-pointer shadow-sm" title="Tutup Modal">
+                    <i data-lucide="x" class="w-5 h-5 text-white"></i>
+                </button>
+            </div>
 
-                <!-- Segment 2: Parent Information -->
-                <div class="space-y-3 pt-2">
-                    <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-                        <i data-lucide="users" class="w-4 h-4"></i> Data Orang Tua / Wali
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ayah Kandung</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="father_name" data-label="Nama Ayah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
+            <!-- Modal Subheader Quick Info Banner -->
+            <div class="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-150 dark:border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-3 flex-shrink-0 text-xs">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                        <i data-lucide="user" class="w-4 h-4 text-brand-emerald"></i>
+                        <span id="det-header-name" class="text-sm">-</span>
+                    </div>
+                    <span class="text-slate-300 dark:text-slate-700">|</span>
+                    <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                        <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-400"></i>
+                        <span id="det-header-level-program" class="font-semibold">-</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="toggleAllDetailAccordions(true)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 transition flex items-center gap-1">
+                        <i data-lucide="chevrons-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Buka Semua</span>
+                    </button>
+                    <button type="button" onclick="toggleAllDetailAccordions(false)" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 transition flex items-center gap-1">
+                        <i data-lucide="chevrons-up" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Tutup Semua</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Scrollable Accordions) -->
+            <div class="p-6 space-y-3.5 overflow-y-auto flex-grow text-xs text-slate-700 dark:text-slate-300 text-left">
+                
+                <!-- ========================================== -->
+                <!-- ACCORDION 1: PROGRAM & LAYANAN             -->
+                <!-- ========================================== -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/60 shadow-2xs transition">
+                    <button type="button" onclick="toggleDetailAccordion('acc-program')" class="w-full px-4 py-3 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 text-left transition select-none group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+                                1
                             </div>
-                            <span id="det-father" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                    <span>Program & Layanan Pendaftaran</span>
+                                </h4>
+                                <p id="badge-acc-program" class="text-[11px] text-slate-400 truncate mt-0.5">Tahun Ajaran, Gelombang, Jalur, Tingkat, & Layanan</p>
+                            </div>
                         </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">Nama Ibu Kandung</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="mother_name" data-label="Nama Ibu" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
-                            </div>
-                            <span id="det-mother" class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <i data-lucide="chevron-down" id="chevron-acc-program" class="w-4 h-4 text-slate-400 transition-transform duration-200 rotate-180"></i>
                         </div>
-                        <div class="verify-field-container p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase block">No. HP Wali (WhatsApp)</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                    <input type="checkbox" data-field="parent_phone" data-label="No. HP Wali" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                    <span>OK</span>
-                                </label>
+                    </button>
+                    <div id="body-acc-program" class="p-4 border-t border-slate-150 dark:border-slate-800">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tahun Ajaran</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="spmb_period_id" data-label="Tahun Ajaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-period" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
                             </div>
-                            <span id="det-phone" class="font-mono text-slate-800 dark:text-slate-200">-</span>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gelombang</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="spmb_wave_id" data-label="Gelombang Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-wave" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Jalur Pendaftaran</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="spmb_type_id" data-label="Jalur Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-type" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tingkat / Jenjang</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="admission_level" data-label="Tingkat Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-level" class="font-bold text-brand-emerald dark:text-emerald-400 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kategori Murid</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="spmb_class_program_id" data-label="Kategori Murid" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-program" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Layanan Tambahan</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="extra_services" data-label="Layanan Non-Formal" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-extras" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Segment 3: Uploaded Documents -->
-                <div class="space-y-3 pt-2">
-                    <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
-                        <i data-lucide="file-text" class="w-4 h-4"></i> Dokumen Persyaratan
-                    </h4>
-                    <div id="det-documents-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Dynamically rendered via openCandidateDetailModal -->
+                <!-- ========================================== -->
+                <!-- ACCORDION 2: BIODATA CALON MURID           -->
+                <!-- ========================================== -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/60 shadow-2xs transition">
+                    <button type="button" onclick="toggleDetailAccordion('acc-biodata')" class="w-full px-4 py-3 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 text-left transition select-none group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+                                2
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <i data-lucide="user" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                    <span>Biodata Calon Murid</span>
+                                </h4>
+                                <p id="badge-acc-biodata" class="text-[11px] text-slate-400 truncate mt-0.5">Nama Lengkap, NIK, No. KK, Tempat & Tanggal Lahir</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <i data-lucide="chevron-down" id="chevron-acc-biodata" class="w-4 h-4 text-slate-400 transition-transform duration-200 rotate-180"></i>
+                        </div>
+                    </button>
+                    <div id="body-acc-biodata" class="p-4 border-t border-slate-150 dark:border-slate-800">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            <div class="sm:col-span-2 verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nama Lengkap (Sesuai Akte)</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="candidate_name" data-label="Nama Lengkap Calon Murid" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-name" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nama Panggilan</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="nickname" data-label="Nama Panggilan" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-nickname" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">NIK Calon Murid</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="nik" data-label="NIK Calon Murid" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-nik" class="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">No. Kartu Keluarga (KK)</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="family_card_no" data-label="Nomor KK" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-family-card-no" class="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Jenis Kelamin</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="gender" data-label="Jenis Kelamin" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-gender" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tempat Lahir</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="birth_place" data-label="Tempat Lahir" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-birth-place" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tanggal Lahir</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="birth_date" data-label="Tanggal Lahir" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-birth-date" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Agama</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="religion" data-label="Agama" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-religion" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="sm:col-span-2 md:col-span-3 verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Asal Sekolah Sebelumnya</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="previous_school" data-label="Asal Sekolah Sebelumnya" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-previous-school" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- ACCORDION 3: TEMPAT TINGGAL & DOMISILI     -->
+                <!-- ========================================== -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/60 shadow-2xs transition">
+                    <button type="button" onclick="toggleDetailAccordion('acc-address')" class="w-full px-4 py-3 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 text-left transition select-none group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+                                3
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                    <span>Tempat Tinggal & Domisili</span>
+                                </h4>
+                                <p id="badge-acc-address" class="text-[11px] text-slate-400 truncate mt-0.5">Alamat Jalan, RT/RW, Kelurahan, Kecamatan, Kota, Provinsi</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <i data-lucide="chevron-down" id="chevron-acc-address" class="w-4 h-4 text-slate-400 transition-transform duration-200"></i>
+                        </div>
+                    </button>
+                    <div id="body-acc-address" class="p-4 border-t border-slate-150 dark:border-slate-800 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Provinsi</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="province" data-label="Provinsi" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-province" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kabupaten / Kota</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="city" data-label="Kabupaten/Kota" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-city" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kecamatan</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="kecamatan" data-label="Kecamatan" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-kecamatan" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kelurahan / Desa</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="kelurahan" data-label="Kelurahan/Desa" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-kelurahan" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="sm:col-span-2 md:col-span-2 verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alamat Jalan / Perumahan</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="address" data-label="Alamat Jalan" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-address" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nomor Rumah</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="house_number" data-label="Nomor Rumah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-house-number" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">RT / RW</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="rt" data-label="RT / RW" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-rt-rw" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="sm:col-span-2 md:col-span-4 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20">
+                                <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block mb-0.5">Alamat Lengkap Terangkai</span>
+                                <span id="det-full-address" class="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- ACCORDION 4: DATA ORANG TUA KANDUNG        -->
+                <!-- ========================================== -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/60 shadow-2xs transition">
+                    <button type="button" onclick="toggleDetailAccordion('acc-parents')" class="w-full px-4 py-3 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 text-left transition select-none group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+                                4
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <i data-lucide="users" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                    <span>Data Orang Tua Kandung (Ayah & Ibu)</span>
+                                </h4>
+                                <p id="badge-acc-parents" class="text-[11px] text-slate-400 truncate mt-0.5">Biodata Ayah Kandung & Ibu Kandung</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <i data-lucide="chevron-down" id="chevron-acc-parents" class="w-4 h-4 text-slate-400 transition-transform duration-200"></i>
+                        </div>
+                    </button>
+                    <div id="body-acc-parents" class="p-4 border-t border-slate-150 dark:border-slate-800 space-y-4 hidden">
+                        <!-- Sub-Section Ayah Kandung -->
+                        <div class="p-3.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/30">
+                            <h5 class="text-xs font-extrabold text-brand-emerald dark:text-emerald-400 mb-3 flex items-center gap-1.5 pb-1.5 border-b border-slate-200/60 dark:border-slate-800">
+                                <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+                                <span>A. Data Ayah Kandung</span>
+                            </h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nama Ayah Kandung</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="father_name" data-label="Nama Ayah Kandung" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-father-name" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">NIK Ayah</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="father_nik" data-label="NIK Ayah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-father-nik" class="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pekerjaan Ayah</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="father_job" data-label="Pekerjaan Ayah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-father-job" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Handphone / WA Ayah</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="father_phone" data-label="No. HP Ayah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-father-phone" class="font-mono font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="sm:col-span-2 verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alamat Domisili Ayah</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="father_address" data-label="Alamat Ayah" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-father-address" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Section Ibu Kandung -->
+                        <div class="p-3.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/30">
+                            <h5 class="text-xs font-extrabold text-brand-emerald dark:text-emerald-400 mb-3 flex items-center gap-1.5 pb-1.5 border-b border-slate-200/60 dark:border-slate-800">
+                                <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+                                <span>B. Data Ibu Kandung</span>
+                            </h5>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nama Ibu Kandung</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="mother_name" data-label="Nama Ibu Kandung" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-mother-name" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">NIK Ibu</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="mother_nik" data-label="NIK Ibu" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-mother-nik" class="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pekerjaan Ibu</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="mother_job" data-label="Pekerjaan Ibu" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-mother-job" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Handphone / WA Ibu</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="mother_phone" data-label="No. HP Ibu" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-mother-phone" class="font-mono font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+
+                                <div class="sm:col-span-2 verify-field-container p-2 rounded-lg border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 transition">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alamat Domisili Ibu</span>
+                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                            <input type="checkbox" data-field="mother_address" data-label="Alamat Ibu" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                            <span>OK</span>
+                                        </label>
+                                    </div>
+                                    <span id="det-mother-address" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- ACCORDION 5: DATA WALI (OPSIONAL)          -->
+                <!-- ========================================== -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/60 shadow-2xs transition">
+                    <button type="button" onclick="toggleDetailAccordion('acc-guardian')" class="w-full px-4 py-3 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 text-left transition select-none group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+                                5
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                    <span>Data Wali Murid (Opsional)</span>
+                                </h4>
+                                <p id="badge-acc-guardian" class="text-[11px] text-slate-400 truncate mt-0.5">Hanya diisi jika calon murid diasuh oleh wali</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <i data-lucide="chevron-down" id="chevron-acc-guardian" class="w-4 h-4 text-slate-400 transition-transform duration-200"></i>
+                        </div>
+                    </button>
+                    <div id="body-acc-guardian" class="p-4 border-t border-slate-150 dark:border-slate-800 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nama Wali</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="guardian_name" data-label="Nama Wali" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-guardian-name" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">NIK Wali</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="guardian_nik" data-label="NIK Wali" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-guardian-nik" class="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pekerjaan Wali</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="guardian_job" data-label="Pekerjaan Wali" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-guardian-job" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Handphone / WA Wali</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="guardian_phone" data-label="No. HP Wali" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-guardian-phone" class="font-mono font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="sm:col-span-2 verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alamat Domisili Wali</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="guardian_address" data-label="Alamat Wali" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <span id="det-guardian-address" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- ACCORDION 6: DOKUMEN PERSYARATAN           -->
+                <!-- ========================================== -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/60 shadow-2xs transition">
+                    <button type="button" onclick="toggleDetailAccordion('acc-documents')" class="w-full px-4 py-3 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 text-left transition select-none group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+                                6
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                    <span>Dokumen Persyaratan & Lampiran</span>
+                                </h4>
+                                <p id="badge-acc-documents" class="text-[11px] text-slate-400 truncate mt-0.5">Pas Foto, Akta Lahir, KK, Surat Keterangan / Ijazah</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <i data-lucide="chevron-down" id="chevron-acc-documents" class="w-4 h-4 text-slate-400 transition-transform duration-200 rotate-180"></i>
+                        </div>
+                    </button>
+                    <div id="body-acc-documents" class="p-4 border-t border-slate-150 dark:border-slate-800">
+                        <div id="det-documents-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Dynamically rendered via openCandidateDetailModal -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- Textarea for Verification Message Notes (Dynamic Rejection Message) -->
-                <div id="verification-notes-block" class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2 hidden">
-                    <label id="verification-notes-label" class="block text-xs font-bold text-slate-655 dark:text-slate-400 uppercase tracking-wider">Pesan Catatan Verifikasi</label>
+                <div id="verification-notes-block" class="pt-4 border-t border-slate-150 dark:border-slate-800 space-y-2 hidden">
+                    <div class="flex items-center justify-between">
+                        <label id="verification-notes-label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                            Pesan Catatan Verifikasi
+                        </label>
+                        <span class="text-[10px] text-slate-400 font-medium">Otomatis tersusun saat checkbox tidak dicentang</span>
+                    </div>
                     <textarea id="verification-notes" name="notes" rows="4"
-                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs leading-relaxed"
-                        placeholder="Masukkan catatan tambahan..."></textarea>
+                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs leading-relaxed transition"
+                        placeholder="Masukkan catatan perbaikan atau informasi tambahan untuk wali murid..."></textarea>
                 </div>
 
-            </div>            <!-- Modal Footer -->
-            <div class="bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center flex-shrink-0">
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center flex-shrink-0">
                 <div>
-                    <span class="text-[9px] font-bold text-slate-400 uppercase block">Tanggal Masuk Formulir</span>
-                    <span id="det-created" class="text-xs font-semibold text-slate-650 dark:text-slate-350">20 Aug 2026, 03:00 WIB</span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tanggal Masuk Formulir</span>
+                    <span id="det-created" class="text-xs font-bold text-slate-700 dark:text-slate-300">-</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition">
-                        Batal
+                    <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition">
+                        Tutup
                     </button>
-                    <button type="submit" id="btn-reject" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md hidden">
-                        Tolak & Minta Perbaikan
+                    <button type="submit" id="btn-reject" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5 hidden">
+                        <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                        <span>Tolak & Minta Perbaikan</span>
                     </button>
-                    <button type="submit" id="btn-approve" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md hidden">
-                        Setujui & Verifikasi Berkas
+                    <button type="submit" id="btn-approve" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5 hidden">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                        <span>Setujui & Verifikasi Berkas</span>
                     </button>
                 </div>
             </div>
@@ -603,70 +1041,146 @@
 </div>
 
 <script>
+    // Accordion Management for Detail Modal
+    const detailAccordionIds = ['acc-program', 'acc-biodata', 'acc-address', 'acc-parents', 'acc-guardian', 'acc-documents'];
+
+    function toggleDetailAccordion(id) {
+        const body = document.getElementById('body-' + id);
+        const chevron = document.getElementById('chevron-' + id);
+        if (!body) return;
+
+        if (body.classList.contains('hidden')) {
+            body.classList.remove('hidden');
+            if (chevron) chevron.classList.add('rotate-180');
+        } else {
+            body.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    }
+
+    function toggleAllDetailAccordions(expand = true) {
+        detailAccordionIds.forEach(id => {
+            const body = document.getElementById('body-' + id);
+            const chevron = document.getElementById('chevron-' + id);
+            if (body) {
+                if (expand) {
+                    body.classList.remove('hidden');
+                    if (chevron) chevron.classList.add('rotate-180');
+                } else {
+                    body.classList.add('hidden');
+                    if (chevron) chevron.classList.remove('rotate-180');
+                }
+            }
+        });
+    }
+
     // Detailed Candidate Modal
     function openCandidateDetailModal(cand, isVerificationMode = false, regId = null) {
+        // Modal Header & Badges
         document.getElementById('det-id-label').innerText = 'ID: ' + cand.id_label;
-        document.getElementById('det-period').innerText = cand.period;
-        document.getElementById('det-wave').innerText = cand.wave;
-        document.getElementById('det-type').innerText = cand.type;
-        
+        document.getElementById('det-header-name').innerText = cand.name;
+        document.getElementById('det-header-level-program').innerText = cand.admission_level + ' • ' + (cand.class_program || 'Reguler');
+        document.getElementById('det-created').innerText = cand.created_at_label;
+
         // Status Badge Style
         const statusEl = document.getElementById('det-status');
         statusEl.innerText = cand.status;
-        statusEl.className = "inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase";
+        statusEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider";
         if (cand.status === 'VERIFIED') {
-            statusEl.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+            statusEl.classList.add('bg-emerald-500', 'text-white', 'border', 'border-emerald-400');
         } else if (cand.status === 'SUBMITTED') {
-            statusEl.classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+            statusEl.classList.add('bg-amber-400', 'text-slate-900', 'border', 'border-amber-300');
+        } else if (cand.status === 'FAILED') {
+            statusEl.classList.add('bg-rose-500', 'text-white', 'border', 'border-rose-400');
         } else {
-            statusEl.classList.add('bg-slate-100', 'text-slate-600', 'border', 'border-slate-300');
+            statusEl.classList.add('bg-white/20', 'text-white', 'border', 'border-white/25');
         }
 
+        // 1. Program & Layanan
+        document.getElementById('det-period').innerText = cand.period;
+        document.getElementById('det-wave').innerText = cand.wave;
+        document.getElementById('det-type').innerText = cand.type;
+        document.getElementById('det-level').innerText = cand.admission_level;
+        document.getElementById('det-program').innerText = cand.class_program || 'Reguler';
+        document.getElementById('det-extras').innerText = cand.extra_services || '-';
+
+        // 2. Biodata Calon Murid
         document.getElementById('det-name').innerText = cand.name;
         document.getElementById('det-nickname').innerText = cand.nickname;
         document.getElementById('det-nik').innerText = cand.nik;
+        document.getElementById('det-family-card-no').innerText = cand.family_card_no || '-';
         document.getElementById('det-gender').innerText = cand.gender;
-        document.getElementById('det-birth').innerText = cand.birth_place + ', ' + cand.birth_date;
+        document.getElementById('det-birth-place').innerText = cand.birth_place;
+        document.getElementById('det-birth-date').innerText = cand.birth_date;
         document.getElementById('det-religion').innerText = cand.religion;
-        document.getElementById('det-previous-school').innerText = cand.previous_school;
-        document.getElementById('det-level').innerText = cand.admission_level;
-        document.getElementById('det-program').innerText = cand.class_program || 'Reguler';
-        document.getElementById('det-extras').innerText = cand.extra_services;
-        
-        document.getElementById('det-father').innerText = cand.father_name;
-        document.getElementById('det-mother').innerText = cand.mother_name;
-        document.getElementById('det-phone').innerText = cand.parent_phone;
-        
-        document.getElementById('det-created').innerText = cand.created_at_label;
+        document.getElementById('det-previous-school').innerText = cand.previous_school || '-';
 
-        // Render dynamic documents
+        // 3. Tempat Tinggal & Domisili
+        document.getElementById('det-province').innerText = cand.province;
+        document.getElementById('det-city').innerText = cand.city;
+        document.getElementById('det-kecamatan').innerText = cand.kecamatan;
+        document.getElementById('det-kelurahan').innerText = cand.kelurahan;
+        document.getElementById('det-address').innerText = cand.address;
+        document.getElementById('det-house-number').innerText = cand.house_number || '-';
+        document.getElementById('det-rt-rw').innerText = (cand.rt ? 'RT ' + cand.rt : '') + (cand.rw ? ' / RW ' + cand.rw : '') || '-';
+        document.getElementById('det-full-address').innerText = cand.full_address || '-';
+
+        // 4. Data Orang Tua Kandung
+        // Ayah
+        document.getElementById('det-father-name').innerText = cand.father_name;
+        document.getElementById('det-father-nik').innerText = cand.father_nik || '-';
+        document.getElementById('det-father-job').innerText = cand.father_job || '-';
+        document.getElementById('det-father-phone').innerText = cand.father_phone || '-';
+        document.getElementById('det-father-address').innerText = cand.father_address || '-';
+        // Ibu
+        document.getElementById('det-mother-name').innerText = cand.mother_name;
+        document.getElementById('det-mother-nik').innerText = cand.mother_nik || '-';
+        document.getElementById('det-mother-job').innerText = cand.mother_job || '-';
+        document.getElementById('det-mother-phone').innerText = cand.mother_phone || '-';
+        document.getElementById('det-mother-address').innerText = cand.mother_address || '-';
+
+        // 5. Data Wali
+        document.getElementById('det-guardian-name').innerText = cand.guardian_name || '-';
+        document.getElementById('det-guardian-nik').innerText = cand.guardian_nik || '-';
+        document.getElementById('det-guardian-job').innerText = cand.guardian_job || '-';
+        document.getElementById('det-guardian-phone').innerText = cand.guardian_phone || '-';
+        document.getElementById('det-guardian-address').innerText = cand.guardian_address || '-';
+
+        // 6. Dokumen Persyaratan
         const docsContainer = document.getElementById('det-documents-container');
         docsContainer.innerHTML = '';
 
         if (cand.documents && cand.documents.length > 0) {
             cand.documents.forEach(doc => {
                 const box = document.createElement('div');
-                box.className = `p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between verify-field-container ${doc.url ? '' : 'opacity-60'}`;
+                box.className = `p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 flex items-center justify-between verify-field-container ${doc.url ? '' : 'opacity-65'}`;
                 
                 let actionHtml = '';
                 if (doc.url) {
-                    actionHtml = `<a href="${doc.url}" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans shrink-0">Buka File</a>`;
+                    actionHtml = `<a href="${doc.url}" target="_blank" hx-boost="false" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition shrink-0 flex items-center gap-1 shadow-2xs">
+                        <i data-lucide="external-link" class="w-3 h-3"></i>
+                        <span>Buka File</span>
+                    </a>`;
                 } else {
-                    actionHtml = `<span class="text-[9px] font-semibold text-slate-400 italic shrink-0">Belum diunggah</span>`;
+                    actionHtml = `<span class="text-[10px] font-semibold text-slate-400 italic shrink-0">Belum diunggah</span>`;
                 }
 
                 box.innerHTML = `
                     <div class="flex items-center gap-2.5 min-w-0 pr-2">
-                        <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald shrink-0"></i>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/60">
+                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                        </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2 mb-0.5 flex-wrap">
-                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate" title="${doc.label}">${doc.label}</span>
-                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check ${isVerificationMode ? '' : 'hidden'}">
-                                    <input type="checkbox" data-field="${doc.field_name}" data-label="${doc.label}" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate" title="${doc.label}">${doc.label}</span>
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check ${isVerificationMode ? '' : 'hidden'} select-none">
+                                    <input type="checkbox" data-field="${doc.field_name}" data-label="${doc.label}" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                                     <span>OK</span>
                                 </label>
                             </div>
-                            <span class="text-[9px] text-slate-400 block truncate">${doc.url ? 'File Terlampir' : 'Berkas Belum Diunggah'}</span>
+                            <span class="text-[10px] ${doc.url ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-slate-400'} block truncate">
+                                ${doc.url ? 'Berkas Terlampir' : 'Berkas Belum Diunggah'}
+                            </span>
                         </div>
                     </div>
                     ${actionHtml}
@@ -676,6 +1190,11 @@
         } else {
             docsContainer.innerHTML = '<p class="text-xs text-slate-400 italic col-span-2">Tidak ada dokumen persyaratan yang dikonfigurasi.</p>';
         }
+
+        // Accordion Initial State
+        // If Verifikasi Mode -> Expand all accordions so admin can verify all sections easily
+        // If Detail Mode -> Collapse all accordions initially for a clean compact view
+        toggleAllDetailAccordions(isVerificationMode);
 
         // Toggle verification elements
         const verifyForm = document.getElementById('verifyForm');
@@ -691,7 +1210,7 @@
             cb.checked = true;
         });
         fieldContainers.forEach(container => {
-            container.classList.remove('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
+            container.classList.remove('bg-rose-50', 'dark:bg-rose-950/20', 'border-rose-300', 'dark:border-rose-800');
         });
 
         if (isVerificationMode && regId) {
@@ -715,7 +1234,9 @@
             verificationChecks.forEach(el => el.classList.add('hidden'));
         }
 
+        // Show Modal and Lock background page scroll
         document.getElementById('detailModal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
         
         if (window.lucide) {
             lucide.createIcons();
@@ -724,6 +1245,7 @@
 
     function closeDetailModal() {
         document.getElementById('detailModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 
     // Close modal by clicking outside
@@ -746,9 +1268,9 @@
             const container = e.target.closest('.verify-field-container');
             if (container) {
                 if (e.target.checked) {
-                    container.classList.remove('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
+                    container.classList.remove('bg-rose-50', 'dark:bg-rose-950/20', 'border-rose-300', 'dark:border-rose-800');
                 } else {
-                    container.classList.add('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
+                    container.classList.add('bg-rose-50', 'dark:bg-rose-950/20', 'border-rose-300', 'dark:border-rose-800');
                 }
             }
             updateVerificationSummary();
@@ -775,7 +1297,7 @@
         invalidFieldsInput.value = JSON.stringify(unchecked);
 
         if (unchecked.length > 0) {
-            notesLabel.innerText = 'Alasan Penolakan / Perbaikan Berkas';
+            notesLabel.innerText = 'Alasan Penolakan / Perbaikan Berkas:';
             
             // Auto-generate helper rejection text
             let compiledMsg = `Mohon maaf, berkas pendaftaran ananda ${candidateName} perlu diperbaiki pada bagian:\n`;
@@ -789,7 +1311,7 @@
             if (btnApprove) btnApprove.classList.add('hidden');
             if (btnReject) btnReject.classList.remove('hidden');
         } else {
-            notesLabel.innerText = 'Catatan Penutup Verifikasi (Opsional)';
+            notesLabel.innerText = 'Catatan Penutup Verifikasi (Opsional):';
             notesTextarea.value = `Alhamdulillah, berkas pendaftaran ananda ${candidateName} telah kami terima dan diverifikasi. Silakan persiapkan untuk mengikuti Tes Observasi.`;
 
             // Only allow approval when all fields are checked OK
