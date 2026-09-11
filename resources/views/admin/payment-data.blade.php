@@ -342,6 +342,12 @@
                                         <span>{{ $cand->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
                                     </div>
                                 @endif
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                    {{ $cand->unit->name ?? 'PAUD/TK' }}
+                                    @if(!empty($cand->admission_level))
+                                        ({{ $cand->admission_level }})
+                                    @endif
+                                </div>
                             </td>
 
                             <!-- Calon Murid -->
@@ -370,12 +376,6 @@
                                             <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>
                                             <span>{{ $parentContact }}</span>
                                         </span>
-                                    @endif
-                                </div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
-                                    {{ $cand->unit->name ?? 'PAUD/TK' }}
-                                    @if(!empty($cand->admission_level))
-                                        ({{ $cand->admission_level }})
                                     @endif
                                 </div>
                                 @if($cand->is_dispensation)
