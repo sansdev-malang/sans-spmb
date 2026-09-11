@@ -264,10 +264,12 @@
                                         }
                                     @endphp
                                     @if($displayWinpayId)
-                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-800" title="{{ $numericWinpayId ? 'ID Transaksi Winpay' : 'Contract ID Winpay' }}">
-                                            <i data-lucide="check" class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400"></i>
-                                            Winpay: {{ $displayWinpayId }}
-                                        </span>
+                                        <div class="flex items-center gap-1">
+                                            <span class="font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300 select-all" title="{{ $numericWinpayId ? 'ID Transaksi Winpay' : 'Contract ID Winpay' }}">{{ $displayWinpayId }}</span>
+                                            <button type="button" onclick="navigator.clipboard.writeText('{{ $displayWinpayId }}'); toastr.success('ID Winpay disalin')" class="text-slate-350 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer" title="Salin ID Winpay">
+                                                <i data-lucide="copy" class="w-2.5 h-2.5"></i>
+                                            </button>
+                                        </div>
                                         <span class="text-slate-300 dark:text-slate-600">•</span>
                                     @endif
                                     <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium" title="{{ $pay->status === 'success' && $settledTimeRaw ? 'Waktu Pembayaran Sukses' : 'Waktu Pembuatan Tagihan' }}">
