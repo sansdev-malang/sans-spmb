@@ -1517,6 +1517,93 @@
         }
         
         // Initialize Lucide Icons & Auto Session Toasts
+        // Universal Async File/Receipt Downloader with Precise Button Animation
+        window.downloadReceiptPdf = async function(btn, url, fallbackName = 'Bukti-Bayar.pdf') {
+            if (!btn || btn.dataset.downloading === 'true') return;
+            btn.dataset.downloading = 'true';
+            
+            const originalHtml = btn.innerHTML;
+            const originalClasses = btn.className;
+            
+            // Set loading state on the button
+            btn.classList.add('pointer-events-none', 'opacity-80');
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin flex-shrink-0"></i> <span>Mengunduh...</span>`;
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/pdf, application/octet-stream, */*'
+                    }
+                });
+
+                if (!response.ok) {
+                    let errorMsg = 'Gagal mengunduh berkas (Status ' + response.status + ')';
+                    try {
+                        const data = await response.json();
+                        if (data && data.message) errorMsg = data.message;
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+
+                // Parse filename from Content-Disposition header if available
+                let filename = fallbackName;
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '').trim();
+                    }
+                }
+
+                // Wait for the full Blob to download into browser memory (exact finish timing)
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const tempLink = document.createElement('a');
+                tempLink.style.display = 'none';
+                tempLink.href = blobUrl;
+                tempLink.download = filename;
+                document.body.appendChild(tempLink);
+                tempLink.click();
+                
+                setTimeout(() => {
+                    if (document.body.contains(tempLink)) {
+                        document.body.removeChild(tempLink);
+                    }
+                    window.URL.revokeObjectURL(blobUrl);
+                }, 200);
+
+                // Precise finish animation on button
+                btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 flex-shrink-0 text-emerald-600 dark:text-emerald-400"></i> <span>Selesai</span>`;
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+                if (typeof showToast === 'function') {
+                    showToast('Bukti pembayaran berhasil diunduh', 'success');
+                }
+
+                // Show "Selesai" checkmark briefly before restoring
+                await new Promise(r => setTimeout(r, 1000));
+
+            } catch (err) {
+                console.error('Download error:', err);
+                if (typeof showToast === 'function') {
+                    showToast(err.message || 'Gagal mengunduh berkas', 'error');
+                }
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.className = originalClasses;
+                delete btn.dataset.downloading;
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            }
+        };
+
         // Top Progress Loading Bar Controller
         window.startTopLoadingBar = function() {
             const bar = document.getElementById('top-loading-bar');

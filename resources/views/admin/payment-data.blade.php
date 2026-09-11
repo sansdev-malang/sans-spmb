@@ -1541,9 +1541,9 @@
                                     </span>
                                 </div>
                             </div>
-                            <a href="/admin/payments/receipt/${inst.payment_id}" target="_blank" download class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition">
-                                <i data-lucide="download" class="w-3.5 h-3.5 text-blue-600"></i> Kwitansi #${idx + 1}
-                            </a>
+                            <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${inst.payment_id}', 'Kwitansi-${inst.invoice_number}.pdf')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition cursor-pointer">
+                                <i data-lucide="download" class="w-3.5 h-3.5 text-blue-600"></i> <span>Kwitansi #${idx + 1}</span>
+                            </button>
                         </div>
                     `;
                 }).join('');
@@ -1564,10 +1564,10 @@
                                 </h4>
                             </div>
                             ${isCompLunas ? `
-                                <a href="/admin/payments/receipt/${lastPayment.payment_id}?type=settlement&item_name=${encodeURIComponent(comp.name)}" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition self-start sm:self-center">
+                                <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${lastPayment.payment_id}?type=settlement&item_name=${encodeURIComponent(comp.name)}', 'Kwitansi-Pelunasan-${lastPayment.invoice_number || 'SPMB'}.pdf')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition self-start sm:self-center cursor-pointer">
                                     <i data-lucide="award" class="w-3.5 h-3.5 text-yellow-300"></i>
                                     <span>Unduh Kwitansi Utama (Pelunasan)</span>
-                                </a>
+                                </button>
                             ` : ''}
                         </div>
 
@@ -1777,15 +1777,15 @@
                     </span>
                     <div class="flex items-center gap-2 flex-wrap">
                         ${canDownloadSettlement ? `
-                            <a href="/admin/payments/receipt/${p.id}?type=settlement&item_name=${encodeURIComponent(settlementItemName)}" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-sm transition">
+                            <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${p.id}?type=settlement&item_name=${encodeURIComponent(settlementItemName)}', 'Kwitansi-Pelunasan-${p.invoice_number}.pdf')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-sm transition cursor-pointer">
                                 <i data-lucide="award" class="w-3.5 h-3.5 text-yellow-200"></i>
                                 <span>Kwitansi Utama</span>
-                            </a>
+                            </button>
                         ` : ''}
-                        <a href="/admin/payments/receipt/${p.id}" target="_blank" download class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition">
+                        <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${p.id}', 'Bukti-Bayar-${p.invoice_number}.pdf')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition cursor-pointer">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             <span>${receiptBtnLabel}</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             `;
