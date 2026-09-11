@@ -245,14 +245,22 @@
     <!-- Kop Surat Header -->
     <table class="kop-table">
         <tr>
-            <td style="width: 60%;">
-                <h1 class="kop-brand">YAYASAN PENDIDIKAN ANAK SALEH MALANG</h1>
-                <div class="kop-subbrand">BAGIAN KEUANGAN & PANITIA PENERIMAAN MURID BARU (SPMB)</div>
-                <div class="kop-address">
-                    Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kec. Lowokwaru, Kota Malang, Jawa Timur | Telp: (0341) 404888
-                </div>
+            <td style="width: 70px;">
+                @php
+                    $logoSrc = \App\Models\Setting::getLogoBase64() ?? ($logoUrl ?? null);
+                @endphp
+                @if(!empty($logoSrc))
+                    <img src="{{ $logoSrc }}" style="height: 48px; width: auto;" alt="Logo">
+                @else
+                    <div style="width: 48px; height: 48px; background-color: #047857; color: white; text-align: center; line-height: 48px; font-weight: bold; border-radius: 6px;">SAS</div>
+                @endif
             </td>
-            <td style="width: 40%;" class="meta-box">
+            <td>
+                <h1 class="kop-brand">YAYASAN PENDIDIKAN ANAK SALEH MALANG</h1>
+                <div class="kop-subbrand">PANITIA SISTEM PENERIMAAN MURID BARU (SPMB)</div>
+                <div class="kop-address">Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur</div>
+            </td>
+            <td class="meta-box" style="width: 220px;">
                 <div class="doc-badge">RINCIAN KEUANGAN OPERASIONAL</div>
                 <div><strong>Tgl Cetak:</strong> {{ $printedAt }}</div>
                 <div><strong>Dicetak Oleh:</strong> {{ $printedBy }}</div>

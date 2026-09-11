@@ -132,6 +132,8 @@ Route::middleware('auth')->group(function () {
 
         // Admin Reports & Analytics (Registrations & Demographics)
         Route::get('/admin/reports/registrations', [AdminReportAnalyticsController::class, 'registrations'])->name('admin.reports.registrations');
+        Route::get('/admin/reports/registrations/export', [AdminReportAnalyticsController::class, 'export'])->name('admin.reports.registrations.export');
+        Route::get('/admin/reports/registrations/export-pdf', [AdminReportAnalyticsController::class, 'exportPdf'])->name('admin.reports.registrations.export-pdf');
         Route::get('/admin/reports/demographics', [AdminReportAnalyticsController::class, 'demographics'])->name('admin.reports.demographics');
 
         // Setting Biaya (Accessible to both Super Admin and Unit Admin)

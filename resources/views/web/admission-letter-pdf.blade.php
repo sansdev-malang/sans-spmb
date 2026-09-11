@@ -209,15 +209,21 @@
         <table class="kop-table">
             <tr>
                 <td style="width: 15%; text-align: left;">
-                    <!-- Place for logo placeholder or plain badge -->
-                    <div style="background-color: #059669; color: white; width: 45px; height: 45px; line-height: 45px; text-align: center; border-radius: 10px; font-weight: bold; font-size: 18px;">
-                        AS
-                    </div>
+                    @php
+                        $logoSrc = \App\Models\Setting::getLogoBase64();
+                    @endphp
+                    @if(!empty($logoSrc))
+                        <img src="{{ $logoSrc }}" style="height: 48px; width: auto;" alt="Logo">
+                    @else
+                        <div style="background-color: #059669; color: white; width: 45px; height: 45px; line-height: 45px; text-align: center; border-radius: 10px; font-weight: bold; font-size: 18px;">
+                            AS
+                        </div>
+                    @endif
                 </td>
                 <td style="width: 85%; text-align: left; padding-left: 10px;">
-                    <div class="school-title">Yayasan Anak Saleh Malang</div>
-                    <div class="school-subtitle">{{ $registration->unit->name ?? 'Sekolah Anak Saleh' }}</div>
-                    <div class="school-address">Jl. Candi Panggung No. 1A, Malang | Telp: (0341) 404040 | Email: info@anaksaleh.sch.id</div>
+                    <div class="school-title">YAYASAN PENDIDIKAN ANAK SALEH MALANG</div>
+                    <div class="school-subtitle">{{ $registration->unit->name ?? 'Sekolah Anak Saleh' }} &bull; PANITIA SISTEM PENERIMAAN MURID BARU (SPMB)</div>
+                    <div class="school-address">Jl. Candi Panggung Indah No. 1-3, Mojolangu, Kecamatan Lowokwaru, Kota Malang, Jawa Timur</div>
                 </td>
             </tr>
         </table>
