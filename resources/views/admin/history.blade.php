@@ -185,7 +185,6 @@
                         <th class="py-4 px-6">Calon Murid</th>
                         <th class="py-4 px-6">Tingkat</th>
                         <th class="py-4 px-6">Tahapan Pendaftaran</th>
-                        <th class="py-4 px-6">Tanggal Pendaftaran</th>
                         <th class="py-4 px-6 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -317,9 +316,6 @@
                                 <span class="px-2 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
                                     {{ $currentStageText }}
                                 </span>
-                            </td>
-                            <td class="py-4 px-6 text-slate-500 text-xs font-semibold">
-                                {{ $cand->created_at->format('d M Y, H:i') }} WIB
                             </td>
                             <td class="py-4 px-6 text-center">
                                 @php
