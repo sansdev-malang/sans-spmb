@@ -470,8 +470,8 @@
                                     </a>
                                     <form method="POST" action="{{ route('logout') }}" hx-boost="false">
                                         @csrf
-                                        <button type="submit" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition flex items-center gap-2 font-bold">
-                                            <i data-lucide="log-out" class="w-4 h-4 text-red-500"></i> Keluar / Logout
+                                        <button type="submit" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition flex items-center gap-2 font-bold cursor-pointer">
+                                            <i data-lucide="log-out" class="w-4 h-4 text-red-500"></i> Keluar
                                         </button>
                                     </form>
                                 </div>

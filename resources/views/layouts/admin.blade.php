@@ -714,9 +714,9 @@
                     <div>
                         <form method="POST" action="{{ route('logout') }}" hx-boost="false" class="w-full">
                             @csrf
-                            <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:bg-red-950/30 hover:text-red-300 transition font-bold text-left rounded-lg mx-1 my-0.5 mt-1.5" style="width: calc(100% - 8px);">
+                            <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-red-400 hover:bg-red-950/30 hover:text-red-300 transition font-bold text-left rounded-lg mx-1 my-0.5 mt-1.5 cursor-pointer" style="width: calc(100% - 8px);">
                                 <i data-lucide="log-out" class="w-4 h-4 flex-shrink-0"></i>
-                                <span>Logout / Keluar</span>
+                                <span>Keluar</span>
                             </button>
                         </form>
                     </div>
