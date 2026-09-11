@@ -153,7 +153,8 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-150 dark:border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/70 dark:bg-slate-950/50">
-                        <th class="py-4 px-6">Calon Murid & No. Pendaftaran</th>
+                        <th class="py-4 px-6">No. Registrasi</th>
+                        <th class="py-4 px-6">Calon Murid</th>
                         <th class="py-4 px-6">Unit & Jenjang</th>
                         <th class="py-4 px-6">Jadwal Ta'aruf</th>
                         <th class="py-4 px-6">Lokasi & Penguji</th>
@@ -177,17 +178,43 @@
                             $defaultAddress = $reg->unit?->taaruf_default_address ?: $fallbackAddress;
                         @endphp
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-855/40 transition">
-                            <!-- 1. Candidate Info -->
+                            <!-- 1. No. Registrasi -->
                             <td class="py-4 px-6">
-                                <div class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
-                                    <span>{{ $reg->candidate_name }}</span>
-                                    <span class="text-[10px] font-mono text-slate-400 font-normal">(#{{ str_pad($reg->id, 5, '0', STR_PAD_LEFT) }})</span>
+                                <div class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    SANS-{{ substr($reg->period->year ?? '2026', 0, 4) }}-{{ str_pad($reg->id, 4, '0', STR_PAD_LEFT) }}
                                 </div>
-                                <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
-                                    <span>No: <strong class="text-slate-600 dark:text-slate-300 font-semibold">{{ $reg->registration_number ?? '-' }}</strong></span>
-                                    @if($reg->parent_phone)
-                                        <span>•</span>
-                                        <span>WA: {{ $reg->parent_phone }}</span>
+                                @if($reg->created_at)
+                                    <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1 font-medium whitespace-nowrap">
+                                        <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i>
+                                        <span>{{ $reg->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- 2. Calon Murid -->
+                            <td class="py-4 px-6">
+                                <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $reg->candidate_name ?? 'Draft' }}</div>
+                                @php
+                                    $parentName = $reg->father_name 
+                                        ?: ($reg->mother_name 
+                                        ?: ($reg->guardian_name 
+                                        ?: ($reg->user->name ?? '-')));
+
+                                    $parentContact = $reg->parent_phone 
+                                        ?: ($reg->father_phone 
+                                        ?: ($reg->mother_phone 
+                                        ?: ($reg->guardian_phone 
+                                        ?: ($reg->getFieldValue('father_phone') 
+                                        ?: ($reg->getFieldValue('mother_phone') 
+                                        ?: ($reg->getFieldValue('guardian_phone') ?: null))))));
+                                @endphp
+                                <div class="text-xs text-slate-400 flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                                    <span>Ortu: {{ $parentName }}</span>
+                                    @if($parentContact)
+                                        <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                            <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>
+                                            <span>{{ $parentContact }}</span>
+                                        </span>
                                     @endif
                                 </div>
                             </td>
@@ -330,7 +357,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 px-6 text-center text-slate-400">
+                            <td colspan="7" class="py-12 px-6 text-center text-slate-400">
                                 <div class="flex flex-col items-center justify-center space-y-3">
                                     <div class="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                                         <i data-lucide="calendar-x-2" class="w-6 h-6"></i>
