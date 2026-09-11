@@ -346,6 +346,9 @@
                         @elseif(Request::is('forgot-password'))
                             <h2 class="text-xl font-black text-slate-800 dark:text-white">Lupa Password</h2>
                             <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Kami akan mengirimkan link reset password via email</p>
+                        @elseif(Request::is('reset-password*'))
+                            <h2 class="text-xl font-black text-slate-800 dark:text-white">Reset Password</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Buat password baru yang aman untuk akun Anda</p>
                         @else
                             <h2 class="text-xl font-black text-slate-800 dark:text-white">Autentikasi</h2>
                             <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">{{ config('app.name') }}</p>
