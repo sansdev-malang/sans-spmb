@@ -861,34 +861,39 @@ class WinpayService implements PaymentGatewayInterface
         $httpMethod = 'POST';
 
         if ($isQris) {
-            // [A] QRIS Query Status (POST /v1.0/qr/qr-mpm-query)
+            // [A] QRIS Query Status (POST /v1.0/qr/qr-mpm-query - Service Code: 51, serviceCode payload: "47")
             $endpoint = '/v1.0/qr/qr-mpm-query';
             $body = [
                 'originalPartnerReferenceNo' => $invoiceNo,
-                'serviceCode' => '51',
+                'serviceCode' => '47',
+                'additionalInfo' => array_filter([
+                    'contractId' => (string) $contractId,
+                ])
             ];
             if (!empty($paymentInfo['referenceId'])) {
                 $body['originalReferenceNo'] = (string) $paymentInfo['referenceId'];
-            }
-            if (!empty($contractId)) {
-                $body['additionalInfo'] = ['contractId' => (string) $contractId];
             }
         } elseif ($isEwallet) {
-            // [B] E-Wallet / Debit Query Status (POST /v1.0/debit/status)
+            // [B] E-Wallet / Debit Query Status (POST /v1.0/debit/status - Service Code: 55)
             $endpoint = '/v1.0/debit/status';
+            $ewalletChannel = $channel ?: 'DANA';
+            if ($ewalletChannel === 'SHOPEEPAY') $ewalletChannel = 'SPAY';
+            if ($ewalletChannel === 'ASTRAPAY') $ewalletChannel = 'ASTRA';
+            if ($ewalletChannel === 'SPEEDCASH') $ewalletChannel = 'SC';
+
             $body = [
                 'originalPartnerReferenceNo' => $invoiceNo,
-                'serviceCode' => '55',
+                'additionalInfo' => array_filter([
+                    'contractId' => (string) $contractId,
+                    'channel' => $ewalletChannel,
+                ])
             ];
             if (!empty($paymentInfo['referenceId'])) {
                 $body['originalReferenceNo'] = (string) $paymentInfo['referenceId'];
             }
-            if (!empty($contractId)) {
-                $body['additionalInfo'] = ['contractId' => (string) $contractId];
-            }
         } else {
-            // [C] Virtual Account & Modern Retail Inquiry Status (POST /v1.0/transfer-va/inquiry-status)
-            $endpoint = '/v1.0/transfer-va/inquiry-status';
+            // [C] Virtual Account & Modern Retail Inquiry Status (POST /v1.0/transfer-va/status - Service Code: 26)
+            $endpoint = '/v1.0/transfer-va/status';
             $vaNo = trim(
                 $paymentInfo['virtualAccountNo'] 
                 ?? ($paymentInfo['virtualAccount'] 
@@ -896,14 +901,16 @@ class WinpayService implements PaymentGatewayInterface
                 ?? ($paymentInfo['payCode'] ?? '')))
             );
 
+            $channelCode = $channel ?: 'MANDIRI';
+            if ($channelCode === 'ALFA') $channelCode = 'ALFAMART';
+            if ($channelCode === 'INDO') $channelCode = 'INDOMARET';
+
             $body = [
-                'partnerServiceId' => (string) ($this->merchantId ?: '90341'),
-                'customerNo' => (string) ($paymentInfo['customerNo'] ?? ($paymentInfo['phone'] ?? $invoiceNo)),
                 'virtualAccountNo' => $vaNo,
-                'inquiryRequestId' => (string) \Illuminate\Support\Str::uuid(),
+                'trxId' => $invoiceNo,
                 'additionalInfo' => array_filter([
                     'contractId' => (string) $contractId,
-                    'channel' => $channel ?: 'MANDIRI',
+                    'channel' => $channelCode,
                     'trxId' => $invoiceNo,
                 ])
             ];
