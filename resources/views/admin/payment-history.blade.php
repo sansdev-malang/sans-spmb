@@ -374,7 +374,7 @@
                             <!-- 7. Aksi -->
                             <td class="py-4 px-6 text-center whitespace-nowrap">
                                 @if($pay->status === 'success')
-                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800 transition duration-200 shadow-2xs whitespace-nowrap" title="Unduh Bukti Pembayaran Resmi">
+                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" download data-no-loading target="_blank" hx-boost="false" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800 transition duration-200 shadow-2xs whitespace-nowrap" title="Unduh Bukti Pembayaran Resmi">
                                         <i data-lucide="download" class="w-3.5 h-3.5 flex-shrink-0"></i>
                                         <span>Unduh Bukti</span>
                                     </a>

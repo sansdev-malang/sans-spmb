@@ -1517,9 +1517,41 @@
         }
         
         // Initialize Lucide Icons & Auto Session Toasts
+        // Top Progress Loading Bar Controller
+        window.startTopLoadingBar = function() {
+            const bar = document.getElementById('top-loading-bar');
+            if (!bar) return;
+            bar.style.opacity = '1';
+            bar.style.width = '35%';
+            setTimeout(() => {
+                if (bar && bar.style.opacity === '1' && bar.style.width === '35%') {
+                    bar.style.width = '75%';
+                }
+            }, 180);
+        };
+
+        window.finishTopLoadingBar = function() {
+            const bar = document.getElementById('top-loading-bar');
+            if (!bar) return;
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.style.opacity = '0';
+                setTimeout(() => {
+                    bar.style.width = '0';
+                }, 250);
+            }, 100);
+        };
+
+        // Always finish bar on load & page transitions
+        window.addEventListener('DOMContentLoaded', finishTopLoadingBar);
+        window.addEventListener('load', finishTopLoadingBar);
+        window.addEventListener('pageshow', finishTopLoadingBar);
+
+        // Initialize Lucide Icons & Auto Session Toasts
         document.addEventListener("DOMContentLoaded", function() {
             lucide.createIcons();
             updateThemeIcon();
+            finishTopLoadingBar();
             
             // Re-render Lucide icons & maintain sidebar state after htmx swaps content
             document.body.addEventListener('htmx:afterSwap', function(evt) {
@@ -1538,16 +1570,7 @@
                 if (path.includes('/notifications')) {
                     return;
                 }
-                const bar = document.getElementById('top-loading-bar');
-                if (bar) {
-                    bar.style.opacity = '1';
-                    bar.style.width = '30%';
-                    setTimeout(() => {
-                        if (bar.style.width === '30%') {
-                            bar.style.width = '75%';
-                        }
-                    }, 150);
-                }
+                startTopLoadingBar();
             });
             
             document.body.addEventListener('htmx:afterRequest', function(evt) {
@@ -1555,16 +1578,7 @@
                 if (path.includes('/notifications')) {
                     return;
                 }
-                const bar = document.getElementById('top-loading-bar');
-                if (bar) {
-                    bar.style.width = '100%';
-                    setTimeout(() => {
-                        bar.style.opacity = '0';
-                        setTimeout(() => {
-                            bar.style.width = '0';
-                        }, 250);
-                    }, 100);
-                }
+                finishTopLoadingBar();
             });
 
             // Helper to check if an element click/submit will be handled by HTMX
@@ -1590,16 +1604,8 @@
             const originalSubmit = HTMLFormElement.prototype.submit;
             HTMLFormElement.prototype.submit = function() {
                 if (!isHtmxRequest(this)) {
-                    const bar = document.getElementById('top-loading-bar');
-                    if (bar) {
-                        bar.style.opacity = '1';
-                        bar.style.width = '60%';
-                        setTimeout(() => {
-                            if (bar.style.opacity === '1') {
-                                bar.style.width = '90%';
-                            }
-                        }, 500);
-                    }
+                    startTopLoadingBar();
+                    setTimeout(finishTopLoadingBar, 3000);
                 }
                 originalSubmit.apply(this, arguments);
             };
@@ -1607,36 +1613,44 @@
             // Show loading bar on native form submits (e.g. search / filters)
             document.body.addEventListener('submit', function(e) {
                 if (!isHtmxRequest(e.target)) {
-                    const bar = document.getElementById('top-loading-bar');
-                    if (bar) {
-                        bar.style.opacity = '1';
-                        bar.style.width = '60%';
-                        setTimeout(() => {
-                            if (bar.style.opacity === '1') {
-                                bar.style.width = '90%';
-                            }
-                        }, 500);
-                    }
+                    startTopLoadingBar();
+                    setTimeout(finishTopLoadingBar, 3000);
                 }
             });
 
             // Show loading bar on native link clicks (to handle non-boosted transitions)
             document.body.addEventListener('click', function(e) {
                 const link = e.target.closest('a');
-                if (link && !link.target && !link.hasAttribute('download')) {
-                    const href = link.getAttribute('href');
-                    if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !isHtmxRequest(link)) {
-                        const bar = document.getElementById('top-loading-bar');
-                        if (bar) {
-                            bar.style.opacity = '1';
-                            bar.style.width = '50%';
-                            setTimeout(() => {
-                                if (bar.style.opacity === '1') {
-                                    bar.style.width = '85%';
-                                }
-                            }, 500);
-                        }
+                if (!link) return;
+
+                const href = link.getAttribute('href');
+                const target = link.getAttribute('target');
+
+                // Skip anchor, javascript, new-tab, download links, receipt/export/file streams
+                if (!href || href.startsWith('#') || href.startsWith('javascript:') || href === '#' || 
+                    target === '_blank' || link.hasAttribute('download') || link.hasAttribute('data-no-loading') || 
+                    href.includes('/receipt') || href.includes('/download') || href.includes('/export') || href.includes('/cetak') || href.includes('/pdf')) {
+                    return;
+                }
+
+                // Skip same-page URLs or external links
+                try {
+                    const url = new URL(href, window.location.href);
+                    if (url.origin === window.location.origin && 
+                        url.pathname === window.location.pathname && 
+                        url.search === window.location.search) {
+                        return;
                     }
+                    if (url.origin !== window.location.origin) {
+                        return;
+                    }
+                } catch (err) {
+                    return;
+                }
+
+                if (!isHtmxRequest(link)) {
+                    startTopLoadingBar();
+                    setTimeout(finishTopLoadingBar, 3000);
                 }
             });
             
