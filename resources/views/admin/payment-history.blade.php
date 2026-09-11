@@ -210,7 +210,7 @@
                         <th class="py-4 px-6">Metode Pembayaran</th>
                         <th class="py-4 px-6">Nominal</th>
                         <th class="py-4 px-6 text-center">Status</th>
-                        <th class="py-4 px-6 text-center w-28">Bukti Bayar</th>
+                        <th class="py-4 px-6 text-center w-48">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
@@ -378,13 +378,22 @@
                                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                     </a>
                                 @elseif($pay->status === 'pending')
-                                    <form action="{{ route('admin.payments.check-status', $pay->id) }}" method="POST" class="inline" hx-boost="false">
-                                        @csrf
-                                        <button type="submit" onclick="this.disabled=true; this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-3.5 h-3.5 animate-spin\'></i>'; this.form.submit();" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-750 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800 transition duration-200 shadow-2xs cursor-pointer" title="Cek status mutasi ke bank">
-                                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                            <span>Cek Status</span>
-                                        </button>
-                                    </form>
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <form action="{{ route('admin.payments.check-status', $pay->id) }}" method="POST" class="inline" hx-boost="false">
+                                            @csrf
+                                            <button type="submit" onclick="this.disabled=true; this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-3.5 h-3.5 animate-spin\'></i>'; this.form.submit();" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-750 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800 transition duration-200 shadow-2xs cursor-pointer" title="Cek status mutasi ke bank">
+                                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                                <span>Cek Status</span>
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('admin.payments.cancel', $pay->id) }}" method="POST" class="inline" hx-boost="false" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan tagihan invoice {{ $pay->invoice_number }} ini? Sesi pembayaran di Winpay/Bank akan ditutup.')">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition duration-200 shadow-2xs cursor-pointer" title="Batalkan Tagihan Pembayaran">
+                                                <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                                <span>Batalkan</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-600 text-xs font-medium">-</span>
                                 @endif

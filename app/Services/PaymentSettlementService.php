@@ -240,4 +240,77 @@ class PaymentSettlementService
             return false;
         }
     }
+
+    /**
+     * Cancel payment, notify gateway if supported, and refresh registration payment status.
+     *
+     * @param Payment $payment
+     * @param string $reason
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public static function cancelPayment(Payment $payment, string $reason = 'admin_cancelled')
+    {
+        if ($payment->status === 'success') {
+            return [
+                'success' => false,
+                'message' => 'Transaksi yang sudah lunas tidak dapat dibatalkan.'
+            ];
+        }
+
+        // 1. Panggil Payment Gateway cancel API (Winpay SNAP BI DELETE /v1.0/transfer-va/delete-va dll)
+        $gatewayCode = $payment->payment_info['gateway'] ?? 'winpay';
+        try {
+            $gatewayService = \App\Services\PaymentGatewayFactory::make($gatewayCode ?: 'winpay');
+            if (method_exists($gatewayService, 'cancelPayment')) {
+                $gatewayService->cancelPayment($payment->invoice_number, $payment->payment_info ?: []);
+            }
+        } catch (\Throwable $gwEx) {
+            Log::warning('Gateway cancel API call warning', [
+                'payment_id' => $payment->id,
+                'invoice' => $payment->invoice_number,
+                'error' => $gwEx->getMessage()
+            ]);
+        }
+
+        // 2. Update Database SPMB
+        DB::beginTransaction();
+        try {
+            $currentInfo = is_array($payment->payment_info) ? $payment->payment_info : [];
+            $newInfo = array_merge($currentInfo, [
+                'cancelled_at' => now()->toIso8601String(),
+                'cancel_reason' => $reason
+            ]);
+
+            $payment->update([
+                'status' => 'cancelled',
+                'payment_info' => $newInfo
+            ]);
+
+            $registration = $payment->registration;
+            if ($registration) {
+                $hasSuccess = $registration->payments()->where('status', 'success')->exists();
+                $registration->update([
+                    'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
+                ]);
+            }
+
+            DB::commit();
+            Log::info('Payment cancelled successfully', [
+                'invoice' => $payment->invoice_number,
+                'reason' => $reason
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Transaksi [' . $payment->invoice_number . '] berhasil dibatalkan.'
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Failed to cancel payment', ['invoice' => $payment->invoice_number, 'error' => $e->getMessage()]);
+            return [
+                'success' => false,
+                'message' => 'Gagal membatalkan transaksi: ' . $e->getMessage()
+            ];
+        }
+    }
 }

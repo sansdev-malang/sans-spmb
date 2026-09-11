@@ -381,5 +381,35 @@ class AdminPaymentController extends Controller
         }
         return redirect()->back()->with('success', $msg);
     }
+
+    /**
+     * Cancel pending payment transaction from Admin Panel
+     */
+    public function cancelPayment($id)
+    {
+        $payment = Payment::with('registration')->findOrFail($id);
+
+        if ($payment->status !== 'pending') {
+            $msg = 'Hanya transaksi berstatus PENDING yang dapat dibatalkan.';
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
+        $result = \App\Services\PaymentSettlementService::cancelPayment($payment, 'admin_manual_cancel');
+
+        if ($result['success']) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json(['success' => true, 'message' => $result['message']]);
+            }
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json(['success' => false, 'message' => $result['message']], 500);
+        }
+        return redirect()->back()->with('error', $result['message']);
+    }
 }
 

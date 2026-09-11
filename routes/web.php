@@ -115,6 +115,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
         Route::post('/admin/payments/sync-pending', [AdminPaymentController::class, 'syncPending'])->name('admin.payments.sync-pending');
         Route::post('/admin/payments/{id}/check-status', [AdminPaymentController::class, 'checkStatus'])->name('admin.payments.check-status');
+        Route::post('/admin/payments/{id}/cancel', [AdminPaymentController::class, 'cancelPayment'])->name('admin.payments.cancel');
         Route::get('/admin/payments/receipt/{id}', [WebDashboardController::class, 'downloadReceipt'])->name('admin.payments.receipt');
 
 
