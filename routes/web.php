@@ -128,6 +128,7 @@ Route::middleware('auth')->group(function () {
         // Admin Finance Reports & Receivables Breakdown
         Route::get('/admin/finance/reports', [AdminFinanceReportController::class, 'index'])->name('admin.finance.reports');
         Route::get('/admin/finance/reports/export', [AdminFinanceReportController::class, 'export'])->name('admin.finance.reports.export');
+        Route::get('/admin/finance/reports/export-pdf', [AdminFinanceReportController::class, 'exportPdf'])->name('admin.finance.reports.export-pdf');
 
         // Admin Reports & Analytics (Registrations & Demographics)
         Route::get('/admin/reports/registrations', [AdminReportAnalyticsController::class, 'registrations'])->name('admin.reports.registrations');

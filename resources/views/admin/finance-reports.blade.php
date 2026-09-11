@@ -22,7 +22,7 @@
     </div>
 
     <!-- Screen Header Card (Hidden on Print) -->
-    <div class="print:hidden bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="print:hidden bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                 <i data-lucide="line-chart" class="w-5 h-5"></i>
@@ -32,21 +32,11 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Rekapitulasi kas bersih sekolah, rincian biaya admin gateway, target tagihan, dan buku piutang calon murid.</p>
             </div>
         </div>
-        <div class="flex items-center gap-2.5">
-            <button type="button" onclick="window.print()" class="h-9 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer">
-                <i data-lucide="printer" class="w-4 h-4 text-slate-500"></i>
-                <span>Cetak / PDF</span>
-            </button>
-            <a href="{{ route('admin.finance.reports.export', request()->query()) }}" class="h-9 px-4 bg-brand-emerald hover-emerald text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer">
-                <i data-lucide="download" class="w-4 h-4 text-emerald-100"></i>
-                <span>Ekspor CSV / Excel</span>
-            </a>
-        </div>
     </div>
 
     <!-- Filter Bar (Hidden on Print) -->
     <div class="print:hidden bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4">
-        <form method="GET" action="{{ route('admin.finance.reports') }}" class="flex flex-wrap items-center gap-3">
+        <form id="financeFilterForm" method="GET" action="{{ route('admin.finance.reports') }}" class="flex flex-wrap items-center gap-3">
             <input type="hidden" name="tab" value="{{ $activeTab }}">
 
             <!-- Unit Filter -->
@@ -211,13 +201,23 @@
     <div class="{{ $activeTab !== 'recap' ? 'hidden print:block' : '' }} space-y-6">
         <!-- Breakdown per Unit Table -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h2 class="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
                         <i data-lucide="building-2" class="w-4 h-4 text-brand-emerald"></i>
                         Rekapitulasi Keuangan per Unit Sekolah
                     </h2>
                     <p class="text-xs text-slate-400 mt-0.5">Rincian perbandingan target tagihan, kas pokok bersih masuk sekolah, dan sisa piutang di tiap unit.</p>
+                </div>
+                <div class="flex items-center gap-2 print:hidden">
+                    <button type="button" onclick="exportFinanceExcel(this, 'recap')" class="h-8 px-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                        <span>Ekspor Excel</span>
+                    </button>
+                    <button type="button" onclick="exportFinancePdf(this, 'recap')" class="h-8 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                        <span>Ekspor PDF</span>
+                    </button>
                 </div>
             </div>
             
@@ -351,13 +351,23 @@
     <div class="space-y-6">
         <!-- Payment Channels Breakdown Grid -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h2 class="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
                         <i data-lucide="credit-card" class="w-4 h-4 text-brand-emerald"></i>
                         Distribusi Penerimaan per Kanal / Saluran Pembayaran (Winpay & Gateway)
                     </h2>
                     <p class="text-xs text-slate-400 mt-0.5">Analisis total transaksi, volume mutasi bruto, biaya admin MDR, dan kas pokok bersih per metode pembayaran.</p>
+                </div>
+                <div class="flex items-center gap-2 print:hidden">
+                    <button type="button" onclick="exportFinanceExcel(this, 'cashflow')" class="h-8 px-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                        <span>Ekspor Excel</span>
+                    </button>
+                    <button type="button" onclick="exportFinancePdf(this, 'cashflow')" class="h-8 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                        <span>Ekspor PDF</span>
+                    </button>
                 </div>
             </div>
 
@@ -479,20 +489,33 @@
                     <p class="text-xs text-slate-400 mt-0.5">Daftar calon murid yang belum melunasi biaya masuk (DSP) lengkap dengan kontak wali untuk penagihan.</p>
                 </div>
                 
-                <!-- Quick Sub-status Filter -->
-                <div class="flex items-center gap-2 text-xs font-bold">
-                    <a href="{{ route('admin.finance.reports', array_merge(request()->except(['page', 'receivable_status']), ['tab' => 'receivables'])) }}" 
-                       class="px-3 py-1.5 rounded-xl border text-xs font-bold transition {{ !request()->filled('receivable_status') ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }}">
-                        Semua Piutang ({{ $sebagianCount + $belumBayarCount }})
-                    </a>
-                    <a href="{{ route('admin.finance.reports', array_merge(request()->except(['page']), ['tab' => 'receivables', 'receivable_status' => 'unpaid'])) }}" 
-                       class="px-3 py-1.5 rounded-xl border text-xs font-bold transition {{ request('receivable_status') === 'unpaid' ? 'bg-rose-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }}">
-                        Belum Bayar ({{ $belumBayarCount }})
-                    </a>
-                    <a href="{{ route('admin.finance.reports', array_merge(request()->except(['page']), ['tab' => 'receivables', 'receivable_status' => 'partial'])) }}" 
-                       class="px-3 py-1.5 rounded-xl border text-xs font-bold transition {{ request('receivable_status') === 'partial' ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }}">
-                        Cicilan Sebagian ({{ $sebagianCount }})
-                    </a>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Quick Sub-status Filter -->
+                    <div class="flex items-center gap-1.5 text-xs font-bold">
+                        <a href="{{ route('admin.finance.reports', array_merge(request()->except(['page', 'receivable_status']), ['tab' => 'receivables'])) }}" 
+                           class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition {{ !request()->filled('receivable_status') ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }}">
+                            Semua ({{ $sebagianCount + $belumBayarCount }})
+                        </a>
+                        <a href="{{ route('admin.finance.reports', array_merge(request()->except(['page']), ['tab' => 'receivables', 'receivable_status' => 'unpaid'])) }}" 
+                           class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition {{ request('receivable_status') === 'unpaid' ? 'bg-rose-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }}">
+                            Belum Bayar ({{ $belumBayarCount }})
+                        </a>
+                        <a href="{{ route('admin.finance.reports', array_merge(request()->except(['page']), ['tab' => 'receivables', 'receivable_status' => 'partial'])) }}" 
+                           class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition {{ request('receivable_status') === 'partial' ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }}">
+                            Cicilan ({{ $sebagianCount }})
+                        </a>
+                    </div>
+                    <!-- Quick Export -->
+                    <div class="flex items-center gap-1.5 print:hidden">
+                        <button type="button" onclick="exportFinanceExcel(this, 'receivables')" class="h-8 px-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                            <span>Excel</span>
+                        </button>
+                        <button type="button" onclick="exportFinancePdf(this, 'receivables')" class="h-8 px-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>PDF</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -652,4 +675,75 @@
     }
 }
 </style>
+<script>
+    window.exportFinanceExcel = function(btn, tab) {
+        const baseUrl = "{{ route('admin.finance.reports.export') }}";
+        const params = new URLSearchParams(window.location.search);
+        
+        if (tab) {
+            params.set('tab', tab);
+        } else if (!params.has('tab')) {
+            params.set('tab', '{{ $activeTab }}');
+        }
+        
+        const filterForm = document.getElementById('financeFilterForm') || document.querySelector('form[action="{{ route('admin.finance.reports') }}"]');
+        if (filterForm) {
+            const formData = new FormData(filterForm);
+            for (const [key, value] of formData.entries()) {
+                if (value !== null && value !== undefined && value.toString().trim() !== '' && key !== '_token') {
+                    params.set(key, value.toString().trim());
+                }
+            }
+        }
+        
+        if (btn) {
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengekspor...</span>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }, 3000);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+    };
+
+    window.exportFinancePdf = function(btn, tab) {
+        const baseUrl = "{{ route('admin.finance.reports.export-pdf') }}";
+        const params = new URLSearchParams(window.location.search);
+        
+        if (tab) {
+            params.set('tab', tab);
+        } else if (!params.has('tab')) {
+            params.set('tab', '{{ $activeTab }}');
+        }
+        
+        const filterForm = document.getElementById('financeFilterForm') || document.querySelector('form[action="{{ route('admin.finance.reports') }}"]');
+        if (filterForm) {
+            const formData = new FormData(filterForm);
+            for (const [key, value] of formData.entries()) {
+                if (value !== null && value !== undefined && value.toString().trim() !== '' && key !== '_token') {
+                    params.set(key, value.toString().trim());
+                }
+            }
+        }
+        
+        if (btn) {
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-slate-600 dark:text-slate-300 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengekspor PDF...</span>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }, 3000);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+    };
+</script>
 @endsection

@@ -13,10 +13,16 @@ use App\Models\SpmbWave;
 use App\Models\SpmbType;
 use App\Models\Setting;
 use App\Models\SpmbFeeCategory;
+use App\Services\SimpleXlsxService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class AdminFinanceReportController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Prepare complete financial dataset based on active filters.
+     */
+    protected function prepareFinanceData(Request $request): array
     {
         $selectedPeriodId = session('selected_period_id', function() {
             return SpmbPeriod::where('is_active', true)->value('id') 
@@ -225,15 +231,6 @@ class AdminFinanceReportController extends Controller
 
         $sortedReceivables = $receivableQuery->sortByDesc('remaining_balance')->values();
 
-        // Paginate receivables collection
-        $currentPage = LengthAwarePaginator::resolveCurrentPage('page');
-        $perPage = 15;
-        $currentItems = $sortedReceivables->slice(($currentPage - 1) * $perPage, $perPage)->all();
-        $paginatedReceivables = new LengthAwarePaginator($currentItems, $sortedReceivables->count(), $perPage, $currentPage, [
-            'path' => LengthAwarePaginator::resolveCurrentPath(),
-            'query' => $request->query(),
-        ]);
-
         // School branding for Print / PDF header
         $schoolName = Setting::get('school_name', 'Sekolah Anak Saleh');
         $schoolLogo = Setting::get('school_logo_url') ?: Setting::get('school_logo');
@@ -250,7 +247,7 @@ class AdminFinanceReportController extends Controller
 
         $activeTab = $request->input('tab', 'recap');
 
-        return view('admin.finance-reports', compact(
+        return compact(
             'totalNetCashIn',
             'totalGrossRevenue',
             'totalAdminFee',
@@ -277,7 +274,7 @@ class AdminFinanceReportController extends Controller
             'waveBreakdown',
             'channelStats',
             'recentTransactions',
-            'paginatedReceivables',
+            'sortedReceivables',
             'units',
             'waves',
             'types',
@@ -288,123 +285,249 @@ class AdminFinanceReportController extends Controller
             'activeTab',
             'registrationFeeLabel',
             'finalFeeLabel'
-        ));
+        );
     }
 
+    public function index(Request $request)
+    {
+        $data = $this->prepareFinanceData($request);
+
+        // Paginate receivables collection for web table view
+        $currentPage = LengthAwarePaginator::resolveCurrentPage('page');
+        $perPage = 15;
+        $sortedReceivables = $data['sortedReceivables'];
+        $currentItems = $sortedReceivables->slice(($currentPage - 1) * $perPage, $perPage)->all();
+        $paginatedReceivables = new LengthAwarePaginator($currentItems, $sortedReceivables->count(), $perPage, $currentPage, [
+            'path' => LengthAwarePaginator::resolveCurrentPath(),
+            'query' => $request->query(),
+        ]);
+
+        $data['paginatedReceivables'] = $paginatedReceivables;
+
+        return view('admin.finance-reports', $data);
+    }
+
+    /**
+     * Export Excel (.xlsx) based on active tab.
+     */
     public function export(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $data = $this->prepareFinanceData($request);
+        $tab = $request->input('tab', 'recap');
 
-        $registrationFeeLabel = SpmbFeeCategory::getRegistrationCategoryName();
-        $finalFeeLabel = SpmbFeeCategory::getTuitionCategoryName();
-
-        $query = Registration::scopedByAdmin()
-            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments'])
-            ->where('spmb_period_id', $selectedPeriodId);
-
+        $unitCode = 'ALL';
         if ($request->filled('unit_id')) {
-            $query->where('spmb_unit_id', $request->unit_id);
-        }
-        if ($request->filled('wave_id')) {
-            $query->where('spmb_wave_id', $request->wave_id);
-        }
-        if ($request->filled('type_id')) {
-            $query->where('spmb_type_id', $request->type_id);
+            $u = SpmbUnit::find($request->unit_id);
+            if ($u) $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+        } elseif (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $u = SpmbUnit::find(auth()->user()->spmb_unit_id);
+            if ($u) $unitCode = strtoupper($u->code ?: Str::slug($u->name));
         }
 
-        $candidates = $query->get();
+        $period = $data['selectedPeriod'];
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
 
-        $csvFileName = 'laporan_keuangan_spmb_' . date('Y-m-d_His') . '.csv';
-        $headers = [
-            "Content-type" => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename=$csvFileName",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
-        ];
+        if ($tab === 'cashflow') {
+            return $this->exportCashflowXlsx($data, $unitCode, $periodLabel);
+        } elseif ($tab === 'receivables') {
+            return $this->exportReceivablesXlsx($data, $unitCode, $periodLabel);
+        }
+
+        return $this->exportRecapXlsx($data, $unitCode, $periodLabel);
+    }
+
+    /**
+     * Export PDF (.pdf) based on active tab.
+     */
+    public function exportPdf(Request $request)
+    {
+        $data = $this->prepareFinanceData($request);
+        $tab = $request->input('tab', 'recap');
+
+        $unitCode = 'ALL';
+        $unitFilterLabel = 'Semua Jenjang / Unit';
+        if ($request->filled('unit_id')) {
+            $u = SpmbUnit::find($request->unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        } elseif (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $u = SpmbUnit::find(auth()->user()->spmb_unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        }
+
+        $period = $data['selectedPeriod'];
+        $periodName = $period ? ($period->name ?? $period->year) : 'SPMB';
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $printedAt = now()->translatedFormat('d F Y, H:i') . ' WIB';
+        $printedBy = auth()->user()->name ?? 'Administrator';
+
+        $data['unitFilterLabel'] = $unitFilterLabel;
+        $data['periodName'] = $periodName;
+        $data['printedAt'] = $printedAt;
+        $data['printedBy'] = $printedBy;
+
+        if ($tab === 'cashflow') {
+            $filename = 'Laporan-Arus-Kas-Saluran-Pembayaran-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.pdf';
+            $pdf = Pdf::loadView('admin.finance-cashflow-pdf', $data)->setPaper('a4', 'landscape');
+        } elseif ($tab === 'receivables') {
+            $filename = 'Buku-Rekapitulasi-Piutang-Murid-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.pdf';
+            $data['receivables'] = $data['sortedReceivables'];
+            $pdf = Pdf::loadView('admin.finance-receivables-pdf', $data)->setPaper('a4', 'landscape');
+        } else {
+            $filename = 'Laporan-Rekapitulasi-Keuangan-Unit-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.pdf';
+            $pdf = Pdf::loadView('admin.finance-recap-pdf', $data)->setPaper('a4', 'landscape');
+        }
+
+        return response()->make($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Tab 1: Export Recap by Unit & Wave (.xlsx)
+     */
+    protected function exportRecapXlsx(array $data, string $unitCode, string $periodLabel)
+    {
+        $filename = 'Rekapitulasi-Keuangan-Unit-Gelombang-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.xlsx';
 
         $columns = [
-            'ID Registrasi',
-            'Nama Calon Murid',
+            'No.',
             'Unit Sekolah',
-            'Jenjang',
-            'Gelombang',
-            'Jalur Pendaftaran',
-            'Nama Orang Tua / Wali',
-            'No. WhatsApp',
-            'Status Pendaftaran',
-            'Status ' . $registrationFeeLabel,
-            'Pokok ' . $registrationFeeLabel . ' Bersih',
-            'Admin Fee ' . $registrationFeeLabel,
-            'Total ' . $registrationFeeLabel . ' Dibayar (Bruto)',
-            'Tagihan ' . $finalFeeLabel . ' Bruto',
-            'Diskon / Keringanan Disetujui',
-            'Tagihan ' . $finalFeeLabel . ' Bersih',
-            'Pokok ' . $finalFeeLabel . ' Terbayar',
-            'Sisa Piutang ' . $finalFeeLabel,
-            'Status Pelunasan ' . $finalFeeLabel
+            'Murid Tagihan DSP (Anak)',
+            'Target Tagihan DSP Netto (Rp)',
+            'Pokok DSP Terbayar (Rp)',
+            'Sisa Piutang DSP (Rp)',
+            'Pokok Formulir (Rp)',
+            'Total Kas Pokok Bersih (Rp)',
+            'MDR / Admin Fee Gateway (Rp)',
+            'Total Mutasi Bruto (Rp)',
+            'Tingkat Capaian DSP (%)',
         ];
 
-        $callback = function() use ($candidates, $columns) {
-            $file = fopen('php://output', 'w');
-            fputs($file, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
-            fputcsv($file, $columns);
+        $rows = [];
+        $i = 1;
+        foreach ($data['unitBreakdown'] as $ub) {
+            $rows[] = [
+                $i++,
+                $ub['unit']->name,
+                (int) $ub['count'],
+                (float) $ub['net'],
+                (float) $ub['paid'],
+                (float) $ub['remaining'],
+                (float) $ub['form_fee_net'],
+                (float) $ub['total_net_cash'],
+                (float) $ub['admin_fee'],
+                (float) $ub['gross_mutasi'],
+                $ub['percentage'] . '%',
+            ];
+        }
 
-            foreach ($candidates as $c) {
-                $isDSPStage = in_array($c->registration_status, ['taaruf_completed', 'agreement_signed', 'completed']);
-                
-                $gross = $isDSPStage ? $c->getGrossFee() : 0;
-                $discount = $isDSPStage ? $c->total_discount : 0;
-                $net = $isDSPStage ? $c->net_fee : 0;
-                $paidDSP = $isDSPStage ? $c->total_paid_final_fee : 0;
-                $remaining = $isDSPStage ? $c->remaining_balance : 0;
+        return SimpleXlsxService::download($columns, $rows, $filename, 'Rekap Unit');
+    }
 
-                $statusDSP = 'Belum Tahap DSP';
-                if ($isDSPStage) {
-                    if ($remaining <= 0 && $net > 0 && $paidDSP > 0) {
-                        $statusDSP = 'LUNAS';
-                    } elseif ($paidDSP > 0 && $remaining > 0) {
-                        $statusDSP = 'CICILAN / SEBAGIAN';
-                    } else {
-                        $statusDSP = 'BELUM BAYAR';
-                    }
-                }
+    /**
+     * Tab 2: Export Cashflow & Payment Channels (.xlsx)
+     */
+    protected function exportCashflowXlsx(array $data, string $unitCode, string $periodLabel)
+    {
+        $filename = 'Arus-Kas-Saluran-Pembayaran-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.xlsx';
 
-                // Form Fee payment
-                $formPayment = $c->payments->where('payment_type', 'registration_fee')->whereIn('status', ['success', 'settled', 'paid'])->first();
-                $formNet = $formPayment ? ($formPayment->base_amount ?: ($formPayment->amount - ($formPayment->admin_fee ?: 0))) : 0;
-                $formAdmin = $formPayment ? ($formPayment->admin_fee ?: 0) : 0;
-                $formGross = $formPayment ? $formPayment->amount : 0;
-                $formStatus = $formPayment ? 'LUNAS' : ($c->payment_status === 'paid' ? 'LUNAS' : 'BELUM BAYAR');
+        $columns = [
+            'No.',
+            'Metode / Saluran Pembayaran',
+            'Jumlah Transaksi (Trx)',
+            'Total Kas Pokok Bersih (Rp)',
+            'Total Biaya Admin / MDR (Rp)',
+            'Total Mutasi Bruto (Rp)',
+        ];
 
-                fputcsv($file, [
-                    $c->id_label,
-                    $c->candidate_name,
-                    $c->unit->name ?? '-',
-                    $c->grade->name ?? '-',
-                    $c->wave->name ?? '-',
-                    $c->type->name ?? '-',
-                    $c->father_name ?: ($c->mother_name ?: ($c->guardian_name ?: '-')),
-                    $c->parent_phone ?? '-',
-                    strtoupper($c->registration_status),
-                    $formStatus,
-                    $formNet,
-                    $formAdmin,
-                    $formGross,
-                    $gross,
-                    $discount,
-                    $net,
-                    $paidDSP,
-                    $remaining,
-                    $statusDSP
-                ]);
+        $rows = [];
+        $i = 1;
+        foreach ($data['channelStats'] as $ch) {
+            $rows[] = [
+                $i++,
+                $ch['name'],
+                (int) $ch['count'],
+                (float) $ch['net'],
+                (float) $ch['admin_fee'],
+                (float) $ch['gross'],
+            ];
+        }
+
+        return SimpleXlsxService::download($columns, $rows, $filename, 'Arus Kas & Saluran');
+    }
+
+    /**
+     * Tab 3: Export Receivables & Arrears (.xlsx)
+     */
+    protected function exportReceivablesXlsx(array $data, string $unitCode, string $periodLabel)
+    {
+        $filename = 'Buku-Rekapitulasi-Piutang-Murid-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.xlsx';
+
+        $columns = [
+            'No.',
+            'No. Registrasi',
+            'Nama Calon Murid',
+            'Unit Sekolah',
+            'Tingkat / Kelas',
+            'Gelombang',
+            'Jalur Masuk',
+            'Nama Orang Tua / Wali',
+            'No. WhatsApp Ortu',
+            'Tagihan DSP Bruto (Rp)',
+            'Diskon / Keringanan (Rp)',
+            'Tagihan DSP Netto (Rp)',
+            'Total Terbayar (Rp)',
+            'Sisa Piutang DSP (Rp)',
+            'Status Pelunasan DSP',
+            'Tahapan Registrasi',
+        ];
+
+        $rows = [];
+        $i = 1;
+        foreach ($data['sortedReceivables'] as $c) {
+            $gross = (float) $c->getGrossFee();
+            $discount = (float) $c->total_discount;
+            $net = (float) $c->net_fee;
+            $paidDSP = (float) $c->total_paid_final_fee;
+            $remaining = (float) $c->remaining_balance;
+
+            $statusDSP = 'BELUM BAYAR';
+            if ($c->is_dispensation) {
+                $statusDSP = 'DISPENSASI';
+            } elseif ($paidDSP > 0 && $remaining > 0) {
+                $statusDSP = 'CICILAN / SEBAGIAN';
             }
-            fclose($file);
-        };
 
-        return response()->stream($callback, 200, $headers);
+            $parentName = $c->guardian_name ?: ($c->father_name ?: ($c->mother_name ?: '-'));
+            $parentPhone = $c->parent_phone ?: ($c->father_phone ?: ($c->mother_phone ?: '-'));
+
+            $rows[] = [
+                $i++,
+                $c->id_label ?? '-',
+                $c->candidate_name ?? '-',
+                $c->unit->name ?? '-',
+                $c->grade->name ?? ($c->admission_level ?? '-'),
+                $c->wave->name ?? '-',
+                $c->type->name ?? '-',
+                $parentName,
+                $parentPhone,
+                $gross,
+                $discount,
+                $net,
+                $paidDSP,
+                $remaining,
+                $statusDSP,
+                strtoupper($c->registration_status ?? '-'),
+            ];
+        }
+
+        return SimpleXlsxService::download($columns, $rows, $filename, 'Buku Piutang');
     }
 }
