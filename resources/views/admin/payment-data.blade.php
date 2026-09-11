@@ -293,7 +293,8 @@
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5 text-center">No.</th>
-                        <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">ID & Calon Murid</th>
+                        <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">No. Registrasi</th>
+                        <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Calon Murid</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Rincian Komponen Biaya</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Diskon / Keringanan</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Kebijakan Cicilan</th>
@@ -330,37 +331,60 @@
                                 {{ ($registrations->currentPage() - 1) * $registrations->perPage() + $loop->iteration }}
                             </td>
 
-                            <!-- ID & Calon Murid -->
+                            <!-- No. Registrasi -->
                             <td class="border-b border-slate-200 dark:border-slate-700 px-4 py-4">
-                                <div class="flex items-start gap-2.5">
-                                    <div class="h-8 w-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5 border border-emerald-200 dark:border-emerald-800/60">
-                                        {{ strtoupper(substr($cand->candidate_name ?? 'S', 0, 1)) }}
-                                    </div>
-                                    <div>
-                                        <span class="font-extrabold text-slate-800 dark:text-white block text-[13px] leading-snug">
-                                            {{ $cand->candidate_name ?? 'Draft / Belum Isi' }}
-                                        </span>
-                                        <div class="flex items-center gap-1.5 mt-0.5">
-                                            <span class="font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-400 select-all">
-                                                {{ $cand->id_label }}
-                                            </span>
-                                            <span class="text-slate-300 dark:text-slate-600">•</span>
-                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                                                {{ $cand->unit->name ?? 'PAUD/TK' }}
-                                                @if(!empty($cand->admission_level))
-                                                    ({{ $cand->admission_level }})
-                                                @endif
-                                            </span>
-                                        </div>
-                                        @if($cand->is_dispensation)
-                                            <div class="mt-1">
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" title="Alasan: {{ $cand->dispensation_reason }}">
-                                                    <i data-lucide="award" class="w-3 h-3"></i> Diterima ({{ $cand->dispensation_reason }})
-                                                </span>
-                                            </div>
-                                        @endif
-                                    </div>
+                                <div class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    {{ $cand->id_label }}
                                 </div>
+                                @if($cand->created_at)
+                                    <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1 font-medium whitespace-nowrap">
+                                        <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i>
+                                        <span>{{ $cand->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- Calon Murid -->
+                            <td class="border-b border-slate-200 dark:border-slate-700 px-4 py-4">
+                                <div class="font-bold text-slate-800 dark:text-white text-xs">
+                                    {{ $cand->candidate_name ?? 'Draft / Belum Isi' }}
+                                </div>
+                                @php
+                                    $parentName = $cand->father_name 
+                                        ?: ($cand->mother_name 
+                                        ?: ($cand->guardian_name 
+                                        ?: ($cand->user->name ?? '-')));
+
+                                    $parentContact = $cand->parent_phone 
+                                        ?: ($cand->father_phone 
+                                        ?: ($cand->mother_phone 
+                                        ?: ($cand->guardian_phone 
+                                        ?: ($cand->getFieldValue('father_phone') 
+                                        ?: ($cand->getFieldValue('mother_phone') 
+                                        ?: ($cand->getFieldValue('guardian_phone') ?: null))))));
+                                @endphp
+                                <div class="text-xs text-slate-400 flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                                    <span>Ortu: {{ $parentName }}</span>
+                                    @if($parentContact)
+                                        <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                            <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>
+                                            <span>{{ $parentContact }}</span>
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                    {{ $cand->unit->name ?? 'PAUD/TK' }}
+                                    @if(!empty($cand->admission_level))
+                                        ({{ $cand->admission_level }})
+                                    @endif
+                                </div>
+                                @if($cand->is_dispensation)
+                                    <div class="mt-1">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" title="Alasan: {{ $cand->dispensation_reason }}">
+                                            <i data-lucide="award" class="w-3 h-3"></i> Diterima ({{ $cand->dispensation_reason }})
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
 
                             <!-- Rincian Komponen Biaya -->
@@ -523,7 +547,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-12 text-center text-slate-400">
+                            <td colspan="10" class="px-6 py-12 text-center text-slate-400">
                                 <div class="flex flex-col items-center justify-center gap-3">
                                     <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                                         <i data-lucide="inbox" class="w-6 h-6"></i>
