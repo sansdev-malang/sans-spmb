@@ -12,10 +12,9 @@
             <p class="text-xs text-slate-500 mt-1">Menampilkan data calon murid aktif yang telah menyelesaikan pembayaran biaya pendaftaran formulir Sekolah Anak Saleh.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <button type="button" onclick="showFeatureComingSoon('Ekspor Data Pendaftar (Excel)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <button type="button" id="btn-export-candidates-excel" onclick="exportCandidatesExcel(this)" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
                 <span>Ekspor Excel</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400 text-amber-950 shadow-2xs">Soon</span>
             </button>
             <button type="button" onclick="showFeatureComingSoon('Cetak Rekap Pendaftar (PDF)')" class="border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer">
                 <i data-lucide="printer" class="w-4 h-4 text-slate-400"></i>
@@ -624,9 +623,9 @@
 
                                         // Riwayat Transaksi Payments
                                         'payments' => $cand->payments->map(function($p) use ($cand) {
-                                            $catName = $p->payment_type === 'registration_fee' ? 'Formulir Pendaftaran' : 'Biaya Administrasi Masuk';
+                                            $catName = $p->payment_type === 'registration_fee' ? 'Enrollment Fee' : 'Biaya Administrasi Masuk';
                                             $feeName = $p->payment_type === 'registration_fee' 
-                                                ? ('Formulir Pendaftaran ' . ($cand->unit->name ?? ''))
+                                                ? ('Enrollment Fee ' . ($cand->unit->name ?? ''))
                                                 : (!empty($p->payment_info['selected_items']) 
                                                     ? collect($p->payment_info['selected_items'])->pluck('name')->join(', ')
                                                     : 'Biaya Masuk Murid Baru');
@@ -2061,5 +2060,45 @@
 
     };
 })();
+
+window.exportCandidatesExcel = function(btn) {
+    const form = document.getElementById('candidateFilterForm');
+    const baseUrl = "{{ route('admin.candidates.export') }}";
+    
+    // Read current parameters from URL search first
+    const params = new URLSearchParams(window.location.search);
+    
+    // Override/supplement with live form inputs in DOM
+    if (form) {
+        const formData = new FormData(form);
+        for (const [key, value] of formData.entries()) {
+            if (value !== null && value !== undefined && value.toString().trim() !== '' && key !== '_token') {
+                params.set(key, value.toString().trim());
+            } else {
+                params.delete(key);
+            }
+        }
+    }
+    
+    // Also ensure stage parameter from URL is kept if not in form
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('stage') && !params.has('stage')) {
+        params.set('stage', urlParams.get('stage'));
+    }
+    
+    if (btn) {
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengekspor...</span>';
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            if (window.lucide) window.lucide.createIcons();
+        }, 3000);
+    }
+    
+    const queryString = params.toString();
+    window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+};
 </script>
 @endsection

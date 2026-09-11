@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
 
         // Admin Candidate Management Pages
         Route::get('/admin/candidates', [AdminCandidateController::class, 'index'])->name('admin.candidates');
+        Route::get('/admin/candidates/export', [AdminCandidateController::class, 'export'])->name('admin.candidates.export');
         Route::post('/admin/candidates/{id}/installment-settings', [AdminDashboardController::class, 'updateInstallmentSettings'])->name('admin.candidates.installment-settings');
         Route::post('/admin/candidates/{id}/manual-accept', [AdminCandidateController::class, 'manualAccept'])->name('admin.candidates.manual-accept');
         Route::post('/admin/candidates/{id}/revert-manual-accept', [AdminCandidateController::class, 'revertManualAccept'])->name('admin.candidates.revert-manual-accept');

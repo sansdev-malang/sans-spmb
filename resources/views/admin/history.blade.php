@@ -396,9 +396,9 @@
 
                                         // Riwayat Transaksi Payments
                                         'payments' => $cand->payments->map(function($p) use ($cand) {
-                                            $catName = $p->payment_type === 'registration_fee' ? 'Formulir Pendaftaran' : 'Biaya Administrasi Masuk';
+                                            $catName = $p->payment_type === 'registration_fee' ? 'Enrollment Fee' : 'Biaya Administrasi Masuk';
                                             $feeName = $p->payment_type === 'registration_fee' 
-                                                ? ('Formulir Pendaftaran ' . ($cand->unit->name ?? ''))
+                                                ? ('Enrollment Fee ' . ($cand->unit->name ?? ''))
                                                 : (!empty($p->payment_info['selected_items']) 
                                                     ? collect($p->payment_info['selected_items'])->pluck('name')->join(', ')
                                                     : 'Biaya Masuk Murid Baru');
