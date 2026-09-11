@@ -12,6 +12,8 @@ use App\Models\SpmbFee;
 use App\Models\SpmbUnit;
 use App\Models\SpmbWave;
 use App\Models\SpmbPaymentChannel;
+use App\Services\SimpleXlsxService;
+use Illuminate\Support\Str;
 
 class AdminPaymentController extends Controller
 {
@@ -436,6 +438,369 @@ class AdminPaymentController extends Controller
             return response()->json(['success' => false, 'message' => $result['message']], 500);
         }
         return redirect()->back()->with('error', $result['message']);
+    }
+
+    /**
+     * Export filtered candidate billing and DSP fee data to Excel (.xlsx).
+     */
+    public function export(Request $request)
+    {
+        $selectedPeriodId = session('selected_period_id', function() {
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
+        });
+        
+        $query = Registration::scopedByAdmin()
+            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
+
+        // Search
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('candidate_name', 'like', "%{$search}%")
+                  ->orWhere('id', 'like', "%" . ltrim(preg_replace('/[^0-9]/', '', $search), '0') . "%")
+                  ->orWhere('parent_phone', 'like', "%{$search}%")
+                  ->orWhere('father_name', 'like', "%{$search}%")
+                  ->orWhere('mother_name', 'like', "%{$search}%")
+                  ->orWhereHas('payments', function($sq) use ($search) {
+                      $sq->where('invoice_number', 'like', "%{$search}%")
+                        ->orWhere('reference_id', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter Unit
+        if ($request->filled('unit_id')) {
+            $query->where('spmb_unit_id', $request->unit_id);
+        }
+
+        // Filter Wave
+        if ($request->filled('wave_id')) {
+            $query->where('spmb_wave_id', $request->wave_id);
+        }
+
+        // Filter Discount Mode
+        if ($request->filled('discount_mode')) {
+            $query->where('discount_mode', $request->discount_mode);
+        }
+
+        // Filter Installment Mode
+        if ($request->filled('installment_mode')) {
+            $query->where('installment_mode', $request->installment_mode);
+        }
+
+        $allCands = (clone $query)->get();
+
+        // Filter Status Tab
+        if ($request->filled('status')) {
+            $st = $request->status;
+            if ($st === 'lunas') {
+                $candIds = $allCands->filter(fn($c) => $c->remaining_balance <= 0 && $c->net_fee > 0 && $c->total_paid_final_fee > 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'sebagian') {
+                $candIds = $allCands->filter(fn($c) => $c->total_paid_final_fee > 0 && $c->remaining_balance > 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'belum_bayar') {
+                $candIds = $allCands->filter(fn($c) => $c->total_paid_final_fee <= 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'diskon') {
+                $candIds = $allCands->filter(fn($c) => $c->total_discount > 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'cicilan') {
+                $query->whereIn('installment_mode', ['all', 'selective']);
+            }
+        }
+
+        $registrations = $query->orderBy('created_at', 'desc')->get();
+
+        $unitCode = 'ALL';
+        if ($request->filled('unit_id')) {
+            $u = SpmbUnit::find($request->unit_id);
+            if ($u) $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+        } elseif (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $u = SpmbUnit::find(auth()->user()->spmb_unit_id);
+            if ($u) $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+        }
+
+        $period = SpmbPeriod::find($selectedPeriodId);
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $filename = 'Data-Rincian-Tagihan-DSP-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.xlsx';
+
+        $tuitionFeeLabel = SpmbFeeCategory::getTuitionCategoryName();
+
+        $columns = [
+            'No.',
+            'No. Registrasi',
+            'Tanggal Masuk',
+            'Tahun Ajaran',
+            'Unit Sekolah',
+            'Tingkat / Kelas',
+            'Gelombang',
+            'Jalur Masuk',
+            'Program Kelas',
+            'Layanan Tambahan',
+            'Nama Lengkap Siswa',
+            'Jenis Kelamin',
+            'Nama Orang Tua / Wali',
+            'No. WhatsApp Orang Tua',
+            'Rincian Komponen Biaya DSP',
+            'Total Tagihan ' . $tuitionFeeLabel . ' Bruto (Rp)',
+            'Diskon / Keringanan (Rp)',
+            'Keterangan / Alasan Diskon',
+            'Total Tagihan ' . $tuitionFeeLabel . ' Netto (Rp)',
+            'Total ' . $tuitionFeeLabel . ' Terbayar (Rp)',
+            'Sisa Piutang ' . $tuitionFeeLabel . ' (Rp)',
+            'Persentase Pelunasan (%)',
+            'Status Pelunasan ' . $tuitionFeeLabel,
+            'Kebijakan Cicilan',
+            'Tahapan Registrasi',
+        ];
+
+        $rows = [];
+        $i = 1;
+        foreach ($registrations as $c) {
+            $gross = $c->getGrossFee();
+            $discount = $c->total_discount;
+            $net = $c->net_fee;
+            $paid = $c->total_paid_final_fee;
+            $remaining = $c->remaining_balance;
+            $percent = $net > 0 ? round(($paid / $net) * 100, 1) : 0;
+
+            $statusText = 'BELUM BAYAR';
+            if ($c->is_dispensation) {
+                $statusText = 'DISPENSASI';
+            } elseif ($remaining <= 0 && $net > 0 && $paid > 0) {
+                $statusText = 'LUNAS';
+            } elseif ($paid > 0 && $remaining > 0) {
+                $statusText = 'SEBAGIAN / CICILAN';
+            }
+
+            $installmentPolicy = match($c->installment_mode) {
+                'all' => 'Cicil Semua Komponen',
+                'selective' => 'Cicil Komponen Tertentu',
+                default => 'Non-Cicil (Sekaligus)'
+            };
+
+            $genderLabel = '-';
+            if ($c->gender) {
+                $g = strtolower($c->gender);
+                if (in_array($g, ['l', 'male', 'laki-laki'])) {
+                    $genderLabel = 'Laki-laki';
+                } elseif (in_array($g, ['p', 'female', 'perempuan'])) {
+                    $genderLabel = 'Perempuan';
+                } else {
+                    $genderLabel = $c->gender;
+                }
+            }
+
+            $stageLabel = match($c->registration_status) {
+                'completed' => 'DITERIMA',
+                'agreement_signed' => 'ADMINISTRASI',
+                'taaruf_completed' => 'PERSETUJUAN',
+                default => strtoupper($c->registration_status ?? '-')
+            };
+
+            $parentName = $c->guardian_name ?: ($c->father_name ?: ($c->mother_name ?: '-'));
+            $parentPhone = $c->parent_phone ?: ($c->father_phone ?: ($c->mother_phone ?: '-'));
+
+            // Build consolidated fee components text
+            $feeData = $c->getFinalFeeDetails();
+            $feeLines = [];
+            foreach ($feeData['items'] as $item) {
+                $itemPaid = $c->getItemPaidAmount($item['name'], $item['id'] ?? null);
+                $isItemPaid = ($itemPaid >= $item['amount'] && $item['amount'] > 0);
+                
+                $statusBadge = '';
+                if ($isItemPaid) {
+                    $statusBadge = ' (LUNAS)';
+                } elseif ($itemPaid > 0) {
+                    $statusBadge = ' (Dicicil: Rp ' . number_format($itemPaid, 0, ',', '.') . ')';
+                }
+
+                $feeLines[] = '• ' . $item['name'] . ': Rp ' . number_format($item['amount'], 0, ',', '.') . $statusBadge;
+            }
+            $feeComponentsText = !empty($feeLines) ? implode("\n", $feeLines) : '-';
+
+            $row = [
+                $i++,
+                $c->id_label ?? '-',
+                $c->created_at ? $c->created_at->format('d/m/Y H:i') : '-',
+                $c->period->name ?? ($c->period->year ?? '-'),
+                $c->unit->name ?? '-',
+                $c->grade->name ?? ($c->admission_level ?? '-'),
+                $c->wave->name ?? '-',
+                $c->type->name ?? '-',
+                $c->classProgram->name ?? ($c->class_program ?? 'Reguler'),
+                $c->extraServices->pluck('name')->implode(', ') ?: '-',
+                $c->candidate_name ?? '-',
+                $genderLabel,
+                $parentName,
+                $parentPhone,
+                $feeComponentsText,
+                $gross,
+                $discount,
+                $c->discount_reason ?: '-',
+                $net,
+                $paid,
+                $remaining,
+                $percent . '%',
+                $statusText,
+                $installmentPolicy,
+                $stageLabel,
+            ];
+
+            $rows[] = $row;
+        }
+
+        return SimpleXlsxService::download($columns, $rows, $filename, 'Tagihan & DSP Murid');
+    }
+
+    /**
+     * Export / Print filtered candidate billing and DSP fee data to PDF (A4 Landscape).
+     */
+    public function exportPdf(Request $request)
+    {
+        $selectedPeriodId = session('selected_period_id', function() {
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
+        });
+        
+        $query = Registration::scopedByAdmin()
+            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
+
+        // Base stats query
+        $baseStatsQuery = (clone $query);
+        if ($request->filled('unit_id')) {
+            $baseStatsQuery->where('spmb_unit_id', $request->unit_id);
+        }
+
+        $allCands = (clone $baseStatsQuery)->get();
+        $totalCandidates = $allCands->count();
+        $totalGross = $allCands->sum(fn($c) => $c->getGrossFee());
+        $totalDiscount = $allCands->sum(fn($c) => $c->total_discount);
+        $totalNet = $allCands->sum(fn($c) => $c->net_fee);
+        $totalPaid = $allCands->sum(fn($c) => $c->total_paid_final_fee);
+        $totalRemaining = $allCands->sum(fn($c) => $c->remaining_balance);
+        
+        $totalLunas = $allCands->filter(fn($c) => $c->remaining_balance <= 0 && $c->net_fee > 0 && $c->total_paid_final_fee > 0)->count();
+        $totalSebagian = $allCands->filter(fn($c) => $c->total_paid_final_fee > 0 && $c->remaining_balance > 0)->count();
+        $totalBelumBayar = $allCands->filter(fn($c) => $c->total_paid_final_fee <= 0)->count();
+        $totalDiskon = $allCands->filter(fn($c) => $c->total_discount > 0)->count();
+        $totalCicilan = $allCands->filter(fn($c) => in_array($c->installment_mode, ['all', 'selective']))->count();
+
+        $stats = [
+            'candidate_count' => $totalCandidates,
+            'gross_revenue' => $totalGross,
+            'discount_sum' => $totalDiscount,
+            'net_revenue' => $totalNet,
+            'paid_sum' => $totalPaid,
+            'remaining_sum' => $totalRemaining,
+            'lunas_count' => $totalLunas,
+            'sebagian_count' => $totalSebagian,
+            'belum_bayar_count' => $totalBelumBayar,
+            'diskon_count' => $totalDiskon,
+            'cicilan_count' => $totalCicilan,
+        ];
+
+        // Search
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('candidate_name', 'like', "%{$search}%")
+                  ->orWhere('id', 'like', "%" . ltrim(preg_replace('/[^0-9]/', '', $search), '0') . "%")
+                  ->orWhere('parent_phone', 'like', "%{$search}%")
+                  ->orWhere('father_name', 'like', "%{$search}%")
+                  ->orWhere('mother_name', 'like', "%{$search}%")
+                  ->orWhereHas('payments', function($sq) use ($search) {
+                      $sq->where('invoice_number', 'like', "%{$search}%")
+                        ->orWhere('reference_id', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter Unit
+        if ($request->filled('unit_id')) {
+            $query->where('spmb_unit_id', $request->unit_id);
+        }
+
+        // Quick Status Tabs Filter
+        if ($request->filled('status')) {
+            $st = $request->status;
+            if ($st === 'lunas') {
+                $candIds = $allCands->filter(fn($c) => $c->remaining_balance <= 0 && $c->net_fee > 0 && $c->total_paid_final_fee > 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'sebagian') {
+                $candIds = $allCands->filter(fn($c) => $c->total_paid_final_fee > 0 && $c->remaining_balance > 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'belum_bayar') {
+                $candIds = $allCands->filter(fn($c) => $c->total_paid_final_fee <= 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'diskon') {
+                $candIds = $allCands->filter(fn($c) => $c->total_discount > 0)->pluck('id');
+                $query->whereIn('id', $candIds);
+            } elseif ($st === 'cicilan') {
+                $query->whereIn('installment_mode', ['all', 'selective']);
+            }
+        }
+
+        // Filter Wave
+        if ($request->filled('wave_id')) {
+            $query->where('spmb_wave_id', $request->wave_id);
+        }
+
+        // Filter Discount Mode
+        if ($request->filled('discount_mode')) {
+            $query->where('discount_mode', $request->discount_mode);
+        }
+
+        // Filter Installment Mode
+        if ($request->filled('installment_mode')) {
+            $query->where('installment_mode', $request->installment_mode);
+        }
+
+        $registrations = $query->orderBy('created_at', 'desc')->get();
+
+        $unitCode = 'ALL';
+        $unitFilterLabel = 'Semua Jenjang / Unit';
+        if ($request->filled('unit_id')) {
+            $u = SpmbUnit::find($request->unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        } elseif (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $u = SpmbUnit::find(auth()->user()->spmb_unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        }
+
+        $period = SpmbPeriod::find($selectedPeriodId);
+        $periodName = $period ? ($period->name ?? $period->year) : 'SPMB';
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $filename = 'Laporan-Tagihan-DSP-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.pdf';
+
+        $printedAt = now()->translatedFormat('d F Y, H:i') . ' WIB';
+        $printedBy = auth()->user()->name ?? 'Administrator';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.payment-data-pdf', compact(
+            'registrations',
+            'stats',
+            'periodName',
+            'unitFilterLabel',
+            'printedAt',
+            'printedBy'
+        ))->setPaper('a4', 'landscape');
+
+        return response()->make($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }
 

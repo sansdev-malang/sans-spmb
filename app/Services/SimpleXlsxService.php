@@ -93,10 +93,10 @@ class SimpleXlsxService
             '<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>' .
             '</cellStyleXfs>' .
             '<cellXfs count="4">' .
-            '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0"/>' . // 0: Default
+            '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyAlignment="1"><alignment vertical="top"/></xf>' . // 0: Default
             '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' . // 1: Header
-            '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' . // 2: Text format (@)
-            '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' . // 3: Integer currency format (#,##0)
+            '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' . // 2: Text format (@)
+            '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="right"/></xf>' . // 3: Integer currency format (#,##0)
             '</cellXfs>' .
             '<cellStyles count="1">' .
             '<cellStyle name="Normal" xfId="0" builtinId="0"/>' .
@@ -112,6 +112,27 @@ class SimpleXlsxService
         $lastColLetter = self::columnLetter($numCols);
         $dimension = "A1:{$lastColLetter}{$numRows}";
 
+        // Calculate approximate column widths
+        $colWidths = [];
+        foreach ($headers as $cIdx => $h) {
+            $colWidths[$cIdx] = min(max(mb_strlen((string)$h, 'UTF-8') + 3, 10), 50);
+        }
+        foreach ($rows as $row) {
+            foreach ($row as $cIdx => $val) {
+                if (isset($colWidths[$cIdx])) {
+                    $lines = explode("\n", (string)$val);
+                    $longestLine = 0;
+                    foreach ($lines as $line) {
+                        $longestLine = max($longestLine, mb_strlen($line, 'UTF-8'));
+                    }
+                    $w = min(max($longestLine + 3, 10), 50);
+                    if ($w > $colWidths[$cIdx]) {
+                        $colWidths[$cIdx] = $w;
+                    }
+                }
+            }
+        }
+
         $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
             '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' .
             '<dimension ref="' . $dimension . '"/>' .
@@ -122,10 +143,17 @@ class SimpleXlsxService
             '</sheetView>' .
             '</sheetViews>' .
             '<sheetFormatPr defaultRowHeight="18"/>' .
-            '<sheetData>';
+            '<cols>';
+
+        foreach ($colWidths as $cIdx => $w) {
+            $colNum = $cIdx + 1;
+            $sheetXml .= '<col min="' . $colNum . '" max="' . $colNum . '" width="' . $w . '" customWidth="1"/>';
+        }
+
+        $sheetXml .= '</cols><sheetData>';
 
         // Header Row
-        $sheetXml .= '<row r="1" ht="26" customHeight="1">';
+        $sheetXml .= '<row r="1" ht="28" customHeight="1">';
         foreach ($headers as $colIdx => $head) {
             $cellRef = self::columnLetter($colIdx + 1) . '1';
             $cleanHead = self::cleanXmlString((string)$head);
@@ -136,10 +164,20 @@ class SimpleXlsxService
         // Data Rows
         $rowNum = 2;
         foreach ($rows as $row) {
-            $sheetXml .= '<row r="' . $rowNum . '" ht="20" customHeight="1">';
+            // Count maximum lines in this row to set row height
+            $maxLines = 1;
+            foreach ($row as $val) {
+                if (is_string($val) && str_contains($val, "\n")) {
+                    $maxLines = max($maxLines, count(explode("\n", $val)));
+                }
+            }
+            $rowHeight = ($maxLines > 1) ? ($maxLines * 16 + 6) : 20;
+
+            $sheetXml .= '<row r="' . $rowNum . '" ht="' . $rowHeight . '" customHeight="1">';
             foreach ($row as $colIdx => $val) {
                 $cellRef = self::columnLetter($colIdx + 1) . $rowNum;
-                if (is_numeric($val) && !str_starts_with((string)$val, '0') && strlen((string)$val) < 12) {
+                $isNumeric = is_numeric($val) && (($val === 0 || $val === '0' || $val === 0.0) || (!str_starts_with((string)$val, '0') && strlen((string)$val) < 12));
+                if ($isNumeric) {
                     $sheetXml .= '<c r="' . $cellRef . '" s="3"><v>' . $val . '</v></c>';
                 } else {
                     $valStr = (string)$val;
@@ -147,7 +185,8 @@ class SimpleXlsxService
                         $valStr = substr($valStr, 1);
                     }
                     $cleanVal = self::cleanXmlString($valStr);
-                    $sheetXml .= '<c r="' . $cellRef . '" s="2" t="inlineStr"><is><t>' . $cleanVal . '</t></is></c>';
+                    $preserveSpace = str_contains($valStr, "\n") ? ' xml:space="preserve"' : '';
+                    $sheetXml .= '<c r="' . $cellRef . '" s="2" t="inlineStr"><is><t' . $preserveSpace . '>' . $cleanVal . '</t></is></c>';
                 }
             }
             $sheetXml .= '</row>';

@@ -15,15 +15,14 @@
                 Pusat pengelolaan tagihan pendaftaran, rincian biaya masuk, persetujuan keringanan/diskon, dan kebijakan cicilan calon murid.
             </p>
         </div>
-        <div class="flex gap-2 items-center">
-            <button type="button" onclick="location.reload()" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer" title="Refresh Data">
-                <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-200"></i>
-                <span>Refresh</span>
-            </button>
-            <button type="button" onclick="showFeatureComingSoon('Ekspor Data Pembayaran (CSV)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+        <div class="flex flex-wrap gap-2 items-center">
+            <button type="button" id="btn-export-payments-excel" onclick="exportPaymentsExcel(this)" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
-                <span>Ekspor CSV</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400 text-amber-950 shadow-2xs">Soon</span>
+                <span>Ekspor Excel</span>
+            </button>
+            <button type="button" id="btn-export-payments-pdf" onclick="exportPaymentsPdf(this)" class="border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs">
+                <i data-lucide="file-text" class="w-4 h-4 text-rose-500 dark:text-rose-400"></i>
+                <span>Ekspor PDF</span>
             </button>
         </div>
     </div>
@@ -1800,5 +1799,79 @@
         document.getElementById('transactions-modal').classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     }
+
+    window.exportPaymentsExcel = function(btn) {
+        const form = document.getElementById('paymentFilterForm');
+        const baseUrl = "{{ route('admin.payments.data.export') }}";
+        
+        const params = new URLSearchParams(window.location.search);
+        
+        if (form) {
+            const formData = new FormData(form);
+            for (const [key, value] of formData.entries()) {
+                if (value !== null && value !== undefined && value.toString().trim() !== '' && key !== '_token') {
+                    params.set(key, value.toString().trim());
+                } else {
+                    params.delete(key);
+                }
+            }
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('status') && !params.has('status')) {
+            params.set('status', urlParams.get('status'));
+        }
+        
+        if (btn) {
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengekspor...</span>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }, 3000);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+    };
+
+    window.exportPaymentsPdf = function(btn) {
+        const form = document.getElementById('paymentFilterForm');
+        const baseUrl = "{{ route('admin.payments.data.export-pdf') }}";
+        
+        const params = new URLSearchParams(window.location.search);
+        
+        if (form) {
+            const formData = new FormData(form);
+            for (const [key, value] of formData.entries()) {
+                if (value !== null && value !== undefined && value.toString().trim() !== '' && key !== '_token') {
+                    params.set(key, value.toString().trim());
+                } else {
+                    params.delete(key);
+                }
+            }
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('status') && !params.has('status')) {
+            params.set('status', urlParams.get('status'));
+        }
+        
+        if (btn) {
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-slate-600 dark:text-slate-300 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengekspor PDF...</span>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }, 3000);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+    };
 </script>
 @endsection

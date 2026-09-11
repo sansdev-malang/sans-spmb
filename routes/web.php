@@ -114,6 +114,8 @@ Route::middleware('auth')->group(function () {
 
         // Admin Billing & Payment Transaction Pages
         Route::get('/admin/payments/data', [AdminPaymentController::class, 'data'])->name('admin.payments.data');
+        Route::get('/admin/payments/data/export', [AdminPaymentController::class, 'export'])->name('admin.payments.data.export');
+        Route::get('/admin/payments/data/export-pdf', [AdminPaymentController::class, 'exportPdf'])->name('admin.payments.data.export-pdf');
         Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
         Route::post('/admin/payments/sync-pending', [AdminPaymentController::class, 'syncPending'])->name('admin.payments.sync-pending');
         Route::post('/admin/payments/{id}/check-status', [AdminPaymentController::class, 'checkStatus'])->name('admin.payments.check-status');
