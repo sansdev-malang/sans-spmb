@@ -277,28 +277,28 @@
                                     {{ $reg->registration_status === 'draft' ? 'Draft Formulir' : str_replace('_', ' ', $reg->registration_status) }}
                                 </span>
                             </td>
-                            <td class="py-4 px-6 text-right">
-                                <div class="flex justify-end items-center gap-1.5 flex-wrap">
+                            <td class="py-4 px-6 text-right whitespace-nowrap">
+                                <div class="inline-flex justify-end items-center gap-1.5">
                                     @if ($reg->registration_status === 'submitted')
                                         <!-- Verifikasi Modal Trigger -->
                                         <button type="button" 
                                              onclick="openCandidateDetailModal({{ json_encode($candJson) }}, true, {{ $reg->id }})" 
-                                            class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+                                             class="h-8 bg-blue-600 hover:bg-blue-700 text-white px-3 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
                                             <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-yellow"></i> Verifikasi Data
                                         </button>
                                     @else
                                         <!-- Detail Modal Trigger -->
                                         <button type="button" 
                                             onclick="openCandidateDetailModal({{ json_encode($candJson) }}, false)" 
-                                            class="bg-slate-600 hover:bg-slate-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1">
-                                            <i data-lucide="eye" class="w-3 h-3"></i> Detail
+                                            class="h-8 bg-slate-600 hover:bg-slate-700 text-white px-2.5 rounded-xl text-xs font-bold shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+                                            <i data-lucide="eye" class="w-3.5 h-3.5"></i> Detail
                                         </button>
                                     @endif
  
                                     @if ($reg->registration_status === 'verified')
                                         @if(!$reg->observation_date)
                                             <!-- Belum dijadwalkan: Tampilkan tombol Atur Jadwal Ta'aruf -->
-                                            <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" class="bg-brand-emerald hover-emerald text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1" title="Atur Jadwal Ta'aruf">
+                                            <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" class="h-8 bg-brand-emerald hover-emerald text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" title="Atur Jadwal Ta'aruf">
                                                 <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
                                                 <span>Jadwal Ta'aruf</span>
                                             </a>
@@ -314,7 +314,7 @@
                                                     formAction: '{{ route('admin.registrations.complete-taaruf', $reg->id) }}',
                                                     formMethod: 'POST'
                                                 })" 
-                                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1 cursor-pointer" 
+                                                class="h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" 
                                                 title="Selesaikan Sesi Ta'aruf">
                                                 <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
                                                 <span>Selesaikan Ta'aruf</span>
