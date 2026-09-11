@@ -1267,12 +1267,23 @@
             const toast = document.createElement('div');
             toast.className = `flex items-center gap-3 bg-white dark:bg-slate-900 text-xs font-bold px-4 py-3 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm`;
             
-            let iconColor = type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
-            let iconName = type === 'success' ? 'check-circle' : 'alert-circle';
+            let iconColor = 'text-emerald-600 dark:text-emerald-400';
+            let iconName = 'check-circle';
+
+            if (type === 'error' || type === 'danger') {
+                iconColor = 'text-red-600 dark:text-red-400';
+                iconName = 'alert-circle';
+            } else if (type === 'warning') {
+                iconColor = 'text-amber-500 dark:text-amber-400';
+                iconName = 'alert-triangle';
+            } else if (type === 'info') {
+                iconColor = 'text-blue-500 dark:text-blue-400';
+                iconName = 'info';
+            }
             
             toast.innerHTML = `
                 <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} flex-shrink-0"></i>
-                <span class="text-slate-700 dark:text-slate-200 flex-grow">${message}</span>
+                <span class="text-slate-700 dark:text-slate-200 flex-grow leading-relaxed">${message}</span>
                 <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5">&times;</button>
             `;
             
@@ -1291,7 +1302,7 @@
                 setTimeout(() => {
                     toast.remove();
                 }, 300);
-            }, 2000);
+            }, 3500);
         }
 
         // Coming Soon Feature Notifier
@@ -1483,6 +1494,14 @@
 
             @if(session('success'))
                 showToast("{{ session('success') }}", 'success');
+            @endif
+
+            @if(session('info'))
+                showToast("{{ session('info') }}", 'info');
+            @endif
+
+            @if(session('warning'))
+                showToast("{{ session('warning') }}", 'warning');
             @endif
             
             @if(session('error'))
