@@ -402,7 +402,7 @@
                         <th class="py-4 px-6 text-center w-12">No.</th>
                         <th class="py-4 px-6">No. Registrasi</th>
                         <th class="py-4 px-6">Calon Murid</th>
-                        <th class="py-4 px-6">Tingkat</th>
+                        <th class="py-4 px-6">Unit & Jenjang</th>
                         <th class="py-4 px-6">Tahapan Pendaftaran</th>
                         <th class="py-4 px-6 text-center">Aksi</th>
                     </tr>
@@ -521,15 +521,10 @@
                                     @endif
                                 </div>
                             </td>
+                            <!-- Unit & Jenjang -->
                             <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $cand->admission_level }}</div>
-                                <div class="mt-0.5">
-                                    @if($cand->classProgram && $cand->classProgram->name === 'Inklusi')
-                                        <span class="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-xs font-bold border border-indigo-200">Inklusi</span>
-                                    @else
-                                        <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs font-bold border border-slate-200">Reguler</span>
-                                    @endif
-                                </div>
+                                <span class="font-bold text-slate-800 dark:text-white block text-xs">{{ $cand->unit?->name }}</span>
+                                <span class="text-[11px] text-slate-400 dark:text-slate-500">{{ $cand->grade?->name ?: ($cand->admission_level ?? '-') }} ({{ $cand->classProgram?->name ?? 'Reguler' }})</span>
                             </td>
                             <td class="py-4 px-6">
                                 <span class="px-2 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
