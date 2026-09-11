@@ -195,11 +195,11 @@
 
         <script>
             function resetAdvancedFilters(form) {
-                form.querySelector('input[name=start_date]').value = '';
-                form.querySelector('input[name=end_date]').value = '';
-                form.querySelector('select[name=method]').value = '';
-                form.querySelector('select[name=category_id]').value = '';
-                form.querySelector('select[name=fee_id]').value = '';
+                const fields = ['start_date', 'end_date', 'wave_id', 'method', 'category_id', 'fee_id'];
+                fields.forEach(name => {
+                    const el = form.querySelector(`[name="${name}"]`);
+                    if (el) el.value = '';
+                });
                 form.submit();
             }
         </script>
