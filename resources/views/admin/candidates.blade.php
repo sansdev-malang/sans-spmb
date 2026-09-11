@@ -400,8 +400,8 @@
                 <thead>
                     <tr class="border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
-                        <th class="py-4 px-6">ID Pendaftaran</th>
-                        <th class="py-4 px-6">Nama Lengkap</th>
+                        <th class="py-4 px-6">No. Registrasi</th>
+                        <th class="py-4 px-6">Calon Murid</th>
                         <th class="py-4 px-6">Tingkat</th>
                         <th class="py-4 px-6">Tahapan Pendaftaran</th>
                         <th class="py-4 px-6">Tanggal Pendaftaran</th>
@@ -485,11 +485,42 @@
                             <td class="py-4 px-6 text-center text-slate-500 font-bold text-xs">
                                 {{ ($candidates->currentPage() - 1) * $candidates->perPage() + $loop->iteration }}
                             </td>
-                            <td class="py-4 px-6 font-mono text-xs text-slate-500">
-                                SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}
+                            <td class="py-4 px-6">
+                                <div class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}
+                                </div>
+                                @if($cand->created_at)
+                                    <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1 font-medium whitespace-nowrap">
+                                        <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i>
+                                        <span>{{ $cand->created_at->translatedFormat('d M Y, H:i') }} WIB</span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="py-4 px-6">
-                                <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $cand->candidate_name }}</div>
+                                <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $cand->candidate_name ?? 'Draft' }}</div>
+                                @php
+                                    $parentName = $cand->father_name 
+                                        ?: ($cand->mother_name 
+                                        ?: ($cand->guardian_name 
+                                        ?: ($cand->user->name ?? '-')));
+
+                                    $parentContact = $cand->parent_phone 
+                                        ?: ($cand->father_phone 
+                                        ?: ($cand->mother_phone 
+                                        ?: ($cand->guardian_phone 
+                                        ?: ($cand->getFieldValue('father_phone') 
+                                        ?: ($cand->getFieldValue('mother_phone') 
+                                        ?: ($cand->getFieldValue('guardian_phone') ?: null))))));
+                                @endphp
+                                <div class="text-xs text-slate-400 flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                                    <span>Ortu: {{ $parentName }}</span>
+                                    @if($parentContact)
+                                        <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                            <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>
+                                            <span>{{ $parentContact }}</span>
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-4 px-6">
                                 <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $cand->admission_level }}</div>

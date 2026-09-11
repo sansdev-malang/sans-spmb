@@ -181,8 +181,8 @@
                 <thead>
                     <tr class="border-b border-slate-100 text-xs text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                         <th class="py-4 px-6 text-center w-12">No.</th>
-                        <th class="py-4 px-6">ID Pendaftaran</th>
-                        <th class="py-4 px-6">Nama Lengkap</th>
+                        <th class="py-4 px-6">No. Registrasi</th>
+                        <th class="py-4 px-6">Calon Murid</th>
                         <th class="py-4 px-6">Tingkat</th>
                         <th class="py-4 px-6">Tahapan Pendaftaran</th>
                         <th class="py-4 px-6">Tanggal Pendaftaran</th>
@@ -278,8 +278,30 @@
                                 @endif
                             </td>
                             <td class="py-4 px-6">
-                                <div class="font-bold text-xs text-slate-800 dark:text-white">{{ $cand->candidate_name }}</div>
-                                <div class="text-xs text-slate-400 dark:text-slate-500">WA: {{ $cand->parent_phone ?: '-' }}</div>
+                                <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $cand->candidate_name ?? 'Draft' }}</div>
+                                @php
+                                    $parentName = $cand->father_name 
+                                        ?: ($cand->mother_name 
+                                        ?: ($cand->guardian_name 
+                                        ?: ($cand->user->name ?? '-')));
+
+                                    $parentContact = $cand->parent_phone 
+                                        ?: ($cand->father_phone 
+                                        ?: ($cand->mother_phone 
+                                        ?: ($cand->guardian_phone 
+                                        ?: ($cand->getFieldValue('father_phone') 
+                                        ?: ($cand->getFieldValue('mother_phone') 
+                                        ?: ($cand->getFieldValue('guardian_phone') ?: null))))));
+                                @endphp
+                                <div class="text-xs text-slate-400 flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                                    <span>Ortu: {{ $parentName }}</span>
+                                    @if($parentContact)
+                                        <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                            <i data-lucide="phone" class="w-3 h-3 text-emerald-500"></i>
+                                            <span>{{ $parentContact }}</span>
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-4 px-6 font-semibold text-brand-emerald">
                                 <span class="text-xs uppercase">{{ $cand->admission_level }}</span>
