@@ -723,20 +723,8 @@ class WinpayService implements PaymentGatewayInterface
                     'contractId' => (string) $contractId
                 ])
             ];
-        } elseif ($isRetail) {
-            // 5. Tangani Pembatalan Retail / OTC (Alfamart / Indomaret):
-            // Kode bayar retail di Winpay tidak memiliki endpoint delete manual dan akan kedaluwarsa otomatis.
-            Log::info("Winpay cancelPayment bypassed for Modern Retail (auto-expires on gateway)", [
-                'invoice' => $invoiceNo,
-                'channel' => $channel
-            ]);
-            return [
-                'success' => true,
-                'message' => 'Tagihan retail berhasil dibatalkan di sistem.',
-                'data' => null
-            ];
         } else {
-            // 6. Tangani Pembatalan Virtual Account Bank (DELETE /v1.0/transfer-va/delete-va - Service Code: 31)
+            // 5. Tangani Pembatalan Virtual Account (VA) & Modern Retail (DELETE /v1.0/transfer-va/delete-va - Service Code: 31)
             $endpoint = '/v1.0/transfer-va/delete-va';
             $httpMethod = 'DELETE';
 
@@ -747,14 +735,16 @@ class WinpayService implements PaymentGatewayInterface
                 ?? ($paymentInfo['payCode'] ?? '')))
             );
 
+            $channelCode = $channel ?: 'MANDIRI';
+            if ($channelCode === 'ALFA') $channelCode = 'ALFAMART';
+            if ($channelCode === 'INDO') $channelCode = 'INDOMARET';
+
             $body = [
-                'partnerServiceId' => (string) ($this->merchantId ?: '90341'),
-                'customerNo' => (string) ($paymentInfo['customerNo'] ?? ($paymentInfo['phone'] ?? $invoiceNo)),
                 'virtualAccountNo' => $vaNo,
                 'trxId' => $invoiceNo,
                 'additionalInfo' => array_filter([
                     'contractId' => (string) $contractId,
-                    'channel' => $channel ?: 'MANDIRI'
+                    'channel' => $channelCode
                 ])
             ];
         }
@@ -763,18 +753,17 @@ class WinpayService implements PaymentGatewayInterface
         $signature = $this->generateAsymmetricSignature($httpMethod, $endpoint, $body, $timestamp);
 
         try {
-            $request = Http::timeout(20)->withHeaders([
+            // Penting: Gunakan send() dengan opsi ['json' => $body] agar HTTP DELETE mengirimkan JSON request body (bukan query string)
+            $response = Http::timeout(20)->withHeaders([
                 'X-SIGNATURE' => $signature,
                 'X-TIMESTAMP' => $timestamp,
                 'X-PARTNER-ID' => $this->clientKey,
                 'X-EXTERNAL-ID' => $invoiceNo,
                 'CHANNEL-ID' => 'WEB',
                 'Content-Type' => 'application/json',
+            ])->send($httpMethod, $this->baseUrl . $endpoint, [
+                'json' => $body
             ]);
-
-            $response = ($httpMethod === 'POST')
-                ? $request->post($this->baseUrl . $endpoint, $body)
-                : $request->delete($this->baseUrl . $endpoint, $body);
 
             if ($response->successful()) {
                 Log::info("Winpay {$httpMethod} {$endpoint} SUCCESS", [
