@@ -1795,7 +1795,7 @@
     // =========================================================================
     // JAVASCRIPT HANDLERS FOR CANDIDATE DISPENSATION MODAL
     // =========================================================================
-    let currentCandDisp = null;
+    var currentCandDisp = window.currentCandDisp || null;
 
     window.openCandidateDispensationModal = function(cand) {
         currentCandDisp = cand;

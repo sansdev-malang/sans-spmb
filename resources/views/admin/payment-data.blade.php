@@ -821,8 +821,9 @@
 <!-- JAVASCRIPT CONTROLLERS FOR DATA PEMBAYARAN & MODALS                      -->
 <!-- ========================================================================= -->
 <script>
-    let currentCandidate = null;
-    let currentFeeDetails = null;
+    var currentCandidate = window.currentCandidate || null;
+    var currentFeeDetails = window.currentFeeDetails || null;
+    var candidatesDataMap = window.candidatesDataMap || {};
 
     // Auto-clean any contaminated URL query string from previous accidental GET submissions
     if (window.location.search.includes('registration_id=')) {
@@ -844,8 +845,6 @@
             closeTransactionsModal();
         }
     });
-
-    const candidatesDataMap = {};
 
     function openPolicyModal(cand, feeDetails) {
         document.body.classList.add('overflow-hidden');
