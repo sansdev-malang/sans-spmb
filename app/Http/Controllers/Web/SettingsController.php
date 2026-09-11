@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Setting;
 use App\Models\SpmbPaymentChannel;
+use App\Models\SpmbTestimonial;
 use App\Services\WinpayService;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
@@ -406,11 +408,26 @@ class SettingsController extends Controller
 
         $defaultTab = $isSuperAdmin ? 'global' : ('unit-' . strtolower($units->first()->code));
         $activeTab = request()->get('tab', $defaultTab);
-        if (!$isSuperAdmin && !str_starts_with($activeTab, 'unit-')) {
+        if (!$isSuperAdmin && !str_starts_with($activeTab, 'unit-') && $activeTab !== 'testimonials') {
             $activeTab = $defaultTab;
         }
 
-        return view('admin.settings-ui', compact('settings', 'units', 'isSuperAdmin', 'activeTab'));
+        $allUnits = \App\Models\SpmbUnit::where('is_active', true)->orderBy('id', 'asc')->get();
+
+        if ($isSuperAdmin) {
+            $testimonials = SpmbTestimonial::with('unit')->orderBy('order', 'asc')->orderBy('id', 'asc')->get();
+        } else {
+            $myUnitId = auth()->user()->spmb_unit_id;
+            $testimonials = SpmbTestimonial::with('unit')
+                ->where(function ($q) use ($myUnitId) {
+                    $q->where('spmb_unit_id', $myUnitId)->orWhereNull('spmb_unit_id');
+                })
+                ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+        }
+
+        return view('admin.settings-ui', compact('settings', 'units', 'allUnits', 'isSuperAdmin', 'activeTab', 'testimonials'));
     }
 
     private function getDefaultUnitDesc($code)
@@ -698,5 +715,199 @@ class SettingsController extends Controller
         ]);
 
         return redirect()->route('admin.spmb-settings.instructions', ['unit_id' => $selectedUnitId])->with('success', 'Instruksi daftar ulang berhasil diperbarui.');
+    }
+
+    public function storeTestimonial(Request $request)
+    {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+
+        $rules = [
+            'name' => 'required|string|max:255',
+            'role_title' => 'required|string|max:255',
+            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'content' => 'required|string',
+            'rating' => 'required|integer|min:1|max:5',
+            'order' => 'nullable|integer|min:0',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ];
+
+        $messages = [
+            'name.required' => 'Nama lengkap / panggilan wajib diisi.',
+            'name.max' => 'Nama maksimal 255 karakter.',
+            'role_title.required' => 'Peran / keterangan wajib diisi.',
+            'role_title.max' => 'Peran / keterangan maksimal 255 karakter.',
+            'content.required' => 'Kutipan / pesan testimoni wajib diisi.',
+            'rating.required' => 'Rating bintang wajib dipilih (1 - 5).',
+            'rating.integer' => 'Rating harus berupa angka 1 sampai 5.',
+            'rating.min' => 'Rating minimal 1 bintang.',
+            'rating.max' => 'Rating maksimal 5 bintang.',
+            'avatar.image' => 'Berkas foto profil harus berupa gambar.',
+            'avatar.mimes' => 'Format foto yang didukung: JPG, PNG, WEBP.',
+            'avatar.max' => 'Ukuran foto maksimal 2MB.',
+        ];
+
+        try {
+            $request->validate($rules, $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->route('admin.ui-settings', ['tab' => 'testimonials'])
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('failed_modal', 'add_testimonial');
+        }
+
+        $unitId = $request->spmb_unit_id;
+        if (!$isSuperAdmin && !empty($unitId) && $unitId != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses ditolak.');
+        }
+        if (!$isSuperAdmin && empty($unitId)) {
+            $unitId = auth()->user()->spmb_unit_id;
+        }
+
+        $avatarUrl = null;
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('testimonials', 'public');
+            $avatarUrl = Storage::url($path);
+        }
+
+        $order = $request->input('order');
+        if (is_null($order) || $order === '') {
+            $maxOrder = SpmbTestimonial::max('order') ?? 0;
+            $order = $maxOrder + 1;
+        }
+
+        SpmbTestimonial::create([
+            'name' => $request->name,
+            'role_title' => $request->role_title,
+            'spmb_unit_id' => $unitId ?: null,
+            'content' => $request->content,
+            'rating' => (int) $request->rating,
+            'avatar_url' => $avatarUrl,
+            'order' => (int) $order,
+            'is_active' => $request->has('is_active') ? (bool) $request->is_active : true,
+        ]);
+
+        return redirect()->route('admin.ui-settings', ['tab' => 'testimonials'])->with('success', 'Testimoni baru berhasil ditambahkan!');
+    }
+
+    public function updateTestimonial(Request $request, $id)
+    {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $testimonial = SpmbTestimonial::findOrFail($id);
+
+        if (!$isSuperAdmin && !empty($testimonial->spmb_unit_id) && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $rules = [
+            'name' => 'required|string|max:255',
+            'role_title' => 'required|string|max:255',
+            'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'content' => 'required|string',
+            'rating' => 'required|integer|min:1|max:5',
+            'order' => 'nullable|integer|min:0',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ];
+
+        $messages = [
+            'name.required' => 'Nama lengkap / panggilan wajib diisi.',
+            'name.max' => 'Nama maksimal 255 karakter.',
+            'role_title.required' => 'Peran / keterangan wajib diisi.',
+            'role_title.max' => 'Peran / keterangan maksimal 255 karakter.',
+            'content.required' => 'Kutipan / pesan testimoni wajib diisi.',
+            'rating.required' => 'Rating bintang wajib dipilih (1 - 5).',
+            'rating.integer' => 'Rating harus berupa angka 1 sampai 5.',
+            'rating.min' => 'Rating minimal 1 bintang.',
+            'rating.max' => 'Rating maksimal 5 bintang.',
+            'avatar.image' => 'Berkas foto profil harus berupa gambar.',
+            'avatar.mimes' => 'Format foto yang didukung: JPG, PNG, WEBP.',
+            'avatar.max' => 'Ukuran foto maksimal 2MB.',
+        ];
+
+        try {
+            $request->validate($rules, $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->route('admin.ui-settings', ['tab' => 'testimonials'])
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('failed_modal', 'edit_testimonial_' . $id);
+        }
+
+        $unitId = $request->spmb_unit_id;
+        if (!$isSuperAdmin && !empty($unitId) && $unitId != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $avatarUrl = $testimonial->avatar_url;
+        if ($request->input('clear_avatar') == '1') {
+            if ($avatarUrl && !str_starts_with($avatarUrl, 'http')) {
+                $oldPath = str_replace('/storage/', '', $avatarUrl);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $avatarUrl = null;
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($avatarUrl && !str_starts_with($avatarUrl, 'http')) {
+                $oldPath = str_replace('/storage/', '', $avatarUrl);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('avatar')->store('testimonials', 'public');
+            $avatarUrl = Storage::url($path);
+        }
+
+        $testimonial->update([
+            'name' => $request->name,
+            'role_title' => $request->role_title,
+            'spmb_unit_id' => $unitId ?: null,
+            'content' => $request->content,
+            'rating' => (int) $request->rating,
+            'avatar_url' => $avatarUrl,
+            'order' => (int) ($request->order ?? $testimonial->order),
+            'is_active' => $request->has('is_active') ? (bool) $request->is_active : $testimonial->is_active,
+        ]);
+
+        return redirect()->route('admin.ui-settings', ['tab' => 'testimonials'])->with('success', 'Testimoni berhasil diperbarui!');
+    }
+
+    public function destroyTestimonial($id)
+    {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $testimonial = SpmbTestimonial::findOrFail($id);
+
+        if (!$isSuperAdmin && !empty($testimonial->spmb_unit_id) && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        if ($testimonial->avatar_url && !str_starts_with($testimonial->avatar_url, 'http')) {
+            $oldPath = str_replace('/storage/', '', $testimonial->avatar_url);
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        $testimonial->delete();
+
+        return redirect()->route('admin.ui-settings', ['tab' => 'testimonials'])->with('success', 'Testimoni berhasil dihapus!');
+    }
+
+    public function toggleTestimonialStatus($id)
+    {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $testimonial = SpmbTestimonial::findOrFail($id);
+
+        if (!$isSuperAdmin && !empty($testimonial->spmb_unit_id) && $testimonial->spmb_unit_id != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $testimonial->is_active = !$testimonial->is_active;
+        $testimonial->save();
+
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'is_active' => $testimonial->is_active,
+                'message' => 'Status testimoni berhasil diubah!',
+            ]);
+        }
+
+        return redirect()->route('admin.ui-settings', ['tab' => 'testimonials'])->with('success', 'Status testimoni berhasil diubah!');
     }
 }

@@ -161,9 +161,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
         Route::post('/admin/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password');
 
-        // Tampilan Portal (Accessible to Super Admin and Unit Admin with scoping)
+        // Tampilan Portal & Testimoni (Accessible to Super Admin and Unit Admin with scoping)
         Route::get('/admin/ui-settings', [SettingsController::class, 'uiSettings'])->name('admin.ui-settings');
         Route::post('/admin/ui-settings', [SettingsController::class, 'saveUiSettings'])->name('admin.ui-settings.save');
+        Route::post('/admin/ui-settings/testimonials', [SettingsController::class, 'storeTestimonial'])->name('admin.ui-settings.testimonials.store');
+        Route::post('/admin/ui-settings/testimonials/{id}', [SettingsController::class, 'updateTestimonial'])->name('admin.ui-settings.testimonials.update');
+        Route::delete('/admin/ui-settings/testimonials/{id}', [SettingsController::class, 'destroyTestimonial'])->name('admin.ui-settings.testimonials.destroy');
+        Route::post('/admin/ui-settings/testimonials/{id}/toggle-status', [SettingsController::class, 'toggleTestimonialStatus'])->name('admin.ui-settings.testimonials.toggle');
 
         // Admin Profile & Password Management
         Route::get('/admin/profile', [ProfileController::class, 'editAdminProfile'])->name('admin.profile.edit');

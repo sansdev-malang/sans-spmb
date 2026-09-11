@@ -62,9 +62,25 @@
         .bg-brand-yellow { background-color: #ffc107; }
         .text-brand-yellow { color: #ffc107; }
         
-        /* iOS Toggle Switch Checked State Sibling style */
+        /* iOS Toggle Switch Checked & Unchecked States with High Contrast */
+        .peer ~ .peer-checked-emerald {
+            background-color: #cbd5e1 !important; /* Slate 300 for high visibility */
+            border: 1px solid #94a3b8 !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         .peer:checked ~ .peer-checked-emerald {
-            background-color: #0f5132 !important;
+            background-color: #10b981 !important; /* Vibrant Emerald 500 */
+            border-color: #059669 !important;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+        }
+        html.dark .peer ~ .peer-checked-emerald {
+            background-color: #334155 !important; /* Slate 700 */
+            border: 1px solid #475569 !important;
+        }
+        html.dark .peer:checked ~ .peer-checked-emerald {
+            background-color: #10b981 !important; /* Vibrant Emerald 500 */
+            border-color: #34d399 !important;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.5) !important;
         }
         /* Lucide icon alignment fallback */
         .lucide {
@@ -854,6 +870,8 @@
             </div>
         </div>
     </div>
+
+    @stack('modals')
 
     <!-- Script triggers and controllers -->
     <script>
@@ -1766,24 +1784,24 @@
             });
 
             @if(session('success'))
-                showToast("{{ session('success') }}", 'success');
+                showToast(@json(session('success')), 'success');
             @endif
 
             @if(session('info'))
-                showToast("{{ session('info') }}", 'info');
+                showToast(@json(session('info')), 'info');
             @endif
 
             @if(session('warning'))
-                showToast("{{ session('warning') }}", 'warning');
+                showToast(@json(session('warning')), 'warning');
             @endif
             
             @if(session('error'))
-                showToast("{{ session('error') }}", 'error');
+                showToast(@json(session('error')), 'error');
             @endif
             
             @if($errors->any() && !session('failed_modal'))
                 @foreach($errors->all() as $error)
-                    showToast("{{ $error }}", 'error');
+                    showToast(@json($error), 'error');
                 @endforeach
             @endif
         });

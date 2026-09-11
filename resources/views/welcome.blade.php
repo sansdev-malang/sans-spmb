@@ -49,6 +49,11 @@
         ];
     }
     $activeUnits = \App\Models\SpmbUnit::where('is_active', true)->get();
+    $activeTestimonials = \App\Models\SpmbTestimonial::with('unit')
+        ->where('is_active', true)
+        ->orderBy('order', 'asc')
+        ->orderBy('id', 'asc')
+        ->get();
 @endphp
 
 {{-- Hero Animation Styles --}}
@@ -414,11 +419,11 @@
 </div>
 
 <!-- Kata Mereka (Testimoni) Section -->
-<div id="kata-mereka" class="bg-slate-50 dark:bg-slate-950 py-8 border-t border-slate-100 dark:border-slate-800 transition relative overflow-hidden">
+<div id="kata-mereka" class="bg-slate-50 dark:bg-slate-950 py-12 border-t border-slate-100 dark:border-slate-800 transition relative overflow-hidden">
     <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         
         <!-- Section Header -->
-        <div class="text-center max-w-2xl mx-auto space-y-3 mb-16 md:mb-20">
+        <div class="text-center max-w-2xl mx-auto space-y-3 mb-12 md:mb-16">
             <h2 class="text-3xl md:text-4xl font-black text-custom-primary dark:text-emerald-400 tracking-tight">Kata Mereka Tentang Kami</h2>
             <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 Cerita dan testimoni dari orang tua wali murid yang mempercayakan masa depan ananda di {{ $schoolName }}.
@@ -426,70 +431,103 @@
         </div>
 
         <!-- Testimonial Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Testimonial 1 -->
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-1 text-amber-400 text-sm">
-                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+        @if($activeTestimonials->isNotEmpty())
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach($activeTestimonials as $testi)
+                    <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                @for($s = 1; $s <= ($testi->rating ?? 5); $s++)
+                                    <span>★</span>
+                                @endfor
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                                "{{ $testi->content }}"
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            @if($testi->avatar_url)
+                                <img src="{{ $testi->avatar_url }}" alt="{{ $testi->name }}" class="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-xs flex-shrink-0" />
+                            @else
+                                <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                                    {{ $testi->initials }}
+                                </div>
+                            @endif
+                            <div class="min-w-0">
+                                <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">{{ $testi->name }}</h4>
+                                <p class="text-[10px] text-slate-400 font-semibold truncate">{{ $testi->role_title }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                        "Perkembangan adab dan kemandirian ananda sangat terlihat nyata. Guru-guru mengajar dengan hati dan penuh keteladanan. Hafalan Al-Qur'annya juga berkembang pesat dengan metode yang menyenangkan."
-                    </p>
-                </div>
-                <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs">
-                        BS
-                    </div>
-                    <div>
-                        <h4 class="font-black text-xs text-slate-800 dark:text-slate-100">Bunda Sarah</h4>
-                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Murid SD Anak Saleh</p>
-                    </div>
-                </div>
+                @endforeach
             </div>
+        @else
+            <!-- Fallback Default Testimonials if none in database -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-1 text-amber-400 text-sm">
+                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                            "Perkembangan adab dan kemandirian ananda sangat terlihat nyata. Guru-guru mengajar dengan hati dan penuh keteladanan. Hafalan Al-Qur'annya juga berkembang pesat dengan metode yang menyenangkan."
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                            BS
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Bunda Sarah</h4>
+                            <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid SD Anak Saleh</p>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Testimonial 2 -->
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-1 text-amber-400 text-sm">
-                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-1 text-amber-400 text-sm">
+                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                            "Kurikulumnya sangat seimbang antara akademik modern dan pembinaan akhlak Islam. Fasilitasnya lengkap, ruang kelas nyaman, dan program mentoring karakternya sangat membimbing anak kami."
+                        </p>
                     </div>
-                    <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                        "Kurikulumnya sangat seimbang antara akademik modern dan pembinaan akhlak Islam. Fasilitasnya lengkap, ruang kelas nyaman, dan program mentoring karakternya sangat membimbing anak kami."
-                    </p>
+                    <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="h-10 w-10 rounded-full bg-amber-50 dark:bg-amber-950 flex items-center justify-center font-black text-amber-600 dark:text-amber-400 text-xs flex-shrink-0">
+                            AH
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Ayah Hendra</h4>
+                            <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid SMP Anak Saleh</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div class="h-10 w-10 rounded-full bg-amber-50 dark:bg-amber-950 flex items-center justify-center font-black text-amber-600 dark:text-amber-400 text-xs">
-                        AH
-                    </div>
-                    <div>
-                        <h4 class="font-black text-xs text-slate-800 dark:text-slate-100">Ayah Hendra</h4>
-                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Murid SMP Anak Saleh</p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Testimonial 3 -->
-            <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-1 text-amber-400 text-sm">
-                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-1 text-amber-400 text-sm">
+                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                            "Lingkungan belajarnya ramah anak dan penuh kasih sayang. Setiap pagi anak saya selalu bersemangat ke sekolah. Komunikasi antara guru dan orang tua juga sangat aktif dan terbuka."
+                        </p>
                     </div>
-                    <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                        "Lingkungan belajarnya ramah anak dan penuh kasih sayang. Setiap pagi anak saya selalu bersemangat ke sekolah. Komunikasi antara guru dan orang tua juga sangat aktif dan terbuka."
-                    </p>
-                </div>
-                <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs">
-                        BF
-                    </div>
-                    <div>
-                        <h4 class="font-black text-xs text-slate-800 dark:text-slate-100">Bunda Fatimah</h4>
-                        <p class="text-[10px] text-slate-400 font-semibold">Orang Tua Murid PAUD Anak Saleh</p>
+                    <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                            BF
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Bunda Fatimah</h4>
+                            <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid PAUD Anak Saleh</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
+
+    </div>
+</div>
 
     </div>
 </div>
