@@ -691,6 +691,8 @@ class WinpayService implements PaymentGatewayInterface
             ?? ($paymentInfo['additionalInfo']['contractId'] 
             ?? ''));
 
+        $isRetail = in_array($channel, ['ALFAMART', 'INDOMARET', 'RETAIL', 'MODERN_RETAIL', 'ALFA', 'INDO']);
+
         // 3. Tangani Pembatalan E-Wallet (POST /v1.0/debit/cancel - Service Code: 57)
         if ($isEwallet) {
             $endpoint = '/v1.0/debit/cancel';
@@ -721,8 +723,20 @@ class WinpayService implements PaymentGatewayInterface
                     'contractId' => (string) $contractId
                 ])
             ];
+        } elseif ($isRetail) {
+            // 5. Tangani Pembatalan Retail / OTC (Alfamart / Indomaret):
+            // Kode bayar retail di Winpay tidak memiliki endpoint delete manual dan akan kedaluwarsa otomatis.
+            Log::info("Winpay cancelPayment bypassed for Modern Retail (auto-expires on gateway)", [
+                'invoice' => $invoiceNo,
+                'channel' => $channel
+            ]);
+            return [
+                'success' => true,
+                'message' => 'Tagihan retail berhasil dibatalkan di sistem.',
+                'data' => null
+            ];
         } else {
-            // 5. Tangani Pembatalan Virtual Account (VA) & Retail (DELETE /v1.0/transfer-va/delete-va - Service Code: 31)
+            // 6. Tangani Pembatalan Virtual Account Bank (DELETE /v1.0/transfer-va/delete-va - Service Code: 31)
             $endpoint = '/v1.0/transfer-va/delete-va';
             $httpMethod = 'DELETE';
 
@@ -734,6 +748,8 @@ class WinpayService implements PaymentGatewayInterface
             );
 
             $body = [
+                'partnerServiceId' => (string) ($this->merchantId ?: '90341'),
+                'customerNo' => (string) ($paymentInfo['customerNo'] ?? ($paymentInfo['phone'] ?? $invoiceNo)),
                 'virtualAccountNo' => $vaNo,
                 'trxId' => $invoiceNo,
                 'additionalInfo' => array_filter([
