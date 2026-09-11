@@ -673,4 +673,175 @@ class AdminCandidateController extends Controller
 
         return SimpleXlsxService::download($columns, $rows, $filename, 'Data Calon Murid');
     }
+
+    /**
+     * Export / Print filtered candidates executive summary report to PDF (A4 Landscape).
+     */
+    public function exportPdf(Request $request)
+    {
+        $selectedPeriodId = session('selected_period_id', function() {
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
+        });
+
+        $query = Registration::scopedByAdmin()
+            ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
+            ->where('spmb_period_id', $selectedPeriodId)
+            ->whereNotNull('candidate_name')
+            ->whereHas('payments', function($q) {
+                $q->where('payment_type', 'registration_fee')
+                  ->where('status', 'success');
+            });
+
+        // Search by Name, WhatsApp, or NIK
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('candidate_name', 'like', "%{$search}%")
+                  ->orWhere('parent_phone', 'like', "%{$search}%")
+                  ->orWhere('nik', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by Stage / Status Pill
+        if ($request->filled('stage') && $request->stage !== 'all') {
+            if ($request->stage === 'draft') {
+                $query->whereIn('registration_status', ['draft', 'failed']);
+            } else {
+                $query->where('registration_status', $request->stage);
+            }
+        }
+
+        // Filter by Unit
+        if ($request->filled('unit_id')) {
+            $query->where('spmb_unit_id', $request->unit_id);
+        }
+
+        // Filter by Registration Date Range
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Filter by Gender
+        if ($request->filled('gender')) {
+            $g = strtolower($request->gender);
+            if (in_array($g, ['l', 'male', 'laki-laki'])) {
+                $query->whereIn('gender', ['L', 'male', 'Laki-laki', 'laki-laki', 'Laki-Laki']);
+            } elseif (in_array($g, ['p', 'female', 'perempuan'])) {
+                $query->whereIn('gender', ['P', 'female', 'Perempuan', 'perempuan']);
+            } else {
+                $query->where('gender', $request->gender);
+            }
+        }
+
+        // Filter by Wave
+        if ($request->filled('wave_id')) {
+            $query->where('spmb_wave_id', $request->wave_id);
+        }
+
+        // Filter by Registration Type
+        if ($request->filled('type_id')) {
+            $query->where('spmb_type_id', $request->type_id);
+        }
+
+        // Filter by Class Program
+        if ($request->filled('class_program_id')) {
+            $query->where('spmb_class_program_id', $request->class_program_id);
+        }
+
+        // Filter by Document Upload Status
+        if ($request->filled('doc_status')) {
+            if ($request->doc_status === 'complete') {
+                $query->whereNotNull('birth_certificate_path')
+                      ->whereNotNull('family_card_path');
+            } elseif ($request->doc_status === 'incomplete') {
+                $query->where(function($q) {
+                    $q->whereNull('birth_certificate_path')
+                      ->orWhereNull('family_card_path');
+                });
+            }
+        }
+
+        $candidates = $query->orderBy('created_at', 'desc')->get();
+
+        // Calculate KPI Stats for filtered set
+        $stats = [
+            'total' => $candidates->count(),
+            'male' => $candidates->whereIn('gender', ['L', 'male', 'Laki-laki', 'laki-laki', 'Laki-Laki'])->count(),
+            'female' => $candidates->whereIn('gender', ['P', 'female', 'Perempuan', 'perempuan'])->count(),
+            'verified' => $candidates->where('is_verified', true)->count(),
+            'pending' => $candidates->where('is_verified', false)->count(),
+        ];
+
+        // Distribution stats
+        $waveStats = SpmbWave::all()->map(function($w) use ($candidates) {
+            return [
+                'name' => $w->name,
+                'count' => $candidates->where('spmb_wave_id', $w->id)->count(),
+            ];
+        })->where('count', '>', 0)->values();
+
+        $typeStats = SpmbType::all()->map(function($t) use ($candidates) {
+            return [
+                'name' => $t->name,
+                'count' => $candidates->where('spmb_type_id', $t->id)->count(),
+            ];
+        })->where('count', '>', 0)->values();
+
+        $stageCounts = [
+            'all' => $stats['total'],
+            'draft' => $candidates->whereIn('registration_status', ['draft', 'failed'])->count(),
+            'submitted' => $candidates->where('registration_status', 'submitted')->count(),
+            'verified' => $candidates->where('registration_status', 'verified')->count(),
+            'taaruf_completed' => $candidates->where('registration_status', 'taaruf_completed')->count(),
+            'agreement_signed' => $candidates->where('registration_status', 'agreement_signed')->count(),
+            'completed' => $candidates->where('registration_status', 'completed')->count(),
+        ];
+
+        $unitCode = 'ALL';
+        $unitFilterLabel = 'Semua Jenjang / Unit';
+        if ($request->filled('unit_id')) {
+            $u = SpmbUnit::find($request->unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        } elseif (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $u = SpmbUnit::find(auth()->user()->spmb_unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        }
+
+        $period = SpmbPeriod::find($selectedPeriodId);
+        $periodName = $period ? ($period->name ?? $period->year) : 'SPMB';
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $filename = 'Laporan-Calon-Murid-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.pdf';
+
+        $regFeeLabel = SpmbFeeCategory::getRegistrationCategoryName();
+        $printedAt = now()->translatedFormat('d F Y, H:i') . ' WIB';
+        $printedBy = auth()->user()->name ?? 'Administrator';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.candidates-pdf', compact(
+            'candidates',
+            'stats',
+            'waveStats',
+            'typeStats',
+            'stageCounts',
+            'periodName',
+            'unitFilterLabel',
+            'regFeeLabel',
+            'printedAt',
+            'printedBy'
+        ))->setPaper('a4', 'landscape');
+
+        return response()->make($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
 }
