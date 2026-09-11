@@ -682,16 +682,6 @@ class WinpayService implements PaymentGatewayInterface
             || !empty($paymentInfo['webRedirectUrl'])
             || !empty($paymentInfo['appRedirectUrl']);
 
-        // 3. Tangani E-Wallet
-        if ($isEwallet) {
-            Log::info('Winpay cancelPayment for E-Wallet processed', ['invoice' => $invoiceNo, 'channel' => $channel]);
-            return [
-                'success' => true,
-                'message' => "Sesi pembayaran {$channel} berhasil dibatalkan.",
-                'data' => null
-            ];
-        }
-
         $timezone = new \DateTimeZone('Asia/Jakarta');
         $now = new \DateTime('now', $timezone);
         $timestamp = $now->format('Y-m-d\TH:i:sP');
@@ -701,8 +691,26 @@ class WinpayService implements PaymentGatewayInterface
             ?? ($paymentInfo['additionalInfo']['contractId'] 
             ?? ''));
 
-        // 4. Tangani Pembatalan QRIS (POST /v1.0/qr/qr-mpm-cancel)
-        if ($isQris) {
+        // 3. Tangani Pembatalan E-Wallet (POST /v1.0/debit/cancel - Service Code: 57)
+        if ($isEwallet) {
+            $endpoint = '/v1.0/debit/cancel';
+            $httpMethod = 'POST';
+
+            $ewalletChannel = $channel;
+            if ($ewalletChannel === 'SHOPEEPAY') $ewalletChannel = 'SPAY';
+            if ($ewalletChannel === 'ASTRAPAY') $ewalletChannel = 'ASTRA';
+            if ($ewalletChannel === 'SPEEDCASH') $ewalletChannel = 'SC';
+
+            $body = [
+                'originalPartnerReferenceNo' => $invoiceNo,
+                'reason' => 'Dibatalkan oleh pendaftar / Ganti channel pembayaran',
+                'additionalInfo' => array_filter([
+                    'contractId' => (string) $contractId,
+                    'channel' => $ewalletChannel
+                ])
+            ];
+        } elseif ($isQris) {
+            // 4. Tangani Pembatalan QRIS (POST /v1.0/qr/qr-mpm-cancel - Service Code: 77)
             $endpoint = '/v1.0/qr/qr-mpm-cancel';
             $httpMethod = 'POST';
 
@@ -714,7 +722,7 @@ class WinpayService implements PaymentGatewayInterface
                 ])
             ];
         } else {
-            // 5. Tangani Pembatalan Virtual Account (VA) & Retail (DELETE /v1.0/transfer-va/delete-va)
+            // 5. Tangani Pembatalan Virtual Account (VA) & Retail (DELETE /v1.0/transfer-va/delete-va - Service Code: 31)
             $endpoint = '/v1.0/transfer-va/delete-va';
             $httpMethod = 'DELETE';
 
