@@ -1885,17 +1885,29 @@
             const data = await res.json();
             if (data.success) {
                 window.closeCandidateDispensationModal();
-                alert(data.message);
-                window.location.reload();
+                if (typeof showToast === 'function') {
+                    showToast(data.message || 'Dispensasi berhasil ditetapkan.', 'success');
+                }
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             } else {
-                alert('Gagal menetapkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+                if (typeof showToast === 'function') {
+                    showToast('Gagal menetapkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'), 'error');
+                } else {
+                    alert('Gagal menetapkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+                }
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i data-lucide="check-check" class="w-4 h-4"></i> Tetapkan Diterima';
                 if (window.lucide) lucide.createIcons();
             }
         } catch (err) {
             console.error(err);
-            alert('Terjadi kesalahan jaringan.');
+            if (typeof showToast === 'function') {
+                showToast('Terjadi kesalahan jaringan.', 'error');
+            } else {
+                alert('Terjadi kesalahan jaringan.');
+            }
             saveBtn.disabled = false;
             saveBtn.innerHTML = '<i data-lucide="check-check" class="w-4 h-4"></i> Tetapkan Diterima';
             if (window.lucide) lucide.createIcons();
@@ -1926,14 +1938,26 @@
             const data = await res.json();
             if (data.success) {
                 window.closeCandidateDispensationModal();
-                alert(data.message);
-                window.location.reload();
+                if (typeof showToast === 'function') {
+                    showToast(data.message || 'Dispensasi berhasil dibatalkan.', 'success');
+                }
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             } else {
-                alert('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+                if (typeof showToast === 'function') {
+                    showToast('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'), 'error');
+                } else {
+                    alert('Gagal membatalkan dispensasi: ' + (data.message || 'Terjadi kesalahan.'));
+                }
             }
         } catch (err) {
             console.error(err);
-            alert('Terjadi kesalahan jaringan.');
+            if (typeof showToast === 'function') {
+                showToast('Terjadi kesalahan jaringan.', 'error');
+            } else {
+                alert('Terjadi kesalahan jaringan.');
+            }
         }
     };
 

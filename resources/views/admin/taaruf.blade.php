@@ -746,7 +746,11 @@
 
                 const actionUrl = scheduleForm.getAttribute('action') || scheduleForm.action;
                 if (!actionUrl || actionUrl === window.location.href) {
-                    alert("URL jadwal belum terpasang dengan benar. Silakan tutup dan buka kembali modal jadwal.");
+                    if (typeof showToast === 'function') {
+                        showToast("URL jadwal belum terpasang dengan benar. Silakan tutup dan buka kembali modal jadwal.", 'warning');
+                    } else {
+                        alert("URL jadwal belum terpasang dengan benar. Silakan tutup dan buka kembali modal jadwal.");
+                    }
                     return;
                 }
 
