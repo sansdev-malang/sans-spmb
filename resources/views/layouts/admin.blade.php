@@ -731,11 +731,11 @@
                     </div>
                     <div class="overflow-hidden sidebar-text">
                         <span class="font-extrabold text-slate-200 block truncate max-w-[110px]">{{ auth()->user()->name }}</span>
-                        <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider block mt-0.5">
+                        <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider block mt-0.5 truncate">
                             @if(auth()->user()->isSuperAdmin())
                                 Super Admin
                             @elseif(auth()->user()->spmb_unit_id)
-                                Admin {{ auth()->user()->spmbUnit->name }}
+                                Admin {{ auth()->user()->spmbUnit->code ?: auth()->user()->spmbUnit->name }}
                             @else
                                 Global Admin
                             @endif
