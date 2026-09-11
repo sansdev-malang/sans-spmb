@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Riwayat Pembayaran (Log) - Admin Panel')
-@section('page_title', 'Riwayat Pembayaran (Log)')
+@section('title', 'Riwayat Pembayaran - Admin Panel')
+@section('page_title', 'Riwayat Pembayaran')
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Summary Card -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Riwayat Transaksi Pembayaran (Log)</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Log riwayat transaksi pembayaran pendaftaran calon murid terintegrasi Winpay SNAP API secara real-time.</p>
+            <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Riwayat Transaksi Pembayaran</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Riwayat transaksi pembayaran pendaftaran calon murid terintegrasi Winpay SNAP API secara real-time.</p>
         </div>
         <div class="flex gap-2 items-center flex-wrap">
             <form action="{{ route('admin.payments.sync-pending') }}" method="POST" class="inline" hx-boost="false">
@@ -19,7 +19,7 @@
                     <span>Sinkronkan Pending</span>
                 </button>
             </form>
-            <button type="button" onclick="showFeatureComingSoon('Ekspor Log Pembayaran (CSV)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <button type="button" onclick="showFeatureComingSoon('Ekspor Pembayaran (CSV)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
                 <span>Ekspor CSV</span>
                 <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400 text-amber-950 shadow-2xs">Soon</span>
@@ -210,7 +210,7 @@
                         <th class="py-4 px-6">Metode Pembayaran</th>
                         <th class="py-4 px-6">Nominal</th>
                         <th class="py-4 px-6 text-center">Status</th>
-                        <th class="py-4 px-6 text-center w-48">Aksi</th>
+                        <th class="py-4 px-6 text-center whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
@@ -372,17 +372,18 @@
                             </td>
 
                             <!-- 7. Aksi -->
-                            <td class="py-4 px-6 text-center">
+                            <td class="py-4 px-6 text-center whitespace-nowrap">
                                 @if($pay->status === 'success')
-                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-900/60 transition duration-200 shadow-2xs" title="Unduh Bukti Pembayaran Resmi">
-                                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                    <a href="{{ route('dashboard.payment.receipt', $pay->id) }}" hx-boost="false" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-emerald bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800 transition duration-200 shadow-2xs whitespace-nowrap" title="Unduh Bukti Pembayaran Resmi">
+                                        <i data-lucide="download" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                        <span>Unduh Bukti</span>
                                     </a>
                                 @elseif($pay->status === 'pending')
-                                    <div class="flex items-center justify-center gap-1.5">
-                                        <form action="{{ route('admin.payments.check-status', $pay->id) }}" method="POST" class="inline" hx-boost="false">
+                                    <div class="inline-flex items-center justify-center gap-2">
+                                        <form action="{{ route('admin.payments.check-status', $pay->id) }}" method="POST" class="inline m-0 p-0" hx-boost="false">
                                             @csrf
-                                            <button type="submit" onclick="this.disabled=true; this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-3.5 h-3.5 animate-spin\'></i>'; this.form.submit();" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-750 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800 transition duration-200 shadow-2xs cursor-pointer" title="Cek status mutasi ke bank">
-                                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                            <button type="submit" onclick="this.disabled=true; this.innerHTML='<i data-lucide=\'loader-2\' class=\'w-3.5 h-3.5 animate-spin\'></i> <span>Cek...</span>'; if(window.lucide) lucide.createIcons(); this.form.submit();" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800 transition duration-200 shadow-2xs cursor-pointer whitespace-nowrap" title="Cek status mutasi ke bank">
+                                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 flex-shrink-0"></i>
                                                 <span>Cek Status</span>
                                             </button>
                                         </form>
@@ -394,8 +395,8 @@
                                             icon: 'x-circle',
                                             formAction: '{{ route('admin.payments.cancel', $pay->id) }}',
                                             formMethod: 'POST'
-                                        })" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800 transition duration-200 shadow-2xs cursor-pointer" title="Batalkan Tagihan Pembayaran">
-                                            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                        })" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800 transition duration-200 shadow-2xs cursor-pointer whitespace-nowrap" title="Batalkan Tagihan Pembayaran">
+                                            <i data-lucide="x-circle" class="w-3.5 h-3.5 flex-shrink-0"></i>
                                             <span>Batalkan</span>
                                         </button>
                                     </div>
