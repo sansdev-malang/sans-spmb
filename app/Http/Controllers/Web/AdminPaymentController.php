@@ -171,9 +171,21 @@ class AdminPaymentController extends Controller
             });
         }
 
-        // Filter by Payment Status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $isSpamView = ($request->get('view') === 'spam');
+
+        // Filter by Status & View (Spam vs Active)
+        if ($isSpamView) {
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            } else {
+                $query->whereNotIn('status', ['success', 'pending']);
+            }
+        } else {
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            } else {
+                $query->whereIn('status', ['success', 'pending']);
+            }
         }
 
         // Filter by Unit/Jenjang
@@ -271,6 +283,20 @@ class AdminPaymentController extends Controller
 
         $payments = $query->latest()->paginate($perPage)->withQueryString();
 
+        // Count total spam/cancelled transactions for badge
+        $spamCountQuery = Payment::scopedByAdmin()
+            ->whereHas('registration', function($q) use ($selectedPeriodId) {
+                $q->where('spmb_period_id', $selectedPeriodId);
+            })
+            ->whereNotIn('status', ['success', 'pending']);
+        
+        if ($request->filled('unit_id')) {
+            $spamCountQuery->whereHas('registration', function($q) use ($request) {
+                $q->where('spmb_unit_id', $request->unit_id);
+            });
+        }
+        $spamCount = $spamCountQuery->count();
+
         $units = SpmbUnit::orderBy('id', 'asc')->get();
         if (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
             $units = $units->where('id', auth()->user()->spmb_unit_id);
@@ -278,7 +304,7 @@ class AdminPaymentController extends Controller
         $waves = SpmbWave::orderBy('id', 'asc')->get();
         $channels = \App\Models\SpmbPaymentChannel::orderBy('id', 'asc')->get();
 
-        return view('admin.payment-history', compact('payments', 'units', 'waves', 'channels'));
+        return view('admin.payment-history', compact('payments', 'units', 'waves', 'channels', 'spamCount', 'isSpamView'));
     }
 
     /**

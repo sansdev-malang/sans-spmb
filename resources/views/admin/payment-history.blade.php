@@ -40,6 +40,9 @@
                         @if(request('unit_id'))
                             <input type="hidden" name="unit_id" value="{{ request('unit_id') }}" hidden class="hidden">
                         @endif
+                        @if(request('view'))
+                            <input type="hidden" name="view" value="{{ request('view') }}" hidden class="hidden">
+                        @endif
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>
@@ -62,12 +65,20 @@
                     </div>
                     
                     <!-- Filter Status -->
-                    <select name="status" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                        <option value="">Semua Status</option>
-                        <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed / Expired</option>
-                    </select>
+                    @if(request('view') === 'spam')
+                        <select name="status" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Status Spam</option>
+                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled (Dibatalkan)</option>
+                            <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>Expired (Kedaluwarsa)</option>
+                            <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed (Gagal)</option>
+                        </select>
+                    @else
+                        <select name="status" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                            <option value="">Semua Status Aktif</option>
+                            <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success (Lunas)</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending (Menunggu)</option>
+                        </select>
+                    @endif
 
                     <!-- Per Page Select -->
                     <select name="per_page" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
@@ -84,22 +95,34 @@
                         Filter Lanjutan
                     </button>
                 </div>
+
+                <!-- Right Aligned: Spam Toggle Button -->
+                <div class="flex items-center gap-2 self-start md:self-auto w-full md:w-auto justify-end">
+                    @if(request('view') === 'spam')
+                        <a href="{{ route('admin.payments', request()->except(['view', 'page', 'status'])) }}" 
+                           class="flex items-center gap-1.5 py-2.5 px-3.5 text-xs rounded-xl font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs transition">
+                            <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                            <span>Kembali ke Transaksi Aktif</span>
+                        </a>
+                    @else
+                        <a href="{{ route('admin.payments', array_merge(request()->except(['page', 'status']), ['view' => 'spam'])) }}" 
+                           class="flex items-center gap-2 py-2 px-3 text-xs rounded-xl font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 shadow-2xs transition"
+                           title="Tampilkan transaksi yang dibatalkan, kedaluwarsa, atau gagal">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-500"></i>
+                            <span>Spam</span>
+                            @if(isset($spamCount) && $spamCount > 0)
+                                <span class="px-1.5 py-0.2 rounded-md text-[10px] font-black bg-rose-200 dark:bg-rose-900 text-rose-800 dark:text-rose-200">
+                                    {{ $spamCount }}
+                                </span>
+                            @endif
+                        </a>
+                    @endif
+                </div>
             </div>
 
             <!-- Slide-down Advanced Filters Panel -->
-            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id') || request('wave_id') || request('unit_id')) ? '' : 'hidden' }} border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4 transition-all duration-300">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- Filter: Unit Sekolah -->
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Unit Sekolah</label>
-                        <select name="unit_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                            <option value="">Semua Unit</option>
-                            @foreach($units as $u)
-                                <option value="{{ $u->id }}" {{ request('unit_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}{{ !$u->is_active ? ' (Nonaktif)' : '' }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
+            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('method') || request('category_id') || request('fee_id') || request('wave_id')) ? '' : 'hidden' }} border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4 transition-all duration-300">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
                     <!-- Filter: Gelombang -->
                     <div class="space-y-1">
                         <label class="text-[9px] font-extrabold uppercase text-slate-400 block">Gelombang</label>
@@ -197,6 +220,18 @@
                         {{ strtoupper($unit->name) }}
                     </a>
                 @endforeach
+            </div>
+        @endif
+
+        @if(request('view') === 'spam')
+            <div class="mx-6 mt-4 p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50 flex items-center justify-between text-xs text-amber-900 dark:text-amber-200">
+                <div class="flex items-center gap-2.5">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0"></i>
+                    <span><strong>Mode Arsip / Spam:</strong> Menampilkan transaksi yang berstatus Dibatalkan (<em>Cancelled</em>), Kedaluwarsa (<em>Expired</em>), atau Gagal (<em>Failed</em>).</span>
+                </div>
+                <a href="{{ route('admin.payments', request()->except(['view', 'page', 'status'])) }}" class="font-bold underline hover:text-amber-700 dark:hover:text-amber-100 flex-shrink-0">
+                    Tampilkan Transaksi Aktif
+                </a>
             </div>
         @endif
 
@@ -409,7 +444,11 @@
                     @empty
                         <tr>
                             <td colspan="7" class="py-12 px-6 text-center text-slate-400 dark:text-slate-500">
-                                Belum ada riwayat transaksi pembayaran.
+                                @if(request('view') === 'spam')
+                                    Tidak ada transaksi spam (dibatalkan/kedaluwarsa/gagal) yang ditemukan.
+                                @else
+                                    Belum ada riwayat transaksi pembayaran aktif.
+                                @endif
                             </td>
                         </tr>
                     @endforelse
