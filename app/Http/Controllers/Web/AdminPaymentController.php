@@ -142,17 +142,12 @@ class AdminPaymentController extends Controller
     }
 
     /**
-     * Display payment transactions log.
+     * Build base query for payment history based on filters.
      */
-    public function index(Request $request)
+    protected function getPaymentHistoryQuery(Request $request, $selectedPeriodId)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
-        
         $query = Payment::scopedByAdmin()
-            ->with('registration')
+            ->with(['registration.unit', 'registration.grade', 'registration.wave', 'registration.type', 'registration.classProgram', 'items'])
             ->whereHas('registration', function($q) use ($selectedPeriodId) {
                 $q->where('spmb_period_id', $selectedPeriodId);
             });
@@ -276,6 +271,23 @@ class AdminPaymentController extends Controller
                 $q->where('spmb_wave_id', $request->wave_id);
             });
         }
+
+        return $query;
+    }
+
+    /**
+     * Display payment transactions log.
+     */
+    public function index(Request $request)
+    {
+        $selectedPeriodId = session('selected_period_id', function() {
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
+        });
+        
+        $query = $this->getPaymentHistoryQuery($request, $selectedPeriodId);
+
+        $isSpamView = ($request->get('view') === 'spam');
 
         // Per page limit
         $perPage = intval($request->get('per_page', 10));
@@ -790,6 +802,195 @@ class AdminPaymentController extends Controller
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.payment-data-pdf', compact(
             'registrations',
+            'stats',
+            'periodName',
+            'unitFilterLabel',
+            'printedAt',
+            'printedBy'
+        ))->setPaper('a4', 'landscape');
+
+        return response()->make($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Export payment history transactions log to Excel (.xlsx).
+     */
+    public function exportHistory(Request $request)
+    {
+        $selectedPeriodId = session('selected_period_id', function() {
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
+        });
+        
+        $query = $this->getPaymentHistoryQuery($request, $selectedPeriodId);
+        $payments = $query->latest()->get();
+
+        $unitCode = 'ALL';
+        if ($request->filled('unit_id')) {
+            $u = SpmbUnit::find($request->unit_id);
+            if ($u) $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+        } elseif (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $u = SpmbUnit::find(auth()->user()->spmb_unit_id);
+            if ($u) $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+        }
+
+        $period = SpmbPeriod::find($selectedPeriodId);
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $filename = 'Data-Riwayat-Transaksi-Masuk-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.xlsx';
+
+        $columns = [
+            'No.',
+            'No. Invoice',
+            'ID Transaksi Gateway',
+            'Waktu Transaksi',
+            'No. Registrasi',
+            'Nama Calon Murid',
+            'Unit Sekolah',
+            'Tingkat / Kelas',
+            'Gelombang',
+            'Jenis Pembayaran',
+            'Rincian Item Pembayaran',
+            'Metode Pembayaran',
+            'Nomor VA / Akun',
+            'Nominal Bersih (Rp)',
+            'Biaya Admin (Rp)',
+            'Total Bayar (Rp)',
+            'Status Pembayaran',
+        ];
+
+        $rows = [];
+        $i = 1;
+        foreach ($payments as $pay) {
+            $callbackPayload = $pay->payment_info['callback_payload'] ?? [];
+            $numericWinpayId = $callbackPayload['originalReferenceNo'] 
+                ?? ($callbackPayload['referenceNo'] 
+                    ?? ($callbackPayload['paymentRequestId'] 
+                        ?? (!empty($pay->reference_id) && is_numeric($pay->reference_id) ? $pay->reference_id : null)));
+            $contractId = $pay->reference_id 
+                ?? ($pay->payment_info['referenceId'] 
+                    ?? ($pay->payment_info['contractId'] 
+                        ?? ($pay->payment_info['additionalInfo']['contractId'] ?? null)));
+            $displayWinpayId = $numericWinpayId ?: ($contractId ?: '-');
+
+            $settledTimeRaw = $pay->payment_info['settled_at'] 
+                ?? ($callbackPayload['paidTime'] 
+                    ?? ($callbackPayload['trxDateTime'] ?? null));
+
+            $displayTime = null;
+            if ($pay->status === 'success' && $settledTimeRaw) {
+                try {
+                    $displayTime = \Carbon\Carbon::parse($settledTimeRaw)->timezone('Asia/Jakarta')->format('d/m/Y H:i');
+                } catch (\Throwable $e) {
+                    $displayTime = null;
+                }
+            }
+            if (!$displayTime) {
+                $displayTime = $pay->created_at ? $pay->created_at->timezone('Asia/Jakarta')->format('d/m/Y H:i') : '-';
+            }
+
+            $reg = $pay->registration;
+            $candName = $reg?->candidate_name ?? 'Draft / Belum Isi';
+            $regId = $reg?->id_label ?? '-';
+            $unitName = $reg?->unit?->name ?? '-';
+            $gradeName = $reg?->grade?->name ?? ($reg?->admission_level ?? '-');
+            $waveName = $reg?->wave?->name ?? '-';
+
+            if ($pay->payment_type === 'registration_fee') {
+                $paymentTypeLabel = 'Formulir Pendaftaran';
+                $fee = $reg ? $reg->getRegistrationFee() : null;
+                $feeTitle = $fee ? $fee->name : 'Biaya Formulir Pendaftaran';
+            } else {
+                $paymentTypeLabel = 'Biaya Masuk / DSP';
+                $itemNames = [];
+                if ($pay->items && $pay->items->isNotEmpty()) {
+                    $itemNames = $pay->items->map(fn($it) => $it->fee_name . ($it->amount > 0 ? ' (Rp ' . number_format($it->amount, 0, ',', '.') . ')' : ''))->toArray();
+                } elseif (isset($pay->payment_info['selected_items']) && is_array($pay->payment_info['selected_items'])) {
+                    $itemNames = array_map(fn($it) => ($it['name'] ?? 'Item') . (isset($it['amount']) ? ' (Rp ' . number_format($it['amount'], 0, ',', '.') . ')' : ''), $pay->payment_info['selected_items']);
+                }
+                $feeTitle = !empty($itemNames) ? implode(", ", $itemNames) : 'Pelunasan Biaya Administrasi DSP';
+            }
+
+            $vaNumber = $pay->payment_info['virtualAccountNo'] ?? '-';
+            $adminFee = (float) ($pay->admin_fee ?? 0);
+            $totalAmount = (float) $pay->amount;
+            $netAmount = max(0, $totalAmount - $adminFee);
+
+            $rows[] = [
+                $i++,
+                $pay->invoice_number,
+                $displayWinpayId,
+                $displayTime . ' WIB',
+                $regId,
+                $candName,
+                $unitName,
+                $gradeName,
+                $waveName,
+                $paymentTypeLabel,
+                $feeTitle,
+                $pay->payment_method ?: 'Gateway',
+                $vaNumber,
+                $netAmount,
+                $adminFee,
+                $totalAmount,
+                strtoupper($pay->status ?? '-'),
+            ];
+        }
+
+        return SimpleXlsxService::download($columns, $rows, $filename, 'Riwayat Transaksi');
+    }
+
+    /**
+     * Export payment history transactions log to PDF (A4 Landscape).
+     */
+    public function exportHistoryPdf(Request $request)
+    {
+        $selectedPeriodId = session('selected_period_id', function() {
+            return SpmbPeriod::where('is_active', true)->value('id') 
+                ?? SpmbPeriod::value('id');
+        });
+        
+        $query = $this->getPaymentHistoryQuery($request, $selectedPeriodId);
+        $payments = $query->latest()->get();
+
+        $stats = [
+            'total_count' => $payments->count(),
+            'success_count' => $payments->where('status', 'success')->count(),
+            'success_amount' => $payments->where('status', 'success')->sum('amount'),
+            'pending_count' => $payments->where('status', 'pending')->count(),
+            'pending_amount' => $payments->where('status', 'pending')->sum('amount'),
+            'spam_count' => $payments->whereNotIn('status', ['success', 'pending'])->count(),
+            'spam_amount' => $payments->whereNotIn('status', ['success', 'pending'])->sum('amount'),
+        ];
+
+        $unitCode = 'ALL';
+        $unitFilterLabel = 'Semua Jenjang / Unit';
+        if ($request->filled('unit_id')) {
+            $u = SpmbUnit::find($request->unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        } elseif (auth()->user()->isUnitAdmin() && auth()->user()->spmb_unit_id) {
+            $u = SpmbUnit::find(auth()->user()->spmb_unit_id);
+            if ($u) {
+                $unitCode = strtoupper($u->code ?: Str::slug($u->name));
+                $unitFilterLabel = $u->name;
+            }
+        }
+
+        $period = SpmbPeriod::find($selectedPeriodId);
+        $periodName = $period ? ($period->name ?? $period->year) : 'SPMB';
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $filename = 'Laporan-Riwayat-Transaksi-Masuk-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.pdf';
+
+        $printedAt = now()->translatedFormat('d F Y, H:i') . ' WIB';
+        $printedBy = auth()->user()->name ?? 'Administrator';
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.payment-history-pdf', compact(
+            'payments',
             'stats',
             'periodName',
             'unitFilterLabel',

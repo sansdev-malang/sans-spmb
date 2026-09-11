@@ -176,7 +176,7 @@ class SimpleXlsxService
             $sheetXml .= '<row r="' . $rowNum . '" ht="' . $rowHeight . '" customHeight="1">';
             foreach ($row as $colIdx => $val) {
                 $cellRef = self::columnLetter($colIdx + 1) . $rowNum;
-                $isNumeric = is_numeric($val) && (($val === 0 || $val === '0' || $val === 0.0) || (!str_starts_with((string)$val, '0') && strlen((string)$val) < 12));
+                $isNumeric = is_int($val) || is_float($val);
                 if ($isNumeric) {
                     $sheetXml .= '<c r="' . $cellRef . '" s="3"><v>' . $val . '</v></c>';
                 } else {

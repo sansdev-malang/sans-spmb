@@ -117,6 +117,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/payments/data/export', [AdminPaymentController::class, 'export'])->name('admin.payments.data.export');
         Route::get('/admin/payments/data/export-pdf', [AdminPaymentController::class, 'exportPdf'])->name('admin.payments.data.export-pdf');
         Route::get('/admin/payments', [AdminPaymentController::class, 'index'])->name('admin.payments');
+        Route::get('/admin/payments/export', [AdminPaymentController::class, 'exportHistory'])->name('admin.payments.export');
+        Route::get('/admin/payments/export-pdf', [AdminPaymentController::class, 'exportHistoryPdf'])->name('admin.payments.export-pdf');
         Route::post('/admin/payments/sync-pending', [AdminPaymentController::class, 'syncPending'])->name('admin.payments.sync-pending');
         Route::post('/admin/payments/{id}/check-status', [AdminPaymentController::class, 'checkStatus'])->name('admin.payments.check-status');
         Route::post('/admin/payments/{id}/cancel', [AdminPaymentController::class, 'cancelPayment'])->name('admin.payments.cancel');

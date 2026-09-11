@@ -19,10 +19,13 @@
                     <span>Sinkronkan Pending</span>
                 </button>
             </form>
-            <button type="button" onclick="showFeatureComingSoon('Ekspor Pembayaran (CSV)')" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <button type="button" id="btn-export-history-excel" onclick="exportHistoryExcel(this)" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
-                <span>Ekspor CSV</span>
-                <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-400 text-amber-950 shadow-2xs">Soon</span>
+                <span>Ekspor Excel</span>
+            </button>
+            <button type="button" id="btn-export-history-pdf" onclick="exportHistoryPdf(this)" class="border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs">
+                <i data-lucide="file-text" class="w-4 h-4 text-rose-500 dark:text-rose-400"></i>
+                <span>Ekspor PDF</span>
             </button>
         </div>
 
@@ -32,7 +35,7 @@
     <div id="payment-history-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#payment-history-card" hx-select="#payment-history-card">
         
         <!-- Search & Filter Form -->
-        <form action="{{ route('admin.payments') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 space-y-4">
+        <form id="paymentHistoryFilterForm" action="{{ route('admin.payments') }}" method="GET" hx-boost="false" class="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 space-y-4">
             <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <!-- Search Input Container -->
@@ -463,5 +466,87 @@
         @endif
     </div>
 </div>
+
+<script>
+    window.exportHistoryExcel = function(btn) {
+        const form = document.getElementById('paymentHistoryFilterForm');
+        const baseUrl = "{{ route('admin.payments.export') }}";
+        
+        const params = new URLSearchParams(window.location.search);
+        
+        if (form) {
+            const formData = new FormData(form);
+            for (const [key, value] of formData.entries()) {
+                if (value !== null && value !== undefined && value.toString().trim() !== '' && key !== '_token') {
+                    params.set(key, value.toString().trim());
+                } else {
+                    params.delete(key);
+                }
+            }
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('view') && !params.has('view')) {
+            params.set('view', urlParams.get('view'));
+        }
+        if (urlParams.has('unit_id') && !params.has('unit_id')) {
+            params.set('unit_id', urlParams.get('unit_id'));
+        }
+        
+        if (btn) {
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengekspor...</span>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }, 3000);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+    };
+
+    window.exportHistoryPdf = function(btn) {
+        const form = document.getElementById('paymentHistoryFilterForm');
+        const baseUrl = "{{ route('admin.payments.export-pdf') }}";
+        
+        const params = new URLSearchParams(window.location.search);
+        
+        if (form) {
+            const formData = new FormData(form);
+            for (const [key, value] of formData.entries()) {
+                if (value !== null && value !== undefined && value.toString().trim() !== '' && key !== '_token') {
+                    params.set(key, value.toString().trim());
+                } else {
+                    params.delete(key);
+                }
+            }
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('view') && !params.has('view')) {
+            params.set('view', urlParams.get('view'));
+        }
+        if (urlParams.has('unit_id') && !params.has('unit_id')) {
+            params.set('unit_id', urlParams.get('unit_id'));
+        }
+        
+        if (btn) {
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-slate-600 dark:text-slate-300 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Mengekspor PDF...</span>';
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }, 3000);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = baseUrl + (queryString ? '?' + queryString : '');
+    };
+</script>
 @endsection
 
