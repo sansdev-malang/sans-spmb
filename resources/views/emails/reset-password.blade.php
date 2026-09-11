@@ -31,9 +31,30 @@
                         <td align="center" style="padding-bottom: 24px;">
                             <table role="presentation" border="0" cellspacing="0" cellpadding="0">
                                 <tr>
-                                    @if(!empty($schoolLogo))
+                                    @php
+                                        $logoSrc = null;
+                                        if (!empty($schoolLogo)) {
+                                            if (str_starts_with($schoolLogo, 'http://') || str_starts_with($schoolLogo, 'https://')) {
+                                                $logoSrc = $schoolLogo;
+                                            } else {
+                                                $cleanedPath = ltrim(str_replace('/storage/', '', $schoolLogo), '/');
+                                                $fullStoragePath = storage_path('app/public/' . $cleanedPath);
+                                                $fullPublicPath = public_path(ltrim($schoolLogo, '/'));
+                                                
+                                                if (isset($message) && method_exists($message, 'embed') && file_exists($fullStoragePath)) {
+                                                    $logoSrc = $message->embed($fullStoragePath);
+                                                } elseif (isset($message) && method_exists($message, 'embed') && file_exists($fullPublicPath)) {
+                                                    $logoSrc = $message->embed($fullPublicPath);
+                                                } else {
+                                                    $logoSrc = asset($schoolLogo);
+                                                }
+                                            }
+                                        }
+                                    @endphp
+
+                                    @if(!empty($logoSrc))
                                         <td align="center" style="padding-bottom: 8px;">
-                                            <img src="{{ $schoolLogo }}" alt="{{ $schoolName }}" style="max-height: 48px; width: auto; display: block;">
+                                            <img src="{{ $logoSrc }}" alt="{{ $schoolName }}" style="max-height: 48px; width: auto; display: block; margin: 0 auto; border: 0;">
                                         </td>
                                     @else
                                         <td align="center" style="padding-bottom: 8px;">
