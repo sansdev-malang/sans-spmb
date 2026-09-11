@@ -761,7 +761,12 @@ class WebDashboardController extends Controller
         
         $committeeMessage = $this->getCommitteeMessage($registration);
         
-        return view('web.verification', compact('registration', 'committeeMessage'));
+        $documentFields = SpmbFormField::where('form_step_id', 6)
+            ->orWhere('type', 'file')
+            ->orderBy('order', 'asc')
+            ->get();
+        
+        return view('web.verification', compact('registration', 'committeeMessage', 'documentFields'));
     }
 
     public function observation($id)

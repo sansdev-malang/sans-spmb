@@ -163,7 +163,17 @@
                                 'guardian_address' => $reg->getFieldValue('guardian_address') ?? '-',
                                 'guardian_phone' => $reg->getFieldValue('guardian_phone') ?? '-',
 
-                                // Lampiran
+                                // Lampiran Dinamis
+                                'documents' => $documentFields->map(function($df) use ($reg) {
+                                    $val = $reg->getFieldValue($df->field_name);
+                                    return [
+                                        'field_name' => $df->field_name,
+                                        'label' => $df->label,
+                                        'is_required' => (bool)$df->is_required,
+                                        'url' => $val ? Storage::url($val) : null,
+                                    ];
+                                })->values()->all(),
+
                                 'student_photo' => $reg->getFieldValue('student_photo_path') ? asset('storage/' . $reg->getFieldValue('student_photo_path')) : null,
                                 'birth_certificate' => $reg->birth_certificate_path ? asset('storage/' . $reg->birth_certificate_path) : null,
                                 'family_card' => $reg->family_card_path ? asset('storage/' . $reg->family_card_path) : null,
@@ -217,17 +227,26 @@
                                 </div>
                             </td>
                             <td class="py-4 px-6 space-y-1">
-                                @if($reg->birth_certificate_path)
-                                    <a href="{{ Storage::url($reg->birth_certificate_path) }}" target="_blank" hx-boost="false" class="text-xs text-brand-emerald font-semibold hover:underline block flex items-center gap-1">
-                                        <i data-lucide="file-digit" class="w-3.5 h-3.5"></i> Akte Kelahiran
-                                    </a>
-                                @endif
-                                @if($reg->family_card_path)
-                                    <a href="{{ Storage::url($reg->family_card_path) }}" target="_blank" hx-boost="false" class="text-xs text-brand-emerald font-semibold hover:underline block flex items-center gap-1">
-                                        <i data-lucide="file-digit" class="w-3.5 h-3.5"></i> Kartu Keluarga
-                                    </a>
-                                @endif
-                                @if(!$reg->birth_certificate_path && !$reg->family_card_path)
+                                @php
+                                    $uploadedDocs = [];
+                                    foreach ($documentFields as $df) {
+                                        $fVal = $reg->getFieldValue($df->field_name);
+                                        if ($fVal) {
+                                            $uploadedDocs[] = [
+                                                'label' => $df->label,
+                                                'url' => Storage::url($fVal),
+                                            ];
+                                        }
+                                    }
+                                @endphp
+                                @if(count($uploadedDocs) > 0)
+                                    @foreach($uploadedDocs as $doc)
+                                        <a href="{{ $doc['url'] }}" target="_blank" hx-boost="false" class="text-xs text-brand-emerald font-semibold hover:underline flex items-center gap-1 truncate max-w-[220px]" title="{{ $doc['label'] }}">
+                                            <i data-lucide="file-digit" class="w-3.5 h-3.5 shrink-0"></i> 
+                                            <span class="truncate">{{ $doc['label'] }}</span>
+                                        </a>
+                                    @endforeach
+                                @else
                                     <span class="text-xs text-slate-400">Belum diunggah</span>
                                 @endif
                             </td>
@@ -532,43 +551,8 @@
                     <h4 class="font-extrabold text-sm text-brand-emerald dark:text-emerald-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
                         <i data-lucide="file-text" class="w-4 h-4"></i> Dokumen Persyaratan
                     </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div id="det-cert-box" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between verify-field-container">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
-                                <div>
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-350 block">Akta Kelahiran</span>
-                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                            <input type="checkbox" data-field="birth_certificate_path" data-label="Scan Akta Kelahiran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                                            <span>OK</span>
-                                        </label>
-                                    </div>
-                                    <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
-                                </div>
-                            </div>
-                            <a id="det-cert-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans">
-                                Buka File
-                            </a>
-                        </div>
-                        <div id="det-card-box" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between verify-field-container">
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald"></i>
-                                <div>
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-350 block">Kartu Keluarga</span>
-                                        <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check hidden">
-                                            <input type="checkbox" data-field="family_card_path" data-label="Scan Kartu Keluarga" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
-                                            <span>OK</span>
-                                        </label>
-                                    </div>
-                                    <span class="text-[9px] text-slate-400">PDF/Gambar Asli</span>
-                                </div>
-                            </div>
-                            <a id="det-card-link" href="#" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans">
-                                Buka File
-                            </a>
-                        </div>
+                    <div id="det-documents-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dynamically rendered via openCandidateDetailModal -->
                     </div>
                 </div>
 
@@ -639,28 +623,47 @@
         
         document.getElementById('det-created').innerText = cand.created_at_label;
 
-        // Akta File Box Link
-        const certBox = document.getElementById('det-cert-box');
-        const certLink = document.getElementById('det-cert-link');
-        if (cand.birth_certificate) {
-            certBox.classList.remove('opacity-50');
-            certLink.href = cand.birth_certificate;
-            certLink.style.display = 'inline-block';
-        } else {
-            certBox.classList.add('opacity-50');
-            certLink.style.display = 'none';
-        }
+        // Render dynamic documents
+        const docsContainer = document.getElementById('det-documents-container');
+        docsContainer.innerHTML = '';
 
-        // KK File Box Link
-        const cardBox = document.getElementById('det-card-box');
-        const cardLink = document.getElementById('det-card-link');
-        if (cand.family_card) {
-            cardBox.classList.remove('opacity-50');
-            cardLink.href = cand.family_card;
-            cardLink.style.display = 'inline-block';
+        if (cand.documents && cand.documents.length > 0) {
+            cand.documents.forEach(doc => {
+                const box = document.createElement('div');
+                box.className = `p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between verify-field-container ${doc.url ? '' : 'opacity-60'}`;
+                
+                let actionHtml = '';
+                if (doc.url) {
+                    actionHtml = `<a href="${doc.url}" target="_blank" class="bg-brand-emerald hover-emerald text-white px-2.5 py-1 rounded text-[9px] font-bold transition font-sans shrink-0">Buka File</a>`;
+                } else {
+                    actionHtml = `<span class="text-[9px] font-semibold text-slate-400 italic shrink-0">Belum diunggah</span>`;
+                }
+
+                const reqBadge = doc.is_required 
+                    ? `<span class="text-[8px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">Wajib</span>`
+                    : `<span class="text-[8px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Opsional</span>`;
+
+                box.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0 pr-2">
+                        <i data-lucide="file-digit" class="w-6 h-6 text-brand-emerald shrink-0"></i>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate" title="${doc.label}">${doc.label}</span>
+                                ${reqBadge}
+                                <label class="inline-flex items-center gap-1 cursor-pointer text-[9px] font-bold text-slate-400 hover:text-red-500 verification-check ${isVerificationMode ? '' : 'hidden'}">
+                                    <input type="checkbox" data-field="${doc.field_name}" data-label="${doc.label}" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald font-sans">
+                                    <span>OK</span>
+                                </label>
+                            </div>
+                            <span class="text-[9px] text-slate-400 block truncate">${doc.url ? 'File Terlampir' : (doc.is_required ? 'Berkas Belum Diunggah' : 'Tidak Wajib')}</span>
+                        </div>
+                    </div>
+                    ${actionHtml}
+                `;
+                docsContainer.appendChild(box);
+            });
         } else {
-            cardBox.classList.add('opacity-50');
-            cardLink.style.display = 'none';
+            docsContainer.innerHTML = '<p class="text-xs text-slate-400 italic col-span-2">Tidak ada dokumen persyaratan yang dikonfigurasi.</p>';
         }
 
         // Toggle verification elements
@@ -726,19 +729,19 @@
         }
     });
 
-    // Attach event listeners to validation checkboxes
-    document.querySelectorAll('.verification-check input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', function() {
-            const container = this.closest('.verify-field-container');
+    // Attach delegated event listener to validation checkboxes
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.matches('.verification-check input[type="checkbox"]')) {
+            const container = e.target.closest('.verify-field-container');
             if (container) {
-                if (this.checked) {
+                if (e.target.checked) {
                     container.classList.remove('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
                 } else {
                     container.classList.add('bg-red-50', 'dark:bg-red-955/20', 'border-red-200');
                 }
             }
             updateVerificationSummary();
-        });
+        }
     });
 
     function updateVerificationSummary() {

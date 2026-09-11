@@ -71,7 +71,12 @@ class AdminDashboardController extends Controller
             'failed' => (clone $baseStats)->where('registration_status', 'failed')->count(),
         ];
 
-        return view('admin.verification', compact('registrations', 'tabCounts'));
+        $documentFields = \App\Models\SpmbFormField::where('form_step_id', 6)
+            ->orWhere('type', 'file')
+            ->orderBy('order', 'asc')
+            ->get();
+
+        return view('admin.verification', compact('registrations', 'tabCounts', 'documentFields'));
     }
 
     public function dashboard()

@@ -223,87 +223,68 @@
                     <span class="text-[11px] text-slate-500 uppercase tracking-wider font-bold hidden sm:inline">Status Berkas</span>
                 </div>
                 <div class="divide-y divide-slate-100 dark:divide-slate-800">
-                    <!-- Row 1: Scan Akta Kelahiran -->
-                    <div class="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-850/40 transition">
-                        <div class="space-y-0.5 min-w-0">
-                            <span class="font-extrabold text-slate-800 dark:text-white text-xs sm:text-sm block truncate">Scan Akta Kelahiran</span>
-                            @if($registration->birth_certificate_path)
-                                <a href="{{ Storage::url($registration->birth_certificate_path) }}" target="_blank" class="text-brand-emerald dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 text-[11px]">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Buka Berkas
-                                </a>
-                            @else
-                                <span class="text-slate-400 text-[11px] italic">Belum diunggah</span>
-                            @endif
-                        </div>
-                        <div class="shrink-0 self-center">
-                            @if($registration->birth_certificate_path)
-                                @if($registration->registration_status === 'submitted')
-                                    <span class="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span> Menunggu Verifikasi
-                                    </span>
-                                @elseif($registration->registration_status === 'failed')
-                                    @if(is_array($registration->invalid_fields) && in_array('birth_certificate_path', $registration->invalid_fields))
-                                        <span class="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse"></span> Perlu Perbaikan (Ditolak)
-                                        </span>
-                                    @else
-                                        <span class="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-green-600"></span> Terverifikasi
-                                        </span>
-                                    @endif
-                                @else
-                                    <span class="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-green-600"></span> Terverifikasi
-                                    </span>
-                                @endif
-                            @else
-                                <span class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 shadow-xs whitespace-nowrap">
-                                    Belum Ada Berkas
-                                </span>
-                            @endif
-                        </div>
-                    </div>
+                    @php
+                        $docList = isset($documentFields) && count($documentFields) > 0 
+                            ? $documentFields 
+                            : \App\Models\SpmbFormField::where('form_step_id', 6)->orWhere('type', 'file')->orderBy('order', 'asc')->get();
+                    @endphp
 
-                    <!-- Row 2: Scan Kartu Keluarga -->
-                    <div class="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-850/40 transition">
-                        <div class="space-y-0.5 min-w-0">
-                            <span class="font-extrabold text-slate-800 dark:text-white text-xs sm:text-sm block truncate">Scan Kartu Keluarga</span>
-                            @if($registration->family_card_path)
-                                <a href="{{ Storage::url($registration->family_card_path) }}" target="_blank" class="text-brand-emerald dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 text-[11px]">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Buka Berkas
-                                </a>
-                            @else
-                                <span class="text-slate-400 text-[11px] italic">Belum diunggah</span>
-                            @endif
-                        </div>
-                        <div class="shrink-0 self-center">
-                            @if($registration->family_card_path)
-                                @if($registration->registration_status === 'submitted')
-                                    <span class="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span> Menunggu Verifikasi
-                                    </span>
-                                @elseif($registration->registration_status === 'failed')
-                                    @if(is_array($registration->invalid_fields) && in_array('family_card_path', $registration->invalid_fields))
-                                        <span class="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
-                                            <span class="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse"></span> Perlu Perbaikan (Ditolak)
+                    @forelse($docList as $docField)
+                        @php
+                            $val = $registration->getFieldValue($docField->field_name);
+                            $isRejected = is_array($registration->invalid_fields) && in_array($docField->field_name, $registration->invalid_fields);
+                        @endphp
+                        <div class="p-4 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-850/40 transition">
+                            <div class="space-y-0.5 min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-extrabold text-slate-800 dark:text-white text-xs sm:text-sm block truncate">{{ $docField->label }}</span>
+                                    @if($docField->is_required)
+                                        <span class="text-[9px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">Wajib</span>
+                                    @else
+                                        <span class="text-[9px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Opsional</span>
+                                    @endif
+                                </div>
+                                @if($val)
+                                    <a href="{{ Storage::url($val) }}" target="_blank" class="text-brand-emerald dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 text-[11px]">
+                                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Buka Berkas
+                                    </a>
+                                @else
+                                    <span class="text-slate-400 text-[11px] italic">Belum diunggah</span>
+                                @endif
+                            </div>
+                            <div class="shrink-0 self-center">
+                                @if($val)
+                                    @if($registration->registration_status === 'submitted')
+                                        <span class="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span> Menunggu Verifikasi
                                         </span>
+                                    @elseif($registration->registration_status === 'failed')
+                                        @if($isRejected)
+                                            <span class="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse"></span> Perlu Perbaikan (Ditolak)
+                                            </span>
+                                        @else
+                                            <span class="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+                                                <span class="h-1.5 w-1.5 rounded-full bg-green-600"></span> Terverifikasi
+                                            </span>
+                                        @endif
                                     @else
                                         <span class="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
                                             <span class="h-1.5 w-1.5 rounded-full bg-green-600"></span> Terverifikasi
                                         </span>
                                     @endif
                                 @else
-                                    <span class="bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/60 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 shadow-xs whitespace-nowrap">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-green-600"></span> Terverifikasi
+                                    <span class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 shadow-xs whitespace-nowrap">
+                                        {{ $docField->is_required ? 'Belum Ada Berkas' : 'Tidak Diunggah' }}
                                     </span>
                                 @endif
-                            @else
-                                <span class="bg-slate-100 dark:bg-slate-800 text-slate-500 px-3 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 shadow-xs whitespace-nowrap">
-                                    Belum Ada Berkas
-                                </span>
-                            @endif
+                            </div>
                         </div>
-                    </div>
+                    @empty
+                        <div class="p-4 text-center text-slate-400 text-xs italic">
+                            Belum ada konfigurasi dokumen persyaratan.
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
