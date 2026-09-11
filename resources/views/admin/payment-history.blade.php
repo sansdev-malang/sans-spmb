@@ -231,21 +231,47 @@
                                 </div>
                                 <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                                     @php
-                                        $winpayTrxId = $pay->reference_id 
-                                            ?: ($pay->payment_info['callback_payload']['originalReferenceNo'] 
-                                                ?? ($pay->payment_info['callback_payload']['referenceNo'] 
-                                                    ?? ($pay->payment_info['callback_payload']['paymentRequestId'] 
-                                                        ?? ($pay->payment_info['trxId'] ?? null))));
+                                        $callbackPayload = $pay->payment_info['callback_payload'] ?? [];
+                                        
+                                        // 1. Prioritaskan ID Transaksi riil Winpay (originalReferenceNo / referenceNo / numeric ID) jika pembayaran sukses/ada callback
+                                        $numericWinpayId = $callbackPayload['originalReferenceNo'] 
+                                            ?? ($callbackPayload['referenceNo'] 
+                                                ?? ($callbackPayload['paymentRequestId'] 
+                                                    ?? (!empty($pay->reference_id) && is_numeric($pay->reference_id) ? $pay->reference_id : null)));
+
+                                        $contractId = $pay->reference_id 
+                                            ?? ($pay->payment_info['referenceId'] 
+                                                ?? ($pay->payment_info['contractId'] 
+                                                    ?? ($pay->payment_info['additionalInfo']['contractId'] ?? null)));
+
+                                        $displayWinpayId = $numericWinpayId ?: $contractId;
+
+                                        // 2. Waktu Transaksi: Jika sukses dan ada waktu pembayaran (settled_at/paidTime/trxDateTime), tampilkan waktu sukses
+                                        $settledTimeRaw = $pay->payment_info['settled_at'] 
+                                            ?? ($callbackPayload['paidTime'] 
+                                                ?? ($callbackPayload['trxDateTime'] ?? null));
+
+                                        $displayTime = null;
+                                        if ($pay->status === 'success' && $settledTimeRaw) {
+                                            try {
+                                                $displayTime = \Carbon\Carbon::parse($settledTimeRaw)->timezone('Asia/Jakarta')->format('d M Y, H:i');
+                                            } catch (\Throwable $e) {
+                                                $displayTime = null;
+                                            }
+                                        }
+                                        if (!$displayTime) {
+                                            $displayTime = $pay->created_at ? $pay->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') : '-';
+                                        }
                                     @endphp
-                                    @if($winpayTrxId)
-                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-800" title="ID Transaksi Winpay">
+                                    @if($displayWinpayId)
+                                        <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-800" title="{{ $numericWinpayId ? 'ID Transaksi Winpay' : 'Contract ID Winpay' }}">
                                             <i data-lucide="check" class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400"></i>
-                                            Winpay: {{ $winpayTrxId }}
+                                            Winpay: {{ $displayWinpayId }}
                                         </span>
                                         <span class="text-slate-300 dark:text-slate-600">•</span>
                                     @endif
-                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                                        {{ $pay->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium" title="{{ $pay->status === 'success' && $settledTimeRaw ? 'Waktu Pembayaran Sukses' : 'Waktu Pembuatan Tagihan' }}">
+                                        {{ $displayTime }} WIB
                                     </span>
                                 </div>
                             </td>

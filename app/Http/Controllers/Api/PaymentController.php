@@ -626,15 +626,28 @@ class PaymentController extends Controller
             // =========================================================================================
             if ($isSuccess) {
                 $currentInfo = is_array($payment->payment_info) ? $payment->payment_info : [];
+                $settledTime = $body['paidTime'] ?? ($body['trxDateTime'] ?? now()->toIso8601String());
+                
                 $newInfo = array_merge($currentInfo, [
                     'callback_payload' => $body,
-                    'settled_at' => now()->toIso8601String()
+                    'settled_at' => $settledTime
                 ]);
 
-                $payment->update([
+                // Preservasikan contractId di payment_info jika reference_id diganti dengan nomor tiket riil Winpay
+                if (!empty($payment->reference_id) && !is_numeric($payment->reference_id)) {
+                    $newInfo['contractId'] = $payment->reference_id;
+                }
+
+                $updateData = [
                     'status' => 'success',
                     'payment_info' => $newInfo
-                ]);
+                ];
+
+                if (!empty($resolvedWinpayRef)) {
+                    $updateData['reference_id'] = $resolvedWinpayRef;
+                }
+
+                $payment->update($updateData);
 
                 if ($payment->payment_type === 'final_fee') {
                     $totalRequired = $registration->net_fee;

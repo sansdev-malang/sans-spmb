@@ -163,6 +163,8 @@ class AdminPaymentController extends Controller
                   ->orWhere('reference_id', 'like', "%{$search}%")
                   ->orWhere('payment_info->virtualAccountNo', 'like', "%{$search}%")
                   ->orWhere('payment_info->trxId', 'like', "%{$search}%")
+                  ->orWhere('payment_info->callback_payload->originalReferenceNo', 'like', "%{$search}%")
+                  ->orWhere('payment_info->callback_payload->referenceNo', 'like', "%{$search}%")
                   ->orWhereHas('registration', function($sq) use ($search) {
                       $sq->where('candidate_name', 'like', "%{$search}%");
                   });
