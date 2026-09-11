@@ -462,9 +462,9 @@
 @push('scripts')
 <script>
     // Master data untuk dynamic dependency
-    const gradesData = @json($grades);
-    const unitsData = @json($units);
-    const typesData = @json($types);
+    var gradesData = @json($grades);
+    var unitsData = @json($units);
+    var typesData = @json($types);
 
     function openRegistrationModal() {
         const modal = document.getElementById('newRegistrationModal');
@@ -571,7 +571,7 @@
     }
     
     // Listener saat jalur diubah
-    const typeSelectElem = document.getElementById('typeSelect');
+    var typeSelectElem = document.getElementById('typeSelect');
     if (typeSelectElem) {
         typeSelectElem.addEventListener('change', function() {
             updateGradeOptions();
@@ -579,7 +579,7 @@
     }
 
     // Listener saat unit diubah (jika ada trigger eksternal)
-    const unitSelectElem = document.getElementById('unitSelect');
+    var unitSelectElem = document.getElementById('unitSelect');
     if (unitSelectElem) {
         unitSelectElem.addEventListener('change', function() {
             updateGradeOptions();

@@ -1045,7 +1045,7 @@
 
 <script>
     // Accordion Management for Detail Modal
-    const detailAccordionIds = ['acc-program', 'acc-biodata', 'acc-address', 'acc-parents', 'acc-guardian', 'acc-documents'];
+    var detailAccordionIds = ['acc-program', 'acc-biodata', 'acc-address', 'acc-parents', 'acc-guardian', 'acc-documents'];
 
     function toggleDetailAccordion(id) {
         const body = document.getElementById('body-' + id);

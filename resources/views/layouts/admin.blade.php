@@ -857,7 +857,7 @@
 
     <!-- Script triggers and controllers -->
     <script>
-        let globalConfirmCallback = null;
+        var globalConfirmCallback = null;
 
         // Custom Universal Confirmation Modal Controller
         window.showConfirmDialog = function(options = {}) {
