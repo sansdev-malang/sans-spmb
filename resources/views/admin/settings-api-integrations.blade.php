@@ -593,15 +593,15 @@ if (hash_equals($signature, $calculated)) {
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">2. Filter Status Pendaftar yang Boleh Diambil <span class="text-red-500">*</span></label>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
                         <label class="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
-                            <input type="checkbox" name="allowed_statuses[]" value="verified" checked class="status-chk rounded border-slate-300 dark:border-slate-700 text-brand-emerald focus:ring-brand-emerald bg-white dark:bg-slate-800">
+                            <input type="checkbox" name="allowed_statuses[]" value="verified" checked class="status-chk status-item-chk rounded border-slate-300 dark:border-slate-700 text-brand-emerald focus:ring-brand-emerald bg-white dark:bg-slate-800">
                             Diterima (Verified / Lulus)
                         </label>
                         <label class="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                            <input type="checkbox" name="allowed_statuses[]" value="submitted" class="status-chk rounded border-slate-300 dark:border-slate-700 text-brand-emerald focus:ring-brand-emerald bg-white dark:bg-slate-800">
+                            <input type="checkbox" name="allowed_statuses[]" value="submitted" class="status-chk status-item-chk rounded border-slate-300 dark:border-slate-700 text-brand-emerald focus:ring-brand-emerald bg-white dark:bg-slate-800">
                             Menunggu Verifikasi
                         </label>
-                        <label class="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                            <input type="checkbox" name="allowed_statuses[]" value="all" class="status-chk rounded border-slate-300 dark:border-slate-700 text-brand-emerald focus:ring-brand-emerald bg-white dark:bg-slate-800">
+                        <label class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                            <input type="checkbox" name="allowed_statuses[]" value="all" id="status_all" class="status-chk rounded border-slate-300 dark:border-slate-700 text-brand-emerald focus:ring-brand-emerald bg-white dark:bg-slate-800">
                             Semua Status
                         </label>
                     </div>
@@ -871,9 +871,12 @@ if (hash_equals($signature, $calculated)) {
         document.getElementById('inputWebhookUrl').value = '';
         
         // Reset checkboxes
-        document.querySelectorAll('.unit-chk').forEach(c => c.checked = false);
         document.getElementById('unit_all').checked = true;
-        document.querySelectorAll('.status-chk').forEach(c => c.checked = (c.value === 'verified'));
+        document.querySelectorAll('.unit-chk').forEach(c => c.checked = true);
+        
+        document.getElementById('status_all').checked = false;
+        document.querySelectorAll('.status-item-chk').forEach(c => c.checked = (c.value === 'verified'));
+        
         document.querySelectorAll('.field-chk').forEach(c => c.checked = (c.value !== 'payments'));
         document.querySelectorAll('.event-chk').forEach(c => c.checked = (c.value === 'candidate.verified'));
 
@@ -895,15 +898,20 @@ if (hash_equals($signature, $calculated)) {
 
         // Allowed units
         const units = client.allowed_units || ['all'];
-        document.getElementById('unit_all').checked = units.includes('all');
-        document.querySelectorAll('.unit-chk').forEach(c => {
-            c.checked = units.includes(c.value.toLowerCase());
+        const unitCheckboxes = document.querySelectorAll('.unit-chk');
+        const isAllUnits = units.includes('all') || (units.length >= unitCheckboxes.length);
+        document.getElementById('unit_all').checked = isAllUnits;
+        unitCheckboxes.forEach(c => {
+            c.checked = isAllUnits || units.includes(c.value.toLowerCase());
         });
 
         // Allowed statuses
         const statuses = client.allowed_statuses || ['verified'];
-        document.querySelectorAll('.status-chk').forEach(c => {
-            c.checked = statuses.includes(c.value);
+        const statusItems = document.querySelectorAll('.status-item-chk');
+        const isAllStatuses = statuses.includes('all') || (statuses.length >= statusItems.length);
+        document.getElementById('status_all').checked = isAllStatuses;
+        statusItems.forEach(c => {
+            c.checked = isAllStatuses || statuses.includes(c.value);
         });
 
         // Allowed fields
@@ -1154,9 +1162,43 @@ if (hash_equals($signature, $calculated)) {
         }
     });
 
-    // Auto lock body if one-time token modal is rendered on page load
+    // Auto lock body and initialize two-way sync for checkboxes
     document.addEventListener('DOMContentLoaded', function() {
         syncBodyScrollLock();
+
+        // 1. Setup two-way sync for Unit checkboxes
+        const unitAll = document.getElementById('unit_all');
+        const unitCheckboxes = document.querySelectorAll('.unit-chk');
+        if (unitAll && unitCheckboxes.length > 0) {
+            unitAll.addEventListener('change', function() {
+                unitCheckboxes.forEach(chk => { chk.checked = unitAll.checked; });
+            });
+
+            unitCheckboxes.forEach(chk => {
+                chk.addEventListener('change', function() {
+                    const total = unitCheckboxes.length;
+                    const checkedCount = document.querySelectorAll('.unit-chk:checked').length;
+                    unitAll.checked = (checkedCount === total);
+                });
+            });
+        }
+
+        // 2. Setup two-way sync for Status checkboxes
+        const statusAll = document.getElementById('status_all');
+        const statusItems = document.querySelectorAll('.status-item-chk');
+        if (statusAll && statusItems.length > 0) {
+            statusAll.addEventListener('change', function() {
+                statusItems.forEach(chk => { chk.checked = statusAll.checked; });
+            });
+
+            statusItems.forEach(chk => {
+                chk.addEventListener('change', function() {
+                    const total = statusItems.length;
+                    const checkedCount = document.querySelectorAll('.status-item-chk:checked').length;
+                    statusAll.checked = (checkedCount === total);
+                });
+            });
+        }
     });
 </script>
 @endsection
