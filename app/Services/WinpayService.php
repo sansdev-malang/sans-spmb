@@ -730,9 +730,10 @@ class WinpayService implements PaymentGatewayInterface
                 ])
             ];
         } else {
-            // 5. Tangani Pembatalan Virtual Account (VA) & Modern Retail (DELETE /v1.0/transfer-va/delete-va - Service Code: 31)
+            // 5. Tangani Pembatalan Virtual Account (VA) & Modern Retail (POST /v1.0/transfer-va/delete-va - Service Code: 31)
+            // Catatan: Dokumentasi menuliskan badge 'DELETE', namun router Symfony Winpay menggunakan HTTP method 'POST'
             $endpoint = '/v1.0/transfer-va/delete-va';
-            $httpMethod = 'DELETE';
+            $httpMethod = 'POST';
 
             $vaNo = trim(
                 $paymentInfo['virtualAccountNo'] 
