@@ -1454,8 +1454,19 @@
         };
 
         // Universal Clipboard Copy with Fallback (for HTTP, non-secure contexts, and mobile)
-        window.copyToClipboard = function(text, successMsg = 'Teks berhasil disalin') {
-            if (!text) return;
+        window.copyToClipboard = function(textOrId, successMsg = 'Teks berhasil disalin') {
+            if (!textOrId) return;
+
+            // If an element with this ID exists, use its value or textContent
+            let text = textOrId;
+            const el = document.getElementById(textOrId);
+            if (el) {
+                if (typeof el.value !== 'undefined') {
+                    text = el.value;
+                } else if (el.textContent) {
+                    text = el.textContent.trim();
+                }
+            }
 
             const onDone = () => {
                 if (typeof showToast === 'function') {

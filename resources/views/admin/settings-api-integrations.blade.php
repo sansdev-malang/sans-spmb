@@ -977,15 +977,6 @@ if (hash_equals($signature, $calculated)) {
         }
     }
 
-    function copyToClipboard(elementId) {
-        const input = document.getElementById(elementId);
-        if (!input) return;
-        input.select();
-        safeCopyText(input.value, () => {
-            showToast('Berhasil disalin ke clipboard!', 'success');
-        });
-    }
-
     function testWebhookPing(clientId, clientName) {
         showToast(`Mengirim test ping webhook ke [${clientName}]...`, 'info');
         fetch(`/admin/api-integrations/${clientId}/test-webhook`, {
