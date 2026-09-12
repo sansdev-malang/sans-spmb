@@ -292,7 +292,7 @@ class WinpayService implements PaymentGatewayInterface
         $expiry->modify('+24 hours');
         $expiredDate = $expiry->format('Y-m-d\TH:i:sP');
 
-        // 2. Sanitasi nama pelanggan (Wajib Alfanumerik & Spasi, Panjang 5-24 karakter standar SNAP BI Winpay)
+        // 2. Sanitasi nama pelanggan (Wajib Alfanumerik & Spasi, Panjang 5-20 karakter standar kompatibilitas SNAP BI seluruh bank)
         $rawName = trim($customerName ?: 'Calon Murid SPMB');
         $cleanName = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $rawName);
         $cleanName = preg_replace('/\s+/', ' ', $cleanName);
@@ -300,7 +300,7 @@ class WinpayService implements PaymentGatewayInterface
         if (strlen($cleanName) < 5) {
             $cleanName = str_pad($cleanName, 5, '0', STR_PAD_RIGHT);
         }
-        $vaName = substr($cleanName, 0, 24);
+        $vaName = substr($cleanName, 0, 20);
 
         // Sanitasi nomor telepon pelanggan (Wajib numerik 10-15 digit)
         $phone = preg_replace('/[^0-9]/', '', $customerPhone ?: '081234567890');
@@ -361,13 +361,13 @@ class WinpayService implements PaymentGatewayInterface
                 ]
             ];
         } else {
-            // Closed Virtual Account (VA) & Retail
-            $custNo = substr(preg_replace('/[^0-9]/', '', $invoiceNo . rand(1000, 9999)), -8);
-
+            // Closed Virtual Account (VA) & Retail (One-Off 'c' standar SNAP BI Winpay)
+            // Sesuai spesifikasi resmi Winpay SNAP API:
+            // - customerNo TIDAK dikirim pada tipe 'c' agar nomor VA digenerate acak oleh bank/Winpay
+            // - additionalInfo HANYA memuat key 'channel'
             $body = [
-                'customerNo' => $custNo,
                 'virtualAccountName' => $vaName,
-                'virtualAccountTrxType' => 'c', // 'c' = Closed amount (tagihan nominal pasti)
+                'virtualAccountTrxType' => 'c', // 'c' = Closed One-Off amount (tagihan nominal pasti)
                 'expiredDate' => $expiredDate,
                 'trxId' => $invoiceNo,
                 'totalAmount' => [
@@ -375,8 +375,7 @@ class WinpayService implements PaymentGatewayInterface
                     'currency' => 'IDR'
                 ],
                 'additionalInfo' => [
-                    'channel' => $cleanMethod,
-                    'invoiceNumber' => $invoiceNo
+                    'channel' => $cleanMethod
                 ]
             ];
         }
