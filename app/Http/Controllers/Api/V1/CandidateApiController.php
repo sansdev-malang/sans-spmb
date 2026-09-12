@@ -42,7 +42,17 @@ class CandidateApiController extends Controller
         // 2. Filter Status sesuai Izin Client (Default: hanya yang diterima/verified jika dibatasi)
         $allowedStatuses = $client->allowed_statuses ?: ['verified', 'accepted'];
         if (!in_array('all', $allowedStatuses)) {
-            $query->whereIn('registration_status', $allowedStatuses);
+            $effectiveStatuses = [];
+            foreach ($allowedStatuses as $st) {
+                if ($st === 'verified') {
+                    $effectiveStatuses = array_merge($effectiveStatuses, ['verified', 'taaruf_completed', 'agreement_signed', 'completed', 'accepted']);
+                } elseif ($st === 'submitted') {
+                    $effectiveStatuses = array_merge($effectiveStatuses, ['submitted']);
+                } else {
+                    $effectiveStatuses[] = $st;
+                }
+            }
+            $query->whereIn('registration_status', array_unique($effectiveStatuses));
         }
 
         // 3. User Query Parameters
