@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SpmbAgreementTemplateSeeder::class,
             SpmbFormStepAndFieldSeeder::class,
             SettingSeeder::class,
+            ApiClientSeeder::class,
         ]);
     }
 }

@@ -21,6 +21,7 @@ use App\Http\Controllers\Web\PaymentChannelController;
 use App\Http\Controllers\Web\AdminTaarufController;
 use App\Http\Controllers\Web\AdminFinanceReportController;
 use App\Http\Controllers\Web\AdminReportAnalyticsController;
+use App\Http\Controllers\Web\AdminApiIntegrationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -197,9 +198,15 @@ Route::middleware('auth')->group(function () {
             Route::post('/admin/payment-channels/{id}/toggle', [PaymentChannelController::class, 'toggle'])->name('admin.payment-channels.toggle');
             Route::post('/admin/payment-channels/sync', [PaymentChannelController::class, 'sync'])->name('admin.payment-channels.sync');
 
-            Route::get('/admin/api-integrations', function () {
-                return view('admin.settings-api-integrations');
-            })->name('admin.api-integrations');
+            // API & External Applications Integration Management
+            Route::get('/admin/api-integrations', [AdminApiIntegrationController::class, 'index'])->name('admin.api-integrations');
+            Route::post('/admin/api-integrations', [AdminApiIntegrationController::class, 'store'])->name('admin.api-integrations.store');
+            Route::post('/admin/api-integrations/{id}/update', [AdminApiIntegrationController::class, 'update'])->name('admin.api-integrations.update');
+            Route::post('/admin/api-integrations/{id}/toggle', [AdminApiIntegrationController::class, 'toggle'])->name('admin.api-integrations.toggle');
+            Route::post('/admin/api-integrations/{id}/regenerate', [AdminApiIntegrationController::class, 'regenerateToken'])->name('admin.api-integrations.regenerate');
+            Route::delete('/admin/api-integrations/{id}', [AdminApiIntegrationController::class, 'destroy'])->name('admin.api-integrations.destroy');
+            Route::post('/admin/api-integrations/{id}/test-webhook', [AdminApiIntegrationController::class, 'testWebhook'])->name('admin.api-integrations.test-webhook');
+            Route::post('/admin/api-integrations/clear-logs', [AdminApiIntegrationController::class, 'clearLogs'])->name('admin.api-integrations.clear-logs');
 
             Route::get('/admin/spmb-settings', [SpmbSettingsController::class, 'index'])->name('admin.spmb-settings');
             Route::get('/admin/spmb-settings/units-grades', [SpmbSettingsController::class, 'unitsGrades'])->name('admin.spmb-settings.units-grades');

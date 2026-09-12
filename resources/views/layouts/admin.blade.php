@@ -51,6 +51,7 @@
     </script>
     
     <style>
+        [x-cloak] { display: none !important; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #f8fafc;
@@ -956,6 +957,7 @@
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
+            document.body.classList.add('overflow-hidden');
 
             if (window.lucide) {
                 lucide.createIcons();
@@ -970,6 +972,7 @@
             modal.classList.add('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-100');
             modalBody.classList.add('scale-95');
+            document.body.classList.remove('overflow-hidden');
             globalConfirmCallback = null;
         };
 

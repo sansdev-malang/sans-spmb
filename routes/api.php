@@ -54,3 +54,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/registrations/{id}/reject', [AdminRegistrationController::class, 'reject']);
     });
 });
+
+// External Application Integration APIs (V1 - SANS Ekosistem Unit: PAUD, SD, SMP)
+Route::prefix('v1')->middleware(\App\Http\Middleware\AuthenticateApiClient::class)->group(function () {
+    Route::get('/candidates', [\App\Http\Controllers\Api\V1\CandidateApiController::class, 'index']);
+    Route::get('/candidates/{id}', [\App\Http\Controllers\Api\V1\CandidateApiController::class, 'show']);
+});
+

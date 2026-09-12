@@ -380,6 +380,13 @@ class AdminDashboardController extends Controller
             \Illuminate\Support\Facades\Log::error('Failed to send candidate verification notification', ['error' => $e->getMessage()]);
         }
 
+        // Dispatch outbound webhook to external integrated applications (sans-sd, sans-smp, etc.)
+        try {
+            app(\App\Services\ApiIntegrationService::class)->dispatchWebhook('candidate.verified', $registration);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to dispatch candidate.verified webhook', ['error' => $e->getMessage()]);
+        }
+
         return redirect()->back()->with('success', 'Candidate registration verified successfully.');
     }
 
