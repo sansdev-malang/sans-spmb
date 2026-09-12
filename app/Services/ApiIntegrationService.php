@@ -60,6 +60,7 @@ class ApiIntegrationService
                 'birth_place' => $reg->birth_place ?? ($candidateInfo['birth_place'] ?? ($candidateInfo['tempat_lahir'] ?? '')),
                 'birth_date' => $reg->birth_date ? (is_string($reg->birth_date) ? $reg->birth_date : $reg->birth_date->format('Y-m-d')) : ($candidateInfo['birth_date'] ?? ($candidateInfo['tanggal_lahir'] ?? '')),
                 'religion' => $reg->religion ?? ($candidateInfo['religion'] ?? ($candidateInfo['agama'] ?? 'Islam')),
+                'photo_url' => $reg->student_photo_path ? (str_starts_with($reg->student_photo_path, 'http') ? $reg->student_photo_path : url(asset('storage/' . ltrim($reg->student_photo_path, '/')))) : null,
                 'address' => [
                     'street' => $reg->address ?? ($candidateInfo['address'] ?? ($candidateInfo['alamat'] ?? '')),
                     'house_number' => $reg->house_number ?? ($candidateInfo['house_number'] ?? ''),
@@ -117,18 +118,80 @@ class ApiIntegrationService
         // 4. Kelompok Data: Berkas & Lampiran Dokumen (documents)
         if ($client->canAccessField('documents')) {
             $docList = [];
-            $docKeys = [
-                'student_photo' => $reg->student_photo_path,
-                'birth_certificate' => $reg->birth_certificate_path,
-                'family_card' => $reg->family_card_path,
-                'diploma_certificate' => $reg->diploma_certificate_path,
-                'student_card' => $reg->student_card_path,
-            ];
-            foreach ($docKeys as $key => $path) {
+            $unitId = $reg->spmb_unit_id;
+
+            // 1. Ambil form fields untuk dokumen / berkas yang relevan dengan unit atau global
+            $docFormFields = \App\Models\SpmbFormField::where(function($q) {
+                    $q->where('form_step_id', 6)->orWhere('type', 'file');
+                })
+                ->where(function($q) use ($unitId) {
+                    if ($unitId) {
+                        $q->whereDoesntHave('units')
+                          ->orWhereHas('units', function($u) use ($unitId) {
+                              $u->where('spmb_units.id', $unitId);
+                          });
+                    }
+                })
+                ->orderBy('order', 'asc')
+                ->get();
+
+            $processedKeys = [];
+
+            foreach ($docFormFields as $field) {
+                $path = $reg->getFieldValue($field->field_name);
                 if (!empty($path)) {
-                    $docList[$key] = str_starts_with($path, 'http') ? $path : url(asset('storage/' . ltrim($path, '/')));
+                    $docList[] = [
+                        'key' => $field->field_name,
+                        'name' => $field->label,
+                        'url' => str_starts_with($path, 'http') ? $path : url(asset('storage/' . ltrim($path, '/'))),
+                    ];
+                    $processedKeys[] = $field->field_name;
                 }
             }
+
+            // 2. Kolom fisik dokumen bawaan standar jika ada yang terisi dan belum masuk form fields
+            $standardFileColumns = [
+                'student_photo_path' => 'Pas Foto Calon Murid (Foto Formal)',
+                'birth_certificate_path' => 'Akta Kelahiran',
+                'family_card_path' => 'Kartu Keluarga (KK)',
+                'diploma_certificate_path' => 'Ijazah / Surat Keterangan Aktif Sekolah',
+                'student_card_path' => 'NISN / KIA / Kartu Pelajar (Opsional)',
+                'special_needs_assessment_path' => 'Asesmen Kebutuhan Khusus (Jika Ada)',
+                'payment_receipt_path' => 'Bukti Pembayaran Pendaftaran',
+            ];
+
+            foreach ($standardFileColumns as $col => $label) {
+                if (!in_array($col, $processedKeys)) {
+                    $path = $reg->getFieldValue($col);
+                    if (!empty($path)) {
+                        $docList[] = [
+                            'key' => $col,
+                            'name' => $label,
+                            'url' => str_starts_with($path, 'http') ? $path : url(asset('storage/' . ltrim($path, '/'))),
+                        ];
+                        $processedKeys[] = $col;
+                    }
+                }
+            }
+
+            // 3. Tambahkan lampiran dinamis dari additional_info jika ada
+            if (is_array($reg->additional_info)) {
+                foreach ($reg->additional_info as $infoKey => $infoVal) {
+                    if (!in_array($infoKey, $processedKeys) && is_string($infoVal) && !empty($infoVal)) {
+                        $ext = strtolower(pathinfo($infoVal, PATHINFO_EXTENSION));
+                        if (in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp']) || str_starts_with($infoVal, 'documents/')) {
+                            $customLabel = \App\Models\SpmbFormField::where('field_name', $infoKey)->first()?->label 
+                                ?? ucwords(str_replace(['_', '-'], ' ', $infoKey));
+                            $docList[] = [
+                                'key' => $infoKey,
+                                'name' => $customLabel,
+                                'url' => str_starts_with($infoVal, 'http') ? $infoVal : url(asset('storage/' . ltrim($infoVal, '/'))),
+                            ];
+                        }
+                    }
+                }
+            }
+
             $data['documents'] = $docList;
         }
 
@@ -226,7 +289,7 @@ class ApiIntegrationService
                 'X-Spmb-Delivery-Id' => $deliveryId,
                 'X-Spmb-Timestamp' => $timestamp,
                 'X-Spmb-Signature' => $signature,
-            ])->post($client->webhook_url, $payload);
+            ])->withBody($payloadJson, 'application/json')->post($client->webhook_url);
 
             $statusCode = $response->status();
             $responseBody = $response->json() ?? ['raw' => substr($response->body(), 0, 500)];

@@ -74,7 +74,7 @@ class CandidateApiController extends Controller
 
         if ($request->filled('period')) {
             $periodParam = trim($request->query('period'));
-            $query->whereHas('period', fn($q) => $q->where('name', $periodParam)->orWhere('id', $periodParam));
+            $query->whereHas('period', fn($q) => $q->where('year', $periodParam)->orWhere('id', $periodParam));
         }
 
         if ($request->filled('search')) {
