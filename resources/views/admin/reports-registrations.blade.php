@@ -8,9 +8,6 @@
     <!-- Header Card -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-            </div>
             <div>
                 <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Rekapitulasi Pendaftaran Calon Murid</h1>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Analisis alur konversi calon murid, matriks distribusi per jenjang unit, dan segmentasi pendaftar.</p>
@@ -42,7 +39,7 @@
             <!-- Unit Filter -->
             <div class="flex items-center gap-2">
                 <label for="filter_unit_id" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Unit:</label>
-                <select name="unit_id" id="filter_unit_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
+                <select name="unit_id" id="filter_unit_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl pl-3.5 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
                     <option value="">Semua Unit Sekolah</option>
                     @foreach($units as $u)
                         <option value="{{ $u->id }}" {{ request('unit_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}{{ !$u->is_active ? ' (Nonaktif)' : '' }}</option>
@@ -53,7 +50,7 @@
             <!-- Wave Filter -->
             <div class="flex items-center gap-2">
                 <label for="filter_wave_id" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Gelombang:</label>
-                <select name="wave_id" id="filter_wave_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
+                <select name="wave_id" id="filter_wave_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl pl-3.5 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
                     <option value="">Semua Gelombang</option>
                     @foreach($waves as $w)
                         <option value="{{ $w->id }}" {{ request('wave_id') == $w->id ? 'selected' : '' }}>{{ $w->name }}{{ !$w->is_active ? ' (Ditutup)' : '' }}</option>
@@ -64,7 +61,7 @@
             <!-- Type Filter -->
             <div class="flex items-center gap-2">
                 <label for="filter_type_id" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jalur:</label>
-                <select name="type_id" id="filter_type_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
+                <select name="type_id" id="filter_type_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl pl-3.5 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
                     <option value="">Semua Jalur</option>
                     @foreach($types as $t)
                         <option value="{{ $t->id }}" {{ request('type_id') == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
@@ -75,7 +72,7 @@
             <!-- Class Program Filter -->
             <div class="flex items-center gap-2">
                 <label for="filter_class_program_id" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Program:</label>
-                <select name="class_program_id" id="filter_class_program_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
+                <select name="class_program_id" id="filter_class_program_id" onchange="this.form.submit()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 rounded-xl pl-3.5 pr-9 py-2 focus:outline-none focus:ring-1 focus:ring-brand-emerald cursor-pointer">
                     <option value="">Semua Program Kelas</option>
                     @foreach($classPrograms as $cp)
                         <option value="{{ $cp->id }}" {{ request('class_program_id') == $cp->id ? 'selected' : '' }}>{{ $cp->name }}</option>
@@ -112,7 +109,7 @@
         <!-- Funnel Stages Flow Grid -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
             <!-- Stage 1: Akun Terdaftar -->
-            <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 relative flex flex-col justify-between">
+            <div class="bg-blue-50 dark:bg-blue-800/60 p-4 rounded-xl border border-blue-100 dark:border-blue-700/60 relative flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">1. Akun Terdaftar</span>
@@ -129,7 +126,7 @@
             </div>
 
             <!-- Stage 2: Formulir Lengkap -->
-            <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 relative flex flex-col justify-between">
+            <div class="bg-sky-50 dark:bg-sky-800/60 p-4 rounded-xl border border-sky-100 dark:border-sky-700/60 relative flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider">2. Formulir Terisi</span>
@@ -146,7 +143,7 @@
             </div>
 
             <!-- Stage 3: Berkas Valid -->
-            <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 relative flex flex-col justify-between">
+            <div class="bg-indigo-50 dark:bg-indigo-800/60 p-4 rounded-xl border border-indigo-100 dark:border-indigo-700/60 relative flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">3. Berkas Valid</span>
@@ -163,7 +160,7 @@
             </div>
 
             <!-- Stage 4: Lulus Observasi -->
-            <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 relative flex flex-col justify-between">
+            <div class="bg-amber-50 dark:bg-amber-800/60 p-4 rounded-xl border border-amber-100 dark:border-amber-700/60 relative flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">4. Lulus Ta'aruf</span>
@@ -180,7 +177,7 @@
             </div>
 
             <!-- Stage 5: Akad Santri -->
-            <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 relative flex flex-col justify-between">
+            <div class="bg-teal-50 dark:bg-teal-800/60 p-4 rounded-xl border border-teal-100 dark:border-teal-700/60 relative flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">5. Akad Santri</span>

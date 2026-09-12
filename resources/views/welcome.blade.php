@@ -108,7 +108,6 @@
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                 </span>
-                <span class="text-amber-500 font-black text-xs">✦</span>
                 <span class="uppercase tracking-wider">PENERIMAAN MURID BARU {{ $activePeriodYear }}</span>
                 <span class="h-3.5 w-px bg-emerald-200 dark:bg-emerald-700 flex-shrink-0"></span>
                 <span class="text-emerald-600 dark:text-emerald-500 font-extrabold">Pendaftaran Dibuka</span>
@@ -399,6 +398,7 @@
                     ['name' => 'Meteor Cell', 'logo' => asset('storage/partnership/meteorcell.svg'), 'label' => 'Meteor Cell'],
                     ['name' => 'Google Workspace Education', 'logo' => asset('storage/partnership/google.svg'), 'label' => 'Google Workspace Education'],
                     ['name' => 'PT. Zigma Indonesia', 'logo' => asset('storage/partnership/zigma.svg'), 'label' => 'PT. Zigma Indonesia'],
+                    ['name' => 'Bank Rakyat Indonesia', 'logo' => asset('storage/partnership/bri.svg'), 'label' => 'Bank Rakyat Indonesia'],
                 ];
             @endphp
     

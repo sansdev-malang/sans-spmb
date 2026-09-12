@@ -216,7 +216,7 @@
                                                 <span class="text-[11px] font-bold text-slate-650">{{ $grade->name }}</span>
                                                 <div class="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" name="active_grades[]" value="{{ $grade->id }}" {{ $grade->is_active ? 'checked' : '' }} class="sr-only peer">
-                                                    <div class="w-7 h-4 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-slate-350 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:after:translate-x-full"></div>
+                                                    <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
                                                 </div>
                                             </label>
                                         @endforeach
@@ -268,7 +268,7 @@
                 <p class="text-[10px] text-slate-400">Aktifkan atau nonaktifkan tarif biaya pendaftaran formulir, uang pangkal administrasi, dan tambahan operasional per unit.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
                 <!-- Loop through Fee Categories dynamically (Match Tarif & Biaya Tabs) -->
                 @foreach($feeCategories as $category)
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">

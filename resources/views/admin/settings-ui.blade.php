@@ -38,7 +38,7 @@
 <div id="ui-settings-container" hx-boost="true" hx-target="#ui-settings-container" hx-select="#ui-settings-container" class="w-full space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <h1 class="text-xl font-extrabold text-slate-800">Pengaturan Tampilan Portal Pendaftaran (UI Portal)</h1>
+        <h1 class="text-xl font-extrabold text-slate-800">Pengaturan Tampilan Halaman Awal (Landing Page)</h1>
         <p class="text-xs text-slate-500 mt-1">
             @if($isSuperAdmin)
                 Mengustomisasi logo yayasan, warna tema, banner slider, tautan footer, dan konten informasi seluruh jenjang sekolah.

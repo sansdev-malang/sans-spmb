@@ -171,24 +171,25 @@
                             <td class="py-4 px-6">
                                 @if(($channel->applicable_for ?? 'all') === 'registration_fee')
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/40">
-                                        🏷️ Pendaftaran Saja
+                                        <i data-lucide="hand-coins" class="w-3.5 h-3.5 text-blue-500"></i> Pendaftaran Saja
                                     </span>
                                 @elseif(($channel->applicable_for ?? 'all') === 'final_fee')
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/40">
-                                        🎓 Administrasi Saja
+                                        <i data-lucide="receipt-text" class="w-3.5 h-3.5 text-purple-500"></i> Administrasi Saja
                                     </span>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                                        ✓ Semua Transaksi
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> Semua Transaksi
                                     </span>
                                 @endif
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <form action="{{ route('admin.payment-channels.toggle', $channel->id) }}" method="POST" class="inline-block">
                                     @csrf
-                                    <button type="submit" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none {{ $channel->is_active ? 'bg-brand-emerald' : 'bg-slate-200 dark:bg-slate-700' }}">
-                                        <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $channel->is_active ? 'translate-x-5' : 'translate-x-0' }}"></span>
-                                    </button>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" onchange="this.form.submit()" {{ $channel->is_active ? 'checked' : '' }} class="sr-only peer">
+                                        <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                    </label>
                                 </form>
                             </td>
                             <td class="py-4 px-6 text-right">

@@ -100,35 +100,6 @@
                 </div>
             @endforeach
         </div>
-
-        <!-- Section: Bantuan Konsultasi & Layanan Informasi Panitia -->
-        @php
-            $csPhone = \App\Models\Setting::get('spmb_cs_whatsapp', '081234567890');
-            $cleanCsPhone = preg_replace('/[^0-9]/', '', $csPhone);
-            if (str_starts_with($cleanCsPhone, '0')) {
-                $cleanCsPhone = '62' . substr($cleanCsPhone, 1);
-            } elseif (!str_starts_with($cleanCsPhone, '62')) {
-                $cleanCsPhone = '62' . $cleanCsPhone;
-            }
-            $csMsg = \App\Models\Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran murid baru.');
-            $csTitle = \App\Models\Setting::get('spmb_cs_card_title', 'Pusat Bantuan & Konsultasi SPMB');
-            $csDesc = \App\Models\Setting::get('spmb_cs_card_desc', 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
-            $csWaUrl = "https://wa.me/{$cleanCsPhone}?text=" . urlencode($csMsg);
-        @endphp
-        <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-150/80 dark:border-slate-800 shadow-sm max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
-            <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="headphones" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h4 class="font-extrabold text-slate-850 dark:text-white text-xs">{{ $csTitle }}</h4>
-                    <p class="text-xs text-slate-400 dark:text-slate-500">{{ $csDesc }}</p>
-                </div>
-            </div>
-            <a href="{{ $csWaUrl }}" target="_blank" class="whitespace-nowrap px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm flex-shrink-0">
-                <i data-lucide="message-square" class="w-4 h-4"></i> Konsultasi via WA
-            </a>
-        </div>
     </div>
 
     <!-- LIST OF CURRENT ACTIVE REGISTRATIONS (SHOWN UNDERNEATH IF NOT EMPTY) -->
@@ -343,6 +314,35 @@
             </div>
         </div>
     @endif
+
+    <!-- Section: Bantuan Konsultasi & Layanan Informasi Panitia -->
+    @php
+        $csPhone = \App\Models\Setting::get('spmb_cs_whatsapp', '081234567890');
+        $cleanCsPhone = preg_replace('/[^0-9]/', '', $csPhone);
+        if (str_starts_with($cleanCsPhone, '0')) {
+            $cleanCsPhone = '62' . substr($cleanCsPhone, 1);
+        } elseif (!str_starts_with($cleanCsPhone, '62')) {
+            $cleanCsPhone = '62' . $cleanCsPhone;
+        }
+        $csMsg = \App\Models\Setting::get('spmb_cs_message', 'Halo Panitia SPMB Sekolah Anak Saleh, saya ingin berkonsultasi mengenai pendaftaran murid baru.');
+        $csTitle = \App\Models\Setting::get('spmb_cs_card_title', 'Pusat Bantuan & Konsultasi SPMB');
+        $csDesc = \App\Models\Setting::get('spmb_cs_card_desc', 'Ada pertanyaan seputar persyaratan atau alur masuk? Tim panitia siap melayani Anda.');
+        $csWaUrl = "https://wa.me/{$cleanCsPhone}?text=" . urlencode($csMsg);
+    @endphp
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-150/80 dark:border-slate-800 shadow-sm max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="headphones" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 class="font-extrabold text-slate-850 dark:text-white text-xs">{{ $csTitle }}</h4>
+                <p class="text-xs text-slate-400 dark:text-slate-500">{{ $csDesc }}</p>
+            </div>
+        </div>
+        <a href="{{ $csWaUrl }}" target="_blank" class="whitespace-nowrap px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm flex-shrink-0">
+            <i data-lucide="message-square" class="w-4 h-4"></i> Konsultasi via WA
+        </a>
+    </div>
 
 </div>
 
