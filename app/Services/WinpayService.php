@@ -362,10 +362,17 @@ class WinpayService implements PaymentGatewayInterface
             ];
         } else {
             // Closed Virtual Account (VA) & Retail (One-Off 'c' standar SNAP BI Winpay)
-            // Sesuai spesifikasi resmi Winpay SNAP API:
-            // - customerNo TIDAK dikirim pada tipe 'c' agar nomor VA digenerate acak oleh bank/Winpay
-            // - additionalInfo HANYA memuat key 'channel'
+            // Sesuai spesifikasi resmi Winpay SNAP API (Gambar 2 & 3):
+            // - customerNo: numerik 3-14 digit (contoh dokumentasi: "000003212")
+            // - additionalInfo: HANYA memuat key 'channel'
+            $rawDigits = preg_replace('/[^0-9]/', '', $invoiceNo);
+            if (strlen($rawDigits) < 6) {
+                $rawDigits .= rand(100000, 999999);
+            }
+            $custNo = str_pad(substr($rawDigits, -8), 8, '0', STR_PAD_LEFT);
+
             $body = [
+                'customerNo' => $custNo,
                 'virtualAccountName' => $vaName,
                 'virtualAccountTrxType' => 'c', // 'c' = Closed One-Off amount (tagihan nominal pasti)
                 'expiredDate' => $expiredDate,
