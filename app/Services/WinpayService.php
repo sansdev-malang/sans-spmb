@@ -758,14 +758,14 @@ class WinpayService implements PaymentGatewayInterface
 
         // Generate SNAP Asymmetric Digital Signature (SHA256withRSA)
         $signature = $this->generateAsymmetricSignature($httpMethod, $endpoint, $body, $timestamp);
+        $cancelExternalId = 'CNC' . date('YmdHis') . rand(100, 999);
 
         try {
-            // Penting: Gunakan send() dengan opsi ['json' => $body] agar HTTP DELETE mengirimkan JSON request body (bukan query string)
             $response = Http::timeout(20)->withHeaders([
                 'X-SIGNATURE' => $signature,
                 'X-TIMESTAMP' => $timestamp,
                 'X-PARTNER-ID' => $this->clientKey,
-                'X-EXTERNAL-ID' => $invoiceNo,
+                'X-EXTERNAL-ID' => $cancelExternalId,
                 'CHANNEL-ID' => 'WEB',
                 'Content-Type' => 'application/json',
             ])->send($httpMethod, $this->baseUrl . $endpoint, [
@@ -869,6 +869,7 @@ class WinpayService implements PaymentGatewayInterface
 
         if ($isQris) {
             // [A] QRIS Query Status (POST /v1.0/qr/qr-mpm-query - Service Code: 51, serviceCode payload: "47")
+            // Sesuai dokumentasi resmi https://docs.winpay.id/payments/snap-api/qris#2-query-payment
             $endpoint = '/v1.0/qr/qr-mpm-query';
             $body = [
                 'originalPartnerReferenceNo' => $invoiceNo,
@@ -877,9 +878,6 @@ class WinpayService implements PaymentGatewayInterface
                     'contractId' => (string) $contractId,
                 ])
             ];
-            if (!empty($paymentInfo['referenceId'])) {
-                $body['originalReferenceNo'] = (string) $paymentInfo['referenceId'];
-            }
         } elseif ($isEwallet) {
             // [B] E-Wallet / Debit Query Status (POST /v1.0/debit/status - Service Code: 55)
             $endpoint = '/v1.0/debit/status';
@@ -895,9 +893,6 @@ class WinpayService implements PaymentGatewayInterface
                     'channel' => $ewalletChannel,
                 ])
             ];
-            if (!empty($paymentInfo['referenceId'])) {
-                $body['originalReferenceNo'] = (string) $paymentInfo['referenceId'];
-            }
         } else {
             // [C] Virtual Account & Modern Retail Inquiry Status (POST /v1.0/transfer-va/status - Service Code: 26)
             $endpoint = '/v1.0/transfer-va/status';
@@ -926,12 +921,15 @@ class WinpayService implements PaymentGatewayInterface
         // Generate SNAP Asymmetric Digital Signature (SHA256withRSA)
         $signature = $this->generateAsymmetricSignature($httpMethod, $endpoint, $body, $timestamp);
 
+        // Header X-EXTERNAL-ID wajib unik per request agar tidak ditolak 4095100 (Cannot use same X-EXTERNAL-ID in same day)
+        $inquiryExternalId = 'INQ' . date('YmdHis') . rand(100, 999);
+
         try {
             $response = Http::timeout(20)->withHeaders([
                 'X-SIGNATURE' => $signature,
                 'X-TIMESTAMP' => $timestamp,
                 'X-PARTNER-ID' => $this->clientKey,
-                'X-EXTERNAL-ID' => $invoiceNo,
+                'X-EXTERNAL-ID' => $inquiryExternalId,
                 'CHANNEL-ID' => 'WEB',
                 'Content-Type' => 'application/json',
             ])->post($this->baseUrl . $endpoint, $body);
@@ -957,10 +955,12 @@ class WinpayService implements PaymentGatewayInterface
                 if (in_array((string)$rawStatus, ['00', 'SUCCESS', 'PAID', 'SETTLED', 'SUCCESSFUL'])) {
                     $isPaid = true;
                     $statusNormalized = 'PAID';
-                } elseif (in_array((string)$rawStatus, ['02', 'EXPIRED', 'KADALUWARSA'])) {
+                } elseif (in_array((string)$rawStatus, ['02', 'EXPIRED', 'KADALUWARSA']) && !$isQris) {
                     $statusNormalized = 'EXPIRED';
-                } elseif (in_array((string)$rawStatus, ['03', 'FAILED', 'CANCELLED', 'BATAL'])) {
+                } elseif (in_array((string)$rawStatus, ['05', 'CANCELLED', 'BATAL', 'CANCELED'])) {
                     $statusNormalized = 'CANCELLED';
+                } elseif (in_array((string)$rawStatus, ['06', 'FAILED'])) {
+                    $statusNormalized = 'FAILED';
                 }
 
                 $msg = $respData['responseMessage'] 
