@@ -28,14 +28,18 @@ class ApiIntegrationService
         $documents = is_array($reg->documents) ? $reg->documents : (json_decode($reg->documents ?: '[]', true) ?: []);
 
         // Base Envelope (Identitas Pendaftaran)
+        $regNumber = $reg->registration_no ?: ($reg->id_label ?: 'SPMB-' . str_pad($reg->id, 5, '0', STR_PAD_LEFT));
+        $periodName = $reg->period->name ?? ($reg->period->year ?? (date('Y') . '/' . (date('Y') + 1)));
+
         $data = [
             'id' => $reg->id,
-            'registration_no' => $reg->registration_no,
+            'registration_number' => $regNumber,
+            'registration_no' => $regNumber,
             'unit' => [
                 'code' => $reg->unit->code ?? null,
                 'name' => $reg->unit->name ?? null,
             ],
-            'period' => $reg->period->name ?? null,
+            'period' => $periodName,
             'wave' => $reg->wave->name ?? null,
             'class_program' => $reg->classProgram->name ?? null,
             'registration_status' => $reg->registration_status,
