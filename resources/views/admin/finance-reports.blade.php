@@ -4,29 +4,27 @@
 @section('page_title', 'Laporan Keuangan')
 
 @section('content')
-<div class="space-y-6">
-    <!-- Printable Official Header (Hidden on screen, Visible on print) -->
-    <div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
-        <div class="flex items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                @if($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="Logo" class="h-16 w-auto object-contain">
-                @endif
-                <div>
-                    <h1 class="text-xl font-black uppercase tracking-wider text-slate-900">{{ $schoolName }}</h1>
-                    <p class="text-xs font-bold text-slate-600">Laporan Rekapitulasi Keuangan & Piutang Penerimaan Peserta Didik Baru (SPMB)</p>
-                    <p class="text-[11px] text-slate-500">Tahun Ajaran: {{ $selectedPeriod->year ?? 'Semua Periode' }} | Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB</p>
-                </div>
+<!-- Printable Official Header (Hidden on screen, Visible on print) -->
+<div class="hidden print:block mb-6 border-b-2 border-slate-800 pb-4">
+    <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            @if($logoUrl)
+                <img src="{{ $logoUrl }}" alt="Logo" class="h-16 w-auto object-contain">
+            @endif
+            <div>
+                <h1 class="text-xl font-black uppercase tracking-wider text-slate-900">{{ $schoolName }}</h1>
+                <p class="text-xs font-bold text-slate-600">Laporan Rekapitulasi Keuangan & Piutang Penerimaan Peserta Didik Baru (SPMB)</p>
+                <p class="text-[11px] text-slate-500">Tahun Ajaran: {{ $selectedPeriod->year ?? 'Semua Periode' }} | Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB</p>
             </div>
         </div>
     </div>
+</div>
 
+<div class="space-y-6">
+    
     <!-- Screen Header Card (Hidden on Print) -->
     <div class="print:hidden bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <i data-lucide="line-chart" class="w-5 h-5"></i>
-            </div>
             <div>
                 <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Laporan & Rekapitulasi Keuangan SPMB</h1>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Rekapitulasi kas bersih sekolah, rincian biaya admin gateway, target tagihan, dan buku piutang calon murid.</p>
