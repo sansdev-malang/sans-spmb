@@ -68,7 +68,7 @@
                             </div>
                             @if($regStatus === 'completed')
                                 <span class="ml-2 text-[9px] px-2 py-0.5 rounded-full font-black uppercase {{ $isActiveTab ? 'bg-emerald-800 text-emerald-100' : 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300' }}">
-                                    Lunas
+                                    Diterima
                                 </span>
                             @endif
                         </a>
@@ -90,7 +90,7 @@
             $netTuition = (float) $reg->net_fee;
             $totalPaidFinal = (float) $reg->total_paid_final_fee;
             $remainingTuition = (float) $reg->remaining_balance;
-            $isTuitionLunas = ($remainingTuition <= 0 && $status === 'completed');
+            $isTuitionLunas = ($remainingTuition <= 0 && $grossTuition > 0);
 
             $finalPayments = $reg->payments()
                 ->where('payment_type', 'final_fee')
@@ -559,7 +559,7 @@
 
                     <!-- STAGE 6: ADMINISTRASI DAFTAR ULANG & TRANSAKSI -->
                     <div class="relative flex items-start gap-3 sm:gap-5 group">
-                        <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full {{ ($status === 'completed') ? 'bg-brand-emerald text-white' : (in_array($status, ['agreement_signed']) ? 'bg-amber-500 text-white animate-pulse' : 'bg-slate-200 dark:bg-slate-800 text-slate-500') }} flex items-center justify-center font-black text-xs sm:text-sm shadow-md ring-4 ring-white dark:ring-slate-900 shrink-0 z-10 select-none">
+                        <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full {{ ($remainingTuition <= 0 && $grossTuition > 0) ? 'bg-brand-emerald text-white' : ($totalPaidFinal > 0 ? 'bg-blue-600 text-white' : (in_array($status, ['agreement_signed', 'completed']) ? 'bg-amber-500 text-white animate-pulse' : 'bg-slate-200 dark:bg-slate-800 text-slate-500')) }} flex items-center justify-center font-black text-xs sm:text-sm shadow-md ring-4 ring-white dark:ring-slate-900 shrink-0 z-10 select-none">
                             6
                         </div>
                         <div class="flex-1 min-w-0 bg-slate-50/80 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 space-y-4">
@@ -567,7 +567,7 @@
                                 <div class="space-y-0.5">
                                     <h5 class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                                         <span>Administrasi Masuk Awal & Riwayat Setoran</span>
-                                        @if($status === 'completed')
+                                        @if($remainingTuition <= 0 && $grossTuition > 0)
                                             <span class="text-[9px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 font-bold uppercase">Lunas Sepenuhnya</span>
                                         @elseif($totalPaidFinal > 0)
                                             <span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold uppercase">Dicicil Sebagian</span>
@@ -618,7 +618,7 @@
                                                 $fNet = max(0, $fGross - $fDiscount);
                                                 $fPaid = $reg->getItemPaidAmount($fItem['name'], $fItem['id'] ?? null);
                                                 $fRemaining = max(0, $fNet - $fPaid);
-                                                $isFLunas = ($fRemaining <= 0 || $status === 'completed');
+                                                $isFLunas = ($fRemaining <= 0 && ($fPaid > 0 || $fNet == 0));
                                             @endphp
                                             <div class="p-3 sm:px-4 sm:py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                                                 <div class="space-y-0.5 min-w-0">
@@ -634,7 +634,7 @@
                                                         <span>Tarif: Rp {{ number_format($fGross, 0, ',', '.') }}</span>
                                                         <span>•</span>
                                                         <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Terbayar: Rp {{ number_format($fPaid, 0, ',', '.') }}</span>
-                                                        @if($fRemaining > 0 && $status !== 'completed')
+                                                        @if($fRemaining > 0)
                                                             <span>•</span>
                                                             <span class="text-amber-600 dark:text-amber-400 font-semibold">Sisa: Rp {{ number_format($fRemaining, 0, ',', '.') }}</span>
                                                         @endif
@@ -732,7 +732,7 @@
                             @endif
 
                             <!-- Status Administrasi Banner -->
-                            @if($status === 'completed' || $remainingTuition <= 0)
+                            @if($remainingTuition <= 0 && $grossTuition > 0)
                                 <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 rounded-xl flex items-center justify-between gap-3 text-xs">
                                     <div class="flex items-center gap-2.5">
                                         <div class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">

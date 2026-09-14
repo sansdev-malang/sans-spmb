@@ -164,7 +164,7 @@
                     ];
                 }
 
-                $isFullySettled = ($registration->registration_status === 'completed' || $registration->remaining_balance <= 0);
+                $isFullySettled = ($registration->remaining_balance <= 0);
             @endphp
             <!-- Receipt Header / Branding -->
             <div class="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-100">

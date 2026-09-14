@@ -274,7 +274,7 @@
             ];
         }
 
-        $isFullySettled = ($registration->registration_status === 'completed' || $registration->remaining_balance <= 0);
+        $isFullySettled = ($registration->remaining_balance <= 0);
     @endphp
 
     <div class="container">
