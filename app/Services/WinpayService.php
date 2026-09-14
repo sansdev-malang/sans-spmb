@@ -1009,8 +1009,9 @@ class WinpayService implements PaymentGatewayInterface
     private function getMockPaymentResponse($amount, $invoiceNo, $method)
     {
         $refId = 'MOCK-WINPAY-' . strtoupper(bin2hex(random_bytes(4)));
+        $cleanMethod = strtoupper(trim($method));
 
-        if ($method === 'QRIS') {
+        if ($cleanMethod === 'QRIS' || str_contains($cleanMethod, 'QRIS')) {
             return [
                 'success' => true,
                 'data' => [
@@ -1027,8 +1028,52 @@ class WinpayService implements PaymentGatewayInterface
             ];
         }
 
+        $isEwallet = in_array($cleanMethod, ['DANA', 'SHOPEEPAY', 'SPAY', 'OVO', 'ASTRAPAY', 'ASTRA', 'SPEEDCASH', 'SC', 'GOPAY', 'LINKAJA']);
+        if ($isEwallet) {
+            $mockUrl = 'https://simulator.winpay.id/ewallet/' . strtolower($cleanMethod) . '/' . $invoiceNo;
+            return [
+                'success' => true,
+                'data' => [
+                    'partnerReferenceNo' => $invoiceNo,
+                    'trxId' => $invoiceNo,
+                    'referenceId' => $refId,
+                    'webRedirectUrl' => $mockUrl,
+                    'appRedirectUrl' => $mockUrl,
+                    'paymentUrl' => $mockUrl,
+                    'channel' => $cleanMethod,
+                    'totalAmount' => [
+                        'value' => number_format($amount, 2, '.', ''),
+                        'currency' => 'IDR'
+                    ],
+                    'status' => 'PENDING',
+                    'message' => 'E-Wallet checkout URL generated successfully (Simulator)'
+                ]
+            ];
+        }
+
+        $isRetail = in_array($cleanMethod, ['ALFAMART', 'INDOMARET', 'ALF', 'IND', 'ALFA', 'INDO', 'FASTPAY']);
+        if ($isRetail) {
+            $retailCode = '99' . rand(10000000, 99999999);
+            return [
+                'success' => true,
+                'data' => [
+                    'trxId' => $invoiceNo,
+                    'referenceId' => $refId,
+                    'virtualAccountNo' => $retailCode,
+                    'virtualAccountName' => 'SPMB ' . $invoiceNo,
+                    'retailName' => $cleanMethod,
+                    'totalAmount' => [
+                        'value' => number_format($amount, 2, '.', ''),
+                        'currency' => 'IDR'
+                    ],
+                    'status' => 'PENDING',
+                    'message' => 'Retail payment code generated successfully (Simulator)'
+                ]
+            ];
+        }
+
         // Virtual Account (VA) Mock
-        $bankName = in_array(strtoupper($method), ['MANDIRI', 'BRI', 'BNI', 'BCA']) ? strtoupper($method) : 'MANDIRI';
+        $bankName = in_array($cleanMethod, ['MANDIRI', 'BRI', 'BNI', 'BCA']) ? $cleanMethod : 'MANDIRI';
         $vaNumber = '889900' . rand(10000000, 99999999);
 
         return [

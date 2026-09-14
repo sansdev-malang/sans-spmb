@@ -417,7 +417,7 @@
                                         <span class="text-xs text-slate-400 font-semibold uppercase block">Pembayaran Dompet Digital (E-Wallet)</span>
                                         <div class="flex flex-col items-center justify-center gap-3">
                                             <p class="text-xs text-slate-600 dark:text-slate-350 font-medium max-w-sm">Klik tombol di bawah ini untuk melanjutkan pembayaran via {{ $activePayment->payment_method }}:</p>
-                                            <a href="{{ $activePayment->payment_info['webRedirectUrl'] ?? $activePayment->payment_info['paymentUrl'] }}" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2">
+                                            <a href="{{ $activePayment->payment_info['webRedirectUrl'] ?? $activePayment->payment_info['paymentUrl'] ?? $activePayment->payment_info['appRedirectUrl'] ?? '#' }}" target="_blank" class="bg-brand-emerald hover:bg-emerald-600 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2">
                                                 <i data-lucide="external-link" class="w-4 h-4"></i> Buka Pembayaran {{ $activePayment->payment_method }}
                                             </a>
                                         </div>
