@@ -1946,8 +1946,13 @@ class WebDashboardController extends Controller
 
     public function downloadAdmissionLetter($id)
     {
+        $user = auth()->user();
+        $isAdmin = ($user->role === 'admin' || $user->role === 'super_admin' || $user->role === 'superadmin');
+
         $registration = \App\Models\Registration::where('id', $id)
-            ->where('user_id', auth()->id())
+            ->when(!$isAdmin, function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
             ->firstOrFail();
             
         if ($registration->registration_status !== 'completed') {

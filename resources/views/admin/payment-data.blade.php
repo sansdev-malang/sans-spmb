@@ -1386,7 +1386,6 @@
         let totalPaid = Number((cand && cand.total_paid) || 0);
         let remainingBalance = Number((cand && cand.remaining_balance !== undefined) ? cand.remaining_balance : 0);
 
-        // Fallback calculations if cand properties are 0 / missing
         if (totalPaid === 0 && finalPayments.length > 0) {
             finalPayments.forEach(p => {
                 const baseAmt = Number(p.base_amount || (p.amount - (p.admin_fee || 0)));
@@ -1400,45 +1399,45 @@
             remainingBalance = Math.max(0, totalNet - totalPaid);
         }
 
-        const isOverallLunas = (remainingBalance <= 0 && totalNet > 0);
+        const isOverallLunas = (remainingBalance <= 0 && totalNet > 0 && totalPaid > 0);
 
         const summaryCard = document.createElement('div');
-        summaryCard.className = 'p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white border border-slate-700 shadow-md space-y-3';
+        summaryCard.className = 'p-4 sm:p-5 rounded-2xl bg-slate-900 text-white border border-slate-800 shadow-lg space-y-3.5';
         summaryCard.innerHTML = `
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
                 <div>
                     <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 block">
                         Ringkasan Keuangan Pendaftar
                     </span>
-                    <h4 class="text-sm font-extrabold text-white mt-0.5">
-                        ${candName} 
+                    <h4 class="text-sm sm:text-base font-extrabold text-white mt-0.5 flex items-center gap-2">
+                        <span>${candName}</span>
                         <span class="text-xs text-slate-400 font-normal font-mono">(${idLabel})</span>
                     </h4>
                 </div>
                 <div class="self-start sm:self-center">
                     ${isOverallLunas 
-                        ? `<span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> LUNAS SEPENUHNYA</span>`
-                        : `<span class="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> SISA TUNGGAKAN</span>`
+                        ? `<span class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 shadow-xs"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i> LUNAS SEPENUHNYA</span>`
+                        : `<span class="px-3.5 py-1.5 rounded-full text-xs font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5 shadow-xs"><i data-lucide="clock" class="w-4 h-4 text-amber-400"></i> BELUM LUNAS</span>`
                     }
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 text-center">
-                <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <span class="text-[10px] text-slate-400 block uppercase font-bold">Total Tagihan</span>
-                    <span class="font-mono font-extrabold text-xs sm:text-sm text-white block mt-0.5">
+            <div class="grid grid-cols-3 gap-2.5 text-center">
+                <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Total Tagihan</span>
+                    <span class="font-mono font-black text-xs sm:text-sm text-white block mt-0.5">
                         Rp ${totalNet.toLocaleString('id-ID')}
                     </span>
                 </div>
-                <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <span class="text-[10px] text-emerald-400 block uppercase font-bold">Total Terbayar</span>
-                    <span class="font-mono font-extrabold text-xs sm:text-sm text-emerald-400 block mt-0.5">
+                <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span class="text-[10px] text-emerald-400 block uppercase font-bold tracking-wider">Total Terbayar</span>
+                    <span class="font-mono font-black text-xs sm:text-sm text-emerald-400 block mt-0.5">
                         Rp ${totalPaid.toLocaleString('id-ID')}
                     </span>
-                    <span class="text-[9px] text-slate-400 block">(${finalPayments.length}x Setoran Masuk Awal)</span>
+                    <span class="text-[9px] text-slate-400 block mt-0.5">(${finalPayments.length}x Setoran Masuk Awal)</span>
                 </div>
-                <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <span class="text-[10px] ${remainingBalance > 0 ? 'text-amber-400' : 'text-slate-400'} block uppercase font-bold">Sisa Tagihan</span>
-                    <span class="font-mono font-extrabold text-xs sm:text-sm ${remainingBalance > 0 ? 'text-amber-400' : 'text-emerald-400'} block mt-0.5">
+                <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span class="text-[10px] ${remainingBalance > 0 ? 'text-amber-400' : 'text-slate-400'} block uppercase font-bold tracking-wider">Sisa Tagihan</span>
+                    <span class="font-mono font-black text-xs sm:text-sm ${remainingBalance > 0 ? 'text-amber-400' : 'text-emerald-400'} block mt-0.5">
                         ${remainingBalance > 0 ? 'Rp ' + remainingBalance.toLocaleString('id-ID') : 'Rp 0 (Lunas)'}
                     </span>
                 </div>
@@ -1446,7 +1445,7 @@
         `;
         listContainer.appendChild(summaryCard);
 
-        // 2. DETECT ALL PAYMENTS PER COMPONENT
+        // 2. DETECT ALL ALLOCATIONS PER COMPONENT
         const allItemsList = (feeDetails && Array.isArray(feeDetails.items)) ? feeDetails.items : [];
         const itemTracker = {};
 
@@ -1476,7 +1475,7 @@
                 }));
             } else {
                 pItems.push({
-                    name: 'Pelunasan / Cicilan Biaya Masuk',
+                    name: 'Setoran Biaya Masuk Awal',
                     amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
                 });
             }
@@ -1501,7 +1500,7 @@
             });
         });
 
-        // 3. RINCIAN KOMPONEN BIAYA MASUK AWAL (TAMPILKAN SEMUA KOMPONEN BIAYA MASUK AWAL)
+        // 3. SECTION 1: STATUS KOMPONEN BIAYA MASUK AWAL (CLEAN SUMMARY VIEW - NO DUPLICATE BUTTONS)
         const componentsToRender = allItemsList.length > 0 
             ? allItemsList 
             : Object.keys(itemTracker).filter(k => !k.toLowerCase().includes('formulir')).map(k => ({
@@ -1513,99 +1512,59 @@
 
         if (componentsToRender.length > 0) {
             const compGroupContainer = document.createElement('div');
-            compGroupContainer.className = 'space-y-3 pt-2';
+            compGroupContainer.className = 'space-y-2.5 pt-2';
             
-            let compHtml = `
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                    <h5 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                        Rincian Status Komponen Biaya Masuk Awal & Bukti Pelunasan
-                    </h5>
-                </div>
-            `;
-
+            let compCardsHtml = '';
             componentsToRender.forEach(comp => {
                 const compName = comp.name;
                 const compGross = Number(comp.amount || 0);
                 const compDiscount = Number(comp.discount_amount || 0);
                 const compNet = Number(comp.net_amount !== undefined ? comp.net_amount : Math.max(0, compGross - compDiscount));
                 
-                // Cari tracker yang cocok (case-insensitive)
                 let trackerKey = Object.keys(itemTracker).find(k => k.toLowerCase() === compName.toLowerCase());
                 const tracker = trackerKey ? itemTracker[trackerKey] : { name: compName, payments: [], totalPaid: 0 };
                 const compPaid = Number(tracker.totalPaid || 0);
                 const compRemaining = Math.max(0, compNet - compPaid);
                 const isCompLunas = (compRemaining <= 0 && (compPaid > 0 || compNet === 0));
-                const lastPayment = tracker.payments.length > 0 ? tracker.payments[tracker.payments.length - 1] : null;
-
-                let stepsHtml = '';
-                if (tracker.payments.length > 0) {
-                    stepsHtml = tracker.payments.map((inst, idx) => {
-                        const instDate = new Date(inst.date).toLocaleString('id-ID', {
-                            day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                        });
-                        const isSingle = (tracker.payments.length === 1);
-                        const labelText = isSingle ? 'Pembayaran Lunas' : `Cicilan #${idx + 1}`;
-                        const badgeStyle = isSingle 
-                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                            : 'bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border-blue-200 dark:border-blue-800';
-                        const btnLabel = isSingle ? 'Kwitansi' : `Kwitansi #${idx + 1}`;
-
-                        return `
-                            <div class="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 text-xs shadow-2xs">
-                                <div class="flex items-center gap-3">
-                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black border ${badgeStyle}">
-                                        ${labelText}
-                                    </span>
-                                    <div>
-                                        <span class="font-mono font-black text-slate-800 dark:text-white text-xs block">
-                                            Rp ${inst.amount.toLocaleString('id-ID')}
-                                        </span>
-                                        <span class="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
-                                            ${inst.invoice_number} • ${instDate} WIB (${inst.payment_method || 'Online'})
-                                        </span>
-                                    </div>
-                                </div>
-                                <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${inst.payment_id}', 'Kwitansi-${inst.invoice_number}.pdf')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition cursor-pointer">
-                                    <i data-lucide="download" class="w-3.5 h-3.5 text-blue-600"></i> <span>${btnLabel}</span>
-                                </button>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    stepsHtml = `
-                        <div class="p-3 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-dashed border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center">
-                            Belum ada setoran pembayaran untuk komponen ini.
-                        </div>
-                    `;
-                }
 
                 let statusBadgeHtml = '';
                 if (isCompLunas) {
-                    if (tracker.payments.length > 1) {
-                        statusBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300">LUNAS (${tracker.payments.length}x Cicilan)</span>`;
-                    } else if (tracker.payments.length === 1) {
-                        statusBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300">LUNAS (Lunas Sekaligus)</span>`;
-                    } else {
-                        statusBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-300">LUNAS (Diskon 100%)</span>`;
-                    }
+                    const payCountText = tracker.payments.length > 1 ? `${tracker.payments.length}x Cicilan` : 'Lunas Sekaligus';
+                    statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300"><i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i> Lunas (${payCountText})</span>`;
                 } else if (compPaid > 0) {
-                    statusBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300">DICICIL (${tracker.payments.length}x Setoran • Sisa Rp ${compRemaining.toLocaleString('id-ID')})</span>`;
+                    statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300"><i data-lucide="clock" class="w-3 h-3 text-blue-600"></i> Dicicil (${tracker.payments.length}x Setoran)</span>`;
                 } else {
-                    statusBadgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700">BELUM BAYAR</span>`;
+                    statusBadgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300">Belum Bayar</span>`;
                 }
 
-                compHtml += `
-                    <div class="p-4.5 rounded-2xl ${isCompLunas ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-800/60' : (compPaid > 0 ? 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/80 dark:border-blue-800/60' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800')} border space-y-3.5">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
+                let paymentHistorySummary = '';
+                if (tracker.payments.length > 0) {
+                    paymentHistorySummary = tracker.payments.map((inst, idx) => {
+                        const instDate = new Date(inst.date).toLocaleString('id-ID', {
+                            day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+                        const label = tracker.payments.length > 1 ? `Cicilan #${idx + 1}` : 'Setoran Lunas';
+                        return `
+                            <div class="flex items-center justify-between text-[11px] py-1 text-slate-600 dark:text-slate-300">
+                                <span class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    <span>${label}: <strong class="font-mono text-slate-800 dark:text-slate-200">Rp ${inst.amount.toLocaleString('id-ID')}</strong></span>
+                                    <span class="text-slate-400 font-mono">(${inst.invoice_number})</span>
+                                </span>
+                                <span class="text-slate-400 text-[10px]">${instDate} WIB</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                compCardsHtml += `
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs shadow-2xs space-y-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h4 class="text-sm font-black text-slate-900 dark:text-white">
-                                        ${compName}
-                                    </h4>
-                                    ${statusBadgeHtml}
-                                </div>
-                                <div class="flex items-center gap-2.5 text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                <h4 class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
+                                    ${compName}
+                                </h4>
+                                <div class="flex items-center gap-2.5 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                     <span>Tarif: <strong>Rp ${compGross.toLocaleString('id-ID')}</strong></span>
                                     ${compDiscount > 0 ? `<span>•</span><span class="text-rose-600 dark:text-rose-400 font-semibold">Diskon: -Rp ${compDiscount.toLocaleString('id-ID')}</span>` : ''}
                                     <span>•</span>
@@ -1613,48 +1572,51 @@
                                     ${compRemaining > 0 ? `<span>•</span><span class="text-amber-600 dark:text-amber-400 font-semibold">Sisa: Rp ${compRemaining.toLocaleString('id-ID')}</span>` : ''}
                                 </div>
                             </div>
-                            ${isCompLunas && lastPayment ? `
-                                <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${lastPayment.payment_id}?type=settlement&item_name=${encodeURIComponent(compName)}', 'Kwitansi-Pelunasan-${lastPayment.invoice_number || 'SPMB'}.pdf')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition self-start sm:self-center cursor-pointer">
-                                    <i data-lucide="award" class="w-3.5 h-3.5 text-yellow-300"></i>
-                                    <span>Unduh Kwitansi Pelunasan</span>
-                                </button>
-                            ` : ''}
-                        </div>
-
-                        <div class="space-y-2">
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                                Riwayat Transaksi Setoran / Angsuran:
-                            </span>
-                            <div class="space-y-2">
-                                ${stepsHtml}
+                            <div class="shrink-0 self-start sm:self-auto">
+                                ${statusBadgeHtml}
                             </div>
                         </div>
+                        ${paymentHistorySummary ? `
+                            <div class="pt-1.5 border-t border-slate-200/60 dark:border-slate-700/60 divide-y divide-slate-100 dark:divide-slate-800">
+                                ${paymentHistorySummary}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             });
 
-            compGroupContainer.innerHTML = compHtml;
+            compGroupContainer.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <h5 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        Status Komponen Biaya Masuk Awal
+                    </h5>
+                </div>
+                <div class="space-y-2">
+                    ${compCardsHtml}
+                </div>
+            `;
             listContainer.appendChild(compGroupContainer);
         }
 
-        // 4. CHRONOLOGICAL ALL INVOICE CARDS SECTION
+        // 4. SECTION 2: DAFTAR TRANSAKSI & UNDUH KWITANSI RESMI (SATU TOMBOL JELAS PER TRANSAKSI)
         const fullLogsHeader = document.createElement('div');
         fullLogsHeader.className = 'flex items-center gap-2 pt-3';
         fullLogsHeader.innerHTML = `
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
             <h5 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                Daftar Seluruh Transaksi & Invoice Masuk
+                Daftar Riwayat Transaksi & Kwitansi Pembayaran (${successPayments.length}x Transaksi)
             </h5>
         `;
         listContainer.appendChild(fullLogsHeader);
 
-        successPayments.forEach(p => {
+        successPayments.forEach((p, pIdx) => {
             const isRegFee = (p.payment_type === 'registration_fee');
 
             // Dynamic Category Badges
             const catList = (p.category_names && p.category_names.length > 0) 
                 ? p.category_names 
-                : [isRegFee ? 'Formulir Pendaftaran' : 'Biaya Administrasi'];
+                : [isRegFee ? 'Formulir Pendaftaran' : 'Biaya Masuk Awal'];
 
             const categoryBadgesHtml = catList.map(catName => {
                 let badgeStyle = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
@@ -1692,57 +1654,22 @@
                 }));
             } else {
                 items.push({
-                    name: 'Pelunasan / Cicilan Biaya Masuk',
+                    name: 'Setoran Biaya Masuk Awal',
                     amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
                 });
             }
 
-            // Check if this payment contains an installment item
-            let hasInstallmentItemInThisTx = false;
-            let primaryItemInstNo = 1;
-            let canDownloadSettlement = false;
-            let settlementItemName = '';
-
-            const itemsHtml = items.map(it => {
-                const tracker = itemTracker[it.name];
-                let installmentTag = '';
-                if (tracker && tracker.payments.length > 1) {
-                    hasInstallmentItemInThisTx = true;
-                    const instIdx = tracker.payments.findIndex(x => x.payment_id === p.id);
-                    const instNo = (instIdx !== -1) ? (instIdx + 1) : 1;
-                    primaryItemInstNo = instNo;
-                    
-                    const feeMatch = allItemsList.find(f => f.name.toLowerCase() === it.name.toLowerCase());
-                    const compGross = feeMatch ? Number(feeMatch.amount || 0) : tracker.totalPaid;
-                    const isLastPaymentForThis = (instIdx === tracker.payments.length - 1);
-                    const isSettled = (tracker.totalPaid >= compGross);
-
-                    if (isLastPaymentForThis && isSettled) {
-                        canDownloadSettlement = true;
-                        settlementItemName = it.name;
-                    }
-
-                    installmentTag = `
-                        <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                            (Setoran Angsuran #${instNo} dari ${tracker.payments.length}${isLastPaymentForThis && isSettled ? ' • Pelunasan 100%' : ''})
-                        </span>
-                    `;
-                }
-                return `
-                    <div class="flex items-center justify-between py-2 text-xs">
-                        <span class="font-bold text-slate-700 dark:text-slate-200 flex flex-col">
-                            <span class="flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald flex-shrink-0"></span>
-                                <span>${it.name}</span>
-                            </span>
-                            ${installmentTag}
-                        </span>
-                        <span class="font-mono font-black text-slate-800 dark:text-slate-100">
-                            Rp ${it.amount.toLocaleString('id-ID')}
-                        </span>
-                    </div>
-                `;
-            }).join('');
+            const itemsHtml = items.map(it => `
+                <div class="flex items-center justify-between py-1.5 text-xs">
+                    <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-emerald flex-shrink-0"></span>
+                        <span>${it.name}</span>
+                    </span>
+                    <span class="font-mono font-black text-slate-800 dark:text-slate-100">
+                        Rp ${it.amount.toLocaleString('id-ID')}
+                    </span>
+                </div>
+            `).join('');
 
             const baseAmount = Number(p.base_amount || (p.amount - (p.admin_fee || 0)));
             const adminFee = Number(p.admin_fee || (p.amount - baseAmount));
@@ -1752,12 +1679,19 @@
                 day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
             });
 
-            const receiptBtnLabel = hasInstallmentItemInThisTx 
-                ? `Unduh Kwitansi Cicilan #${primaryItemInstNo}`
-                : `Unduh Kwitansi PDF`;
+            // Single, clean download button label per transaction
+            let downloadBtnLabel = 'Unduh Kwitansi';
+            if (isRegFee) {
+                downloadBtnLabel = 'Unduh Kwitansi Formulir';
+            } else if (finalPayments.length > 1) {
+                const finalIdx = finalPayments.findIndex(x => x.id === p.id);
+                downloadBtnLabel = (finalIdx !== -1) ? `Unduh Kwitansi Setoran #${finalIdx + 1}` : 'Unduh Kwitansi Setoran';
+            } else {
+                downloadBtnLabel = 'Unduh Kwitansi Pembayaran';
+            }
 
             const row = document.createElement('div');
-            row.className = 'p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3.5 shadow-xs';
+            row.className = 'p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3.5 shadow-xs';
             row.innerHTML = `
                 <!-- Header: Invoice, Categories, Status -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -1765,11 +1699,6 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="font-mono font-black text-xs text-slate-900 dark:text-white select-all">${p.invoice_number}</span>
                             ${categoryBadgesHtml}
-                            ${hasInstallmentItemInThisTx ? `
-                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300">
-                                    Angsuran #${primaryItemInstNo}
-                                </span>
-                            ` : ''}
                         </div>
                         <span class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
                             <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i> ${formattedDate} WIB
@@ -1777,14 +1706,14 @@
                     </div>
                     <span class="self-start sm:self-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase border bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 flex items-center gap-1.5 shadow-2xs">
                         <i data-lucide="check-circle-2" class="w-3 h-3"></i>
-                        <span>${hasInstallmentItemInThisTx ? `SETORAN ANGSURAN BERHASIL` : `LUNAS / BERHASIL`}</span>
+                        <span>BERHASIL / LUNAS</span>
                     </span>
                 </div>
 
                 <!-- Items Detail -->
-                <div class="p-3.5 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
-                        Rincian Komponen Biaya:
+                <div class="p-3 bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">
+                        Alokasi Komponen Biaya:
                     </span>
                     <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
                         ${itemsHtml}
@@ -1806,7 +1735,7 @@
                         </span>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 block font-medium">Biaya Admin PG</span>
+                        <span class="text-[10px] text-slate-400 block font-medium">Biaya Transaksi</span>
                         <span class="font-mono font-bold text-slate-500 dark:text-slate-400 text-xs block">
                             + Rp ${adminFee.toLocaleString('id-ID')}
                         </span>
@@ -1819,24 +1748,16 @@
                     </div>
                 </div>
 
-                <!-- Footer Action: Receipt Button -->
+                <!-- Footer Action: Clean Single Receipt Button -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-xs">
                     <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1.5">
                         <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
                         Kas Berhasil Tercatat
                     </span>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        ${canDownloadSettlement ? `
-                            <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${p.id}?type=settlement&item_name=${encodeURIComponent(settlementItemName)}', 'Kwitansi-Pelunasan-${p.invoice_number}.pdf')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-sm transition cursor-pointer">
-                                <i data-lucide="award" class="w-3.5 h-3.5 text-yellow-200"></i>
-                                <span>Kwitansi Utama</span>
-                            </button>
-                        ` : ''}
-                        <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${p.id}', 'Bukti-Bayar-${p.invoice_number}.pdf')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm transition cursor-pointer">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            <span>${receiptBtnLabel}</span>
-                        </button>
-                    </div>
+                    <button type="button" onclick="downloadReceiptPdf(this, '/admin/payments/receipt/${p.id}', 'Kwitansi-${p.invoice_number}.pdf')" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition cursor-pointer self-start sm:self-auto">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>${downloadBtnLabel}</span>
+                    </button>
                 </div>
             `;
             listContainer.appendChild(row);
