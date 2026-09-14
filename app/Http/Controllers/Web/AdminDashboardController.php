@@ -494,17 +494,6 @@ class AdminDashboardController extends Controller
     {
         $registration = Registration::scopedByAdmin()->findOrFail($id);
 
-        // Guard: Fully paid candidates cannot be modified
-        if ($registration->remaining_balance <= 0 && $registration->total_paid_final_fee > 0) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Tagihan calon murid ini telah lunas sepenuhnya. Pengaturan keringanan & cicilan sudah terkunci dan tidak dapat diubah lagi.'
-                ], 422);
-            }
-            return redirect()->back()->with('error', 'Tagihan calon murid ini telah lunas sepenuhnya dan terkunci.');
-        }
-
         $validated = $request->validate([
             'discount_mode' => 'nullable|in:none,global,selective',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -565,6 +554,25 @@ class AdminDashboardController extends Controller
             'installment_approved_by' => auth()->id(),
             'installment_approved_at' => now(),
         ]);
+
+        $registration->refresh();
+
+        // Synchronize registration status & payment status based on new remaining balance
+        $newNet = (float) $registration->net_final_fee;
+        $newPaid = (float) $registration->total_paid_final_fee;
+        $newRemaining = max(0, $newNet - $newPaid);
+
+        if ($newRemaining <= 0 && ($newPaid > 0 || $newNet == 0)) {
+            $registration->update([
+                'payment_status' => 'paid',
+                'registration_status' => 'completed',
+            ]);
+        } elseif ($newRemaining > 0) {
+            $registration->update([
+                'payment_status' => ($newPaid > 0 ? 'partially_paid' : 'unpaid'),
+                'registration_status' => 'agreement_signed',
+            ]);
+        }
 
         $registration->refresh();
         $candidateName = $registration->candidate_name ?? 'ID: ' . $registration->id;

@@ -603,14 +603,14 @@
             </button>
         </div>
 
-        <!-- In-Modal Fully Paid Alert / Lock Banner -->
-        <div id="modal_already_paid_banner" class="hidden p-4 bg-emerald-50 dark:bg-emerald-950/80 border-b border-emerald-300 dark:border-emerald-700 flex items-center gap-3 text-xs font-semibold text-emerald-900 dark:text-emerald-200 shadow-inner">
-            <div class="h-9 w-9 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
-                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600"></i>
+        <!-- In-Modal Fully Paid Alert / Notice Banner -->
+        <div id="modal_already_paid_banner" class="hidden p-4 bg-sky-50 dark:bg-sky-950/80 border-b border-sky-200 dark:border-sky-800 flex items-center gap-3 text-xs font-semibold text-sky-900 dark:text-sky-200 shadow-inner">
+            <div class="h-9 w-9 rounded-xl bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="info" class="w-5 h-5 text-sky-600"></i>
             </div>
             <div>
-                <span class="font-extrabold block text-xs text-emerald-900 dark:text-emerald-100">Tagihan Calon Murid Telah Lunas Sepenuhnya</span>
-                <span class="text-[11px] text-emerald-700 dark:text-emerald-300 font-normal">Seluruh komponen biaya telah dibayar (Rp 0 sisa tagihan). Kebijakan biaya terkunci dan tidak dapat diubah lagi.</span>
+                <span class="font-extrabold block text-xs text-sky-900 dark:text-sky-100">Status Tagihan: Terbayar / Lunas (Rp 0 Sisa)</span>
+                <span class="text-[11px] text-sky-700 dark:text-sky-300 font-normal">Anda tetap dapat menyesuaikan atau membatalkan diskon jika sewaktu-waktu terdapat penambahan tagihan atau koreksi keringanan.</span>
             </div>
         </div>
 
@@ -884,9 +884,9 @@
         document.getElementById('modal-cand-unit').textContent = (cand.unit?.name || 'Unit') + (cand.admission_level ? ' (' + cand.admission_level + ')' : '');
         document.getElementById('modal_registration_id').value = cand.id;
 
-        // Fully Paid Notice & Button Lock
+        // Notice banner shown if currently remaining is 0
         document.getElementById('modal_already_paid_banner').classList.toggle('hidden', !isFullyPaid);
-        document.getElementById('btn_save_policy').classList.toggle('hidden', isFullyPaid);
+        document.getElementById('btn_save_policy').classList.remove('hidden');
 
         // 1. Setup Diskon Mode
         let discMode = cand.discount_mode || 'none';
@@ -909,12 +909,12 @@
         document.getElementById('modal_discount_amount').value = cand.discount_amount || 0;
         document.getElementById('modal_discount_notes').value = cand.discount_notes || '';
 
-        // If candidate is fully paid, disable all discount controls
-        document.getElementById('disc_mode_none').disabled = isFullyPaid;
-        document.getElementById('disc_mode_global').disabled = isFullyPaid;
-        document.getElementById('disc_mode_selective').disabled = isFullyPaid;
-        document.getElementById('modal_discount_amount').disabled = isFullyPaid;
-        document.getElementById('modal_discount_notes').disabled = isFullyPaid;
+        // Keep discount and installment controls enabled so admin can adjust
+        document.getElementById('disc_mode_none').disabled = false;
+        document.getElementById('disc_mode_global').disabled = false;
+        document.getElementById('disc_mode_selective').disabled = false;
+        document.getElementById('modal_discount_amount').disabled = false;
+        document.getElementById('modal_discount_notes').disabled = false;
 
         // 2. Setup Cicilan Mode
         const instMode = cand.installment_mode || 'none';
@@ -927,14 +927,14 @@
         }
         document.getElementById('modal_min_installment_amount').value = cand.min_installment_amount || 1000000;
 
-        document.getElementById('inst_mode_none').disabled = isFullyPaid;
-        document.getElementById('inst_mode_all').disabled = isFullyPaid;
-        document.getElementById('inst_mode_selective').disabled = isFullyPaid;
-        document.getElementById('modal_min_installment_amount').disabled = isFullyPaid;
+        document.getElementById('inst_mode_none').disabled = false;
+        document.getElementById('inst_mode_all').disabled = false;
+        document.getElementById('inst_mode_selective').disabled = false;
+        document.getElementById('modal_min_installment_amount').disabled = false;
 
         // 3. Render Selective Discount Table & Selective Installment Checklist
-        renderSelectiveDiscountItems(feeDetails.items || [], cand.item_discounts || {}, isFullyPaid);
-        renderSelectiveInstallmentItems(feeDetails.items || [], cand.installment_allowed_fee_ids || [], isFullyPaid);
+        renderSelectiveDiscountItems(feeDetails.items || [], cand.item_discounts || {});
+        renderSelectiveInstallmentItems(feeDetails.items || [], cand.installment_allowed_fee_ids || []);
 
         // 4. Update visibility
         onDiscountModeChange();
@@ -968,7 +968,7 @@
         document.getElementById('modal_min_installment_container').classList.toggle('hidden', (!isSelective && !isAll));
     }
 
-    function renderSelectiveDiscountItems(items, itemDiscounts, isFullyPaid) {
+    function renderSelectiveDiscountItems(items, itemDiscounts) {
         const tbody = document.getElementById('selective_discount_table_body');
         tbody.innerHTML = '';
 
@@ -980,7 +980,7 @@
         items.forEach((it, idx) => {
             const discVal = Number(itemDiscounts[it.name] || (it.id ? itemDiscounts[it.id] : 0) || 0);
             const paid = Number(it.paid_amount || 0);
-            const isItemPaid = it.is_fully_paid || (paid >= it.amount && it.amount > 0);
+            const isCashFullyPaid = (paid >= it.amount && it.amount > 0);
             const netAmount = Math.max(0, it.amount - discVal);
             const maxDiscount = Math.max(0, it.amount - paid);
 
@@ -990,15 +990,19 @@
                 <td class="py-2.5 px-3 font-extrabold text-slate-800 dark:text-slate-100">
                     <div class="flex items-center gap-2">
                         <span>${it.name}</span>
-                        ${isItemPaid ? `
+                        ${isCashFullyPaid ? `
                             <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                ✓ Lunas
+                                ✓ Lunas (Kas)
                             </span>
                         ` : (paid > 0 ? `
                             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200">
                                 Terbayar Rp ${paid.toLocaleString('id-ID')}
                             </span>
-                        ` : '')}
+                        ` : (discVal > 0 ? `
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold text-rose-700 bg-rose-50 border border-rose-200">
+                                Diskon Rp ${discVal.toLocaleString('id-ID')}
+                            </span>
+                        ` : ''))}
                     </div>
                 </td>
                 <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-600 dark:text-slate-300">
@@ -1009,14 +1013,14 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-2 text-[10px] font-bold text-slate-400 font-mono">Rp</span>
                         <input type="number" 
                                name="item_discounts[${it.name}]" 
-                               value="${isItemPaid ? 0 : discVal}"
+                               value="${isCashFullyPaid ? 0 : discVal}"
                                min="0" 
                                max="${maxDiscount}"
                                step="10000"
-                               ${(isFullyPaid || isItemPaid) ? 'disabled' : ''}
+                               ${isCashFullyPaid ? 'disabled' : ''}
                                data-gross="${it.amount}"
                                data-paid="${paid}"
-                               class="selective-disc-input w-full pl-7 pr-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold font-mono text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 text-right ${(isFullyPaid || isItemPaid) ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}"
+                               class="selective-disc-input w-full pl-7 pr-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-bold font-mono text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500 text-right ${isCashFullyPaid ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800' : ''}"
                                placeholder="0"
                                oninput="onSelectiveDiscountInput(this)">
                     </div>
@@ -1029,7 +1033,7 @@
         });
     }
 
-    function renderSelectiveInstallmentItems(items, allowedIds, isFullyPaid) {
+    function renderSelectiveInstallmentItems(items, allowedIds) {
         const container = document.getElementById('selective_installment_items_list');
         container.innerHTML = '';
 
@@ -1041,22 +1045,22 @@
         items.forEach((it, idx) => {
             const isChecked = Array.isArray(allowedIds) && (allowedIds.includes(it.id) || allowedIds.includes(String(it.id)) || allowedIds.includes(it.name));
             const paid = Number(it.paid_amount || 0);
-            const isItemPaid = it.is_fully_paid || (paid >= it.amount && it.amount > 0);
+            const isCashFullyPaid = (paid >= it.amount && it.amount > 0);
 
             const div = document.createElement('label');
-            div.className = `flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer ${(isFullyPaid || isItemPaid) ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-800' : ''}`;
+            div.className = `flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer ${isCashFullyPaid ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-800' : ''}`;
             div.innerHTML = `
                 <div class="flex items-center gap-2.5">
                     <input type="checkbox" 
                            name="installment_allowed_fee_ids[]" 
                            value="${it.id || it.name}" 
                            ${isChecked ? 'checked' : ''}
-                           ${(isFullyPaid || isItemPaid) ? 'disabled' : ''}
+                           ${isCashFullyPaid ? 'disabled' : ''}
                            class="text-indigo-600 focus:ring-indigo-500 rounded w-4 h-4">
                     <span class="text-xs font-bold text-slate-800 dark:text-slate-100">${it.name}</span>
-                    ${isItemPaid ? `
+                    ${isCashFullyPaid ? `
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            ✓ Lunas
+                            ✓ Lunas (Kas)
                         </span>
                     ` : ''}
                 </div>
