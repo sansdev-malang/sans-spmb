@@ -23,6 +23,7 @@ class UserController extends Controller
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         $search = $request->search;
         $unitId = $request->unit_id;
+        $targetUnitId = !$isSuperAdmin ? auth()->user()->spmb_unit_id : $unitId;
 
         // 1. Admins query
         $adminsQuery = User::whereIn('role', ['admin', 'super_admin']);
@@ -44,14 +45,12 @@ class UserController extends Controller
 
         // 2. Active Candidates (Sudah memilih unit & sudah lunas formulir pendaftaran)
         $candidatesQuery = User::where('role', 'candidate')
-            ->whereHas('registrations', function($rq) use ($selectedPeriodId, $isSuperAdmin, $unitId) {
+            ->whereHas('registrations', function($rq) use ($selectedPeriodId, $targetUnitId) {
                 if ($selectedPeriodId) {
                     $rq->where('spmb_period_id', $selectedPeriodId);
                 }
-                if (!$isSuperAdmin) {
-                    $rq->where('spmb_unit_id', auth()->user()->spmb_unit_id);
-                } elseif ($unitId) {
-                    $rq->where('spmb_unit_id', $unitId);
+                if ($targetUnitId) {
+                    $rq->where('spmb_unit_id', $targetUnitId);
                 }
                 // Sudah lunas formulir atau bukan draf
                 $rq->where(function($sq) {
@@ -73,12 +72,10 @@ class UserController extends Controller
             });
         }
         $candidatesCount = (clone $candidatesQuery)->count();
-        $candidates = $candidatesQuery->with(['registrations' => function($rq) use ($selectedPeriodId, $isSuperAdmin, $unitId) {
+        $candidates = $candidatesQuery->with(['registrations' => function($rq) use ($selectedPeriodId, $targetUnitId) {
             if ($selectedPeriodId) $rq->where('spmb_period_id', $selectedPeriodId);
-            if (!$isSuperAdmin) {
-                $rq->where('spmb_unit_id', auth()->user()->spmb_unit_id);
-            } elseif ($unitId) {
-                $rq->where('spmb_unit_id', $unitId);
+            if ($targetUnitId) {
+                $rq->where('spmb_unit_id', $targetUnitId);
             }
             $rq->with(['unit', 'payments']);
         }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'candidates_page');
