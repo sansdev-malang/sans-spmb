@@ -345,12 +345,13 @@ class UserController extends Controller
 
         // Determine fee amount for record audit
         $feeObj = $registration->getRegistrationFee();
+        $feeName = $feeObj ? $feeObj->name : ($registration->unit->registration_fee_name ?? 'Biaya Formulir Pendaftaran');
         $originalAmount = $feeObj ? (float)$feeObj->amount : 350000;
 
         $invoiceNo = 'DISP-REG-' . strtoupper(\Illuminate\Support\Str::random(5)) . '-' . $registration->id;
 
         // Create successful dispensation payment record
-        \App\Models\Payment::create([
+        $dispPayment = \App\Models\Payment::create([
             'registration_id' => $registration->id,
             'invoice_number' => $invoiceNo,
             'reference_id' => 'DISP-' . time(),
@@ -364,12 +365,20 @@ class UserController extends Controller
                 'dispensation' => true,
                 'dispensation_reason' => $request->reason,
                 'notes' => $request->notes,
+                'fee_name' => $feeName,
                 'original_amount' => $originalAmount,
                 'approved_by_id' => auth()->id(),
                 'approved_by_name' => auth()->user()->name,
                 'settle_source' => 'admin_dispensation',
                 'settled_at' => now()->toIso8601String(),
             ]
+        ]);
+
+        \App\Models\PaymentItem::create([
+            'payment_id' => $dispPayment->id,
+            'spmb_fee_id' => $feeObj?->id,
+            'fee_name' => $feeName,
+            'amount' => 0,
         ]);
 
         // Update registration payment status
