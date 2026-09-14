@@ -282,7 +282,19 @@
         <div class="header">
             <table class="header-table">
                 <tr>
-                    <td>
+                    <td style="width: 44px; vertical-align: middle; padding-right: 10px;">
+                        @php
+                            $logoSrc = \App\Models\Setting::getLogoBase64();
+                        @endphp
+                        @if(!empty($logoSrc))
+                            <img src="{{ $logoSrc }}" style="height: 38px; width: auto;" alt="Logo">
+                        @else
+                            <div style="background-color: #059669; color: white; width: 36px; height: 36px; line-height: 36px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                                SAS
+                            </div>
+                        @endif
+                    </td>
+                    <td style="vertical-align: middle;">
                         <h1 class="school-name">{{ \App\Models\Setting::get('school_name', 'Sekolah Anak Saleh') }}</h1>
                         <div class="school-subtitle">Sistem Penerimaan Murid Baru (SPMB)</div>
                     </td>
