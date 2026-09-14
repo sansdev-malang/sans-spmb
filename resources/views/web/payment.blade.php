@@ -98,30 +98,18 @@
                     </div>
                 </div>
 
-                @if(isset($discountAmount) && ($discountAmount > 0 || ($installmentMode ?? 'none') !== 'none'))
-                    <!-- Keringanan & Cicilan Banner -->
+                @if(!$isPaymentPending && $registration->payment_status !== 'paid' && isset($discountAmount) && $discountAmount > 0)
+                    <!-- Keringanan Biaya (Diskon) Banner -->
                     <div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl flex items-start gap-3">
                         <div class="h-8 w-8 rounded-xl bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <i data-lucide="sparkles" class="w-4 h-4"></i>
                         </div>
                         <div class="space-y-1">
                             <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-300">
-                                @if($discountAmount > 0 && ($installmentMode ?? 'none') !== 'none')
-                                    Persetujuan Keringanan & Kebijakan Cicilan
-                                @elseif($discountAmount > 0)
-                                    Persetujuan Keringanan Biaya (Diskon)
-                                @else
-                                    Kebijakan Cicilan Pembayaran
-                                @endif
+                                Persetujuan Keringanan Biaya (Diskon)
                             </h4>
                             <p class="text-xs text-emerald-750 dark:text-emerald-400 leading-relaxed">
-                                @if($discountAmount > 0 && ($installmentMode ?? 'none') !== 'none')
-                                    Alhamdulillah! Anda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}) dan diizinkan melakukan <strong>pembayaran bertahap (cicilan)</strong>.
-                                @elseif($discountAmount > 0)
-                                    Alhamdulillah! Anda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}).
-                                @elseif(($installmentMode ?? 'none') !== 'none')
-                                    Alhamdulillah! Anda disetujui untuk melakukan <strong>pembayaran bertahap (cicilan)</strong> untuk biaya administrasi akhir ini.
-                                @endif
+                                Alhamdulillah! Anda disetujui memperoleh <strong>Keringanan Potongan Biaya sebesar Rp {{ number_format($discountAmount, 0, ',', '.') }}</strong> ({{ $discountNotes ?: 'Keringanan Yayasan' }}).
                             </p>
                         </div>
                     </div>
@@ -263,17 +251,6 @@
                                     <div class="flex justify-between items-center text-rose-600 dark:text-rose-400 border-t border-slate-200/40 dark:border-slate-800 pt-2 px-3.5">
                                         <span>Potongan Keringanan (Diskon)</span>
                                         <span class="font-extrabold text-xs font-mono">- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
-                                    </div>
-                                @endif
-
-                                @if($isInstallmentActive && isset($totalPaid) && $totalPaid > 0)
-                                    <div class="flex justify-between items-center text-emerald-600 dark:text-emerald-400 border-t border-slate-200/40 dark:border-slate-800 pt-1.5 px-3.5">
-                                        <span>Telah Dibayar Sebelumnya</span>
-                                        <span class="font-extrabold text-xs font-mono">Rp {{ number_format($totalPaid, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-slate-800 dark:text-white font-extrabold px-3.5">
-                                        <span>Sisa Tanggungan</span>
-                                        <span class="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">Rp {{ number_format($remainingBalance, 0, ',', '.') }}</span>
                                     </div>
                                 @endif
 

@@ -599,7 +599,7 @@ class WebDashboardController extends Controller
                 $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
                 $itemNet = max(0, $itemGross - $itemDiscount);
                 $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
-                if (($itemNet - $itemPaid) <= 0 && $itemNet > 0) {
+                if (($itemNet - $itemPaid) <= 0) {
                     $fullyPaidItemNames[] = $item['name'];
                 }
             }
@@ -710,11 +710,15 @@ class WebDashboardController extends Controller
                     $item['is_installment_allowed'] = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
                     
                     $itemGross = (float) ($item['amount'] ?? 0);
+                    $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                    $itemNet = max(0, $itemGross - $itemDiscount);
                     $itemPaid = $isGlobalInstallment ? 0 : $registration->getItemPaidAmount($item['name']);
-                    $itemRemaining = max(0, $itemGross - $itemPaid);
+                    $itemRemaining = max(0, $itemNet - $itemPaid);
                     $minItemInstallment = min($itemRemaining, (float) ($registration->min_installment_amount ?: 500000));
 
                     $item['paid_amount'] = $itemPaid;
+                    $item['discount_amount'] = $itemDiscount;
+                    $item['net_amount'] = $itemNet;
                     $item['remaining_amount'] = $itemRemaining;
                     $item['min_installment'] = $minItemInstallment;
 
@@ -969,7 +973,7 @@ class WebDashboardController extends Controller
                 $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
                 $itemNet = max(0, $itemGross - $itemDiscount);
                 $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
-                if (($itemNet - $itemPaid) <= 0 && $itemNet > 0) {
+                if (($itemNet - $itemPaid) <= 0) {
                     $fullyPaidItemNames[] = $item['name'];
                 }
             }
@@ -1274,7 +1278,7 @@ class WebDashboardController extends Controller
                     $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
                     $itemNet = max(0, $itemGross - $itemDiscount);
                     $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
-                    if (($itemNet - $itemPaid) <= 0 && $itemNet > 0) {
+                    if (($itemNet - $itemPaid) <= 0) {
                         $fullyPaidItemNames[] = $item['name'];
                     }
                 }
@@ -1364,8 +1368,10 @@ class WebDashboardController extends Controller
                 foreach ($feeDetails['items'] as $item) {
                     $isInstallmentAllowed = $registration->isFeeInstallmentAllowed($item['name'], $item['id'] ?? null);
                     $itemGross = (float) ($item['amount'] ?? 0);
+                    $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                    $itemNet = max(0, $itemGross - $itemDiscount);
                     $itemPaid = $isGlobalInstallment ? 0 : $registration->getItemPaidAmount($item['name']);
-                    $itemRemaining = max(0, $itemGross - $itemPaid);
+                    $itemRemaining = max(0, $itemNet - $itemPaid);
 
                     if ($itemRemaining <= 0) continue;
 
@@ -1804,47 +1810,70 @@ class WebDashboardController extends Controller
             ]);
 
             $registration = Registration::find($payment->registration_id);
-            $hasSuccess = $registration->payments()->where('status', 'success')->exists();
-            $registration->update([
-                'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
-            ]);
+            if ($payment->payment_type === 'final_fee') {
+                $hasSuccess = $registration->payments()->where('status', 'success')->where('payment_type', 'final_fee')->exists();
+                $registration->update([
+                    'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
+                ]);
+            } else {
+                $hasSuccess = $registration->payments()->where('status', 'success')->where('payment_type', 'registration_fee')->exists();
+                $registration->update([
+                    'payment_status' => $hasSuccess ? 'paid' : 'unpaid'
+                ]);
+            }
 
-            // Preserve selected items index query parameters upon redirection
+            // Preserve selected items index and custom installment amount query parameters upon redirection
             $itemsQuery = '';
+            $selectedItemAmounts = [];
             if (isset($payment->payment_info['selected_items']) && is_array($payment->payment_info['selected_items'])) {
-                $selectedNames = array_column($payment->payment_info['selected_items'], 'name');
+                foreach ($payment->payment_info['selected_items'] as $si) {
+                    if (!empty($si['name'])) {
+                        $selectedItemAmounts[$si['name']] = $si['amount'] ?? null;
+                    }
+                }
+            }
+            if (empty($selectedItemAmounts) && $payment->items()->count() > 0) {
+                foreach ($payment->items as $pi) {
+                    $selectedItemAmounts[$pi->fee_name] = $pi->amount;
+                }
+            }
+
+            if (!empty($selectedItemAmounts)) {
                 $feeDetails = $this->getFinalFeeDetails($registration);
                 if (isset($feeDetails['items']) && is_array($feeDetails['items'])) {
-                    // Collect names of successful payments to compute the unpaid list
-                    $paidItemNames = [];
-                    $successfulPayments = $registration->payments()
-                        ->where('status', 'success')
-                        ->where('payment_type', 'final_fee')
-                        ->get();
-                    foreach ($successfulPayments as $p) {
-                        if (isset($p->payment_info['selected_items']) && is_array($p->payment_info['selected_items'])) {
-                            foreach ($p->payment_info['selected_items'] as $item) {
-                                $paidItemNames[] = $item['name'];
-                            }
+                    // Filter out already fully paid items
+                    $fullyPaidItemNames = [];
+                    foreach ($feeDetails['items'] as $item) {
+                        $itemGross = (float) ($item['amount'] ?? 0);
+                        $itemDiscount = $registration->getItemDiscountAmount($item['name'], $item['id'] ?? null);
+                        $itemNet = max(0, $itemGross - $itemDiscount);
+                        $itemPaid = $registration->getItemPaidAmount($item['name'], $item['id'] ?? null);
+                        if (($itemNet - $itemPaid) <= 0) {
+                            $fullyPaidItemNames[] = $item['name'];
                         }
                     }
 
                     $unpaidItems = [];
                     foreach ($feeDetails['items'] as $item) {
-                        if (!in_array($item['name'], $paidItemNames)) {
+                        if (!in_array($item['name'], $fullyPaidItemNames)) {
                             $unpaidItems[] = $item;
                         }
                     }
 
-                    // Resolve indices
-                    $indices = [];
+                    // Resolve indices with custom installment amounts preserved
+                    $paramPairs = [];
                     foreach ($unpaidItems as $idx => $item) {
-                        if (in_array($item['name'], $selectedNames)) {
-                            $indices[] = $idx;
+                        if (array_key_exists($item['name'], $selectedItemAmounts)) {
+                            $customAmt = $selectedItemAmounts[$item['name']];
+                            if ($customAmt !== null && $customAmt > 0) {
+                                $paramPairs[] = $idx . ':' . (int) $customAmt;
+                            } else {
+                                $paramPairs[] = $idx;
+                            }
                         }
                     }
-                    if (!empty($indices)) {
-                        $itemsQuery = '?items=' . implode(',', $indices);
+                    if (!empty($paramPairs)) {
+                        $itemsQuery = '?items=' . implode(',', $paramPairs);
                     }
                 }
             }
@@ -1899,7 +1928,7 @@ class WebDashboardController extends Controller
         
         $candidateSlug = $registration->candidate_name ? \Illuminate\Support\Str::slug($registration->candidate_name) : $registration->id;
         $filename = $isSettlement 
-            ? 'Kwitansi-Utama-Pelunasan-SPMB-' . $candidateSlug . ($filterItemName ? '-' . \Illuminate\Support\Str::slug($filterItemName) : '') . '.pdf'
+            ? 'Bukti-Pelunasan-SPMB-' . $candidateSlug . ($filterItemName ? '-' . \Illuminate\Support\Str::slug($filterItemName) : '') . '.pdf'
             : 'Bukti-Bayar-SPMB-' . $payment->invoice_number . '.pdf';
 
         $response = response()->make($pdf->output(), 200, [

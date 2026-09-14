@@ -15,57 +15,8 @@
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Status Akhir Pendaftaran</h1>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                Rekam jejak komprehensif perjalanan pendaftaran ananda dari registrasi akun hingga tahap penerimaan resmi.
+                Informasi lengkap tahapan perjalanan pendaftaran ananda dari registrasi awal hingga tahap penerimaan resmi.
             </p>
-        </div>
-    </div>
-
-    <!-- ACCOUNT SUMMARY CARD -->
-    <div class="bg-gradient-to-br from-white via-slate-50 to-emerald-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/20 rounded-3xl p-5 sm:p-7 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
-        <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-brand-emerald/5 dark:bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
-
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-            <div class="flex items-start sm:items-center gap-4">
-                <div class="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-brand-emerald text-white flex items-center justify-center text-xl sm:text-2xl font-black uppercase shadow-md flex-shrink-0 ring-4 ring-emerald-100/60 dark:ring-emerald-950">
-                    {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
-                </div>
-                <div class="space-y-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate">{{ $user->name }}</h2>
-                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
-                            Akun Orang Tua / Wali
-                        </span>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-                        <span class="flex items-center gap-1">
-                            <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> {{ $user->email }}
-                        </span>
-                        @if(!empty($user->phone))
-                            <span class="flex items-center gap-1">
-                                <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i> {{ $user->phone }}
-                            </span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Account Meta Badges -->
-            <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4 border-t lg:border-t-0 lg:border-l border-slate-200/80 dark:border-slate-800 pt-4 lg:pt-0 lg:pl-6">
-                <div class="bg-white dark:bg-slate-950/60 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Tanggal Registrasi Akun</span>
-                    <span class="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5 mt-1">
-                        <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                        {{ $user->created_at ? $user->created_at->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') : '-' }} WIB
-                    </span>
-                </div>
-                <div class="bg-white dark:bg-slate-950/60 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800">
-                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Pendaftaran Aktif</span>
-                    <span class="text-xs font-black text-slate-900 dark:text-slate-200 flex items-center gap-1.5 mt-1">
-                        <i data-lucide="users" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                        {{ $registrations->count() }} Calon Murid
-                    </span>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -148,6 +99,41 @@
                 ->orderBy('created_at', 'asc')
                 ->get();
         @endphp
+
+        @if($status === 'completed')
+            <!-- OFFICIAL ACCEPTANCE CELEBRATION BANNER (TOP HERO) -->
+            <div class="bg-gradient-to-br from-emerald-500/10 via-emerald-50 to-emerald-100/60 dark:from-emerald-950/60 dark:via-emerald-900/40 dark:to-slate-900 border border-emerald-300/80 dark:border-emerald-700/60 rounded-3xl p-5 sm:p-7 shadow-xs relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-400/20 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="flex flex-col lg:flex-row items-center justify-between gap-6 relative z-10 text-center lg:text-left">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
+                        <div class="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-tr from-brand-emerald to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/20 shrink-0 ring-4 ring-emerald-100/80 dark:ring-emerald-950">
+                            <i data-lucide="party-popper" class="w-8 h-8 sm:w-10 sm:h-10 text-brand-yellow animate-bounce"></i>
+                        </div>
+                        <div class="space-y-1.5 min-w-0">
+                            <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                                Alhamdulillah, Ananda Dinyatakan <span class="text-brand-emerald dark:text-emerald-400">RESMI DITERIMA!</span>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                                Selamat kepada ananda <strong class="text-slate-900 dark:text-white font-extrabold">{{ $reg->candidate_name }}</strong> yang telah resmi terdaftar dan diterima sebagai murid baru di <strong>{{ $reg->unit?->name ?? 'Sekolah Anak Saleh' }}</strong> (TP {{ $reg->period?->year ?? date('Y') }}). Selamat bergabung menjadi bagian dari keluarga besar Sekolah Anak Saleh! Silakan unduh Surat Keterangan Penerimaan (SKP) resmi di bawah ini.
+                                @if($reg->is_dispensation)
+                                    <span class="block mt-1 text-xs font-bold text-purple-700 dark:text-purple-300">
+                                        ★ Penerimaan melalui persetujuan kebijakan: {{ $reg->dispensation_reason }}
+                                    </span>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- DOWNLOAD ACTION BUTTON -->
+                    <div class="w-full lg:w-auto shrink-0 flex justify-center lg:justify-end">
+                        <a href="{{ route('dashboard.admission-letter.download', $reg->id) }}" target="_blank" download class="download-link-animate w-full sm:w-auto min-w-[240px] h-12 bg-brand-emerald hover-emerald border border-brand-emerald text-white px-6 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition inline-flex items-center justify-center gap-2 select-none active:scale-[0.98]">
+                            <i data-lucide="file-check" class="w-4 h-4 text-brand-yellow shrink-0"></i>
+                            <span>Unduh Surat Penerimaan (SKP)</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- ACTIVE CANDIDATE RECAP CARD -->
         <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden space-y-6">
@@ -265,16 +251,14 @@
                 <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
                     <h4 class="font-extrabold text-slate-900 dark:text-white text-sm uppercase tracking-wider flex items-center gap-2">
                         <i data-lucide="git-commit" class="w-4 h-4 text-brand-emerald"></i>
-                        <span>Rekam Jejak & Alur Lengkap Pendaftaran</span>
+                        <span>Alur & Tahapan Lengkap Pendaftaran</span>
                     </h4>
                 </div>
 
                 <div class="relative space-y-6 sm:space-y-8">
-                    <!-- Continuous Vertical Line (Precision Centered at Center of Circle) -->
-                    <div class="absolute top-5 bottom-8 left-4 sm:left-5 w-0.5 -translate-x-1/2 bg-emerald-200 dark:bg-emerald-900/60 pointer-events-none"></div>
-
                     <!-- STAGE 1: REGISTRASI & BIAYA AWAL PENDAFTARAN -->
                     <div class="relative flex items-start gap-3 sm:gap-5 group">
+                        <div class="absolute top-4 sm:top-5 left-4 sm:left-5 -bottom-6 sm:-bottom-8 w-0.5 -translate-x-1/2 bg-emerald-200 dark:bg-emerald-900/60 pointer-events-none"></div>
                         <!-- Node Circle -->
                         <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-brand-emerald text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-md ring-4 ring-white dark:ring-slate-900 shrink-0 z-10 select-none">
                             1
@@ -312,7 +296,7 @@
                                         <span class="font-bold text-slate-900 dark:text-slate-300 mt-1 block">{{ $regPayment ? 'Tersedia' : 'Belum Ada' }}</span>
                                     </div>
                                     @if($regPayment)
-                                        <a href="{{ route('dashboard.payment.receipt', $regPayment->id) }}" class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition" title="Unduh Kwitansi">
+                                        <a href="{{ route('dashboard.payment.receipt', $regPayment->id) }}" class="download-link-animate p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-brand-emerald dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition flex items-center justify-center" title="Unduh Kwitansi">
                                             <i data-lucide="download" class="w-4 h-4"></i>
                                         </a>
                                     @endif
@@ -323,6 +307,7 @@
 
                     <!-- STAGE 2: PENGISIAN BIODATA & BERKAS -->
                     <div class="relative flex items-start gap-3 sm:gap-5 group">
+                        <div class="absolute top-4 sm:top-5 left-4 sm:left-5 -bottom-6 sm:-bottom-8 w-0.5 -translate-x-1/2 bg-emerald-200 dark:bg-emerald-900/60 pointer-events-none"></div>
                         <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full {{ in_array($status, ['submitted', 'verified', 'taaruf_completed', 'agreement_signed', 'completed']) ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500' }} flex items-center justify-center font-black text-xs sm:text-sm shadow-md ring-4 ring-white dark:ring-slate-900 shrink-0 z-10 select-none">
                             2
                         </div>
@@ -446,6 +431,7 @@
 
                     <!-- STAGE 3: VERIFIKASI BERKAS OLEH PANITIA -->
                     <div class="relative flex items-start gap-3 sm:gap-5 group">
+                        <div class="absolute top-4 sm:top-5 left-4 sm:left-5 -bottom-6 sm:-bottom-8 w-0.5 -translate-x-1/2 bg-emerald-200 dark:bg-emerald-900/60 pointer-events-none"></div>
                         <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full {{ in_array($status, ['verified', 'taaruf_completed', 'agreement_signed', 'completed']) ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500' }} flex items-center justify-center font-black text-xs sm:text-sm shadow-md ring-4 ring-white dark:ring-slate-900 shrink-0 z-10 select-none">
                             3
                         </div>
@@ -487,6 +473,7 @@
 
                     <!-- STAGE 4: OBSERVASI & TA'ARUF -->
                     <div class="relative flex items-start gap-3 sm:gap-5 group">
+                        <div class="absolute top-4 sm:top-5 left-4 sm:left-5 -bottom-6 sm:-bottom-8 w-0.5 -translate-x-1/2 bg-emerald-200 dark:bg-emerald-900/60 pointer-events-none"></div>
                         <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full {{ in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']) ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500' }} flex items-center justify-center font-black text-xs sm:text-sm shadow-md ring-4 ring-white dark:ring-slate-900 shrink-0 z-10 select-none">
                             4
                         </div>
@@ -537,6 +524,7 @@
 
                     <!-- STAGE 5: SURAT PERNYATAAN & KERINGANAN/CICILAN -->
                     <div class="relative flex items-start gap-3 sm:gap-5 group">
+                        <div class="absolute top-4 sm:top-5 left-4 sm:left-5 -bottom-6 sm:-bottom-8 w-0.5 -translate-x-1/2 bg-emerald-200 dark:bg-emerald-900/60 pointer-events-none"></div>
                         <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full {{ in_array($status, ['agreement_signed', 'completed']) ? 'bg-brand-emerald text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500' }} flex items-center justify-center font-black text-xs sm:text-sm shadow-md ring-4 ring-white dark:ring-slate-900 shrink-0 z-10 select-none">
                             5
                         </div>
@@ -733,9 +721,7 @@
                                                             </div>
                                                         @endif
                                                     </div>
-                                                </div>
-
-                                                <a href="{{ route('dashboard.payment.receipt', $fp->id) }}" class="self-start sm:self-center px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0 shadow-2xs">
+                                                                                        <a href="{{ route('dashboard.payment.receipt', $fp->id) }}" class="download-link-animate self-start sm:self-center px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0 shadow-2xs">
                                                     <i data-lucide="download" class="w-3.5 h-3.5 text-brand-emerald"></i> Kwitansi #{{ $index + 1 }}
                                                 </a>
                                             </div>
@@ -776,27 +762,6 @@
                         </div>
                     </div>
 
-                    <!-- STAGE 7: STATUS RESMI DITERIMA -->
-                    <div class="relative flex items-start gap-3 sm:gap-5 group">
-                        <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full {{ ($status === 'completed') ? 'bg-brand-emerald text-brand-yellow ring-4 ring-emerald-100 dark:ring-emerald-950' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 ring-4 ring-white dark:ring-slate-900' }} flex items-center justify-center font-black text-xs sm:text-sm shadow-md shrink-0 z-10 select-none">
-                            <i data-lucide="check" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                        </div>
-                        <div class="flex-1 min-w-0 {{ $status === 'completed' ? 'bg-gradient-to-r from-emerald-50 via-emerald-100/40 to-emerald-50 dark:from-emerald-950/30 dark:via-emerald-900/10 dark:to-emerald-950/30 border-emerald-300/60 dark:border-emerald-800' : 'bg-slate-50/80 dark:bg-slate-950/60 border-slate-200/80 dark:border-slate-800' }} rounded-2xl p-4 sm:p-5 border space-y-2">
-                            <div class="flex items-center gap-2">
-                                <h5 class="font-black text-xs sm:text-sm {{ $status === 'completed' ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-900 dark:text-white' }}">
-                                    Status Akhir: {{ $status === 'completed' ? 'Alhamdulillah, RESMI DITERIMA' : 'Dalam Proses Daftar Ulang' }}
-                                </h5>
-                            </div>
-                            <p class="text-[11px] {{ $status === 'completed' ? 'text-emerald-800/80 dark:text-emerald-300/80' : 'text-slate-500 dark:text-slate-400' }} leading-relaxed">
-                                @if($status === 'completed')
-                                    Selamat! Ananda <strong>{{ $reg->candidate_name }}</strong> telah resmi menjadi bagian dari keluarga besar {{ $reg->unit?->name ?? 'Sekolah Anak Saleh' }}. Seluruh tahapan pendaftaran dan administrasi telah selesai dengan lengkap.
-                                @else
-                                    Selesaikan seluruh tahapan yang masih berjalan agar ananda resmi terdaftar dan diterima sebagai murid baru.
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
@@ -805,17 +770,13 @@
                 <span class="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
                     Butuh bantuan atau informasi perubahan data? Hubungi panitia SPMB unit.
                 </span>
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    @if($status === 'completed' || $status === 'agreement_signed')
-                        <a href="{{ route('dashboard.result', $reg->id) }}" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-emerald hover-emerald text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
-                            <i data-lucide="award" class="w-4 h-4 text-brand-yellow"></i> Buka Halaman Administrasi
-                        </a>
-                    @else
+                @if($status !== 'completed' && $status !== 'agreement_signed')
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
                         <a href="{{ route('dashboard.detail', $reg->id) }}" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-emerald hover-emerald text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
                             <i data-lucide="arrow-right" class="w-4 h-4"></i> Lanjut Tahapan
                         </a>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </div>
 
         </div>
@@ -823,4 +784,70 @@
     @endif
 
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle loading animations for download buttons
+        document.querySelectorAll('.download-link-animate').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const originalHref = this.getAttribute('href');
+                const originalContent = this.innerHTML;
+                const isIconOnly = !this.innerText.trim();
+                
+                // Generate a unique token
+                const token = 'dt_' + Date.now();
+                const downloadUrl = originalHref + (originalHref.includes('?') ? '&' : '?') + 'download_token=' + token;
+                
+                // Show spinner animation
+                if (isIconOnly) {
+                    this.innerHTML = '<svg class="animate-spin h-4 w-4 text-brand-emerald dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                } else {
+                    this.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyiapkan Berkas...</span>';
+                }
+                this.style.pointerEvents = 'none';
+                
+                // Start the download
+                window.location.href = downloadUrl;
+                
+                // Poll for the cookie
+                const cookieName = 'download_status_' + token;
+                const checkInterval = setInterval(() => {
+                    const cookies = document.cookie.split(';');
+                    let cookieFound = false;
+                    for (let i = 0; i < cookies.length; i++) {
+                        const c = cookies[i].trim();
+                        if (c.indexOf(cookieName + '=') === 0) {
+                            cookieFound = true;
+                            // Delete the cookie
+                            document.cookie = cookieName + '=; Max-Age=-99999999; path=/;';
+                            break;
+                        }
+                    }
+                    
+                    if (cookieFound) {
+                        clearInterval(checkInterval);
+                        this.innerHTML = originalContent;
+                        this.style.pointerEvents = '';
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }
+                }, 150);
+                
+                // Safety timeout fallback (15 seconds) in case of network/render errors
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    if (this.style.pointerEvents === 'none') {
+                        this.innerHTML = originalContent;
+                        this.style.pointerEvents = '';
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }
+                }, 15000);
+            });
+        });
+    });
+</script>
 @endsection

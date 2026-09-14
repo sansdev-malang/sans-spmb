@@ -1195,9 +1195,9 @@
             Object.assign(currentCandidate, resData);
         }
 
-        // 2. Rincian Komponen Biaya (Column 3, index 2)
+        // 2. Rincian Komponen Biaya (Column 4, index 3)
         if (currentFeeDetails && currentFeeDetails.items) {
-            const feeItemsTd = row.children[2];
+            const feeItemsTd = row.children[3];
             if (feeItemsTd) {
                 const itemsHtml = currentFeeDetails.items.map(it => {
                     let itDiscount = 0;
@@ -1221,8 +1221,8 @@
             }
         }
 
-        // 3. Diskon / Keringanan (Column 4, index 3)
-        const discTd = row.children[3];
+        // 3. Diskon / Keringanan (Column 5, index 4)
+        const discTd = row.children[4];
         if (discTd) {
             if (resData.total_discount > 0) {
                 discTd.innerHTML = `
@@ -1250,8 +1250,8 @@
             }
         }
 
-        // 4. Kebijakan Cicilan (Column 5, index 4)
-        const instTd = row.children[4];
+        // 4. Kebijakan Cicilan (Column 6, index 5)
+        const instTd = row.children[5];
         if (instTd) {
             if (resData.installment_mode === 'all') {
                 instTd.innerHTML = `
@@ -1281,8 +1281,8 @@
             }
         }
 
-        // 5. Tagihan & Realisasi (Column 6, index 5)
-        const billTd = row.children[5];
+        // 5. Tagihan & Realisasi (Column 7, index 6)
+        const billTd = row.children[6];
         if (billTd) {
             billTd.innerHTML = `
                 <div>
@@ -1301,8 +1301,8 @@
             `;
         }
 
-        // 6. Sisa Tagihan (Column 7, index 6)
-        const remTd = row.children[6];
+        // 6. Sisa Tagihan (Column 8, index 7)
+        const remTd = row.children[7];
         if (remTd) {
             if (resData.remaining_balance <= 0 && resData.net_fee > 0) {
                 remTd.innerHTML = `
@@ -1319,8 +1319,8 @@
             }
         }
 
-        // 7. Status (Column 8, index 7)
-        const stTd = row.children[7];
+        // 7. Status (Column 9, index 8)
+        const stTd = row.children[8];
         if (stTd) {
             if (resData.remaining_balance <= 0 && resData.net_fee > 0 && resData.total_paid > 0) {
                 stTd.innerHTML = `

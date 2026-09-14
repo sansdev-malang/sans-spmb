@@ -330,10 +330,19 @@
                                                             <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas (Total: Rp {{ number_format($itemNet, 0, ',', '.') }} melalui {{ count($itemPayments) }}x pembayaran)
                                                         </div>
                                                         <div class="mt-2 bg-emerald-50/40 dark:bg-emerald-950/20 p-2.5 rounded-xl border border-emerald-200/50 dark:border-emerald-900/40 space-y-1.5">
-                                                            <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                                                            <div class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between flex-wrap gap-2">
                                                                 <span class="flex items-center gap-1.5">
                                                                     <i data-lucide="history" class="w-3.5 h-3.5 text-brand-emerald"></i> Riwayat Angsuran Cicilan:
                                                                 </span>
+                                                                @php
+                                                                    $lastPaymentItem = end($itemPayments);
+                                                                    $lastPaymentObj = $lastPaymentItem['payment'] ?? null;
+                                                                @endphp
+                                                                @if($lastPaymentObj)
+                                                                    <a href="{{ route('dashboard.payment.receipt', $lastPaymentObj->id) }}?type=settlement&item_name={{ urlencode($item['name']) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1 text-[9px] font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 px-2 py-0.5 rounded-md shadow-2xs transition" title="Unduh Bukti Pelunasan {{ $item['name'] }}">
+                                                                        <i data-lucide="receipt" class="w-2.5 h-2.5"></i> Bukti Pelunasan
+                                                                    </a>
+                                                                @endif
                                                             </div>
                                                             <div class="space-y-1 pt-0.5">
                                                                 @foreach($itemPayments as $idx => $ip)
@@ -520,32 +529,17 @@
 
             <!-- BOTTOM SECTION -->
             @if($registration->registration_status === 'completed')
-                <!-- ANNOUNCEMENT BANNER -->
-                <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
-                    <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
-                        <i data-lucide="party-popper" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Alhamdulillah, Dinyatakan RESMI DITERIMA</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Selamat kepada ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> yang telah resmi terdaftar dan diterima menjadi bagian dari keluarga besar Sekolah Anak Saleh.
-                            @if($registration->is_dispensation)
-                                <span class="block mt-1 text-xs font-bold text-purple-700 dark:text-purple-300">
-                                    ★ Penerimaan melalui persetujuan kebijakan: {{ $registration->dispensation_reason }}
-                                </span>
-                            @endif
-                        </p>
-                    </div>
-                </div>
-
                 @if(isset($remainingBalance) && $remainingBalance > 0)
-                    <!-- INSTRUCTIONS BOX FOR REMAINING INSTALLMENTS -->
-                    <div class="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-800 space-y-3 sm:space-y-3.5 text-xs text-slate-600 dark:text-slate-400">
-                        <h5 class="font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
-                            <i data-lucide="info" class="w-4 h-4 text-brand-emerald"></i> Prosedur Pelunasan Sisa Angsuran
-                        </h5>
-                        <div class="instructions-body text-slate-600 dark:text-slate-400">
-                            <p>Ananda telah resmi diterima di Sekolah Anak Saleh. Anda dapat melanjutkan pembayaran angsuran untuk sisa biaya administrasi masuk di atas secara fleksibel sebelum tahun ajaran baru dimulai.</p>
+                    <!-- ANNOUNCEMENT BANNER FOR REMAINING INSTALLMENTS -->
+                    <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
+                        <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                            <i data-lucide="clock" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Tahap Administrasi & Angsuran Berjalan</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Pembayaran administrasi tahap awal ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> telah diterima. Anda dapat melanjutkan pembayaran angsuran untuk sisa tanggungan pembiayaan di atas secara fleksibel sebelum tahun ajaran baru dimulai.
+                            </p>
                         </div>
                     </div>
 
@@ -555,6 +549,37 @@
                             <span class="btn-label-text flex items-center gap-2">
                                 <i data-lucide="credit-card" class="w-4.5 h-4.5 text-brand-yellow animate-pulse"></i> Bayar Sisa Angsuran
                             </span>
+                        </a>
+                    </div>
+                @else
+                    <!-- ANNOUNCEMENT BANNER FOR FULLY COMPLETED -->
+                    <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/50 dark:from-emerald-950/10 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-900/50 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center text-center sm:text-left">
+                        <div class="h-14 w-14 sm:h-16 sm:w-16 bg-brand-emerald text-white rounded-2xl flex items-center justify-center shadow-md flex-shrink-0">
+                            <i data-lucide="check-circle-2" class="w-7 h-7 sm:w-8 sm:h-8 text-brand-yellow"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white">Alhamdulillah, Seluruh Administrasi Telah Selesai</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Seluruh rangkaian pembayaran administrasi masuk awal untuk ananda <strong class="text-slate-800 dark:text-slate-200">{{ $registration->candidate_name }}</strong> telah berhasil diselesaikan dan terverifikasi lunas sepenuhnya. Silakan unduh Bukti Pelunasan di bawah ini atau buka menu <strong class="text-brand-emerald dark:text-emerald-400">Status Akhir</strong> untuk melihat informasi hasil penerimaan resmi.
+                            </p>
+                        </div>
+                    </div>
+
+                    @php
+                        $latestFinalPay = $registration->payments()->where('status', 'success')->where('payment_type', 'final_fee')->latest()->first();
+                    @endphp
+                    <!-- ACTION BUTTONS WHEN FULLY LUNAS -->
+                    <div class="pt-3 flex flex-col sm:flex-row justify-center items-center gap-3.5">
+                        @if($latestFinalPay)
+                            <a href="{{ route('dashboard.payment.receipt', $latestFinalPay->id) }}?type=settlement" target="_blank" download class="download-link-animate w-full sm:w-auto min-w-[220px] h-12 bg-brand-emerald hover-emerald border border-brand-emerald text-white px-6 rounded-xl font-bold text-xs shadow-md transition inline-flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-4 h-4 text-brand-yellow shrink-0"></i>
+                                <span>Unduh Bukti Pelunasan</span>
+                            </a>
+                        @endif
+                        <a href="{{ route('dashboard.history', ['id' => $registration->id]) }}" class="w-full sm:w-auto min-w-[220px] h-12 bg-white hover:bg-slate-50 border border-slate-200 dark:border-slate-700 text-slate-750 dark:text-slate-200 px-6 rounded-xl font-bold text-xs shadow-sm transition inline-flex items-center justify-center gap-2">
+                            <i data-lucide="award" class="w-4 h-4 text-brand-emerald shrink-0"></i>
+                            <span>Buka Menu Status Akhir</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5 opacity-60 shrink-0"></i>
                         </a>
                     </div>
                 @endif
@@ -854,13 +879,18 @@
                 e.preventDefault();
                 const originalHref = this.getAttribute('href');
                 const originalContent = this.innerHTML;
+                const isIconOnly = !this.innerText.trim();
                 
                 // Generate a unique token
                 const token = 'dt_' + Date.now();
                 const downloadUrl = originalHref + (originalHref.includes('?') ? '&' : '?') + 'download_token=' + token;
                 
                 // Show spinner animation
-                this.innerHTML = '<span class="inline-flex items-center gap-1.5"><svg class="animate-spin h-3.5 w-3.5 text-brand-emerald" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Mohon Tunggu...</span>';
+                if (isIconOnly) {
+                    this.innerHTML = '<svg class="animate-spin h-3.5 w-3.5 text-brand-emerald dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                } else {
+                    this.innerHTML = '<span class="inline-flex items-center gap-1.5"><svg class="animate-spin h-3.5 w-3.5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyiapkan Berkas...</span>';
+                }
                 this.style.pointerEvents = 'none';
                 
                 // Start the download
@@ -885,6 +915,9 @@
                         clearInterval(checkInterval);
                         this.innerHTML = originalContent;
                         this.style.pointerEvents = '';
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
                     }
                 }, 150);
                 
@@ -894,6 +927,9 @@
                     if (this.style.pointerEvents === 'none') {
                         this.innerHTML = originalContent;
                         this.style.pointerEvents = '';
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
                     }
                 }, 15000);
             });

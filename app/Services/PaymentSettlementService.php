@@ -226,10 +226,17 @@ class PaymentSettlementService
 
             $registration = $payment->registration;
             if ($registration) {
-                $hasSuccess = $registration->payments()->where('status', 'success')->exists();
-                $registration->update([
-                    'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
-                ]);
+                if ($payment->payment_type === 'final_fee') {
+                    $hasSuccess = $registration->payments()->where('status', 'success')->where('payment_type', 'final_fee')->exists();
+                    $registration->update([
+                        'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
+                    ]);
+                } else {
+                    $hasSuccess = $registration->payments()->where('status', 'success')->where('payment_type', 'registration_fee')->exists();
+                    $registration->update([
+                        'payment_status' => $hasSuccess ? 'paid' : 'unpaid'
+                    ]);
+                }
             }
 
             DB::commit();
@@ -288,10 +295,17 @@ class PaymentSettlementService
 
             $registration = $payment->registration;
             if ($registration) {
-                $hasSuccess = $registration->payments()->where('status', 'success')->exists();
-                $registration->update([
-                    'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
-                ]);
+                if ($payment->payment_type === 'final_fee') {
+                    $hasSuccess = $registration->payments()->where('status', 'success')->where('payment_type', 'final_fee')->exists();
+                    $registration->update([
+                        'payment_status' => $hasSuccess ? 'partially_paid' : 'unpaid'
+                    ]);
+                } else {
+                    $hasSuccess = $registration->payments()->where('status', 'success')->where('payment_type', 'registration_fee')->exists();
+                    $registration->update([
+                        'payment_status' => $hasSuccess ? 'paid' : 'unpaid'
+                    ]);
+                }
             }
 
             DB::commit();

@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>{{ !empty($isSettlement) ? 'Kwitansi Utama Pelunasan SPMB' : ('Kwitansi Pembayaran #' . $payment->invoice_number) }}</title>
+    <title>{{ !empty($isSettlement) ? 'Bukti Pelunasan Biaya SPMB' : ('Kwitansi Pembayaran #' . $payment->invoice_number) }}</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -302,7 +302,7 @@
         <!-- Title Section -->
         <div class="title-section">
             @if(!empty($isSettlement))
-                <h2 class="title">Kwitansi Utama Pelunasan Biaya SPMB</h2>
+                <h2 class="title">Bukti Pelunasan Biaya SPMB</h2>
                 <p class="invoice-no">
                     @if(!empty($filterItemName))
                         Komponen: {{ $filterItemName }} • 
