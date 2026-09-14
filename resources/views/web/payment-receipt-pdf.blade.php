@@ -303,21 +303,18 @@
         <div class="title-section">
             @if(!empty($isSettlement))
                 <h2 class="title">Bukti Pelunasan Biaya SPMB</h2>
-                <p class="invoice-no">
-                    @if(!empty($filterItemName))
-                        Komponen: {{ $filterItemName }} • 
-                    @endif
-                    No. Registrasi: {{ $registration->id_label }}
-                </p>
+                @if(!empty($filterItemName))
+                    <p class="invoice-no">Komponen: {{ $filterItemName }}</p>
+                @endif
             @elseif($isFormPayment)
                 <h2 class="title">Bukti Pembayaran Biaya Pendaftaran</h2>
-                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }} • No. Registrasi: {{ $registration->id_label }}</p>
+                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }}</p>
             @elseif($hasAnyInstallmentItem)
                 <h2 class="title">Bukti Pembayaran Angsuran Ke-{{ $primaryItemInstallmentNo }}</h2>
-                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }} • No. Registrasi: {{ $registration->id_label }}</p>
+                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }}</p>
             @else
                 <h2 class="title">Bukti Pembayaran Resmi</h2>
-                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }} • No. Registrasi: {{ $registration->id_label }}</p>
+                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }}</p>
             @endif
         </div>
 
