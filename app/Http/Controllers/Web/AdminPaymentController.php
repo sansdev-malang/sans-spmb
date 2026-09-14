@@ -209,7 +209,7 @@ class AdminPaymentController extends Controller
         if ($request->filled('category_id')) {
             $category = SpmbFeeCategory::find($request->category_id);
             if ($category) {
-                $isFormulir = str_contains(strtolower($category->name), 'formulir') || str_contains(strtolower($category->name), 'pendaftaran');
+                $isFormulir = $category->isRegistration() || str_contains(strtolower($category->name), 'formulir') || str_contains(strtolower($category->name), 'pendaftaran') || str_contains(strtolower($category->name), 'enrollment') || str_contains(strtolower($category->name), 'registrasi') || str_contains(strtolower($category->name), 'daftar');
                 $feeNames = SpmbFee::where('spmb_fee_category_id', $category->id)->pluck('name');
                 
                 $query->where(function($q) use ($isFormulir, $feeNames) {

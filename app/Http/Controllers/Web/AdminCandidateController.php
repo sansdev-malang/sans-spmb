@@ -30,18 +30,24 @@ class AdminCandidateController extends Controller
             ->with(['user', 'period', 'wave', 'type', 'payments'])
             ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name')
-            ->whereHas('payments', function($q) {
-                $q->where('payment_type', 'registration_fee')
-                  ->where('status', 'success');
+            ->where(function($sq) {
+                $sq->where('payment_status', 'paid')
+                  ->orWhereHas('payments', function($q) {
+                      $q->where('payment_type', 'registration_fee')
+                        ->whereIn('status', ['success', 'settled']);
+                  });
             });
 
         // Calculate Stats for Active Candidates with dynamic filters applied
         $baseStatsQuery = Registration::scopedByAdmin()
             ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name')
-            ->whereHas('payments', function($q) {
-                $q->where('payment_type', 'registration_fee')
-                  ->where('status', 'success');
+            ->where(function($sq) {
+                $sq->where('payment_status', 'paid')
+                  ->orWhereHas('payments', function($q) {
+                      $q->where('payment_type', 'registration_fee')
+                        ->whereIn('status', ['success', 'settled']);
+                  });
             });
 
         if ($request->filled('unit_id')) {
@@ -424,9 +430,12 @@ class AdminCandidateController extends Controller
             ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name')
-            ->whereHas('payments', function($q) {
-                $q->where('payment_type', 'registration_fee')
-                  ->where('status', 'success');
+            ->where(function($sq) {
+                $sq->where('payment_status', 'paid')
+                  ->orWhereHas('payments', function($q) {
+                      $q->where('payment_type', 'registration_fee')
+                        ->whereIn('status', ['success', 'settled']);
+                  });
             });
 
         // Search by Name, WhatsApp, or NIK
@@ -600,7 +609,9 @@ class AdminCandidateController extends Controller
             }
 
             $formPayment = $c->payments->where('payment_type', 'registration_fee')->whereIn('status', ['success', 'settled', 'paid'])->first();
-            $formStatus = $formPayment ? 'LUNAS' : ($c->payment_status === 'paid' ? 'LUNAS' : 'BELUM BAYAR');
+            $isFormDispensation = ($formPayment && ($formPayment->payment_method === 'DISPENSATION' || !empty($formPayment->payment_info['dispensation'])))
+                || ($c->payment_status === 'paid' && (!$formPayment || $formPayment->amount == 0));
+            $formStatus = $isFormDispensation ? 'BEBAS BIAYA' : ($formPayment || $c->payment_status === 'paid' ? 'LUNAS' : 'BELUM BAYAR');
 
             $genderLabel = '-';
             if ($c->gender) {

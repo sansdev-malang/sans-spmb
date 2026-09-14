@@ -411,7 +411,7 @@
                     @endphp
                     @forelse($candidates as $cand)
                         @php
-                            $formPaid = $cand->payments->where('payment_type', 'registration_fee')->where('status', 'success')->isNotEmpty();
+                            $formPaid = ($cand->payment_status === 'paid') || $cand->payments->where('payment_type', 'registration_fee')->whereIn('status', ['success', 'settled'])->isNotEmpty();
                             $status = strtolower($cand->registration_status);
                             
                             $currentStageText = '';
@@ -668,7 +668,12 @@
 
                                             foreach ($feeCategories as $cat) {
                                                 $catName = $cat->name;
-                                                $isFormulir = (stripos($catName, 'Formulir') !== false);
+                                                $isFormulir = ($cat->category_type === 'registration_fee')
+                                                    || (stripos($catName, 'Formulir') !== false)
+                                                    || (stripos($catName, 'Enrollment') !== false)
+                                                    || (stripos($catName, 'Pendaftaran') !== false)
+                                                    || (stripos($catName, 'Registrasi') !== false)
+                                                    || (stripos($catName, 'Daftar') !== false);
 
                                                 // Biaya Administrasi & Biaya Tambahan hanya muncul jika pendaftar sudah menyetujui surat pernyataan
                                                 if (!$hasAgreed && !$isFormulir) {
@@ -681,7 +686,7 @@
                                                 });
 
                                                 // Filter Biaya Tambahan: check against both name and code of candidate's extraServices
-                                                if (stripos($catName, 'Tambahan') !== false) {
+                                                if (stripos($catName, 'Tambahan') !== false || $cat->category_type === 'extra_service') {
                                                     $extraServices = $cand->extraServices ?? collect();
                                                     if ($extraServices->isEmpty()) {
                                                         continue; // Skip Biaya Tambahan category entirely if candidate chose none
@@ -715,15 +720,28 @@
                                                     $method = '-';
                                                     $paidTime = '-';
                                                     $amountPaid = $feeAmount;
+                                                    $isDispensation = false;
 
                                                     if ($isFormulir) {
-                                                        if ($cand->form_paid || ($regPayment && in_array($regPayment->status, ['success', 'settled']))) {
+                                                        $isRegDispensation = ($regPayment && ($regPayment->payment_method === 'DISPENSATION' || !empty($regPayment->payment_info['dispensation'])))
+                                                            || ($cand->payment_status === 'paid' && (!$regPayment || $regPayment->amount == 0));
+                                                        $isRegSuccess = ($regPayment && in_array($regPayment->status, ['success', 'settled'])) || $cand->payment_status === 'paid' || $cand->form_paid;
+
+                                                        if ($isRegDispensation) {
+                                                            $isPaid = true;
+                                                            $isDispensation = true;
+                                                            $status = 'dispensation';
+                                                            $invoiceNo = $regPayment ? ($regPayment->invoice_number ?: ($regPayment->order_id ?: ('DISP-' . $regPayment->id))) : 'DISPENSASI';
+                                                            $method = 'Dispensasi (Bebas Biaya)';
+                                                            $paidTime = $regPayment && $regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : ($cand->created_at ? $cand->created_at->format('d M Y, H:i') . ' WIB' : '-');
+                                                            $amountPaid = (float) $feeAmount;
+                                                        } elseif ($isRegSuccess) {
                                                             $isPaid = true;
                                                             $status = 'paid';
-                                                            $invoiceNo = $regPayment->invoice_number ?: ($regPayment->order_id ?: ('PAY-' . $regPayment->id));
-                                                            $method = $regPayment->payment_channel ?: ($regPayment->payment_method ?: 'Online');
-                                                            $paidTime = $regPayment->paid_at ? $regPayment->paid_at->format('d M Y, H:i') . ' WIB' : ($regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : '-');
-                                                            $amountPaid = (float) ($regPayment->amount ?: $feeAmount);
+                                                            $invoiceNo = $regPayment ? ($regPayment->invoice_number ?: ($regPayment->order_id ?: ('PAY-' . $regPayment->id))) : 'LUNAS';
+                                                            $method = $regPayment ? ($regPayment->payment_channel ?: ($regPayment->payment_method ?: 'Online')) : 'Online';
+                                                            $paidTime = $regPayment ? ($regPayment->paid_at ? $regPayment->paid_at->format('d M Y, H:i') . ' WIB' : ($regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : '-')) : '-';
+                                                            $amountPaid = (float) ($regPayment ? ($regPayment->amount ?: $feeAmount) : $feeAmount);
                                                         } elseif ($regPayment && $regPayment->status === 'pending') {
                                                             $status = 'pending';
                                                             $invoiceNo = $regPayment->invoice_number ?: ($regPayment->order_id ?: ('PAY-' . $regPayment->id));
@@ -773,6 +791,7 @@
                                                         'name' => $feeName,
                                                         'amount' => $feeAmount,
                                                         'is_paid' => $isPaid,
+                                                        'is_dispensation' => $isDispensation,
                                                         'status' => $status,
                                                         'invoice_no' => $invoiceNo,
                                                         'payment_method' => $method,
@@ -788,7 +807,7 @@
                                                 ];
                                             }
 
-                                            $discount = (float) ($cand->discount_amount ?? 0);
+                                            $discount = (float) ($cand->total_discount ?? 0);
                                             $totalNet = max(0, $totalGross - $discount);
                                             $remBalance = max(0, $totalNet - $totalPaid);
 
@@ -1601,13 +1620,18 @@
 
                     cat.items.forEach(item => {
                         let statusBadge = '';
-                        if (item.is_paid) {
+                        if (item.status === 'dispensation' || item.is_dispensation) {
+                            statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1"><i data-lucide="award" class="w-3 h-3"></i> Bebas Biaya</span>';
+                        } else if (item.is_paid) {
                             statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Lunas</span>';
                         } else if (item.status === 'pending') {
                             statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Menunggu</span>';
                         } else {
                             statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">Belum Dibayar</span>';
                         }
+
+                        const isDisp = (item.status === 'dispensation' || item.is_dispensation);
+                        const displayAmount = isDisp ? `Rp 0 <span class="text-[10px] text-purple-600 dark:text-purple-400 font-semibold block sm:inline sm:ml-1">(Dibebaskan)</span>` : `Rp ${item.amount.toLocaleString('id-ID')}`;
 
                         itemsHtml += `
                             <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2.5 shadow-2xs">
@@ -1622,15 +1646,15 @@
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
                                     <div>
                                         <span class="text-slate-400 font-bold block text-[10px] uppercase">No. Invoice</span>
-                                        <span class="font-mono font-bold ${item.invoice_no !== '-' ? 'text-brand-emerald dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}">${item.invoice_no}</span>
+                                        <span class="font-mono font-bold ${item.invoice_no !== '-' ? (isDisp ? 'text-purple-600 dark:text-purple-400' : 'text-brand-emerald dark:text-emerald-400') : 'text-slate-400 dark:text-slate-500'}">${item.invoice_no}</span>
                                     </div>
                                     <div>
                                         <span class="text-slate-400 font-bold block text-[10px] uppercase">Metode Pembayaran</span>
-                                        <span class="font-bold text-slate-700 dark:text-slate-200">${item.payment_method}</span>
+                                        <span class="font-bold ${isDisp ? 'text-purple-700 dark:text-purple-300' : 'text-slate-700 dark:text-slate-200'}">${item.payment_method}</span>
                                     </div>
                                     <div>
                                         <span class="text-slate-400 font-bold block text-[10px] uppercase">Nominal</span>
-                                        <span class="font-mono font-extrabold text-slate-900 dark:text-white">Rp ${item.amount.toLocaleString('id-ID')}</span>
+                                        <span class="font-mono font-extrabold text-slate-900 dark:text-white">${displayAmount}</span>
                                     </div>
                                     <div>
                                         <span class="text-slate-400 font-bold block text-[10px] uppercase">Waktu Pembayaran</span>
