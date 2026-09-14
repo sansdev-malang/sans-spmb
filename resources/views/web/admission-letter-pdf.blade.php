@@ -248,7 +248,7 @@
             </tr>
             <tr>
                 <td class="label">No. Registrasi</td>
-                <td class="value">SANS-{{ substr($registration->period->year ?? '2026', 0, 4) }}-{{ str_pad($registration->id, 4, '0', STR_PAD_LEFT) }}</td>
+                <td class="value">{{ $registration->id_label }}</td>
             </tr>
             <tr>
                 <td class="label">Unit Pendidikan</td>
@@ -266,7 +266,7 @@
 
         <!-- Status Declaration -->
         <div class="status-box">
-            <h2 class="status-text">Lulus & Diterima</h2>
+            <h2 class="status-text">Diterima</h2>
         </div>
 
         <p class="closing-text">
@@ -289,8 +289,18 @@
                     <td style="text-align: right;">
                         <div class="sig-date">Malang, {{ $dateStr }}</div>
                         <div class="sig-title">Ketua Panitia SPMB,</div>
-                        <div class="sig-name">Hj. Lilik Handayani, S.Pd</div>
-                        <div class="sig-nip">NIP. 19780512 200501 2 003</div>
+                        @php
+                            $committeeChair = \App\Models\Setting::get('spmb_committee_chair');
+                            $committeeNip = \App\Models\Setting::get('spmb_committee_nip');
+                        @endphp
+                        @if(!empty($committeeChair))
+                            <div class="sig-name" style="text-decoration: underline;">{{ $committeeChair }}</div>
+                            @if(!empty($committeeNip))
+                                <div class="sig-nip">NIP. {{ $committeeNip }}</div>
+                            @endif
+                        @else
+                            <div class="sig-name" style="text-decoration: none;">( .................................................... )</div>
+                        @endif
                     </td>
                 </tr>
             </table>
