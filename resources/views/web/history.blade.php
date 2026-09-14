@@ -721,7 +721,8 @@
                                                             </div>
                                                         @endif
                                                     </div>
-                                                                                        <a href="{{ route('dashboard.payment.receipt', $fp->id) }}" class="download-link-animate self-start sm:self-center px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0 shadow-2xs">
+                                                </div>
+                                                <a href="{{ route('dashboard.payment.receipt', $fp->id) }}" class="download-link-animate self-start sm:self-center px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0 shadow-2xs">
                                                     <i data-lucide="download" class="w-3.5 h-3.5 text-brand-emerald"></i> Kwitansi #{{ $index + 1 }}
                                                 </a>
                                             </div>
