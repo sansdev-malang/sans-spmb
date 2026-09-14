@@ -1958,7 +1958,7 @@ class WebDashboardController extends Controller
         
         $response = response()->make($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="SKP-SANS-' . str_pad($registration->id, 4, '0', STR_PAD_LEFT) . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="SKP-' . ($registration->id_label ?: ('SANS-' . $registration->id)) . '.pdf"',
         ]);
         
         if (request()->has('download_token')) {

@@ -307,22 +307,32 @@
                     @if(!empty($filterItemName))
                         Komponen: {{ $filterItemName }} • 
                     @endif
-                    No. Pendaftaran: SANS-{{ str_pad($registration->id, 4, '0', STR_PAD_LEFT) }}
+                    No. Registrasi: {{ $registration->id_label }}
                 </p>
             @elseif($isFormPayment)
                 <h2 class="title">Bukti Pembayaran Biaya Pendaftaran</h2>
-                <p class="invoice-no">Nomor Transaksi: {{ $payment->invoice_number }}</p>
+                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }} • No. Registrasi: {{ $registration->id_label }}</p>
             @elseif($hasAnyInstallmentItem)
                 <h2 class="title">Bukti Pembayaran Angsuran Ke-{{ $primaryItemInstallmentNo }}</h2>
-                <p class="invoice-no">Nomor Transaksi: {{ $payment->invoice_number }}</p>
+                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }} • No. Registrasi: {{ $registration->id_label }}</p>
             @else
                 <h2 class="title">Bukti Pembayaran Resmi</h2>
-                <p class="invoice-no">Nomor Transaksi: {{ $payment->invoice_number }}</p>
+                <p class="invoice-no">No. Transaksi: {{ $payment->invoice_number }} • No. Registrasi: {{ $registration->id_label }}</p>
             @endif
         </div>
 
         <!-- Details Metadata -->
         <table class="details-table">
+            <tr>
+                <td style="width: 50%;">
+                    <span class="label">Nama Calon Murid</span>
+                    <span class="value">{{ $registration->candidate_name ?? 'Calon Murid' }}</span>
+                </td>
+                <td style="width: 50%;">
+                    <span class="label">No. Registrasi</span>
+                    <span class="value" style="font-family: monospace; font-size: 11px; font-weight: bold; color: #0f172a;">{{ $registration->id_label }}</span>
+                </td>
+            </tr>
             <tr>
                 <td style="width: 50%;">
                     <span class="label">{{ !empty($isSettlement) ? 'Tanggal Pelunasan' : 'Tanggal Transaksi' }}</span>
@@ -347,28 +357,33 @@
             </tr>
             <tr>
                 <td style="width: 50%;">
-                    <span class="label">Nama Calon Murid</span>
-                    <span class="value">{{ $registration->candidate_name ?? 'Calon Murid' }}</span>
-                </td>
-                <td style="width: 50%;">
                     <span class="label">Unit Pendidikan</span>
                     <span class="value">
                         {{ $registration->unit->name ?? '-' }}@if(!empty($registration->grade->name)) ({{ $registration->grade->name }})@endif
                     </span>
                 </td>
-            </tr>
-            <tr>
                 <td style="width: 50%;">
                     <span class="label">Tahun Ajaran & Gelombang</span>
                     <span class="value">
                         {{ $registration->period->year ?? '-' }} - {{ $registration->wave->name ?? '-' }}
                     </span>
                 </td>
+            </tr>
+            <tr>
                 <td style="width: 50%;">
                     <span class="label">Jalur & Kategori Murid</span>
                     <span class="value">
                         {{ $registration->type->name ?? '-' }}@if(!empty($registration->classProgram->name)) ({{ $registration->classProgram->name }})@endif
                     </span>
+                </td>
+                <td style="width: 50%;">
+                    @if(empty($isSettlement))
+                        <span class="label">Nomor Transaksi</span>
+                        <span class="value" style="font-family: monospace; font-size: 10px;">{{ $payment->invoice_number }}</span>
+                    @else
+                        <span class="label">Status Administrasi</span>
+                        <span class="value" style="color: #059669; font-weight: bold;">LUNAS SEPENUHNYA</span>
+                    @endif
                 </td>
             </tr>
             @if($registration->extraServices->count() > 0)
