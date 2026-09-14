@@ -14,6 +14,47 @@
             </p>
         </div>
 
+        @if(isset($pendingDrafts) && $pendingDrafts->isNotEmpty())
+            <!-- PENDING DRAFT REGISTRATION BANNER -->
+            <div class="max-w-4xl mx-auto space-y-3">
+                @foreach($pendingDrafts as $draft)
+                    <div class="bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm text-left animate-in fade-in duration-200">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 shadow-inner">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider bg-amber-200/80 dark:bg-amber-800/50 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-md">
+                                        Pendaftaran Belum Selesai
+                                    </span>
+                                    <span class="text-xs text-slate-400 font-medium">• {{ $draft->created_at->diffForHumans() }}</span>
+                                </div>
+                                <h3 class="font-extrabold text-sm text-slate-850 dark:text-white">
+                                    {{ $draft->candidate_name ?? 'Calon Murid' }} — <span class="text-emerald-700 dark:text-emerald-400 font-bold">{{ $draft->unit->name ?? 'Unit Sekolah' }}</span>
+                                </h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Biaya pendaftaran formulir belum dibayar. Anda dapat melanjutkan pembayaran atau mengganti pilihan unit pendaftaran.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end pt-1 sm:pt-0">
+                            <form method="POST" action="{{ route('dashboard.registration.draft.delete', $draft->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan draf pendaftaran ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-3.5 py-2.5 rounded-xl border border-slate-250 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs transition cursor-pointer">
+                                    Batalkan
+                                </button>
+                            </form>
+                            <a href="{{ route('dashboard.payment', $draft->id) }}" class="px-5 py-2.5 rounded-xl bg-brand-emerald hover:bg-emerald-600 text-white font-bold text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="credit-card" class="w-4 h-4"></i> Lanjutkan Pembayaran
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         <!-- Card Options for Each School Unit -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
             @foreach($units as $unit)

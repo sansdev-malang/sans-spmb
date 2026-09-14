@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/history', [WebDashboardController::class, 'history'])->name('dashboard.history');
     Route::post('/dashboard/registration/create', [WebDashboardController::class, 'createRegistration'])->name('dashboard.registration.create');
+    Route::delete('/dashboard/registration/{id}/draft', [WebDashboardController::class, 'deleteDraftRegistration'])->name('dashboard.registration.draft.delete');
     
     // Candidate In-App Notifications Routes
     Route::get('/dashboard/notifications/unread-count', [AdminNotificationController::class, 'unreadCount'])->name('dashboard.notifications.count');
@@ -161,6 +162,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
         Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
         Route::post('/admin/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.reset-password');
+        Route::post('/admin/registrations/{id}/bypass-form-payment', [UserController::class, 'bypassFormPayment'])->name('admin.registrations.bypass-form-payment');
+        Route::delete('/admin/registrations/{id}/draft', [UserController::class, 'deleteDraftRegistration'])->name('admin.registrations.draft.delete');
 
         // Tampilan Portal & Testimoni (Accessible to Super Admin and Unit Admin with scoping)
         Route::get('/admin/ui-settings', [SettingsController::class, 'uiSettings'])->name('admin.ui-settings');

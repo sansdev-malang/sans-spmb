@@ -126,8 +126,11 @@ class WebDashboardController extends Controller
 
         switch ($stage) {
             case 'payment':
-                if ($formPaid && !in_array($status, ['draft', 'agreement_signed', 'completed'])) {
+                if ($formPaid && !in_array($status, ['agreement_signed', 'completed'])) {
                     session(['active_candidate_id' => $registration->id]);
+                    if ($status === 'draft') {
+                        return redirect()->route('dashboard.form', $registration->id)->with('info', 'Biaya pendaftaran telah lunas. Silakan lengkapi formulir pendaftaran.');
+                    }
                     return redirect()->route('dashboard')->with('error', 'Tidak ada tagihan pembayaran aktif untuk ' . ($registration->candidate_name ?? 'calon murid') . '.');
                 }
                 return null;
@@ -182,6 +185,17 @@ class WebDashboardController extends Controller
             })
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // Query pending unpaid draft registrations for this candidate
+        $pendingDrafts = Registration::with(['unit', 'grade', 'period', 'wave', 'type', 'payments'])
+            ->where('user_id', auth()->id())
+            ->where('registration_status', 'draft')
+            ->where('payment_status', '!=', 'paid')
+            ->whereDoesntHave('payments', function($pq) {
+                $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
             
         $units = SpmbUnit::with(['grades' => function($q) {
             $q->where('is_active', true)->orderBy('id', 'asc');
@@ -195,7 +209,7 @@ class WebDashboardController extends Controller
         // Share registrations with layout to prevent duplicate database query
         $allUserRegistrations = $registrations;
 
-        return view('web.dashboard-index', compact('registrations', 'units', 'grades', 'waves', 'types', 'activePeriod', 'allUserRegistrations'));
+        return view('web.dashboard-index', compact('registrations', 'pendingDrafts', 'units', 'grades', 'waves', 'types', 'activePeriod', 'allUserRegistrations'));
     }
     
     public function history(Request $request)
@@ -251,20 +265,77 @@ class WebDashboardController extends Controller
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
         $grade = \App\Models\SpmbGrade::find($request->spmb_grade_id);
 
-        $registration = Registration::create([
-            'user_id' => auth()->id(),
-            'candidate_name' => $request->candidate_name,
-            'spmb_unit_id' => $request->spmb_unit_id,
-            'spmb_grade_id' => $request->spmb_grade_id,
-            'admission_level' => $grade ? $grade->name : null,
-            'spmb_period_id' => $activePeriod?->id,
-            'spmb_wave_id' => $request->spmb_wave_id,
-            'spmb_type_id' => $request->spmb_type_id,
-            'registration_status' => 'draft',
-            'payment_status' => 'unpaid'
-        ]);
+        // Check if user already has an unpaid draft registration in this active period
+        $existingDraft = Registration::where('user_id', auth()->id())
+            ->where('registration_status', 'draft')
+            ->where('payment_status', '!=', 'paid')
+            ->whereDoesntHave('payments', function($q) {
+                $q->where('payment_type', 'registration_fee')->where('status', 'success');
+            })
+            ->where(function($q) use ($activePeriod) {
+                if ($activePeriod) {
+                    $q->where('spmb_period_id', $activePeriod->id)->orWhereNull('spmb_period_id');
+                }
+            })
+            ->latest()
+            ->first();
+
+        if ($existingDraft) {
+            // Cancel any old pending payment on this draft if unit changed
+            if ($existingDraft->spmb_unit_id != $request->spmb_unit_id) {
+                $existingDraft->payments()->where('status', 'pending')->update([
+                    'status' => 'cancelled'
+                ]);
+            }
+
+            $existingDraft->update([
+                'candidate_name' => $request->candidate_name,
+                'spmb_unit_id' => $request->spmb_unit_id,
+                'spmb_grade_id' => $request->spmb_grade_id,
+                'admission_level' => $grade ? $grade->name : null,
+                'spmb_period_id' => $activePeriod?->id,
+                'spmb_wave_id' => $request->spmb_wave_id,
+                'spmb_type_id' => $request->spmb_type_id,
+                'registration_status' => 'draft',
+                'payment_status' => 'unpaid',
+            ]);
+            $registration = $existingDraft;
+        } else {
+            $registration = Registration::create([
+                'user_id' => auth()->id(),
+                'candidate_name' => $request->candidate_name,
+                'spmb_unit_id' => $request->spmb_unit_id,
+                'spmb_grade_id' => $request->spmb_grade_id,
+                'admission_level' => $grade ? $grade->name : null,
+                'spmb_period_id' => $activePeriod?->id,
+                'spmb_wave_id' => $request->spmb_wave_id,
+                'spmb_type_id' => $request->spmb_type_id,
+                'registration_status' => 'draft',
+                'payment_status' => 'unpaid'
+            ]);
+        }
         
+        session(['active_candidate_id' => $registration->id]);
         return redirect()->route('dashboard.payment', $registration->id);
+    }
+
+    public function deleteDraftRegistration($id)
+    {
+        $registration = Registration::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->where('registration_status', 'draft')
+            ->whereDoesntHave('payments', function($q) {
+                $q->where('payment_type', 'registration_fee')->where('status', 'success');
+            })
+            ->firstOrFail();
+
+        // Cancel pending payments
+        $registration->payments()->where('status', 'pending')->update(['status' => 'cancelled']);
+
+        $candidateName = $registration->candidate_name ?? 'Calon Murid';
+        $registration->delete();
+
+        return redirect()->route('dashboard')->with('success', 'Draf pendaftaran untuk "' . $candidateName . '" berhasil dibatalkan.');
     }
 
     private function getFormDetails($registration)
@@ -356,11 +427,16 @@ class WebDashboardController extends Controller
         $feeAmount = $fee ? $fee->amount : 350000;
         $feeGateway = $fee ? ($fee->payment_gateway === 'bni' ? 'BNI SNAP' : 'Winpay') : 'Winpay';
 
+        $formPayment = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->first();
+        $isFormDispensation = $formPayment && ($formPayment->payment_method === 'DISPENSATION' || !empty($formPayment->payment_info['dispensation']));
+
         // Build 7-step timeline
         $timeline = [
             'registration_fee' => [
                 'label' => 'Biaya Pendaftaran',
-                'description' => 'Membayar biaya seleksi pendaftaran Rp ' . number_format($feeAmount, 0, ',', '.'),
+                'description' => $isFormDispensation
+                    ? 'Dispensasi / Pembebasan Biaya Pendaftaran (' . ($formPayment->payment_info['dispensation_reason'] ?? 'Disetujui Panitia') . ')'
+                    : 'Membayar biaya seleksi pendaftaran Rp ' . number_format($feeAmount, 0, ',', '.'),
                 'status' => $formPaid ? 'completed' : 'in_progress',
             ],
             'form_fill' => [

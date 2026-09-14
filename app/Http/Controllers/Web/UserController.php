@@ -300,6 +300,152 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Password user "' . $user->name . '" berhasil direset.');
     }
 
+    /**
+     * Bypass / dispense registration form fee for a candidate registration.
+     */
+    public function bypassFormPayment(Request $request, $registrationId)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:255',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $registration = Registration::with(['unit', 'user', 'payments'])->findOrFail($registrationId);
+
+        // Authorization check if admin is scoped to a specific unit
+        if (auth()->user()->role !== 'super_admin' && auth()->user()->spmb_unit_id && $registration->spmb_unit_id !== auth()->user()->spmb_unit_id) {
+            abort(403, 'Anda tidak memiliki akses untuk unit pendaftar ini.');
+        }
+
+        // Check if registration fee is already paid
+        $alreadyPaid = $registration->payments()
+            ->where('payment_type', 'registration_fee')
+            ->where('status', 'success')
+            ->exists();
+
+        if ($alreadyPaid) {
+            return redirect()->back()->with('error', 'Biaya formulir pendaftaran untuk pendaftar ini sudah berstatus lunas sebelumnya.');
+        }
+
+        // Cancel any existing pending registration fee payments
+        $pendingPayments = $registration->payments()
+            ->where('payment_type', 'registration_fee')
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($pendingPayments as $p) {
+            $p->update([
+                'status' => 'cancelled',
+                'payment_info' => array_merge(is_array($p->payment_info) ? $p->payment_info : [], [
+                    'cancel_reason' => 'Dibatalkan karena pembebasan biaya/dispensasi oleh admin ' . auth()->user()->name,
+                    'cancelled_at' => now()->toIso8601String()
+                ])
+            ]);
+        }
+
+        // Determine fee amount for record audit
+        $feeObj = $registration->getRegistrationFee();
+        $originalAmount = $feeObj ? (float)$feeObj->amount : 350000;
+
+        $invoiceNo = 'DISP-REG-' . strtoupper(\Illuminate\Support\Str::random(5)) . '-' . $registration->id;
+
+        // Create successful dispensation payment record
+        \App\Models\Payment::create([
+            'registration_id' => $registration->id,
+            'invoice_number' => $invoiceNo,
+            'reference_id' => 'DISP-' . time(),
+            'payment_type' => 'registration_fee',
+            'payment_method' => 'DISPENSATION',
+            'amount' => 0,
+            'base_amount' => 0,
+            'admin_fee' => 0,
+            'status' => 'success',
+            'payment_info' => [
+                'dispensation' => true,
+                'dispensation_reason' => $request->reason,
+                'notes' => $request->notes,
+                'original_amount' => $originalAmount,
+                'approved_by_id' => auth()->id(),
+                'approved_by_name' => auth()->user()->name,
+                'settle_source' => 'admin_dispensation',
+                'settled_at' => now()->toIso8601String(),
+            ]
+        ]);
+
+        // Update registration payment status
+        $registration->update([
+            'payment_status' => 'paid',
+            'committee_notes' => 'Dispensasi biaya formulir pendaftaran telah disetujui (' . $request->reason . '). Silakan lanjutkan pengisian formulir pendaftaran.'
+        ]);
+
+        // Log Activity
+        SpmbActivityLog::log(
+            'DISPENSATION_FORM_FEE',
+            "Memberikan pembebasan biaya pendaftaran (Dispensasi) untuk pendaftar " . ($registration->candidate_name ?? 'Draft') . " (ID: {$registration->id}) di unit " . ($registration->unit->name ?? '-') . ". Alasan: {$request->reason}"
+        );
+
+        // Send In-App Notification to candidate user
+        if ($registration->user) {
+            try {
+                $registration->user->notify(new \App\Notifications\SpmbNotification([
+                    'title' => 'Dispensasi Biaya Formulir Disetujui',
+                    'message' => 'Alhamdulillah, biaya pendaftaran ananda ' . ($registration->candidate_name ?? 'Calon Murid') . ' telah dibebaskan (' . $request->reason . '). Anda dapat langsung melengkapi formulir pendaftaran.',
+                    'url' => route('dashboard.form', $registration->id),
+                    'type' => 'success',
+                    'spmb_unit_id' => $registration->spmb_unit_id,
+                    'registration_id' => $registration->id,
+                ]));
+            } catch (\Throwable $e) {
+                // Ignore notification failure
+            }
+        }
+
+        return redirect()->back()->with('success', 'Biaya pendaftaran untuk "' . ($registration->candidate_name ?? 'Calon Murid') . '" berhasil dibebaskan (Dispensasi). Pendaftar kini dapat langsung mengisi formulir pendaftaran.');
+    }
+
+    /**
+     * Delete / cancel an unpaid draft registration (Admin action).
+     */
+    public function deleteDraftRegistration($id)
+    {
+        $registration = Registration::with('user', 'unit')->findOrFail($id);
+
+        // Authorization check if admin is scoped to a specific unit
+        if (auth()->user()->role !== 'super_admin' && auth()->user()->spmb_unit_id && $registration->spmb_unit_id !== auth()->user()->spmb_unit_id) {
+            abort(403, 'Anda tidak memiliki akses untuk unit pendaftar ini.');
+        }
+
+        // Only allow deleting unpaid draft registrations
+        $isPaid = $registration->payments()
+            ->where('payment_type', 'registration_fee')
+            ->where('status', 'success')
+            ->exists();
+
+        if ($isPaid || $registration->registration_status !== 'draft') {
+            return redirect()->back()->with('error', 'Pendaftaran yang sudah lunas atau dalam proses seleksi tidak dapat dihapus melalui menu draf.');
+        }
+
+        // Cancel any pending payments
+        $registration->payments()->where('status', 'pending')->update([
+            'status' => 'cancelled',
+            'payment_info' => array_merge(is_array($registration->payment_info) ? $registration->payment_info : [], [
+                'cancel_reason' => 'Draf pendaftaran dihapus oleh admin ' . auth()->user()->name
+            ])
+        ]);
+
+        $candidateName = $registration->candidate_name ?? 'Draft';
+        $userName = $registration->user?->name ?? 'User';
+
+        SpmbActivityLog::log(
+            'DELETE_DRAFT_REGISTRATION',
+            "Menghapus draf pendaftaran belum bayar ananda {$candidateName} (ID: {$registration->id}) milik user {$userName}"
+        );
+
+        $registration->delete();
+
+        return redirect()->back()->with('success', 'Draf pendaftaran untuk "' . $candidateName . '" berhasil dihapus.');
+    }
+
     public function quickRegister(Request $request)
     {
         $request->validate([

@@ -180,13 +180,33 @@
                                     <div class="text-xs font-extrabold text-slate-800">{{ $cand->name }}</div>
                                     @if($cand->registrations->isNotEmpty())
                                         <div class="text-[10px] text-slate-400 font-semibold mt-1.5 flex flex-wrap gap-1.5 items-center">
-                                            <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[9px] font-bold border border-emerald-200">
-                                                {{ $cand->registrations->count() }} Pendaftaran Aktif
-                                            </span>
                                             @foreach($cand->registrations as $reg)
-                                                <span class="bg-emerald-50 text-brand-emerald px-2 py-0.5 rounded-full border border-emerald-100 text-[9px] font-extrabold uppercase">
-                                                    {{ $reg->candidate_name }} ({{ $reg->unit->name ?? '-' }})
-                                                </span>
+                                                @php
+                                                    $isFormPaid = $reg->payments->where('payment_type', 'registration_fee')->where('status', 'success')->isNotEmpty();
+                                                @endphp
+                                                @if($isFormPaid)
+                                                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg border border-emerald-200 text-[10px] font-bold">
+                                                        <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i> {{ $reg->candidate_name ?? 'Calon Murid' }} ({{ $reg->unit->name ?? '-' }})
+                                                    </span>
+                                                @else
+                                                    <div class="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-lg px-2 py-1">
+                                                        <span class="text-rose-700 text-[10px] font-bold inline-flex items-center gap-1">
+                                                            <i data-lucide="clock" class="w-3 h-3 text-rose-500"></i> {{ $reg->candidate_name ?? 'Draft' }} ({{ $reg->unit->name ?? '-' }} - Belum Bayar)
+                                                        </span>
+                                                        <button type="button" 
+                                                            onclick="openBypassModal('{{ $reg->id }}', '{{ addslashes($reg->candidate_name ?? $cand->name) }}', '{{ addslashes($reg->unit->name ?? '-') }}', '{{ addslashes($cand->name) }}')"
+                                                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs cursor-pointer inline-flex items-center gap-0.5 transition" 
+                                                            title="Bebaskan Biaya Formulir untuk {{ $reg->candidate_name ?? 'Anak Ini' }}">
+                                                            <i data-lucide="ticket-percent" class="w-2.5 h-2.5"></i> Bebaskan Biaya
+                                                        </button>
+                                                        <button type="button" 
+                                                            onclick="deleteUser('Draf Pendaftaran {{ addslashes($reg->candidate_name ?? 'Calon Murid') }} ({{ addslashes($reg->unit->name ?? '-') }})', '{{ route('admin.registrations.draft.delete', $reg->id) }}')"
+                                                            class="bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs cursor-pointer inline-flex items-center gap-0.5 transition" 
+                                                            title="Hapus Draf {{ $reg->candidate_name ?? 'Anak Ini' }}">
+                                                            <i data-lucide="trash-2" class="w-2.5 h-2.5"></i> Hapus
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             @endforeach
                                         </div>
                                     @else
@@ -245,8 +265,9 @@
                             <th class="py-4 px-6">Nama Pengguna</th>
                             <th class="py-4 px-6">Alamat Email & No. HP</th>
                             <th class="py-4 px-6">Status Prospek / Kendala</th>
+                            <th class="py-4 px-6">Aksi Pendaftaran (Draf)</th>
                             <th class="py-4 px-6">Tanggal Registrasi Akun</th>
-                            <th class="py-4 px-6 text-right">Aksi</th>
+                            <th class="py-4 px-6 text-right">Aksi Akun</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
@@ -291,26 +312,68 @@
                                     @else
                                         <div class="flex flex-col gap-1">
                                             @foreach($unreg->registrations as $reg)
-                                                <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-rose-200 w-fit">
-                                                    <i data-lucide="alert-circle" class="w-3 h-3 text-rose-500"></i> Belum Bayar Formulir ({{ $reg->unit->name ?? '-' }})
-                                                </span>
+                                                @php
+                                                    $isFormPaid = $reg->payments->where('payment_type', 'registration_fee')->where('status', 'success')->isNotEmpty();
+                                                @endphp
+                                                @if(!$isFormPaid)
+                                                    <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-rose-200 w-fit">
+                                                        <i data-lucide="alert-circle" class="w-3 h-3 text-rose-500"></i> Belum Bayar Formulir ({{ $reg->unit->name ?? '-' }})
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-emerald-200 w-fit">
+                                                        <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i> Formulir Lunas ({{ $reg->unit->name ?? '-' }})
+                                                    </span>
+                                                @endif
                                             @endforeach
                                         </div>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6 whitespace-nowrap">
+                                    @if($unreg->registrations->isNotEmpty())
+                                        <div class="flex flex-col gap-1.5">
+                                            @foreach($unreg->registrations as $reg)
+                                                @php
+                                                    $isFormPaid = $reg->payments->where('payment_type', 'registration_fee')->where('status', 'success')->isNotEmpty();
+                                                @endphp
+                                                @if(!$isFormPaid)
+                                                    <div class="flex items-center gap-1.5">
+                                                        <button type="button" 
+                                                            onclick="openBypassModal('{{ $reg->id }}', '{{ addslashes($reg->candidate_name ?? $unreg->name) }}', '{{ addslashes($reg->unit->name ?? '-') }}', '{{ addslashes($unreg->name) }}')"
+                                                            class="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-emerald-300 transition shadow-xs cursor-pointer" 
+                                                            title="Bebaskan Biaya / Berikan Dispensasi Formulir">
+                                                            <i data-lucide="ticket-percent" class="w-3.5 h-3.5 text-emerald-600"></i> Bebaskan Biaya
+                                                        </button>
+                                                        <button type="button" 
+                                                            onclick="deleteUser('Draf Pendaftaran {{ addslashes($reg->candidate_name ?? 'Calon Murid') }} ({{ addslashes($reg->unit->name ?? '-') }})', '{{ route('admin.registrations.draft.delete', $reg->id) }}')"
+                                                            class="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-lg border border-rose-200 transition shadow-xs cursor-pointer" 
+                                                            title="Hapus draf pendaftaran ini">
+                                                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i> Hapus Draf
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-bold">
+                                                        <i data-lucide="check" class="w-3.5 h-3.5"></i> Sudah Lunas
+                                                    </span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-[10px] text-slate-400 italic">-</span>
                                     @endif
                                 </td>
                                 <td class="py-4 px-6 text-slate-500 text-xs">
                                     {{ $unreg->created_at->format('d M Y, H:i') }}
                                     <span class="text-[10px] text-slate-400 block font-normal">{{ $unreg->created_at->diffForHumans() }}</span>
                                 </td>
-                                <td class="py-4 px-6 text-right space-x-2">
+                                <td class="py-4 px-6 text-right space-x-2 whitespace-nowrap">
                                     <button onclick="openEditUserModal({{ json_encode($unreg) }})" class="text-xs text-brand-emerald font-bold hover:underline">Edit</button>
                                     <button onclick="openResetPasswordModal({{ json_encode($unreg) }})" class="text-xs text-amber-600 font-bold hover:underline">Reset Password</button>
-                                    <button onclick="deleteUser('{{ $unreg->name }}', '{{ route('admin.users.destroy', $unreg->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus</button>
+                                    <button onclick="deleteUser('{{ $unreg->name }}', '{{ route('admin.users.destroy', $unreg->id) }}')" class="text-xs text-red-600 font-bold hover:underline">Hapus Akun</button>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 px-6 text-center text-slate-400">Tidak ada akun pendaftar yang belum memilih unit atau tertunda pembayaran.</td>
+                                <td colspan="7" class="py-8 px-6 text-center text-slate-400">Tidak ada akun pendaftar yang belum memilih unit atau tertunda pembayaran.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -494,6 +557,70 @@
     </div>
 </div>
 
+<!-- Bypass / Pembebasan Biaya Formulir Modal -->
+<div id="bypassModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-4 flex justify-between items-center text-white">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+                    <i data-lucide="ticket-percent" class="w-4 h-4 text-white"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-sm text-white">Bebaskan Biaya Formulir</h3>
+                    <p class="text-[10px] text-emerald-100 font-medium">Dispensasi / Keringanan Biaya Pendaftaran SPMB</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeBypassModal()" class="text-white hover:text-emerald-200 font-bold text-lg">&times;</button>
+        </div>
+        <form id="bypassForm" method="POST" hx-boost="false" class="p-6 space-y-4">
+            @csrf
+            
+            <div class="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-500 font-medium">Nama Calon Murid:</span>
+                    <span id="bypass-candidate-name" class="font-bold text-slate-800"></span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-500 font-medium">Unit Pendaftaran:</span>
+                    <span id="bypass-unit-name" class="font-bold text-emerald-700"></span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-500 font-medium">Nama Akun / Wali:</span>
+                    <span id="bypass-user-name" class="font-bold text-slate-700"></span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Alasan Pembebasan / Keringanan*</label>
+                <select name="reason" id="bypass-reason" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-semibold">
+                    <option value="Beasiswa Penuh (Yayasan/Prestasi)">Beasiswa Penuh (Yayasan / Prestasi)</option>
+                    <option value="Keluarga Guru / Karyawan / Dosen">Keluarga Guru / Karyawan / Dosen</option>
+                    <option value="Undangan Khusus / Kerjasama Lembaga">Undangan Khusus / Kerjasama Lembaga</option>
+                    <option value="Dispensasi Khusus Panitia SPMB">Dispensasi Khusus Panitia SPMB</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Catatan Tambahan (Opsional)</label>
+                <textarea name="notes" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs" placeholder="Contoh: SK Beasiswa Yayasan No. 12/2026 atau Memo Panitia SPMB..."></textarea>
+            </div>
+
+            <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 flex items-start gap-2 text-[11px] text-amber-800 leading-relaxed">
+                <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                <p>Setelah disetujui, tagihan biaya formulir pendaftaran ananda akan otomatis dilunaskan (Rp 0) dan menu <strong>Pengisian Formulir</strong> pada portal calon murid akan langsung terbuka.</p>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeBypassModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">Batal</button>
+                <button type="submit" class="bg-brand-emerald hover:bg-emerald-600 text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="check" class="w-4 h-4"></i> Setujui Pembebasan Biaya
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Hidden Delete Form -->
 <form id="deleteUserForm" method="POST" hx-boost="false" class="hidden">
     @csrf
@@ -506,6 +633,19 @@
         document.querySelectorAll('.spmb-user-errors').forEach(el => {
             el.classList.add('hidden');
         });
+    }
+
+    // Bypass Registration Fee Modal
+    function openBypassModal(regId, candidateName, unitName, userName) {
+        document.getElementById('bypass-candidate-name').innerText = candidateName;
+        document.getElementById('bypass-unit-name').innerText = unitName;
+        document.getElementById('bypass-user-name').innerText = userName;
+        document.getElementById('bypassForm').setAttribute('action', '/admin/registrations/' + regId + '/bypass-form-payment');
+        document.getElementById('bypassModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+    function closeBypassModal() {
+        document.getElementById('bypassModal').classList.add('hidden');
     }
 
     // Tab switching memory
@@ -632,6 +772,9 @@
     document.getElementById('resetPasswordModal').addEventListener('click', function(e) {
         if (e.target === this) closeResetPasswordModal();
     });
+    document.getElementById('bypassModal').addEventListener('click', function(e) {
+        if (e.target === this) closeBypassModal();
+    });
 
     // Escape key listener to close modals
     document.addEventListener('keydown', function(e) {
@@ -644,6 +787,9 @@
             
             const resetPasswordModal = document.getElementById('resetPasswordModal');
             if (resetPasswordModal && !resetPasswordModal.classList.contains('hidden')) closeResetPasswordModal();
+
+            const bypassModal = document.getElementById('bypassModal');
+            if (bypassModal && !bypassModal.classList.contains('hidden')) closeBypassModal();
         }
     });
 
