@@ -29,19 +29,6 @@ class Registration extends Model
         'id_label',
     ];
 
-    public function getIdLabelAttribute()
-    {
-        $year = '2026';
-        if ($this->relationLoaded('period') && $this->period && !empty($this->period->year)) {
-            $year = substr($this->period->year, 0, 4);
-        } elseif (!empty($this->period?->year)) {
-            $year = substr($this->period->year, 0, 4);
-        } elseif (!empty($this->created_at)) {
-            $year = $this->created_at->format('Y');
-        }
-        return 'SANS-' . $year . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
-    }
-
     public function scopeScopedByAdmin($query)
     {
         if (auth()->check() && auth()->user()->spmb_unit_id) {
