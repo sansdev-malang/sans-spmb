@@ -409,8 +409,8 @@
 
         <!-- PRICING & PAYMENT HISTORY BREAKDOWN -->
         @if(!empty($isSettlement))
-            {{-- KWITANSI UTAMA: MENAMPILKAN SEMUA CICILAN YANG TELAH DILAKUKAN HINGGA LUNAS --}}
-            <div class="items-title">Rincian Komponen Biaya & Riwayat Pelunasan Cicilan</div>
+            {{-- KWITANSI UTAMA: MENAMPILKAN RINCIAN PEMBAYARAN HINGGA LUNAS --}}
+            <div class="items-title">Rincian Komponen Biaya & Riwayat Pembayaran</div>
 
             @php
                 $targetItems = [];
@@ -484,14 +484,34 @@
 
                 @if(!empty($itemInstallments))
                     <div class="installment-box">
-                        <div class="installment-title">
-                            Riwayat Pembayaran Angsuran ({{ count($itemInstallments) }}x Pembayaran):
-                        </div>
-                        <table class="installment-item">
-                            @foreach($itemInstallments as $idx => $inst)
+                        @if(count($itemInstallments) > 1)
+                            <div class="installment-title">
+                                Riwayat Pembayaran Angsuran ({{ count($itemInstallments) }}x Pembayaran):
+                            </div>
+                            <table class="installment-item">
+                                @foreach($itemInstallments as $idx => $inst)
+                                    <tr>
+                                        <td style="width: 25%; font-weight: bold; color: #059669;">
+                                            Cicilan #{{ $idx + 1 }}
+                                        </td>
+                                        <td style="color: #64748b;">
+                                            {{ $inst['invoice'] }} ({{ $inst['date'] }} WIB via {{ $inst['method'] }})
+                                        </td>
+                                        <td style="text-align: right; font-weight: bold; color: #1e293b; width: 100px;">
+                                            Rp {{ number_format($inst['amount'], 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </table>
+                        @else
+                            <div class="installment-title">
+                                Riwayat Pembayaran (Lunas Sekaligus):
+                            </div>
+                            <table class="installment-item">
+                                @php $inst = $itemInstallments[0]; @endphp
                                 <tr>
                                     <td style="width: 25%; font-weight: bold; color: #059669;">
-                                        Cicilan #{{ $idx + 1 }}
+                                        Pembayaran Lunas
                                     </td>
                                     <td style="color: #64748b;">
                                         {{ $inst['invoice'] }} ({{ $inst['date'] }} WIB via {{ $inst['method'] }})
@@ -500,8 +520,8 @@
                                         Rp {{ number_format($inst['amount'], 0, ',', '.') }}
                                     </td>
                                 </tr>
-                            @endforeach
-                        </table>
+                            </table>
+                        @endif
                     </div>
                 @endif
             @endforeach

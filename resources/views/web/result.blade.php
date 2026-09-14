@@ -360,10 +360,14 @@
                                                             </div>
                                                         </div>
                                                     @elseif(count($itemPayments) === 1)
-                                                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between gap-1 mt-0.5">
-                                                            <span class="flex items-center gap-1"><i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> Terbayar Lunas via {{ $itemPayments[0]['method'] }} ({{ $itemPayments[0]['date'] }} WIB)</span>
-                                                            <a href="{{ route('dashboard.payment.receipt', $itemPayments[0]['payment']->id) }}" target="_blank" download class="sm:hidden download-link-animate inline-flex items-center gap-1 text-[9px] font-bold text-brand-emerald hover:underline bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800 whitespace-nowrap">
-                                                                <i data-lucide="download" class="w-2.5 h-2.5"></i> Kwitansi
+                                                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-between flex-wrap gap-2 mt-1.5 pt-1 border-t border-emerald-100/60 dark:border-emerald-950/40">
+                                                            <span class="flex items-center gap-1.5">
+                                                                <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-500"></i> 
+                                                                <span>Terbayar Lunas via {{ $itemPayments[0]['method'] }} <span class="text-slate-400 font-normal">({{ $itemPayments[0]['date'] }} WIB)</span></span>
+                                                            </span>
+                                                            <a href="{{ route('dashboard.payment.receipt', $itemPayments[0]['payment']->id) }}" target="_blank" download class="download-link-animate inline-flex items-center gap-1.5 text-[9px] font-bold text-brand-emerald hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200/80 dark:border-emerald-800 shadow-2xs hover:shadow-xs transition select-none whitespace-nowrap" title="Unduh Kwitansi Pembayaran">
+                                                                <i data-lucide="download" class="w-3 h-3"></i> 
+                                                                <span>Unduh Kwitansi</span>
                                                             </a>
                                                         </div>
                                                     @endif
