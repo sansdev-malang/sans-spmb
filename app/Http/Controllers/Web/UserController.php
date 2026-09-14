@@ -83,34 +83,51 @@ class UserController extends Controller
             $rq->with(['unit', 'payments']);
         }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'candidates_page');
 
-        // 3. Unregistered / Unpaid Leads (Belum memilih unit ATAU belum bayar formulir)
-        $unregisteredQuery = User::where('role', 'candidate')
-            ->whereDoesntHave('registrations', function($rq) use ($selectedPeriodId) {
-                if ($selectedPeriodId) {
-                    $rq->where('spmb_period_id', $selectedPeriodId);
-                }
-                $rq->where(function($sq) {
-                    $sq->where('registration_status', '!=', 'draft')
-                       ->orWhereHas('payments', function($pq) {
+        // 3. Unregistered / Unpaid Leads (Belum memilih unit ATAU memiliki pendaftaran draf/belum bayar di unit ini)
+        $unregisteredQuery = User::where('role', 'candidate');
+
+        if ($targetUnitId) {
+            $unregisteredQuery->where(function($q) use ($selectedPeriodId, $targetUnitId) {
+                $q->whereHas('registrations', function($rq) use ($selectedPeriodId, $targetUnitId) {
+                    if ($selectedPeriodId) {
+                        $rq->where('spmb_period_id', $selectedPeriodId);
+                    }
+                    $rq->where('spmb_unit_id', $targetUnitId)
+                       ->where('registration_status', 'draft')
+                       ->whereDoesntHave('payments', function($pq) {
                            $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                       });
+                })
+                ->orWhere(function($sq) use ($targetUnitId) {
+                    $sq->doesntHave('registrations')
+                       ->where(function($uq) use ($targetUnitId) {
+                           $uq->where('spmb_unit_id', $targetUnitId)
+                              ->orWhereNull('spmb_unit_id');
                        });
                 });
             });
-
-        if (!$isSuperAdmin) {
-            $myUnitId = auth()->user()->spmb_unit_id;
-            $unregisteredQuery->where(function($q) use ($myUnitId) {
-                $q->where('spmb_unit_id', $myUnitId)
-                  ->orWhereHas('registrations', function($rq) use ($myUnitId) {
-                      $rq->where('spmb_unit_id', $myUnitId);
-                  });
-            });
-        } elseif ($request->filled('unit_id')) {
-            $unregisteredQuery->where(function($q) use ($unitId) {
-                $q->where('spmb_unit_id', $unitId)
-                  ->orWhereHas('registrations', function($rq) use ($unitId) {
-                      $rq->where('spmb_unit_id', $unitId);
-                  });
+        } else {
+            $unregisteredQuery->where(function($q) use ($selectedPeriodId) {
+                $q->whereDoesntHave('registrations', function($rq) use ($selectedPeriodId) {
+                    if ($selectedPeriodId) {
+                        $rq->where('spmb_period_id', $selectedPeriodId);
+                    }
+                    $rq->where(function($sq) {
+                        $sq->where('registration_status', '!=', 'draft')
+                           ->orWhereHas('payments', function($pq) {
+                               $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                           });
+                    });
+                })
+                ->orWhereHas('registrations', function($rq) use ($selectedPeriodId) {
+                    if ($selectedPeriodId) {
+                        $rq->where('spmb_period_id', $selectedPeriodId);
+                    }
+                    $rq->where('registration_status', 'draft')
+                       ->whereDoesntHave('payments', function($pq) {
+                           $pq->where('payment_type', 'registration_fee')->where('status', 'success');
+                       });
+                });
             });
         }
 
@@ -125,12 +142,10 @@ class UserController extends Controller
             });
         }
         $unregisteredCount = (clone $unregisteredQuery)->count();
-        $unregistered = $unregisteredQuery->with(['registrations' => function($rq) use ($selectedPeriodId, $isSuperAdmin, $unitId) {
+        $unregistered = $unregisteredQuery->with(['registrations' => function($rq) use ($selectedPeriodId, $targetUnitId) {
             if ($selectedPeriodId) $rq->where('spmb_period_id', $selectedPeriodId);
-            if (!$isSuperAdmin) {
-                $rq->where('spmb_unit_id', auth()->user()->spmb_unit_id);
-            } elseif ($unitId) {
-                $rq->where('spmb_unit_id', $unitId);
+            if ($targetUnitId) {
+                $rq->where('spmb_unit_id', $targetUnitId);
             }
             $rq->with(['unit', 'payments']);
         }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'unregistered_page');
