@@ -517,10 +517,12 @@
                                     @php
                                         $yearVal = $cand->period->year ?? '2027-2028';
                                         $idLabelVal = $cand->id_label ?? ('SANS-' . $yearVal . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT));
+                                        $regFeeNameVal = $cand->registration_fee_name ?? ($cand->getRegistrationFee()?->name ?? 'Biaya Pendaftaran');
                                         $candPayload = [
                                             'id' => $cand->id,
                                             'candidate_name' => $cand->candidate_name ?? 'Calon Murid',
                                             'id_label' => $idLabelVal,
+                                            'registration_fee_name' => $regFeeNameVal,
                                             'total_gross' => (float) $gross,
                                             'total_discount' => (float) $discount,
                                             'total_net' => (float) $net,
@@ -1458,9 +1460,18 @@
             }
             info = info || {};
 
+            let regFeeItemName = 'Biaya Pendaftaran';
+            if (Array.isArray(p.items) && p.items.length > 0 && p.items[0].fee_name) {
+                regFeeItemName = p.items[0].fee_name;
+            } else if (cand && cand.registration_fee_name) {
+                regFeeItemName = cand.registration_fee_name;
+            } else if (info && (info.fee_name || info.name)) {
+                regFeeItemName = info.fee_name || info.name;
+            }
+
             if (isRegFee) {
                 pItems.push({
-                    name: cand.registration_fee_name || info.fee_name || 'Formulir Pendaftaran',
+                    name: regFeeItemName,
                     amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
                 });
             } else if (Array.isArray(p.items) && p.items.length > 0) {
@@ -1503,7 +1514,10 @@
         // 3. SECTION 1: STATUS KOMPONEN BIAYA MASUK AWAL (CLEAN SUMMARY VIEW - NO DUPLICATE BUTTONS)
         const componentsToRender = allItemsList.length > 0 
             ? allItemsList 
-            : Object.keys(itemTracker).filter(k => !k.toLowerCase().includes('formulir')).map(k => ({
+            : Object.keys(itemTracker).filter(k => {
+                const lower = k.toLowerCase();
+                return !lower.includes('formulir') && !lower.includes('pendaftaran') && !lower.includes('registrasi') && !lower.includes('enrollment') && !lower.includes('registration');
+            }).map(k => ({
                 name: k,
                 amount: itemTracker[k].totalPaid,
                 discount_amount: 0,
@@ -1613,23 +1627,7 @@
         successPayments.forEach((p, pIdx) => {
             const isRegFee = (p.payment_type === 'registration_fee');
 
-            // Dynamic Category Badges
-            const catList = (p.category_names && p.category_names.length > 0) 
-                ? p.category_names 
-                : [isRegFee ? 'Formulir Pendaftaran' : 'Biaya Masuk Awal'];
-
-            const categoryBadgesHtml = catList.map(catName => {
-                let badgeStyle = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
-                const lower = catName.toLowerCase();
-                if (lower.includes('formulir') || lower.includes('pendaftaran') || lower.includes('registrasi')) {
-                    badgeStyle = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
-                } else if (lower.includes('tambahan') || lower.includes('non-formal') || lower.includes('tpa') || lower.includes('tpq')) {
-                    badgeStyle = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
-                }
-                return `<span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${badgeStyle}">${catName}</span>`;
-            }).join(' ');
-
-            // Parse items
+            // Parse items & dynamic fee name
             let items = [];
             let info = p.payment_info;
             if (typeof info === 'string') {
@@ -1637,9 +1635,34 @@
             }
             info = info || {};
 
+            let regFeeItemName = 'Biaya Pendaftaran';
+            if (Array.isArray(p.items) && p.items.length > 0 && p.items[0].fee_name) {
+                regFeeItemName = p.items[0].fee_name;
+            } else if (cand && cand.registration_fee_name) {
+                regFeeItemName = cand.registration_fee_name;
+            } else if (info && (info.fee_name || info.name)) {
+                regFeeItemName = info.fee_name || info.name;
+            }
+
+            // Dynamic Category Badges
+            const catList = (p.category_names && p.category_names.length > 0) 
+                ? p.category_names 
+                : [isRegFee ? regFeeItemName : 'Biaya Masuk Awal'];
+
+            const categoryBadgesHtml = catList.map(catName => {
+                let badgeStyle = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+                const lower = catName.toLowerCase();
+                if (lower.includes('formulir') || lower.includes('pendaftaran') || lower.includes('registrasi') || lower.includes('enrollment') || lower.includes('registration')) {
+                    badgeStyle = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+                } else if (lower.includes('tambahan') || lower.includes('non-formal') || lower.includes('tpa') || lower.includes('tpq')) {
+                    badgeStyle = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+                }
+                return `<span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${badgeStyle}">${catName}</span>`;
+            }).join(' ');
+
             if (isRegFee) {
                 items.push({
-                    name: cand.registration_fee_name || info.fee_name || 'Formulir Pendaftaran',
+                    name: regFeeItemName,
                     amount: Number(p.base_amount || (p.amount - (p.admin_fee || 0)))
                 });
             } else if (Array.isArray(p.items) && p.items.length > 0) {
@@ -1682,7 +1705,7 @@
             // Single, clean download button label per transaction
             let downloadBtnLabel = 'Unduh Kwitansi';
             if (isRegFee) {
-                downloadBtnLabel = 'Unduh Kwitansi Formulir';
+                downloadBtnLabel = `Unduh Kwitansi ${regFeeItemName}`;
             } else if (finalPayments.length > 1) {
                 const finalIdx = finalPayments.findIndex(x => x.id === p.id);
                 downloadBtnLabel = (finalIdx !== -1) ? `Unduh Kwitansi Setoran #${finalIdx + 1}` : 'Unduh Kwitansi Setoran';

@@ -594,7 +594,7 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Alasan Pembebasan / Keringanan*</label>
                 <select name="reason" id="bypass-reason" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-semibold">
                     <option value="Beasiswa Penuh (Yayasan/Prestasi)">Beasiswa Penuh (Yayasan / Prestasi)</option>
-                    <option value="Keluarga Guru / Karyawan / Dosen">Keluarga Guru / Karyawan / Dosen</option>
+                    <option value="Keluarga Guru / Karyawan">Keluarga Guru / Karyawan</option>
                     <option value="Undangan Khusus / Kerjasama Lembaga">Undangan Khusus / Kerjasama Lembaga</option>
                     <option value="Dispensasi Khusus Panitia SPMB">Dispensasi Khusus Panitia SPMB</option>
                     <option value="Lainnya">Lainnya</option>
