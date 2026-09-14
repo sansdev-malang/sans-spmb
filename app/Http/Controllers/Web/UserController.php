@@ -356,13 +356,7 @@ class UserController extends Controller
             ->get();
 
         foreach ($pendingPayments as $p) {
-            $p->update([
-                'status' => 'cancelled',
-                'payment_info' => array_merge(is_array($p->payment_info) ? $p->payment_info : [], [
-                    'cancel_reason' => 'Dibatalkan karena pembebasan biaya/dispensasi oleh admin ' . auth()->user()->name,
-                    'cancelled_at' => now()->toIso8601String()
-                ])
-            ]);
+            \App\Services\PaymentSettlementService::cancelPayment($p, 'Dibatalkan karena pembebasan biaya/dispensasi oleh admin ' . auth()->user()->name);
         }
 
         // Determine fee amount for record audit
