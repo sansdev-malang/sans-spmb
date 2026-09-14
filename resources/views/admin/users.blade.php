@@ -608,7 +608,7 @@
 
             <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 flex items-start gap-2 text-[11px] text-amber-800 leading-relaxed">
                 <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
-                <p>Setelah disetujui, tagihan biaya formulir pendaftaran ananda akan otomatis dilunaskan (Rp 0) dan menu <strong>Pengisian Formulir</strong> pada portal calon murid akan langsung terbuka.</p>
+                <p>Setelah disetujui, tagihan biaya awal pendaftaran ananda akan otomatis dilunaskan (Rp 0) dan menu <strong>Pengisian Formulir</strong> pada portal calon murid akan langsung terbuka.</p>
             </div>
 
             <div class="flex justify-end gap-2 pt-2">

@@ -34,7 +34,7 @@
                                     {{ $draft->candidate_name ?? 'Calon Murid' }} — <span class="text-emerald-700 dark:text-emerald-400 font-bold">{{ $draft->unit->name ?? 'Unit Sekolah' }}</span>
                                 </h3>
                                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                    Biaya pendaftaran formulir belum dibayar. Anda dapat melanjutkan pembayaran atau mengganti pilihan unit pendaftaran.
+                                    Biaya awal pendaftaran belum dibayar. Anda dapat melanjutkan pembayaran atau mengganti pilihan unit pendaftaran.
                                 </p>
                             </div>
                         </div>

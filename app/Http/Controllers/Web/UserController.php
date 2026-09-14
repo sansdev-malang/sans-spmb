@@ -73,8 +73,13 @@ class UserController extends Controller
             });
         }
         $candidatesCount = (clone $candidatesQuery)->count();
-        $candidates = $candidatesQuery->with(['registrations' => function($rq) use ($selectedPeriodId) {
+        $candidates = $candidatesQuery->with(['registrations' => function($rq) use ($selectedPeriodId, $isSuperAdmin, $unitId) {
             if ($selectedPeriodId) $rq->where('spmb_period_id', $selectedPeriodId);
+            if (!$isSuperAdmin) {
+                $rq->where('spmb_unit_id', auth()->user()->spmb_unit_id);
+            } elseif ($unitId) {
+                $rq->where('spmb_unit_id', $unitId);
+            }
             $rq->with(['unit', 'payments']);
         }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'candidates_page');
 
@@ -120,8 +125,13 @@ class UserController extends Controller
             });
         }
         $unregisteredCount = (clone $unregisteredQuery)->count();
-        $unregistered = $unregisteredQuery->with(['registrations' => function($rq) use ($selectedPeriodId) {
+        $unregistered = $unregisteredQuery->with(['registrations' => function($rq) use ($selectedPeriodId, $isSuperAdmin, $unitId) {
             if ($selectedPeriodId) $rq->where('spmb_period_id', $selectedPeriodId);
+            if (!$isSuperAdmin) {
+                $rq->where('spmb_unit_id', auth()->user()->spmb_unit_id);
+            } elseif ($unitId) {
+                $rq->where('spmb_unit_id', $unitId);
+            }
             $rq->with(['unit', 'payments']);
         }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'unregistered_page');
             
