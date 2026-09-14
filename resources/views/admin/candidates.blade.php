@@ -664,7 +664,9 @@
                                             $categoriesResult = [];
                                             $totalGross = 0;
                                             $totalPaid = 0;
+                                            $totalWaived = 0;
                                             $paidCount = 0;
+                                            $dispCount = 0;
 
                                             foreach ($feeCategories as $cat) {
                                                 $catName = $cat->name;
@@ -719,7 +721,8 @@
                                                     $invoiceNo = '-';
                                                     $method = '-';
                                                     $paidTime = '-';
-                                                    $amountPaid = $feeAmount;
+                                                    $actualPaid = 0;
+                                                    $waivedAmount = 0;
                                                     $isDispensation = false;
 
                                                     if ($isFormulir) {
@@ -734,20 +737,23 @@
                                                             $invoiceNo = $regPayment ? ($regPayment->invoice_number ?: ($regPayment->order_id ?: ('DISP-' . $regPayment->id))) : 'DISPENSASI';
                                                             $method = 'Dispensasi (Bebas Biaya)';
                                                             $paidTime = $regPayment && $regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : ($cand->created_at ? $cand->created_at->format('d M Y, H:i') . ' WIB' : '-');
-                                                            $amountPaid = (float) $feeAmount;
+                                                            $actualPaid = 0;
+                                                            $waivedAmount = $feeAmount;
+                                                            $dispCount++;
                                                         } elseif ($isRegSuccess) {
                                                             $isPaid = true;
                                                             $status = 'paid';
                                                             $invoiceNo = $regPayment ? ($regPayment->invoice_number ?: ($regPayment->order_id ?: ('PAY-' . $regPayment->id))) : 'LUNAS';
                                                             $method = $regPayment ? ($regPayment->payment_channel ?: ($regPayment->payment_method ?: 'Online')) : 'Online';
                                                             $paidTime = $regPayment ? ($regPayment->paid_at ? $regPayment->paid_at->format('d M Y, H:i') . ' WIB' : ($regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : '-')) : '-';
-                                                            $amountPaid = (float) ($regPayment ? ($regPayment->amount ?: $feeAmount) : $feeAmount);
+                                                            $actualPaid = (float) ($regPayment ? ($regPayment->amount ?: $feeAmount) : $feeAmount);
+                                                            $paidCount++;
                                                         } elseif ($regPayment && $regPayment->status === 'pending') {
                                                             $status = 'pending';
                                                             $invoiceNo = $regPayment->invoice_number ?: ($regPayment->order_id ?: ('PAY-' . $regPayment->id));
                                                             $method = $regPayment->payment_channel ?: ($regPayment->payment_method ?: 'Online');
                                                             $paidTime = $regPayment->created_at ? $regPayment->created_at->format('d M Y, H:i') . ' WIB' : '-';
-                                                            $amountPaid = (float) $regPayment->amount;
+                                                            $actualPaid = 0;
                                                         }
                                                     } else {
                                                         if ($isAllFinalPaid) {
@@ -759,6 +765,8 @@
                                                                 $method = $latestPay->payment_channel ?: ($latestPay->payment_method ?: 'Online');
                                                                 $paidTime = $latestPay->paid_at ? $latestPay->paid_at->format('d M Y, H:i') . ' WIB' : ($latestPay->created_at ? $latestPay->created_at->format('d M Y, H:i') . ' WIB' : '-');
                                                             }
+                                                            $actualPaid = $feeAmount;
+                                                            $paidCount++;
                                                         } else {
                                                             $matchedPay = $finalSuccessPayments->first(function($p) use ($feeName) {
                                                                 if (!isset($p->payment_info['selected_items'])) return false;
@@ -776,15 +784,15 @@
                                                                 $invoiceNo = $matchedPay->invoice_number ?: ($matchedPay->order_id ?: ('PAY-' . $matchedPay->id));
                                                                 $method = $matchedPay->payment_channel ?: ($matchedPay->payment_method ?: 'Online');
                                                                 $paidTime = $matchedPay->paid_at ? $matchedPay->paid_at->format('d M Y, H:i') . ' WIB' : ($matchedPay->created_at ? $matchedPay->created_at->format('d M Y, H:i') . ' WIB' : '-');
+                                                                $actualPaid = $feeAmount;
+                                                                $paidCount++;
                                                             }
                                                         }
                                                     }
 
                                                     $totalGross += $feeAmount;
-                                                    if ($isPaid) {
-                                                        $totalPaid += $feeAmount;
-                                                        $paidCount++;
-                                                    }
+                                                    $totalPaid += $actualPaid;
+                                                    $totalWaived += $waivedAmount;
 
                                                     $items[] = [
                                                         'fee_id' => $fee->id,
@@ -796,7 +804,7 @@
                                                         'invoice_no' => $invoiceNo,
                                                         'payment_method' => $method,
                                                         'paid_time' => $paidTime,
-                                                        'amount_paid' => $amountPaid,
+                                                        'amount_paid' => $actualPaid,
                                                     ];
                                                 }
 
@@ -807,8 +815,8 @@
                                                 ];
                                             }
 
-                                            $discount = (float) ($cand->total_discount ?? 0);
-                                            $totalNet = max(0, $totalGross - $discount);
+                                            $allDiscount = (float) ($cand->total_discount ?? 0) + $totalWaived;
+                                            $totalNet = max(0, $totalGross - $allDiscount);
                                             $remBalance = max(0, $totalNet - $totalPaid);
 
                                             return [
@@ -818,9 +826,12 @@
                                                 'fee_categories' => $categoriesResult,
                                                 'all_gross_fee' => $totalGross,
                                                 'all_net_fee' => $totalNet,
+                                                'all_discount' => $allDiscount,
+                                                'discount_amount' => $allDiscount,
                                                 'all_total_paid' => $totalPaid,
                                                 'all_remaining_balance' => $remBalance,
                                                 'all_paid_items_count' => $paidCount,
+                                                'all_disp_items_count' => $dispCount,
                                             ];
                                         })()),
                                     ];
@@ -2005,13 +2016,19 @@
         const grossEl = document.getElementById('pay-gross-amount');
         if (grossEl) grossEl.innerText = 'Rp ' + totalGross.toLocaleString('id-ID');
         const discEl = document.getElementById('pay-discount-sub');
-        if (discEl) discEl.innerText = discount > 0 ? ('Potongan Diskon: - Rp ' + discount.toLocaleString('id-ID')) : 'Diskon: Rp 0';
+        if (discEl) discEl.innerText = discount > 0 ? ('Potongan / Bebas: - Rp ' + discount.toLocaleString('id-ID')) : 'Diskon: Rp 0';
         const paidEl = document.getElementById('pay-paid-amount');
         if (paidEl) paidEl.innerText = 'Rp ' + totalPaid.toLocaleString('id-ID');
         const remEl = document.getElementById('pay-remaining-amount');
         if (remEl) remEl.innerText = 'Rp ' + remaining.toLocaleString('id-ID');
         const countEl = document.getElementById('pay-success-count-sub');
-        if (countEl) countEl.innerText = paidItemsCount + ' Komponen Terbayar';
+        if (countEl) {
+            if (cand.all_disp_items_count > 0) {
+                countEl.innerText = paidItemsCount + ' Terbayar (' + cand.all_disp_items_count + ' Bebas)';
+            } else {
+                countEl.innerText = paidItemsCount + ' Komponen Terbayar';
+            }
+        }
 
         // Progress Bar
         const progressBar = document.getElementById('pay-progress-bar');
