@@ -23,6 +23,12 @@ class SpmbPaymentChannel extends Model
         'fee_value' => 'float',
     ];
 
+    protected $appends = [
+        'logo_url',
+        'fee_label',
+        'applicable_for_label',
+    ];
+
     public function gateway()
     {
         return $this->belongsTo(PaymentGateway::class, 'payment_gateway_id');
@@ -77,14 +83,28 @@ class SpmbPaymentChannel extends Model
         return 'Rp ' . number_format($this->fee_value, 0, ',', '.') . ' (Flat)';
     }
 
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->getLogoUrl();
+    }
+
     /**
      * Get logo URL from storage.
      */
     public function getLogoUrl()
     {
-        // if ($this->logo) {
-        //     return '/storage/' . ltrim($this->logo, '/');
-        // }
+        if ($this->logo) {
+            $storagePath = 'storage/' . ltrim($this->logo, '/');
+            if (file_exists(public_path($storagePath))) {
+                return asset($storagePath);
+            }
+
+            $diskPath = storage_path('app/public/' . ltrim($this->logo, '/'));
+            if (file_exists($diskPath)) {
+                $mime = mime_content_type($diskPath) ?: 'image/png';
+                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($diskPath));
+            }
+        }
 
         $channelKey = strtolower($this->code . ' ' . $this->name);
         $logoSlugs = [
@@ -103,6 +123,7 @@ class SpmbPaymentChannel extends Model
             'gopay' => 'gopay',
             'ovo' => 'ovo',
             'linkaja' => 'linkaja',
+            'jatim' => 'bank-jatim',
         ];
 
         foreach ($logoSlugs as $keyword => $slug) {

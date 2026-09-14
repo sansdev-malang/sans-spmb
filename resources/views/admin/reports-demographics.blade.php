@@ -9,9 +9,6 @@
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                    <i data-lucide="pie-chart" class="w-5 h-5"></i>
-                </div>
                 <div>
                     <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">Demografi & Asal Sekolah Calon Murid</h1>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Analisis persebaran sekolah asal, peta domisili pendaftar, dan efektivitas saluran informasi.</p>

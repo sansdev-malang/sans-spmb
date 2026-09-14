@@ -219,6 +219,7 @@ class Payment extends Model
             'gopay' => 'gopay',
             'ovo' => 'ovo',
             'linkaja' => 'linkaja',
+            'jatim' => 'jatim',
         ];
 
         foreach ($logoSlugs as $keyword => $slug) {

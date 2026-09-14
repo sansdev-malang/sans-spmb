@@ -516,8 +516,9 @@
         // Show/hide current logo preview
         const previewContainer = document.getElementById('edit_logo_preview_container');
         const previewImg = document.getElementById('edit_logo_preview');
-        if (channel.logo) {
-            previewImg.src = `/storage/${channel.logo}`;
+        const currentLogoUrl = channel.logo_url || (channel.logo ? `/storage/${channel.logo}` : null);
+        if (currentLogoUrl) {
+            previewImg.src = currentLogoUrl;
             previewContainer.classList.remove('hidden');
         } else {
             previewImg.src = '';
