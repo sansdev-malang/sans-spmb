@@ -151,6 +151,24 @@
                                             placeholder="Contoh: Kak Nisa - Admin {{ $u->code }}" 
                                             class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                                     </div>
+                                    <div class="sm:col-span-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                            <i data-lucide="users-round" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                            <span>Link Group WhatsApp SPMB {{ $u->code }} (Tahap Assessment / Ta'aruf)</span>
+                                        </label>
+                                        <div class="relative">
+                                            <input type="url" name="units[{{ $u->id }}][spmb_group_url]" 
+                                                value="{{ $u->spmb_group_url }}" 
+                                                placeholder="Contoh: https://chat.whatsapp.com/XXXXX" 
+                                                class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                                <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                                            </div>
+                                        </div>
+                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                                            Tautan group WhatsApp resmi untuk koordinasi & pembaruan informasi SPMB unit {{ $u->name }} yang ditampilkan pada Tahap 4 (Assessment / Ta'aruf).
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach

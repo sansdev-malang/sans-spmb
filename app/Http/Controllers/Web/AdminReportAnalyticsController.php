@@ -423,8 +423,10 @@ class AdminReportAnalyticsController extends Controller
 
         // 4. Marketing Information Sources (Real survey responses if present)
         $sourceCounts = [];
-        $totalSurveyResponses = 0;
         foreach ($candidates as $c) {
+            if ($c->registration_status === 'draft' && empty($c->additional_info['step_7_saved'])) {
+                continue;
+            }
             $source = null;
             if (!empty($c->additional_info) && is_array($c->additional_info)) {
                 $source = $c->additional_info['info_source'] 
@@ -435,10 +437,30 @@ class AdminReportAnalyticsController extends Controller
             if (!empty($source) && !in_array(strtolower(trim($source)), ['-', 'tidak ada'])) {
                 $source = ucwords(strtolower(trim($source)));
                 $sourceCounts[$source] = ($sourceCounts[$source] ?? 0) + 1;
-                $totalSurveyResponses++;
             }
         }
         arsort($sourceCounts);
+        $totalSurveyResponses = array_sum($sourceCounts);
+
+        // 5. Referral Program (Data Rekomendasi Murid TA 2026/2027)
+        $referralList = [];
+        foreach ($candidates as $c) {
+            if ($c->registration_status === 'draft' && empty($c->additional_info['step_7_saved'])) {
+                continue;
+            }
+            if (!empty($c->additional_info) && is_array($c->additional_info)) {
+                $refStudent = $c->additional_info['referral_student_name'] ?? null;
+                if (!empty($refStudent)) {
+                    $referralList[] = [
+                        'candidate' => $c,
+                        'student_name' => $refStudent,
+                        'student_class' => $c->additional_info['referral_student_class'] ?? '-',
+                        'parent_phone' => $c->additional_info['referral_parent_phone'] ?? '-',
+                        'info_source' => $c->additional_info['info_source'] ?? 'Rekomendasi Walimurid / Alumni',
+                    ];
+                }
+            }
+        }
 
         $selectedPeriod = SpmbPeriod::find($selectedPeriodId);
 
@@ -457,8 +479,10 @@ class AdminReportAnalyticsController extends Controller
             'unfilledDistricts',
             'sourceCounts',
             'totalSurveyResponses',
+            'referralList',
             'units',
             'selectedPeriod'
         ));
     }
 }
+

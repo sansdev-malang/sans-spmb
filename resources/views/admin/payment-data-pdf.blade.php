@@ -262,9 +262,9 @@
             </td>
             <td class="meta-box" style="width: 220px;">
                 <div class="doc-badge">RINCIAN KEUANGAN OPERASIONAL</div>
-                <div><strong>Tgl Cetak:</strong> {{ $printedAt }}</div>
-                <div><strong>Dicetak Oleh:</strong> {{ $printedBy }}</div>
-                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel }}</div>
+                <div><strong>Tgl Cetak:</strong> {{ $printedAt ?? (now()->translatedFormat('d F Y, H:i') . ' WIB') }}</div>
+                <div><strong>Dicetak Oleh:</strong> {{ $printedBy ?? (auth()->user()->name ?? 'Administrator') }}</div>
+                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel ?? 'Semua Unit' }}</div>
             </td>
         </tr>
     </table>
@@ -273,7 +273,7 @@
     <div class="report-title-section">
         <h2 class="report-title">LAPORAN RINCIAN TAGIHAN & PEMBAYARAN DSP MURID</h2>
         <div class="report-subtitle">
-            TAHUN AJARAN {{ $periodName }} &bull; DETAIL ITEM KOMPONEN BIAYA, DISKON, DAN STATUS ANGSURAN
+            TAHUN AJARAN {{ $periodName ?? ($selectedPeriod->year ?? '-') }} &bull; DETAIL ITEM KOMPONEN BIAYA, DISKON, DAN STATUS ANGSURAN
         </div>
     </div>
 

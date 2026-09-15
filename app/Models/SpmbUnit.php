@@ -13,6 +13,11 @@ class SpmbUnit extends Model
         return $this->hasMany(SpmbGrade::class);
     }
 
+    public function fees()
+    {
+        return $this->hasMany(SpmbFee::class, 'spmb_unit_id');
+    }
+
     public function feeCategories()
     {
         return $this->belongsToMany(SpmbFeeCategory::class, 'spmb_fee_category_unit', 'spmb_unit_id', 'spmb_fee_category_id');
@@ -21,6 +26,66 @@ class SpmbUnit extends Model
     public function agreementTemplate()
     {
         return $this->hasOne(SpmbAgreementTemplate::class, 'spmb_unit_id');
+    }
+
+    public function waves()
+    {
+        return $this->belongsToMany(SpmbWave::class, 'spmb_wave_unit', 'spmb_unit_id', 'spmb_wave_id')
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
+
+    public function activeWaves()
+    {
+        return $this->waves()->wherePivot('is_active', true);
+    }
+
+    public function types()
+    {
+        return $this->belongsToMany(SpmbType::class, 'spmb_type_unit', 'spmb_unit_id', 'spmb_type_id')
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
+
+    public function activeTypes()
+    {
+        return $this->types()->wherePivot('is_active', true);
+    }
+
+    public function classPrograms()
+    {
+        return $this->belongsToMany(SpmbClassProgram::class, 'spmb_class_program_unit', 'spmb_unit_id', 'spmb_class_program_id')
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
+
+    public function activeClassPrograms()
+    {
+        return $this->classPrograms()->wherePivot('is_active', true);
+    }
+
+    public function periods()
+    {
+        return $this->belongsToMany(SpmbPeriod::class, 'spmb_period_unit', 'spmb_unit_id', 'spmb_period_id')
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
+
+    public function activePeriods()
+    {
+        return $this->periods()->wherePivot('is_active', true);
+    }
+
+    public function extraServices()
+    {
+        return $this->belongsToMany(SpmbExtraService::class, 'spmb_extra_service_unit', 'spmb_unit_id', 'spmb_extra_service_id')
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
+
+    public function activeExtraServices()
+    {
+        return $this->extraServices()->wherePivot('is_active', true);
     }
 
     /**

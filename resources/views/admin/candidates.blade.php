@@ -518,6 +518,14 @@
                                         </span>
                                     @endif
                                 </div>
+                                @if(!empty($cand->additional_info['referral_student_name']))
+                                    <div class="mt-1">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" title="Rujukan Murid: {{ $cand->additional_info['referral_student_name'] }} (Kelas {{ $cand->additional_info['referral_student_class'] ?? '-' }})">
+                                            <i data-lucide="gift" class="w-3 h-3 text-purple-600"></i>
+                                            Ref: {{ \Illuminate\Support\Str::limit($cand->additional_info['referral_student_name'], 15) }}
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
                             <!-- Unit & Jenjang -->
                             <td class="py-4 px-6">
@@ -585,6 +593,15 @@
                                         'guardian_nik' => $cand->getFieldValue('guardian_nik') ?? '-',
                                         'guardian_address' => $cand->getFieldValue('guardian_address') ?? '-',
                                         'guardian_phone' => $cand->getFieldValue('guardian_phone') ?? '-',
+
+                                        // Saluran Info & Referral
+                                        'info_source' => $cand->additional_info['info_source'] ?? $cand->additional_info['sumber_informasi'] ?? '-',
+                                        'referral_student_name' => $cand->additional_info['referral_student_name'] ?? null,
+                                        'referral_student_class' => $cand->additional_info['referral_student_class'] ?? null,
+                                        'referral_parent_phone' => $cand->additional_info['referral_parent_phone'] ?? null,
+                                        'wa_group_joined' => (bool) ($cand->additional_info['wa_group_joined'] ?? false),
+                                        'wa_group_joined_at' => !empty($cand->additional_info['wa_group_joined_at']) ? \Carbon\Carbon::parse($cand->additional_info['wa_group_joined_at'])->timezone('Asia/Jakarta')->translatedFormat('d M Y, H:i') : null,
+                                        'spmb_group_url' => $cand->unit->spmb_group_url ?? null,
 
                                         // Lampiran
                                         'student_photo' => $cand->getFieldValue('student_photo_path') ? asset('storage/' . $cand->getFieldValue('student_photo_path')) : null,
@@ -682,9 +699,9 @@
                                                     continue;
                                                 }
 
-                                                // Filter fees strictly belonging to this candidate's unit
-                                                $unitFees = $cat->fees->filter(function($f) use ($candUnitId) {
-                                                    return $f->is_active && ($f->spmb_unit_id == $candUnitId);
+                                                // Filter fees strictly belonging to this candidate's unit and targeting criteria
+                                                $unitFees = $cat->fees->filter(function($f) use ($candUnitId, $cand) {
+                                                    return $f->is_active && ($f->spmb_unit_id == $candUnitId) && $f->matchesRegistration($cand);
                                                 });
 
                                                 // Filter Biaya Tambahan: check against both name and code of candidate's extraServices
@@ -1074,6 +1091,45 @@
                             <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">NIK Wali:</span> <span id="det-guardian-nik" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
                             <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">No. HP:</span> <span id="det-guardian-phone" class="font-mono text-slate-800 dark:text-slate-100">-</span></div>
                             <div><span class="text-slate-400 dark:text-slate-400 font-bold block text-[10px]">Alamat:</span> <span id="det-guardian-addr" class="text-slate-800 dark:text-slate-200">-</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segment 4: Saluran Informasi & Referral -->
+                <div class="space-y-4 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <h4 class="font-extrabold text-xs text-brand-emerald dark:text-emerald-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-700/80 pb-3">
+                        <i data-lucide="megaphone" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i> Saluran Informasi & Program Referral
+                    </h4>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase block">Sumber Mengetahui SPMB</span>
+                            <span id="det-info-source" class="font-bold text-slate-800 dark:text-slate-100 text-xs">-</span>
+                        </div>
+                        <div id="det-referral-box" class="hidden p-4 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 space-y-2">
+                            <div class="flex items-center gap-2 text-purple-800 dark:text-purple-300 font-extrabold text-xs">
+                                <i data-lucide="user-check" class="w-4 h-4 text-purple-600"></i>
+                                <span>Informasi Murid / Wali Murid Perujuk (TA 2026/2027)</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                                <div>
+                                    <span class="text-slate-400 font-bold block text-[10px]">Nama Lengkap Murid Perujuk:</span>
+                                    <span id="det-ref-student" class="font-bold text-purple-900 dark:text-purple-200">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 font-bold block text-[10px]">Kelas Murid (TA 2026/2027):</span>
+                                    <span id="det-ref-class" class="font-bold text-slate-800 dark:text-slate-100">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 font-bold block text-[10px]">No. WA / HP Wali Perujuk:</span>
+                                    <span id="det-ref-phone" class="font-bold text-emerald-600 dark:text-emerald-400">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 dark:border-slate-700/80">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase block">Status Group WhatsApp SPMB Unit</span>
+                            <div id="det-wa-group-status" class="mt-1 flex items-center gap-2">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1575,7 +1631,45 @@
         setText('det-guardian-nik', cand.guardian_nik);
         setText('det-guardian-phone', cand.guardian_phone);
         setText('det-guardian-addr', cand.guardian_address);
+
+        // Saluran Informasi & Referral
+        setText('det-info-source', cand.info_source || '-');
+        const refBox = document.getElementById('det-referral-box');
+        if (refBox) {
+            if (cand.referral_student_name) {
+                refBox.classList.remove('hidden');
+                setText('det-ref-student', cand.referral_student_name);
+                setText('det-ref-class', cand.referral_student_class || '-');
+                setText('det-ref-phone', cand.referral_parent_phone || '-');
+            } else {
+                refBox.classList.add('hidden');
+            }
+        }
         
+        // Status Group WA SPMB Unit
+        const waStatusEl = document.getElementById('det-wa-group-status');
+        if (waStatusEl) {
+            if (cand.wa_group_joined) {
+                waStatusEl.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-extrabold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Telah Bergabung ke Group WA</span>
+                    </span>
+                    ${cand.wa_group_joined_at ? '<span class="text-[11px] text-slate-400">(' + cand.wa_group_joined_at + ')</span>' : ''}
+                    ${cand.spmb_group_url ? '<a href="' + cand.spmb_group_url + '" target="_blank" class="text-xs font-bold text-brand-emerald hover:underline flex items-center gap-1 ml-2"><i data-lucide="external-link" class="w-3 h-3"></i> Tautan Group</a>' : ''}
+                `;
+            } else {
+                waStatusEl.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Belum Bergabung</span>
+                    </span>
+                    ${cand.spmb_group_url ? '<a href="' + cand.spmb_group_url + '" target="_blank" class="text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline flex items-center gap-1 ml-2"><i data-lucide="external-link" class="w-3 h-3"></i> Tautan Group</a>' : ''}
+                `;
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
         setText('det-created', cand.created_at_label);
 
         // Lampiran Helper

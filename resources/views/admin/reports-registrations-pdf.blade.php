@@ -275,9 +275,9 @@
             <td class="meta-box" style="width: 200px;">
                 <span class="doc-badge">Dokumen Resmi SPMB</span>
                 <div><strong>Tahun Ajaran:</strong> {{ $periodName }}</div>
-                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel }}</div>
-                <div><strong>Waktu Cetak:</strong> {{ $printedAt }}</div>
-                <div><strong>Dicetak Oleh:</strong> {{ $printedBy }}</div>
+                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel ?? 'Semua Unit' }}</div>
+                <div><strong>Waktu Cetak:</strong> {{ $printedAt ?? (now()->translatedFormat('d F Y, H:i') . ' WIB') }}</div>
+                <div><strong>Dicetak Oleh:</strong> {{ $printedBy ?? (auth()->user()->name ?? 'Administrator') }}</div>
             </td>
         </tr>
     </table>

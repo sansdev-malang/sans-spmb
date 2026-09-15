@@ -439,6 +439,10 @@ class AdminDashboardController extends Controller
     {
         $registration = Registration::scopedByAdmin()->findOrFail($id);
         
+        if (empty($registration->observation_result_path)) {
+            return redirect()->back()->with('error', "Hasil observasi belum diunggah. Mohon unggah berkas hasil observasi terlebih dahulu sebelum menyelesaikan tahapan Ta'aruf.");
+        }
+
         $registration->update([
             'registration_status' => 'taaruf_completed',
             'committee_notes' => 'Ujian observasi / ta\'aruf telah selesai dilaksanakan. Silakan mengisi Formulir Pernyataan Kesanggupan Biaya dan Tata Tertib Sekolah.'

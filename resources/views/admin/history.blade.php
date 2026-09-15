@@ -456,9 +456,9 @@
                                                     continue;
                                                 }
 
-                                                // Filter fees strictly belonging to this candidate's unit
-                                                $unitFees = $cat->fees->filter(function($f) use ($candUnitId) {
-                                                    return $f->is_active && ($f->spmb_unit_id == $candUnitId);
+                                                // Filter fees strictly belonging to this candidate's unit and targeting criteria
+                                                $unitFees = $cat->fees->filter(function($f) use ($candUnitId, $cand) {
+                                                    return $f->is_active && ($f->spmb_unit_id == $candUnitId) && $f->matchesRegistration($cand);
                                                 });
 
                                                 // Filter Biaya Tambahan: check against both name and code of candidate's extraServices

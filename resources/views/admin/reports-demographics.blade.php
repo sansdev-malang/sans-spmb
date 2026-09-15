@@ -275,6 +275,97 @@
             </div>
         </div>
     </div>
+
+    <!-- 4. Dedicated Referral Recap Section (Klaim Keringanan SPP Rp 300.000,- TA 2026/2027) -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div>
+                <h2 class="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-4 h-4 text-purple-600"></i>
+                    Rekapitulasi Rekomendasi / Rujukan Murid (TA 2026/2027)
+                </h2>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Daftar murid / wali murid aktif (TA 2026/2027) yang merekomendasikan calon murid baru.
+                </p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                    Total: {{ count($referralList) }} Rekomendasi
+                </span>
+            </div>
+        </div>
+
+        @if(count($referralList) > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-bold uppercase tracking-wider">
+                            <th class="py-3 px-4 text-center w-10">No.</th>
+                            <th class="py-3 px-4">Calon Murid Baru</th>
+                            <th class="py-3 px-4">Unit Tujuan</th>
+                            <th class="py-3 px-4">Murid Perujuk (TA 2026/2027)</th>
+                            <th class="py-3 px-4">Kelas Murid Perujuk</th>
+                            <th class="py-3 px-4">Kontak Ortu Perujuk</th>
+                            <th class="py-3 px-4 text-center">Status Pendaftar</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach($referralList as $index => $ref)
+                            @php
+                                $cand = $ref['candidate'];
+                                $cleanPhone = preg_replace('/[^0-9]/', '', $ref['parent_phone']);
+                                if (str_starts_with($cleanPhone, '0')) {
+                                    $cleanPhone = '62' . substr($cleanPhone, 1);
+                                }
+                                $waUrl = !empty($cleanPhone) ? "https://wa.me/{$cleanPhone}" : null;
+                            @endphp
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                                <td class="py-3 px-4 text-center text-slate-400 font-bold">
+                                    {{ $index + 1 }}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="font-bold text-slate-800 dark:text-white">{{ $cand->candidate_name }}</div>
+                                    <div class="font-mono text-[10px] text-slate-400">SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}</div>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $cand->unit->name ?? '-' }}</span>
+                                    <span class="text-[10px] text-slate-400 block">{{ $cand->grade->name ?? '-' }}</span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="font-extrabold text-purple-700 dark:text-purple-300">{{ $ref['student_name'] }}</span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                        {{ $ref['student_class'] }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    @if(!empty($ref['parent_phone']) && $ref['parent_phone'] !== '-')
+                                        <a href="{{ $waUrl }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+                                            <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                                            <span>{{ $ref['parent_phone'] }}</span>
+                                        </a>
+                                    @else
+                                        <span class="text-slate-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                        {{ str_replace('_', ' ', $cand->registration_status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-center py-6 text-xs text-slate-400">
+                <i data-lucide="inbox" class="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2"></i>
+                <p>Belum ada pendaftar yang memasukkan data referral atau rujukan dari murid aktif.</p>
+            </div>
+        @endif
+    </div>
 </div>
 @endsection
 

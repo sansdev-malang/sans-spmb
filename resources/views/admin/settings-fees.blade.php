@@ -121,6 +121,7 @@
                             <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                                 <th class="py-4 px-6">Nama Biaya</th>
                                 <th class="py-4 px-6 text-center">Unit Sekolah</th>
+                                <th class="py-4 px-6 text-left">Target Kelas & Kategori</th>
                                 <th class="py-4 px-6 text-center">Nominal (Rp)</th>
                                 <th class="py-4 px-6 text-center">Payment Gateway</th>
                                 <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
@@ -133,6 +134,42 @@
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $fee->name }}</td>
                                     <td class="py-4 px-6 text-center font-semibold text-slate-500 text-xs">
                                         {{ $fee->unit->code ?? 'Global' }}
+                                    </td>
+                                    <td class="py-4 px-6 text-left">
+                                        <div class="space-y-1">
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="text-[10px] font-bold text-slate-400">Kelas:</span>
+                                                @if(empty($fee->applicable_grades))
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        Semua Kelas
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200" title="{{ $fee->target_grades_text }}">
+                                                        {{ \Illuminate\Support\Str::limit($fee->target_grades_text, 25) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="text-[10px] font-bold text-slate-400">Kategori:</span>
+                                                @if(empty($fee->applicable_class_programs))
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                                                        Semua Kategori
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200" title="{{ $fee->target_class_programs_text }}">
+                                                        {{ \Illuminate\Support\Str::limit($fee->target_class_programs_text, 25) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            @if(!empty($fee->applicable_types))
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="text-[10px] font-bold text-slate-400">Jalur:</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="{{ $fee->target_types_text }}">
+                                                        {{ \Illuminate\Support\Str::limit($fee->target_types_text, 25) }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="py-4 px-6 text-center font-semibold text-slate-700">Rp {{ number_format($fee->amount, 0, ',', '.') }}</td>
                                     <td class="py-4 px-6 text-center whitespace-nowrap">
@@ -161,7 +198,7 @@
                                     </td>
                                     <td class="py-4 px-6 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <button type="button" onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
+                                            <button type="button" onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}', [], 'tuition_fee', {{ json_encode($fee->applicable_grades ?? []) }}, {{ json_encode($fee->applicable_class_programs ?? []) }}, {{ json_encode($fee->applicable_types ?? []) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
                                                 <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                                 <span>Edit</span>
                                             </button>
@@ -174,7 +211,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-8 px-6 text-center text-slate-400 text-xs">Belum ada data nominal untuk kategori ini.</td>
+                                    <td colspan="7" class="py-8 px-6 text-center text-slate-400 text-xs">Belum ada data nominal untuk kategori ini.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -187,13 +224,18 @@
 </div>
 
 <!-- Unified Fee CRUD Modal -->
-<div id="feeCrudModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
-    <div class="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-100 overflow-hidden">
-        <div class="bg-brand-emerald text-white px-6 py-4">
-            <h3 id="feeModalTitle" class="font-extrabold text-lg">Tambah</h3>
-            <p class="text-xs text-emerald-100 mt-0.5">Kelola data konfigurasi setting biaya.</p>
+<div id="feeCrudModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full mx-auto shadow-2xl border border-slate-100 overflow-hidden max-h-[92vh] flex flex-col">
+        <div class="bg-brand-emerald text-white px-6 py-4 flex-shrink-0 flex items-center justify-between">
+            <div>
+                <h3 id="feeModalTitle" class="font-extrabold text-lg">Tambah</h3>
+                <p class="text-xs text-emerald-100 mt-0.5">Kelola data konfigurasi setting biaya.</p>
+            </div>
+            <button type="button" onclick="closeFeeModal()" class="text-emerald-100 hover:text-white transition p-1 rounded-lg hover:bg-emerald-700/50">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
         </div>
-        <form id="feeCrudForm" method="POST" class="p-6 space-y-4" hx-boost="false">
+        <form id="feeCrudForm" method="POST" class="p-6 space-y-4 overflow-y-auto" hx-boost="false">
             @csrf
             
             <input type="hidden" id="feeCategoryInput" name="spmb_fee_category_id">
@@ -216,7 +258,7 @@
                             Pilih Semua Unit
                         </label>
                         <hr class="border-slate-200 my-2">
-                        <div class="grid grid-cols-1 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             @foreach($units as $unit)
                                 <label class="flex items-center gap-2 text-xs font-semibold text-slate-650 cursor-pointer">
                                     <input type="checkbox" name="spmb_units[]" value="{{ $unit->id }}" class="unit-checkbox rounded text-brand-emerald focus:ring-brand-emerald" onchange="updateCheckAllState()">
@@ -238,7 +280,7 @@
                             Pilih Semua Unit
                         </label>
                         <hr class="border-slate-200 my-2">
-                        <div class="grid grid-cols-1 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             @foreach($units as $unit)
                                 <label class="flex items-center gap-2 text-xs font-semibold text-slate-650 cursor-pointer">
                                     <input type="checkbox" name="spmb_units[]" value="{{ $unit->id }}" class="fee-unit-checkbox rounded text-brand-emerald focus:ring-brand-emerald" onchange="updateCheckAllFeeState()">
@@ -266,7 +308,7 @@
                 <input type="text" id="feeMainInput" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
             
-            <!-- Amount Input (Only visible for Biaya Tambahan) -->
+            <!-- Amount Input & Targeting (Only visible for Fee Items) -->
             <div id="feeAmountWrapper" class="hidden space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-605 uppercase tracking-wider mb-2">Nominal (Rupiah)*</label>
@@ -276,6 +318,84 @@
                         Nominal biaya ini dikunci karena sudah memiliki transaksi pembayaran.
                     </p>
                 </div>
+
+                <!-- Fee Targeting Section (Grades, Class Programs, Registration Types) -->
+                <div id="feeTargetingWrapper" class="space-y-4 pt-1">
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-[11px] text-amber-800 flex items-start gap-2.5">
+                        <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                        <span class="leading-relaxed"><strong>Petunjuk Pengaturan:</strong> Tentukan kelas & kategori murid yang dibebankan biaya ini. Jika <strong>tidak dicentang</strong> atau mencentang <strong>Pilih Semua</strong>, biaya ini akan otomatis berlaku untuk <strong>semua kelas & kategori</strong> di unit terkait.</span>
+                    </div>
+
+                    <!-- 1. Target Kelas (Grades) -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Kelas (Grades)</label>
+                            <label class="flex items-center gap-1.5 text-[11px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                <input type="checkbox" id="checkAllGrades" onchange="toggleAllGrades(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                Pilih Semua Kelas
+                            </label>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 max-h-36 overflow-y-auto">
+                            <div id="gradeCheckboxesList" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                @foreach($grades as $grade)
+                                    <label class="grade-item-wrapper flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer p-1.5 rounded-lg hover:bg-slate-100 transition" data-unit-id="{{ $grade->spmb_unit_id }}">
+                                        <input type="checkbox" name="applicable_grades[]" value="{{ $grade->id }}" class="fee-grade-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllGradesState()">
+                                        <span class="truncate">{{ $grade->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Target Kategori Murid (Program Kelas) -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Kategori Murid</label>
+                            <label class="flex items-center gap-1.5 text-[11px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                <input type="checkbox" id="checkAllClassPrograms" onchange="toggleAllClassPrograms(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                Pilih Semua Kategori
+                            </label>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <div id="classProgramCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach($classPrograms as $prog)
+                                    @php
+                                        $progUnitIds = $prog->units->pluck('id')->toArray();
+                                    @endphp
+                                    <label class="program-item-wrapper flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer p-1.5 rounded-lg hover:bg-slate-100 transition" data-unit-ids="{{ implode(',', $progUnitIds) }}">
+                                        <input type="checkbox" name="applicable_class_programs[]" value="{{ $prog->id }}" class="fee-program-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllClassProgramsState()">
+                                        <span class="truncate">{{ $prog->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Target Jalur Pendaftaran (Tipe Masuk) -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Jalur Pendaftaran</label>
+                            <label class="flex items-center gap-1.5 text-[11px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                <input type="checkbox" id="checkAllTypes" onchange="toggleAllTypes(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                Pilih Semua Jalur
+                            </label>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <div id="typeCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach($types as $type)
+                                    @php
+                                        $typeUnitIds = $type->units->pluck('id')->toArray();
+                                    @endphp
+                                    <label class="type-item-wrapper flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer p-1.5 rounded-lg hover:bg-slate-100 transition" data-unit-ids="{{ implode(',', $typeUnitIds) }}">
+                                        <input type="checkbox" name="applicable_types[]" value="{{ $type->id }}" class="fee-type-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllTypesState()">
+                                        <span class="truncate">{{ $type->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Payment Gateway*</label>
                     <div class="space-y-2 bg-slate-50 border border-slate-300 rounded-xl p-3">
@@ -289,7 +409,7 @@
                 </div>
             </div>
             
-            <div class="flex justify-end gap-2 pt-4">
+            <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-4">
                 <button type="button" onclick="closeFeeModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
                     Kembali
                 </button>
@@ -321,11 +441,13 @@
 </form>
 
 <script>
+    const currentUserUnitId = "{{ auth()->user()->spmb_unit_id ?? '' }}";
+    const isSuperAdmin = {{ auth()->user()->isSuperAdmin() ? 'true' : 'false' }};
+
     // Format as thousands
     function formatRupiah(value) {
         if (!value) return '';
         let str = value.toString();
-        // If database float representation (ends with .00), strip it
         if (str.endsWith('.00')) {
             str = str.substring(0, str.length - 3);
         }
@@ -347,14 +469,13 @@
             form.addEventListener('submit', function(e) {
                 const amountInput = document.getElementById('feeAmountInput');
                 if (amountInput && amountInput.value) {
-                    // Remove all dot separators before sending to backend
                     amountInput.value = amountInput.value.replace(/\./g, '');
                 }
             });
         }
     });
 
-    // Checkbox controls
+    // Checkbox controls for Category Units (Super Admin)
     function toggleAllUnits(source) {
         document.querySelectorAll('.unit-checkbox').forEach(cb => {
             cb.checked = source.checked;
@@ -370,10 +491,17 @@
         }
     }
 
+    // Fee Units Checkbox controls (Super Admin)
+    function getSelectedFeeUnits() {
+        const checkedBoxes = document.querySelectorAll('.fee-unit-checkbox:checked');
+        return Array.from(checkedBoxes).map(cb => cb.value);
+    }
+
     function toggleAllFeeUnits(source) {
         document.querySelectorAll('.fee-unit-checkbox').forEach(cb => {
             cb.checked = source.checked;
         });
+        filterTargetingCheckboxesByUnit(getSelectedFeeUnits());
     }
 
     function updateCheckAllFeeState() {
@@ -383,6 +511,126 @@
         if (checkAll) {
             checkAll.checked = checkedCount === checkboxes.length;
         }
+        filterTargetingCheckboxesByUnit(getSelectedFeeUnits());
+    }
+
+    // Targeting Checkboxes Controls
+    function toggleAllGrades(source) {
+        document.querySelectorAll('.grade-item-wrapper').forEach(wrapper => {
+            if (wrapper.style.display !== 'none') {
+                const cb = wrapper.querySelector('.fee-grade-checkbox');
+                if (cb) cb.checked = source.checked;
+            }
+        });
+    }
+
+    function updateCheckAllGradesState() {
+        const visibleWrappers = Array.from(document.querySelectorAll('.grade-item-wrapper')).filter(w => w.style.display !== 'none');
+        if (visibleWrappers.length === 0) return;
+        const checkedCount = visibleWrappers.filter(w => {
+            const cb = w.querySelector('.fee-grade-checkbox');
+            return cb && cb.checked;
+        }).length;
+        const checkAll = document.getElementById('checkAllGrades');
+        if (checkAll) {
+            checkAll.checked = checkedCount === visibleWrappers.length;
+        }
+    }
+
+    function toggleAllClassPrograms(source) {
+        document.querySelectorAll('.program-item-wrapper').forEach(wrapper => {
+            if (wrapper.style.display !== 'none') {
+                const cb = wrapper.querySelector('.fee-program-checkbox');
+                if (cb) cb.checked = source.checked;
+            }
+        });
+    }
+
+    function updateCheckAllClassProgramsState() {
+        const visibleWrappers = Array.from(document.querySelectorAll('.program-item-wrapper')).filter(w => w.style.display !== 'none');
+        if (visibleWrappers.length === 0) return;
+        const checkedCount = visibleWrappers.filter(w => {
+            const cb = w.querySelector('.fee-program-checkbox');
+            return cb && cb.checked;
+        }).length;
+        const checkAll = document.getElementById('checkAllClassPrograms');
+        if (checkAll) {
+            checkAll.checked = checkedCount === visibleWrappers.length;
+        }
+    }
+
+    function toggleAllTypes(source) {
+        document.querySelectorAll('.type-item-wrapper').forEach(wrapper => {
+            if (wrapper.style.display !== 'none') {
+                const cb = wrapper.querySelector('.fee-type-checkbox');
+                if (cb) cb.checked = source.checked;
+            }
+        });
+    }
+
+    function updateCheckAllTypesState() {
+        const visibleWrappers = Array.from(document.querySelectorAll('.type-item-wrapper')).filter(w => w.style.display !== 'none');
+        if (visibleWrappers.length === 0) return;
+        const checkedCount = visibleWrappers.filter(w => {
+            const cb = w.querySelector('.fee-type-checkbox');
+            return cb && cb.checked;
+        }).length;
+        const checkAll = document.getElementById('checkAllTypes');
+        if (checkAll) {
+            checkAll.checked = checkedCount === visibleWrappers.length;
+        }
+    }
+
+    // Dynamic Filter for Checklist based on Selected Unit
+    function filterTargetingCheckboxesByUnit(activeUnits) {
+        let unitIds = [];
+        if (Array.isArray(activeUnits)) {
+            unitIds = activeUnits.map(id => id.toString().trim()).filter(id => id !== '');
+        } else if (activeUnits) {
+            let str = activeUnits.toString();
+            unitIds = str.includes(',') ? str.split(',').map(s => s.trim()).filter(s => s !== '') : [str.trim()];
+        }
+
+        const isGlobalOrAll = (unitIds.length === 0);
+
+        // Filter Grades
+        document.querySelectorAll('.grade-item-wrapper').forEach(wrapper => {
+            const uId = (wrapper.dataset.unitId || '').toString();
+            if (isGlobalOrAll || unitIds.includes(uId)) {
+                wrapper.style.display = 'flex';
+            } else {
+                wrapper.style.display = 'none';
+                const cb = wrapper.querySelector('.fee-grade-checkbox');
+                if (cb) cb.checked = false;
+            }
+        });
+        updateCheckAllGradesState();
+
+        // Filter Class Programs
+        document.querySelectorAll('.program-item-wrapper').forEach(wrapper => {
+            const uIds = (wrapper.dataset.unitIds || '').split(',').map(s => s.trim());
+            if (isGlobalOrAll || uIds.length === 0 || uIds.some(id => unitIds.includes(id))) {
+                wrapper.style.display = 'flex';
+            } else {
+                wrapper.style.display = 'none';
+                const cb = wrapper.querySelector('.fee-program-checkbox');
+                if (cb) cb.checked = false;
+            }
+        });
+        updateCheckAllClassProgramsState();
+
+        // Filter Registration Types
+        document.querySelectorAll('.type-item-wrapper').forEach(wrapper => {
+            const uIds = (wrapper.dataset.unitIds || '').split(',').map(s => s.trim());
+            if (isGlobalOrAll || uIds.length === 0 || uIds.some(id => unitIds.includes(id))) {
+                wrapper.style.display = 'flex';
+            } else {
+                wrapper.style.display = 'none';
+                const cb = wrapper.querySelector('.fee-type-checkbox');
+                if (cb) cb.checked = false;
+            }
+        });
+        updateCheckAllTypesState();
     }
 
     // Tab Switching
@@ -402,19 +650,13 @@
             activeBtn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
         }
         
-        // Update URL query parameter to preserve tab state across actions/redirects
         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
         window.history.replaceState({ path: newUrl }, '', newUrl);
-        
         localStorage.setItem('spmb_fees_active_tab', tabId);
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        // Tab state is handled server-side via Laravel view variable $activeTab
-    });
-
-    // Modal Control
-    function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee') {
+    // Unified Fee Modal Control
+    function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee', applicableGrades = [], applicableClassPrograms = [], applicableTypes = []) {
         const errorWrapper = document.getElementById('feeErrorWrapper');
         if (errorWrapper) {
             errorWrapper.classList.add('hidden');
@@ -432,6 +674,7 @@
 
         const amountInput = document.getElementById('feeAmountInput');
         const amountWrapper = document.getElementById('feeAmountWrapper');
+        const targetingWrapper = document.getElementById('feeTargetingWrapper');
         const unitWrapper = document.getElementById('feeUnitWrapper');
         const categoryUnitsWrapper = document.getElementById('categoryUnitsWrapper');
         const catTypeWrapper = document.getElementById('categoryTypeWrapper');
@@ -461,6 +704,17 @@
         // Reset gateway checkboxes
         document.querySelectorAll('.fee-gateway-checkbox').forEach(cb => cb.checked = false);
 
+        // Reset targeting checkboxes
+        document.querySelectorAll('.fee-grade-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.fee-program-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.fee-type-checkbox').forEach(cb => cb.checked = false);
+        const checkAllG = document.getElementById('checkAllGrades');
+        if (checkAllG) checkAllG.checked = false;
+        const checkAllP = document.getElementById('checkAllClassPrograms');
+        if (checkAllP) checkAllP.checked = false;
+        const checkAllT = document.getElementById('checkAllTypes');
+        if (checkAllT) checkAllT.checked = false;
+
         if (moduleType === 'jenis_biaya') {
             titleEl.innerText = val ? 'Edit Jenis Biaya' : 'Tambah Jenis Biaya';
             labelEl.innerText = 'Nama Jenis Biaya*';
@@ -468,6 +722,7 @@
             
             amountWrapper.classList.add('hidden');
             amountInput.required = false;
+            if (targetingWrapper) targetingWrapper.classList.add('hidden');
             if (unitWrapper) unitWrapper.classList.add('hidden');
 
             if (catTypeWrapper) {
@@ -493,12 +748,12 @@
             if (catTypeWrapper) catTypeWrapper.classList.add('hidden');
 
             amountWrapper.classList.remove('hidden');
+            if (targetingWrapper) targetingWrapper.classList.remove('hidden');
             amountInput.value = formatRupiah(amount);
             amountInput.required = true;
             
             const isLockedBool = (isLocked === 'true' || isLocked === true || isLocked === '1');
             amountInput.readOnly = isLockedBool;
-            const warningEl = document.getElementById('feeAmountWarning');
             if (isLockedBool) {
                 amountInput.classList.add('bg-slate-200', 'cursor-not-allowed', 'text-slate-500');
                 amountInput.classList.remove('bg-slate-50', 'text-slate-800');
@@ -545,6 +800,34 @@
                 updateCheckAllFeeState();
             }
 
+            // Populate targeting selections
+            let targetGradesArr = [];
+            if (Array.isArray(applicableGrades)) targetGradesArr = applicableGrades.map(x => x.toString());
+            else if (applicableGrades) targetGradesArr = [applicableGrades.toString()];
+
+            document.querySelectorAll('.fee-grade-checkbox').forEach(cb => {
+                cb.checked = targetGradesArr.includes(cb.value.toString());
+            });
+
+            let targetProgsArr = [];
+            if (Array.isArray(applicableClassPrograms)) targetProgsArr = applicableClassPrograms.map(x => x.toString());
+            else if (applicableClassPrograms) targetProgsArr = [applicableClassPrograms.toString()];
+
+            document.querySelectorAll('.fee-program-checkbox').forEach(cb => {
+                cb.checked = targetProgsArr.includes(cb.value.toString());
+            });
+
+            let targetTypesArr = [];
+            if (Array.isArray(applicableTypes)) targetTypesArr = applicableTypes.map(x => x.toString());
+            else if (applicableTypes) targetTypesArr = [applicableTypes.toString()];
+
+            document.querySelectorAll('.fee-type-checkbox').forEach(cb => {
+                cb.checked = targetTypesArr.includes(cb.value.toString());
+            });
+
+            const effectiveUnit = unitId || (isSuperAdmin ? getSelectedFeeUnits() : currentUserUnitId);
+            filterTargetingCheckboxesByUnit(effectiveUnit);
+
             if (categoryUnitsWrapper) categoryUnitsWrapper.classList.add('hidden');
         }
 
@@ -589,14 +872,14 @@
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
                 if (oldCatId) {
                     switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}');
+                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}', [], 'tuition_fee', {{ json_encode(old('applicable_grades', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_types', [])) }});
                 }
             } else if (failed.startsWith('biaya_admin_edit_')) {
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
                 let id = failed.replace('biaya_admin_edit_', '');
                 if (oldCatId) {
                     switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}');
+                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}', [], 'tuition_fee', {{ json_encode(old('applicable_grades', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_types', [])) }});
                 }
             }
 

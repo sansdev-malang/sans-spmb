@@ -22,6 +22,8 @@ class Registration extends Model
         'min_installment_amount' => 'float',
         'is_dispensation' => 'boolean',
         'dispensation_approved_at' => 'datetime',
+        'observation_attendance_confirmed_at' => 'datetime',
+        'observation_result_uploaded_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -61,7 +63,9 @@ class Registration extends Model
             'student_photo_path', 'birth_certificate_path', 'family_card_path', 'diploma_certificate_path',
             'student_card_path', 'special_needs_assessment_path', 'payment_receipt_path',
             'spmb_wave_id', 'spmb_type_id', 'spmb_period_id', 'spmb_class_program_id',
-            'observation_date', 'observation_time', 'observation_location', 'observation_room', 'observation_address', 'observation_interviewer', 'observation_notes'
+            'observation_date', 'observation_time', 'observation_location', 'observation_room', 'observation_address', 'observation_interviewer', 'observation_notes',
+            'observation_attendance_status', 'observation_attendance_notes', 'observation_attendance_confirmed_at',
+            'observation_result_path', 'observation_result_notes', 'observation_result_uploaded_at'
         ];
 
         if (in_array($fieldName, $columns)) {
@@ -244,6 +248,11 @@ class Registration extends Model
                 continue;
             }
 
+            // Check if fee matches this candidate's targeting criteria
+            if (!$fee->matchesRegistration($this)) {
+                continue;
+            }
+
             $isExtraCat = ($catType === SpmbFeeCategory::TYPE_EXTRA) || in_array($fee->spmb_fee_category_id, $extraCatIds);
 
             if ($isExtraCat) {
@@ -262,30 +271,43 @@ class Registration extends Model
                     }
                 }
             } else {
-                // Regular admission fee: check if fee is explicitly targeted to another grade
-                $feeNameUpper = strtoupper($fee->name);
-                $gradeNameUpper = strtoupper($gradeName);
+                // Regular admission fee: check backward-compatibility grade keyword if targeting was not explicitly set
+                $hasExplicitTarget = !empty($fee->applicable_grades) || !empty($fee->applicable_class_programs) || !empty($fee->applicable_types);
 
-                $allGradeKeywords = ['TK A', 'TK B', 'KB', 'PLAY GROUP', 'PLAYGROUP', 'KELAS 1', 'KELAS 2', 'KELAS 3', 'KELAS 4', 'KELAS 5', 'KELAS 6', 'KELAS 7', 'KELAS 8', 'KELAS 9'];
-                $hasOtherGradeKeyword = false;
+                if ($hasExplicitTarget) {
+                    $selectedMasterFees->push($fee);
+                } else {
+                    $feeNameUpper = strtoupper($fee->name);
+                    $gradeNameUpper = strtoupper($gradeName);
 
-                foreach ($allGradeKeywords as $kw) {
-                    if (str_contains($feeNameUpper, $kw)) {
-                        if (!empty($gradeNameUpper) && (
-                            str_contains($gradeNameUpper, $kw) ||
-                            ($kw === 'PLAY GROUP' && str_contains($gradeNameUpper, 'KB')) ||
-                            ($kw === 'KB' && str_contains($gradeNameUpper, 'PLAY GROUP'))
-                        )) {
-                            $hasOtherGradeKeyword = false;
-                            break;
-                        } else {
-                            $hasOtherGradeKeyword = true;
+                    $allGradeKeywords = [
+                        'TPA 1', 'TPA 2', 'TPA 3', 'TPA',
+                        'KB-A', 'KB-B', 'KB A', 'KB B', 'KB',
+                        'TK-A', 'TK-B', 'TK A', 'TK B', 'TK',
+                        'KELAS 1', 'KELAS 2', 'KELAS 3', 'KELAS 4', 'KELAS 5', 'KELAS 6',
+                        'KELAS 7', 'KELAS 8', 'KELAS 9'
+                    ];
+                    $hasOtherGradeKeyword = false;
+                    $normalizedGrade = str_replace('-', ' ', $gradeNameUpper);
+
+                    foreach ($allGradeKeywords as $kw) {
+                        if (str_contains($feeNameUpper, $kw)) {
+                            $normalizedKw = str_replace('-', ' ', $kw);
+                            if (!empty($gradeNameUpper) && (
+                                str_contains($gradeNameUpper, $kw) ||
+                                str_contains($normalizedGrade, $normalizedKw)
+                            )) {
+                                $hasOtherGradeKeyword = false;
+                                break;
+                            } else {
+                                $hasOtherGradeKeyword = true;
+                            }
                         }
                     }
-                }
 
-                if (!$hasOtherGradeKeyword) {
-                    $selectedMasterFees->push($fee);
+                    if (!$hasOtherGradeKeyword) {
+                        $selectedMasterFees->push($fee);
+                    }
                 }
             }
         }
@@ -300,7 +322,7 @@ class Registration extends Model
                     return ($fn === $esName || $fn === $esCode || (!empty($esCode) && str_contains($fn, $esCode)) || (!empty($fn) && str_contains($esName, $fn)));
                 });
                 if (!$alreadyFound) {
-                    $fallbackFee = SpmbFee::with('category')
+                    $fallbackFees = SpmbFee::with('category')
                         ->whereIn('spmb_fee_category_id', $extraCatIds)
                         ->where('is_active', true)
                         ->where(function($q) use ($esName, $esCode) {
@@ -311,9 +333,14 @@ class Registration extends Model
                             }
                         })
                         ->orderByRaw('CASE WHEN spmb_unit_id = ? THEN 0 ELSE 1 END', [$unitId])
-                        ->first();
-                    if ($fallbackFee) {
-                        $selectedMasterFees->push($fallbackFee);
+                        ->get();
+
+                    $matchingFallback = $fallbackFees->first(function($f) {
+                        return $f->matchesRegistration($this);
+                    });
+
+                    if ($matchingFallback) {
+                        $selectedMasterFees->push($matchingFallback);
                     }
                 }
             }
@@ -416,45 +443,56 @@ class Registration extends Model
      */
     public function getRegistrationFee()
     {
-        // 1. Primary: Lookup by explicit category_type
-        $regCat = SpmbFeeCategory::where('category_type', SpmbFeeCategory::TYPE_REGISTRATION)->first();
-        if (!$regCat) {
-            $regCat = SpmbFeeCategory::where(function($q) {
+        $regCatIds = SpmbFeeCategory::where('category_type', SpmbFeeCategory::TYPE_REGISTRATION)
+            ->orWhere(function($q) {
                 $q->where('name', 'like', '%Formulir%')
                   ->orWhere('name', 'like', '%Pendaftaran%')
                   ->orWhere('name', 'like', '%Registrasi%')
                   ->orWhere('name', 'like', '%Enrollment%')
                   ->orWhere('name', 'like', '%Registration%');
-            })->first();
-        }
+            })->pluck('id')->toArray();
 
-        if ($regCat) {
-            $fee = SpmbFee::where('spmb_fee_category_id', $regCat->id)
-                ->where('spmb_unit_id', $this->spmb_unit_id)
-                ->where('is_active', true)
-                ->first();
-            if ($fee) {
-                return $fee;
-            }
-        }
-
-        return SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
+        $fees = SpmbFee::where(function($q) {
+                $q->where('spmb_unit_id', $this->spmb_unit_id)
+                  ->orWhereNull('spmb_unit_id');
+            })
             ->where('is_active', true)
-            ->where(function($q) {
-                $q->whereHas('category', function($cq) {
-                    $cq->where('category_type', SpmbFeeCategory::TYPE_REGISTRATION)
-                      ->orWhere('name', 'like', '%Formulir%')
-                      ->orWhere('name', 'like', '%Pendaftaran%')
-                      ->orWhere('name', 'like', '%Registrasi%')
-                      ->orWhere('name', 'like', '%Enrollment%')
-                      ->orWhere('name', 'like', '%Registration%');
-                })
-                ->orWhere('name', 'like', '%Formulir%')
-                ->orWhere('name', 'like', '%Pendaftaran%')
-                ->orWhere('name', 'like', '%Registrasi%')
-                ->orWhere('name', 'like', '%Enrollment%')
-                ->orWhere('name', 'like', '%Registration%');
-            })->first();
+            ->where(function($q) use ($regCatIds) {
+                if (!empty($regCatIds)) {
+                    $q->whereIn('spmb_fee_category_id', $regCatIds);
+                }
+                $q->orWhere('name', 'like', '%Formulir%')
+                  ->orWhere('name', 'like', '%Pendaftaran%')
+                  ->orWhere('name', 'like', '%Registrasi%')
+                  ->orWhere('name', 'like', '%Enrollment%')
+                  ->orWhere('name', 'like', '%Registration%');
+            })
+            ->get();
+
+        if ($fees->isEmpty()) {
+            return null;
+        }
+
+        // Priority 1: Fee that explicitly matches registration with specific targeting
+        $specificMatch = $fees->first(function($fee) {
+            $hasTarget = !empty($fee->applicable_grades) || !empty($fee->applicable_class_programs) || !empty($fee->applicable_types);
+            return $hasTarget && $fee->matchesRegistration($this);
+        });
+
+        if ($specificMatch) {
+            return $specificMatch;
+        }
+
+        // Priority 2: Fee that matches registration (general / untargeted)
+        $generalMatch = $fees->first(function($fee) {
+            return $fee->matchesRegistration($this);
+        });
+
+        if ($generalMatch) {
+            return $generalMatch;
+        }
+
+        return $fees->first();
     }
 
     public function getRegistrationFeeNameAttribute()

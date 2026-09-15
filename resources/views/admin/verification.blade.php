@@ -313,22 +313,35 @@
                                                 <span>Jadwal Ta'aruf</span>
                                             </a>
                                         @else
-                                            <!-- Sudah dijadwalkan: Tampilkan tombol Selesaikan Ta'aruf -->
-                                            <button type="button" 
-                                                onclick="showConfirmDialog({
-                                                    title: 'Selesaikan Sesi Ta\'aruf',
-                                                    message: 'Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.',
-                                                    confirmText: 'Ya, Selesaikan',
-                                                    type: 'blue',
-                                                    icon: 'check-check',
-                                                    formAction: '{{ route('admin.registrations.complete-taaruf', $reg->id) }}',
-                                                    formMethod: 'POST'
-                                                })" 
-                                                class="h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" 
-                                                title="Selesaikan Sesi Ta'aruf">
-                                                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
-                                                <span>Selesaikan Ta'aruf</span>
-                                            </button>
+                                            @php
+                                                $hasResult = !empty($reg->observation_result_path);
+                                            @endphp
+                                            @if($hasResult)
+                                                <!-- Sudah dijadwalkan & Hasil sudah diunggah: Tampilkan tombol Selesaikan Ta'aruf -->
+                                                <button type="button" 
+                                                    onclick="showConfirmDialog({
+                                                        title: 'Selesaikan Sesi Ta\'aruf',
+                                                        message: 'Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Berkas hasil observasi sudah lengkap. Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.',
+                                                        confirmText: 'Ya, Selesaikan',
+                                                        type: 'blue',
+                                                        icon: 'check-check',
+                                                        formAction: '{{ route('admin.registrations.complete-taaruf', $reg->id) }}',
+                                                        formMethod: 'POST'
+                                                    })" 
+                                                    class="h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" 
+                                                    title="Selesaikan Sesi Ta'aruf">
+                                                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                                                    <span>Selesaikan Ta'aruf</span>
+                                                </button>
+                                            @else
+                                                <!-- Sudah dijadwalkan tapi belum ada hasil: Arahkan ke modul Ta'aruf untuk unggah berkas hasil -->
+                                                <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" 
+                                                    class="h-8 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" 
+                                                    title="Hasil observasi belum diunggah. Klik untuk membuka Jadwal Ta'aruf dan mengunggah berkas hasil observasi.">
+                                                    <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+                                                    <span>Unggah Hasil</span>
+                                                </a>
+                                            @endif
                                         @endif
                                     @endif
                                 </div>

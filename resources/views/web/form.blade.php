@@ -302,6 +302,7 @@
                                 4 => 'Isi data identitas orang tua kandung beserta nomor WhatsApp aktif untuk koordinasi resmi panitia.',
                                 5 => 'Isi data berikut jika calon murid tinggal bersama wali (opsional, dapat dikosongkan jika bersama orang tua).',
                                 6 => 'Unggah dokumen persyaratan pendaftaran seperti Akta Kelahiran, KK, dan Pas Foto (maks. 2MB per berkas).',
+                                7 => 'Beri tahu kami bagaimana Anda mengetahui informasi SPMB Sekolah Anak Saleh dan sertakan data perujuk / rekomendasi (jika ada).',
                             ];
                             $stepDesc = $stepDescriptions[$step->id] ?? $stepDescriptions[$index + 1] ?? 'Lengkapi formulir berikut dengan data yang benar.';
                         @endphp
@@ -448,7 +449,7 @@
                                             } elseif ($field->field_name === 'previous_school') {
                                                 $fieldLabel = 'Asal Sekolah';
                                             }
-                                            $isFullWidth = ($field->type === 'textarea') || ($field->type !== 'file' && strlen($fieldLabel) > 30) || $field->field_name === 'extra_services' || $field->field_name === 'previous_school' || in_array($field->field_name, ['father_address', 'mother_address', 'guardian_address']);
+                                            $isFullWidth = ($field->type === 'textarea') || ($field->type !== 'file' && strlen($fieldLabel) > 30) || $field->field_name === 'extra_services' || $field->field_name === 'info_source' || $field->field_name === 'previous_school' || in_array($field->field_name, ['father_address', 'mother_address', 'guardian_address']);
                                             $hasFieldError = $errors->has($field->field_name);
                                         @endphp
 
@@ -500,16 +501,143 @@
                                             </div>
                                             
                                             @if($field->field_name === 'extra_services')
+                                                 @php
+                                                     $isTpaReg = str_contains(strtolower($registration->admission_level ?? ''), 'tpa') || ($registration->grade && str_contains(strtolower($registration->grade->name), 'tpa'));
+                                                 @endphp
                                                  <div class="flex flex-wrap gap-2.5 mt-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                                                      @foreach($activeServices as $service)
-                                                         <label class="flex items-center gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
-                                                             <input type="checkbox" name="extra_services[]" value="{{ $service->id }}" {{ in_array($service->id, $selectedServiceIds) ? 'checked' : '' }} class="w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
-                                                             <span class="text-xs font-bold text-slate-700">
-                                                                 {{ $service->name }}
-                                                             </span>
-                                                         </label>
+                                                         @php
+                                                             $isTpaService = str_contains(strtolower($service->name), 'taman penitipan anak') || str_contains(strtolower($service->name), 'tpa') || strtoupper($service->code ?? '') === 'TPA';
+                                                             $isLockedTpa = $isTpaReg && $isTpaService;
+                                                             $isChecked = $isLockedTpa || in_array($service->id, $selectedServiceIds);
+                                                         @endphp
+                                                         @if($isLockedTpa)
+                                                             <label class="flex items-center gap-2 bg-emerald-50/80 px-3.5 py-2.5 rounded-xl border border-emerald-200 text-slate-800 shadow-xs select-none cursor-default">
+                                                                 <input type="checkbox" checked disabled class="w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
+                                                                 <input type="hidden" name="extra_services[]" value="{{ $service->id }}">
+                                                                 <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                                                     {{ $service->name }}
+                                                                     <span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-200">Wajib untuk TPA</span>
+                                                                 </span>
+                                                             </label>
+                                                         @else
+                                                             <label class="flex items-center gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
+                                                                 <input type="checkbox" name="extra_services[]" value="{{ $service->id }}" {{ $isChecked ? 'checked' : '' }} class="w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
+                                                                 <span class="text-xs font-bold text-slate-700">
+                                                                     {{ $service->name }}
+                                                                 </span>
+                                                             </label>
+                                                         @endif
                                                      @endforeach
                                                  </div>
+                                            @elseif($field->field_name === 'info_source')
+                                                @php
+                                                    $selectedSource = $val ?: $registration->getFieldValue('info_source');
+                                                    $sources = [
+                                                        'Media Sosial' => ['label' => 'Media Sosial (Instagram / FB / TikTok / YouTube)', 'icon' => 'instagram'],
+                                                        'Brosur / Spanduk' => ['label' => 'Brosur / Flyer / Spanduk / Baliho', 'icon' => 'file-text'],
+                                                        'Website Resmi' => ['label' => 'Website Resmi Sekolah Anak Saleh', 'icon' => 'globe'],
+                                                        'Rekomendasi Wali Murid (Referral)' => ['label' => 'Rekomendasi Wali Murid / Murid', 'icon' => 'users'],
+                                                        'Alumni / Keluarga Besar' => ['label' => 'Alumni / Keluarga Besar Anak Saleh', 'icon' => 'users'],
+                                                        'Lainnya' => ['label' => 'Lainnya', 'icon' => 'help-circle'],
+                                                    ];
+                                                    $isReferral = ($selectedSource === 'Rekomendasi Wali Murid (Referral)');
+                                                    $isOtherSource = ($selectedSource === 'Lainnya' || (!empty($selectedSource) && !array_key_exists($selectedSource, $sources)));
+                                                @endphp
+                                                <div class="space-y-3 mt-1" id="info_source_wrapper_{{ $step->id }}">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                        @foreach($sources as $srcKey => $srcData)
+                                                            @php
+                                                                $isSrcChecked = ($selectedSource === $srcKey) || ($srcKey === 'Lainnya' && $isOtherSource);
+                                                            @endphp
+                                                            <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                                <input type="radio" 
+                                                                       name="info_source_radio_{{ $step->id }}" 
+                                                                       value="{{ $srcKey }}" 
+                                                                       {{ $isSrcChecked ? 'checked' : '' }} 
+                                                                       onchange="handleInfoSourceChoice(this, '{{ $step->id }}')" 
+                                                                       class="w-4 h-4 text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald mt-0.5 shrink-0">
+                                                                <div class="flex flex-col gap-0.5 flex-1 min-w-0">
+                                                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-emerald transition-colors">
+                                                                            {{ $srcData['label'] }}
+                                                                        </span>
+                                                                        @if(isset($srcData['badge']))
+                                                                            <span class="text-[9.5px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-300/60">
+                                                                                {{ $srcData['badge'] }}
+                                                                            </span>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+
+                                                    <!-- Hidden Input for info_source submission -->
+                                                    <input type="hidden" name="info_source" id="real_info_source_{{ $step->id }}" value="{{ $selectedSource }}">
+
+                                                    <!-- Custom Source Input if Lainnya -->
+                                                    <div id="info_source_custom_box_{{ $step->id }}" class="{{ $isOtherSource ? '' : 'hidden' }} space-y-1 transition-all duration-200 pt-1">
+                                                        <input type="text" 
+                                                               id="info_source_custom_input_{{ $step->id }}" 
+                                                               value="{{ $registration->getFieldValue('info_source_custom') ?: ($isOtherSource && !in_array($selectedSource, ['Lainnya']) ? $selectedSource : '') }}" 
+                                                               placeholder="Tuliskan sumber informasi lainnya..." 
+                                                               oninput="syncCustomInfoSource(this.value, '{{ $step->id }}')" 
+                                                               class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald shadow-xs">
+                                                        <input type="hidden" name="info_source_custom" id="real_info_source_custom_{{ $step->id }}" value="{{ $registration->getFieldValue('info_source_custom') }}">
+                                                    </div>
+
+                                                    <!-- Sub-form Box for Referral -->
+                                                    <div id="referral_box_{{ $step->id }}" class="{{ $isReferral ? '' : 'hidden' }} p-4 sm:p-5 bg-emerald-50/50 dark:bg-emerald-950/20 border border-brand-emerald/20 dark:border-emerald-800/40 rounded-2xl space-y-3.5 transition-all shadow-xs">
+                                                        <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                                                            <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-brand-emerald flex items-center justify-center text-xs">🤝</span>
+                                                            <span>Data Murid / Wali Murid yang Merekomendasikan</span>
+                                                        </div>
+                                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                            Mohon lengkapi data perujuk di bawah ini:
+                                                        </p>
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                                            <div>
+                                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
+                                                                    Nama Lengkap Murid yang Mereferensikan <span class="text-rose-500">*</span>
+                                                                </label>
+                                                                <input type="text" 
+                                                                       name="referral_student_name" 
+                                                                       id="referral_student_name_{{ $step->id }}"
+                                                                       value="{{ $registration->getFieldValue('referral_student_name') }}" 
+                                                                       placeholder="Misal: Muhammad Fatih Al-Faruq" 
+                                                                       {{ $isReferral ? 'required' : '' }}
+                                                                       class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold shadow-xs">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
+                                                                    Kelas & Unit Murid Saat Ini (TA 2026/2027) <span class="text-rose-500">*</span>
+                                                                </label>
+                                                                <input type="text" 
+                                                                       name="referral_student_class" 
+                                                                       id="referral_student_class_{{ $step->id }}"
+                                                                       value="{{ $registration->getFieldValue('referral_student_class') }}" 
+                                                                       placeholder="Misal: TK A / SD Kelas 2 / SMP Kelas 7" 
+                                                                       {{ $isReferral ? 'required' : '' }}
+                                                                       class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold shadow-xs">
+                                                            </div>
+                                                            <div class="sm:col-span-2">
+                                                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-200 mb-1">
+                                                                    Nama Orang Tua / No. WhatsApp Perujuk <span class="text-slate-400 font-normal">(Opsional)</span>
+                                                                </label>
+                                                                <input type="text" 
+                                                                       name="referral_parent_phone" 
+                                                                       id="referral_parent_phone_{{ $step->id }}"
+                                                                       value="{{ $registration->getFieldValue('referral_parent_phone') }}" 
+                                                                       placeholder="Misal: Ibu Rina (0812-3456-7890)" 
+                                                                       class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold shadow-xs">
+                                                                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 italic">
+                                                                    Digunakan panitia untuk validasi data rekomendasi.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             @elseif($field->field_name === 'previous_school')
                                                 @php
                                                     $isInternal = (!empty($val) && $val === $internalSchoolName);
@@ -687,14 +815,15 @@
                                             @elseif($field->type === 'select')
                                                 @php
                                                     $ops = [];
+                                                    $regUnitId = $registration->spmb_unit_id;
                                                     if ($field->field_name === 'spmb_period_id') {
-                                                        $ops = \App\Models\SpmbPeriod::where('is_active', true)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->year]);
+                                                        $ops = \App\Models\SpmbPeriod::forUnit($regUnitId)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->year]);
                                                     } elseif ($field->field_name === 'spmb_wave_id') {
-                                                        $ops = \App\Models\SpmbWave::where('is_active', true)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
+                                                        $ops = \App\Models\SpmbWave::forUnit($regUnitId)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
                                                     } elseif ($field->field_name === 'spmb_type_id') {
-                                                        $ops = \App\Models\SpmbType::where('is_active', true)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
+                                                        $ops = \App\Models\SpmbType::forUnit($regUnitId)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
                                                     } elseif ($field->field_name === 'spmb_class_program_id') {
-                                                        $ops = \App\Models\SpmbClassProgram::where('is_active', true)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
+                                                        $ops = \App\Models\SpmbClassProgram::forUnit($regUnitId)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
                                                     } elseif ($field->field_name === 'admission_level') {
                                                         $unitId = $registration->spmb_unit_id ?: 1;
                                                         $ops = \App\Models\SpmbGrade::where('spmb_unit_id', $unitId)
@@ -800,6 +929,45 @@
 
                                                     </div>
                                                 </div>
+                                            @elseif($field->field_name === 'birth_date')
+                                                @php
+                                                    $currentGrade = $registration->grade;
+                                                    if (!$currentGrade && $registration->spmb_grade_id) {
+                                                        $currentGrade = \App\Models\SpmbGrade::find($registration->spmb_grade_id);
+                                                    }
+                                                    $cutoffDate = \App\Models\SpmbGrade::resolveCutoffDate($registration->period?->year);
+                                                    $cutoffYear = $cutoffDate->year;
+                                                    $hasAgeLimits = $currentGrade && ($currentGrade->min_age_years !== null || $currentGrade->max_age_years !== null);
+                                                @endphp
+
+                                                @if($hasAgeLimits)
+                                                    <div class="flex items-center gap-2 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 mb-2 shadow-xs">
+                                                        <i data-lucide="clock" class="w-3.5 h-3.5 text-brand-emerald shrink-0"></i>
+                                                        <span>Ketentuan Usia <strong>{{ $currentGrade->name }}</strong>: <strong>{{ $currentGrade->age_range_label }}</strong> (per 1 Juli {{ $cutoffYear }})</span>
+                                                    </div>
+                                                @endif
+
+                                                <input type="date" 
+                                                       name="birth_date" 
+                                                       id="birth_date_input_{{ $step->id }}"
+                                                       value="{{ $val }}" 
+                                                       min="2000-01-01"
+                                                       max="{{ date('Y-m-d') }}"
+                                                       class="birth-date-input w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs shadow-xs" 
+                                                       {{ $field->is_required ? 'required' : '' }}
+                                                       data-step-id="{{ $step->id }}"
+                                                       data-cutoff-year="{{ $cutoffYear }}"
+                                                       data-min-months="{{ $currentGrade?->min_age_total_months ?? '' }}"
+                                                       data-max-months="{{ $currentGrade?->max_age_total_months ?? '' }}"
+                                                       data-min-label="{{ $currentGrade?->min_age_years !== null ? ($currentGrade->min_age_years . ' thn ' . ($currentGrade->min_age_months > 0 ? $currentGrade->min_age_months . ' bln' : '0 bln')) : '' }}"
+                                                       data-max-label="{{ $currentGrade?->max_age_years !== null ? ($currentGrade->max_age_years . ' thn ' . ($currentGrade->max_age_months > 0 ? $currentGrade->max_age_months . ' bln' : '0 bln')) : '' }}"
+                                                       data-age-notes="{{ $currentGrade?->age_notes ?? '' }}"
+                                                       data-grade-name="{{ $currentGrade?->name ?? 'Tingkatan Kelas' }}"
+                                                       onchange="handleBirthDateCalculation(this, '{{ $step->id }}')"
+                                                       oninput="handleBirthDateCalculation(this, '{{ $step->id }}')">
+
+                                                <!-- Live feedback box -->
+                                                <div id="birth_date_preview_{{ $step->id }}" class="mt-2 space-y-1"></div>
                                             @else
                                                 <input type="{{ $field->type }}" name="{{ $field->field_name }}" value="{{ $val }}" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs" {{ $field->is_required ? 'required' : '' }}>
                                             @endif
@@ -1027,6 +1195,46 @@
                                                                 </span>
                                                             @endforeach
                                                         </div>
+                                                    @endif
+                                                @elseif($field->field_name === 'birth_date' && !empty($val))
+                                                    @php
+                                                        $cutoffDate = \App\Models\SpmbGrade::resolveCutoffDate($registration->period?->year);
+                                                        $ageInfo = \App\Models\SpmbGrade::calculateAge($val, $cutoffDate);
+                                                    @endphp
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold">{{ \Carbon\Carbon::parse($val)->translatedFormat('d F Y') }}</span>
+                                                        <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/50">
+                                                            Usia per 1 Juli: {{ $ageInfo['text'] }}
+                                                        </span>
+                                                    </div>
+                                                @elseif($field->field_name === 'info_source')
+                                                    @php
+                                                        $infoSrc = $val ?: $registration->getFieldValue('info_source');
+                                                        $refName = $registration->getFieldValue('referral_student_name');
+                                                        $refClass = $registration->getFieldValue('referral_student_class');
+                                                        $refPhone = $registration->getFieldValue('referral_parent_phone');
+                                                    @endphp
+                                                    @if(!empty($infoSrc))
+                                                        <div class="space-y-1.5">
+                                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200">
+                                                                <i data-lucide="megaphone" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                                                                {{ $infoSrc }}
+                                                            </span>
+                                                            @if(!empty($refName))
+                                                                <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-[11px] text-emerald-900 dark:text-emerald-200 space-y-0.5">
+                                                                    <div class="font-bold flex items-center gap-1">
+                                                                        <span>🤝 Rekomendasi dari:</span> <strong>{{ $refName }}</strong> ({{ $refClass ?? 'Murid 2026/2027' }})
+                                                                    </div>
+                                                                    @if(!empty($refPhone))
+                                                                        <div class="text-[10.5px] text-slate-500 dark:text-slate-400">
+                                                                            Kontak Ortu: {{ $refPhone }}
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        <span class="text-slate-800 dark:text-slate-200 font-bold">-</span>
                                                     @endif
                                                 @else
                                                     <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $val ?? '-' }}</span>
@@ -2054,5 +2262,191 @@
                 realInput.value = val.trim();
             }
         };
+
+        window.handleInfoSourceChoice = function(radio, stepId) {
+            const val = radio.value;
+            const realInput = document.getElementById('real_info_source_' + stepId);
+            const customBox = document.getElementById('info_source_custom_box_' + stepId);
+            const customInput = document.getElementById('info_source_custom_input_' + stepId);
+            const referralBox = document.getElementById('referral_box_' + stepId);
+            const refStudent = document.getElementById('referral_student_name_' + stepId);
+            const refClass = document.getElementById('referral_student_class_' + stepId);
+
+            if (val === 'Rekomendasi Wali Murid (Referral)') {
+                if (referralBox) referralBox.classList.remove('hidden');
+                if (customBox) customBox.classList.add('hidden');
+                if (realInput) realInput.value = val;
+                if (refStudent) {
+                    refStudent.required = true;
+                    setTimeout(() => refStudent.focus(), 50);
+                }
+                if (refClass) refClass.required = true;
+            } else if (val === 'Lainnya') {
+                if (referralBox) referralBox.classList.add('hidden');
+                if (customBox) customBox.classList.remove('hidden');
+                if (refStudent) {
+                    refStudent.required = false;
+                    refStudent.value = '';
+                }
+                if (refClass) {
+                    refClass.required = false;
+                    refClass.value = '';
+                }
+                if (customInput) {
+                    customInput.focus();
+                    if (realInput) realInput.value = customInput.value.trim() || 'Lainnya';
+                }
+            } else {
+                if (referralBox) referralBox.classList.add('hidden');
+                if (customBox) customBox.classList.add('hidden');
+                if (refStudent) {
+                    refStudent.required = false;
+                    refStudent.value = '';
+                }
+                if (refClass) {
+                    refClass.required = false;
+                    refClass.value = '';
+                }
+                if (realInput) realInput.value = val;
+            }
+        };
+
+        window.syncCustomInfoSource = function(val, stepId) {
+            const realInput = document.getElementById('real_info_source_' + stepId);
+            const realCustom = document.getElementById('real_info_source_custom_' + stepId);
+            if (realCustom) realCustom.value = val.trim();
+            if (realInput) {
+                realInput.value = val.trim() ? val.trim() : 'Lainnya';
+            }
+        };
+
+        window.handleBirthDateCalculation = function(input, stepId) {
+            const previewBox = document.getElementById('birth_date_preview_' + stepId);
+            if (!previewBox) return;
+
+            const val = input.value;
+            if (!val) {
+                previewBox.innerHTML = '';
+                return;
+            }
+
+            const birth = new Date(val + 'T00:00:00');
+            if (isNaN(birth.getTime())) {
+                previewBox.innerHTML = '';
+                return;
+            }
+
+            const currentYear = new Date().getFullYear();
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+
+            const birthYear = birth.getFullYear();
+            if (isNaN(birthYear) || birthYear < 1990 || birthYear > currentYear || birth > today) {
+                previewBox.innerHTML = `
+                    <div class="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 rounded-xl text-xs text-rose-800 dark:text-rose-200 flex items-start gap-2 shadow-xs">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="font-bold text-rose-700 dark:text-rose-300">Tanggal lahir tidak valid atau melebihi tahun yang sedang berjalan (${currentYear}).</p>
+                            <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-0.5">Mohon periksa kembali tanggal dan 4 digit tahun kelahiran ananda (maksimal tahun ${currentYear}).</p>
+                        </div>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            const cutoffYear = parseInt(input.dataset.cutoffYear) || new Date().getFullYear();
+            const target = new Date(cutoffYear, 6, 1); // 1 July of cutoffYear
+
+            if (birth > target) {
+                previewBox.innerHTML = `
+                    <div class="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="font-bold">Tanggal lahir melebihi 1 Juli ${cutoffYear} (Tahun Ajaran Aktif).</p>
+                            <p class="text-[11px] text-amber-700 dark:text-amber-300">Mohon periksa kembali tanggal dan tahun kelahiran ananda.</p>
+                        </div>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            // Accurate calculation of years, months, days
+            let years = target.getFullYear() - birth.getFullYear();
+            let months = target.getMonth() - birth.getMonth();
+            let days = target.getDate() - birth.getDate();
+
+            if (days < 0) {
+                months -= 1;
+                const prevMonthDays = new Date(target.getFullYear(), target.getMonth(), 0).getDate();
+                days += prevMonthDays;
+            }
+            if (months < 0) {
+                years -= 1;
+                months += 12;
+            }
+
+            const totalMonths = (years * 12) + months;
+            const ageText = `${years} Tahun ${months} Bulan` + (days > 0 ? ` ${days} Hari` : '');
+            const shortText = `${years} thn ${months} bln`;
+
+            const minMonths = input.dataset.minMonths !== '' && input.dataset.minMonths !== undefined ? parseInt(input.dataset.minMonths) : null;
+            const maxMonths = input.dataset.maxMonths !== '' && input.dataset.maxMonths !== undefined ? parseInt(input.dataset.maxMonths) : null;
+            const minLabel = input.dataset.minLabel || '';
+            const maxLabel = input.dataset.maxLabel || '';
+            const ageNotes = input.dataset.ageNotes || '';
+            const gradeName = input.dataset.gradeName || 'Tingkatan Kelas';
+
+            let isValid = true;
+            let statusMessage = '';
+
+            if (minMonths !== null && totalMonths < minMonths) {
+                isValid = false;
+                statusMessage = `Usia ananda (${shortText}) belum memenuhi batas minimal untuk ${gradeName} (minimal ${minLabel} per 1 Juli ${cutoffYear}).`;
+            } else if (maxMonths !== null && totalMonths > maxMonths) {
+                isValid = false;
+                statusMessage = `Usia ananda (${shortText}) melebihi batas maksimal untuk ${gradeName} (maksimal ${maxLabel} per 1 Juli ${cutoffYear}).`;
+            }
+
+            if (minMonths === null && maxMonths === null) {
+                previewBox.innerHTML = `
+                    <div class="p-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-brand-emerald shrink-0"></i>
+                        <span>Usia ananda per 1 Juli ${cutoffYear}: <strong>${ageText}</strong></span>
+                    </div>
+                `;
+            } else if (isValid) {
+                previewBox.innerHTML = `
+                    <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2 shadow-xs">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-emerald shrink-0"></i>
+                        <span>Usia per 1 Juli ${cutoffYear}: <strong>${ageText}</strong> — <strong class="text-emerald-700 dark:text-emerald-300 font-bold">Sesuai Syarat Usia</strong></span>
+                    </div>
+                `;
+            } else {
+                previewBox.innerHTML = `
+                    <div class="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 rounded-xl text-xs text-rose-800 dark:text-rose-200 flex items-start gap-2 shadow-xs">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="font-bold text-rose-700 dark:text-rose-300">${statusMessage}</p>
+                            <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-0.5">Usia ananda per 1 Juli ${cutoffYear}: <strong>${ageText}</strong>${ageNotes ? ` • Catatan: ${ageNotes}` : ''}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        };
+
+        // Initialize calculations for existing birth date inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.birth-date-input').forEach(input => {
+                if (input.value) {
+                    window.handleBirthDateCalculation(input, input.dataset.stepId);
+                }
+            });
+        });
     </script>
 @endsection

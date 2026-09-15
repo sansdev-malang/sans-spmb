@@ -66,6 +66,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/registration/{id}/parent-info', [WebDashboardController::class, 'updateParentInfo'])->name('dashboard.parent');
     Route::post('/dashboard/registration/{id}/documents', [WebDashboardController::class, 'uploadDocuments'])->name('dashboard.documents');
     Route::post('/dashboard/registration/{id}/agreement/submit', [WebDashboardController::class, 'submitAgreement'])->name('dashboard.agreement.submit');
+    Route::post('/dashboard/registration/{id}/join-wa-group', [WebDashboardController::class, 'joinWaGroup'])->name('dashboard.registration.join-wa-group');
+    Route::post('/dashboard/registration/{id}/confirm-attendance', [WebDashboardController::class, 'confirmAttendance'])->name('dashboard.registration.confirm-attendance');
     
     // Payments
     Route::post('/dashboard/registration/{id}/payments/charge', [WebDashboardController::class, 'chargePayment'])->name('dashboard.charge');
@@ -74,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/payments/{id}/cancel', [WebDashboardController::class, 'cancelPayment'])->name('dashboard.cancel-payment');
     Route::get('/dashboard/payments/{id}/receipt', [WebDashboardController::class, 'downloadReceipt'])->name('dashboard.payment.receipt');
     Route::get('/dashboard/registration/{id}/admission-letter', [WebDashboardController::class, 'downloadAdmissionLetter'])->name('dashboard.admission-letter.download');
+    Route::get('/dashboard/registration/{id}/download-result', [WebDashboardController::class, 'downloadObservationResult'])->name('dashboard.registration.download-result');
 
     // Profile Management (Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -110,6 +113,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/taaruf', [AdminTaarufController::class, 'index'])->name('admin.taaruf');
         Route::post('/admin/taaruf/{id}/schedule', [AdminTaarufController::class, 'updateSchedule'])->name('admin.taaruf.schedule.update');
         Route::delete('/admin/taaruf/{id}/schedule', [AdminTaarufController::class, 'deleteSchedule'])->name('admin.taaruf.schedule.delete');
+        Route::post('/admin/taaruf/{id}/upload-result', [AdminTaarufController::class, 'uploadResult'])->name('admin.taaruf.upload-result');
+        Route::delete('/admin/taaruf/{id}/delete-result', [AdminTaarufController::class, 'deleteResult'])->name('admin.taaruf.delete-result');
+        Route::get('/admin/taaruf/{id}/download-result', [AdminTaarufController::class, 'downloadResult'])->name('admin.taaruf.download-result');
         Route::post('/admin/taaruf/{id}/complete', [AdminTaarufController::class, 'completeTaaruf'])->name('admin.taaruf.complete');
         Route::post('/admin/taaruf/{id}/revert', [AdminTaarufController::class, 'revertTaaruf'])->name('admin.taaruf.revert');
         Route::post('/admin/taaruf/units/{unitId}/settings', [AdminTaarufController::class, 'updateUnitSettings'])->name('admin.taaruf.units.settings');
@@ -178,6 +184,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/profile', [ProfileController::class, 'updateAdminProfile'])->name('admin.profile.update');
         Route::get('/admin/profile/password', [ProfileController::class, 'editAdminPassword'])->name('admin.profile.password');
         Route::post('/admin/profile/password', [ProfileController::class, 'updateAdminPassword'])->name('admin.profile.password.update');
+
+        // Setting Pendaftaran / Aktivasi SPMB (Accessible to Super Admin & Unit Admin)
+        Route::get('/admin/spmb-settings/registration', [SpmbRegistrationSettingsController::class, 'index'])->name('admin.spmb-settings.registration');
+        Route::post('/admin/spmb-settings/registration', [SpmbRegistrationSettingsController::class, 'update'])->name('admin.spmb-settings.registration.update');
 
         // Super Admin Restricted Routes
         Route::middleware('super_admin')->group(function () {
@@ -249,10 +259,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/admin/spmb-settings/extra-services', [SpmbSettingsController::class, 'storeExtraService'])->name('admin.spmb-settings.extra-services.store');
             Route::match(['POST', 'PUT'], '/admin/spmb-settings/extra-services/{id}', [SpmbSettingsController::class, 'updateExtraService'])->name('admin.spmb-settings.extra-services.update');
             Route::delete('/admin/spmb-settings/extra-services/{id}', [SpmbSettingsController::class, 'destroyExtraService'])->name('admin.spmb-settings.extra-services.delete');
-
-            // Setting Pendaftaran (Activation Config Panel)
-            Route::get('/admin/spmb-settings/registration', [SpmbRegistrationSettingsController::class, 'index'])->name('admin.spmb-settings.registration');
-            Route::post('/admin/spmb-settings/registration', [SpmbRegistrationSettingsController::class, 'update'])->name('admin.spmb-settings.registration.update');
 
             // Setting Formulir CRUD
             Route::get('/admin/spmb-settings/form', [SpmbFormSettingsController::class, 'index'])->name('admin.spmb-settings.form');

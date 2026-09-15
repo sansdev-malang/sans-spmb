@@ -316,9 +316,9 @@
             </td>
             <td class="meta-box" style="width: 220px;">
                 <div class="doc-badge">DOKUMEN REKAPITULASI RESMI</div>
-                <div><strong>Tgl Cetak:</strong> {{ $printedAt }}</div>
-                <div><strong>Dicetak Oleh:</strong> {{ $printedBy }}</div>
-                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel }}</div>
+                <div><strong>Tgl Cetak:</strong> {{ $printedAt ?? (now()->translatedFormat('d F Y, H:i') . ' WIB') }}</div>
+                <div><strong>Dicetak Oleh:</strong> {{ $printedBy ?? (auth()->user()->name ?? 'Administrator') }}</div>
+                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel ?? 'Semua Unit' }}</div>
             </td>
         </tr>
     </table>
@@ -327,7 +327,7 @@
     <div class="report-title-section">
         <h2 class="report-title">LAPORAN REKAPITULASI DATA CALON MURID BARU</h2>
         <div class="report-subtitle">
-            TAHUN AJARAN {{ $periodName }} &bull; STATUS: CALON MURID AKTIF (ENROLLMENT FEE LUNAS)
+            TAHUN AJARAN {{ $periodName ?? ($selectedPeriod->year ?? '-') }} &bull; STATUS: CALON MURID AKTIF (ENROLLMENT FEE LUNAS)
         </div>
     </div>
 
@@ -352,7 +352,7 @@
             <td class="kpi-card emerald" style="width: 20%;">
                 <span class="kpi-label">Status {{ $regFeeLabel }}</span>
                 <span class="kpi-value" style="color: #065f46;">100% LUNAS</span>
-                <span class="kpi-sub">{{ $stats['total'] }} Siswa Terverifikasi</span>
+                <span class="kpi-sub">{{ $stats['total'] }} Murid Terverifikasi</span>
             </td>
             <td class="kpi-card amber" style="width: 20%;">
                 <span class="kpi-label">Diterima / Selesai</span>

@@ -197,9 +197,23 @@ class WebDashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
             
-        $units = SpmbUnit::with(['grades' => function($q) {
-            $q->where('is_active', true)->orderBy('id', 'asc');
-        }])->where('is_active', true)->get();
+        $units = SpmbUnit::with([
+            'grades' => function($q) {
+                $q->where('is_active', true)->orderBy('id', 'asc');
+            },
+            'waves' => function($q) {
+                $q->wherePivot('is_active', true)->orderBy('id', 'asc');
+            },
+            'types' => function($q) {
+                $q->wherePivot('is_active', true)->orderBy('id', 'asc');
+            },
+            'classPrograms' => function($q) {
+                $q->wherePivot('is_active', true)->orderBy('id', 'asc');
+            },
+            'periods' => function($q) {
+                $q->wherePivot('is_active', true)->orderBy('id', 'asc');
+            }
+        ])->where('is_active', true)->get();
 
         $grades = SpmbGrade::where('is_active', true)->get();
         $waves = \App\Models\SpmbWave::where('is_active', true)->get();
@@ -262,7 +276,11 @@ class WebDashboardController extends Controller
             'spmb_wave_id' => 'required|exists:spmb_waves,id',
         ]);
         
-        $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+        $selectedUnit = SpmbUnit::find($request->spmb_unit_id);
+        $activePeriod = $selectedUnit ? $selectedUnit->activePeriods()->first() : null;
+        if (!$activePeriod) {
+            $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+        }
         $grade = \App\Models\SpmbGrade::find($request->spmb_grade_id);
 
         // Check if user already has an unpaid draft registration in this active period
@@ -313,6 +331,17 @@ class WebDashboardController extends Controller
                 'registration_status' => 'draft',
                 'payment_status' => 'unpaid'
             ]);
+        }
+
+        // If registering for TPA, auto-attach TPA extra service
+        $isTpaReg = $grade && str_contains(strtolower($grade->name), 'tpa');
+        if ($isTpaReg) {
+            $tpaService = \App\Models\SpmbExtraService::where(function($q) {
+                $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
+            })->first();
+            if ($tpaService) {
+                $registration->extraServices()->syncWithoutDetaching([$tpaService->id]);
+            }
         }
         
         session(['active_candidate_id' => $registration->id]);
@@ -378,7 +407,21 @@ class WebDashboardController extends Controller
             }
 
             if (!$hasRequiredField) {
-                $isSaved = !empty($registration->additional_info['step_' . $step->id . '_saved']) || !empty($registration->guardian_name);
+                $isSaved = !empty($registration->additional_info['step_' . $step->id . '_saved'])
+                    || ($step->fields->contains('field_name', 'info_source') && !empty($registration->additional_info['info_source']))
+                    || ($step->fields->contains('field_name', 'guardian_name') && !empty($registration->guardian_name));
+
+                if ($step->fields->contains('field_name', 'info_source')) {
+                    $infoSrc = $registration->getFieldValue('info_source');
+                    if ($infoSrc === 'Rekomendasi Wali Murid (Referral)') {
+                        $refName = $registration->getFieldValue('referral_student_name');
+                        $refClass = $registration->getFieldValue('referral_student_class');
+                        if (empty($refName) || empty($refClass)) {
+                            $isSaved = false;
+                        }
+                    }
+                }
+
                 $isCompleted = $previousCompleted && $isSaved;
             } else {
                 $isCompleted = $isCompleted && $previousCompleted;
@@ -1021,11 +1064,50 @@ class WebDashboardController extends Controller
                     $rules[$field->field_name] .= '|email';
                 } elseif ($field->type === 'number') {
                     $rules[$field->field_name] .= '|numeric';
+                } elseif ($field->field_name === 'birth_date' || $field->type === 'date') {
+                    $rules[$field->field_name] .= '|date|before_or_equal:today|after:2000-01-01';
                 }
             }
         }
 
-        $validated = $request->validate($rules);
+        // Conditional required validation for referral when Rekomendasi is chosen
+        if ($request->input('info_source') === 'Rekomendasi Wali Murid (Referral)') {
+            $rules['referral_student_name'] = 'required|string|min:2|max:255';
+            $rules['referral_student_class'] = 'required|string|min:2|max:255';
+            $rules['referral_parent_phone'] = 'nullable|string|max:50';
+        }
+
+        $customMessages = [
+            'birth_date.before_or_equal' => 'Tanggal lahir tidak boleh melebihi tanggal hari ini / tahun berjalan.',
+            'birth_date.after' => 'Tahun kelahiran tidak valid (harus di atas tahun 2000).',
+            'birth_date.date' => 'Format tanggal lahir tidak valid.',
+            'referral_student_name.required' => 'Nama lengkap murid yang mereferensikan wajib diisi jika memilih opsi Rekomendasi Wali Murid.',
+            'referral_student_name.min' => 'Nama lengkap murid yang mereferensikan minimal 2 karakter.',
+            'referral_student_class.required' => 'Kelas & unit murid saat ini (TA 2026/2027) wajib diisi jika memilih opsi Rekomendasi Wali Murid.',
+            'referral_student_class.min' => 'Kelas & unit murid saat ini minimal 2 karakter.',
+        ];
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules, $customMessages);
+
+        // Age limits validation against selected grade & active academic period
+        if ($step->fields->contains('field_name', 'birth_date') && $request->filled('birth_date')) {
+            $grade = $registration->grade;
+            if (!$grade && $registration->spmb_grade_id) {
+                $grade = \App\Models\SpmbGrade::find($registration->spmb_grade_id);
+            }
+            if ($grade && ($grade->min_age_years !== null || $grade->max_age_years !== null)) {
+                $periodYear = $registration->period ? $registration->period->year : null;
+                $cutoffDate = \App\Models\SpmbGrade::resolveCutoffDate($periodYear);
+                $ageCheck = $grade->validateAge($request->birth_date, $cutoffDate);
+                if (!$ageCheck['valid']) {
+                    $validator->after(function ($validator) use ($ageCheck) {
+                        $validator->errors()->add('birth_date', $ageCheck['message']);
+                    });
+                }
+            }
+        }
+
+        $validated = $validator->validate();
 
         // 2. Save fields dynamically
         $physicalColumns = [
@@ -1078,7 +1160,27 @@ class WebDashboardController extends Controller
 
         // Sync extra services if the step has extra_services field
         if ($step->fields->where('field_name', 'extra_services')->count() > 0) {
-            $registration->extraServices()->sync(array_filter((array)$request->input('extra_services', [])));
+            $services = (array)$request->input('extra_services', []);
+            $isTpaReg = str_contains(strtolower($registration->admission_level ?? ''), 'tpa') || ($registration->grade && str_contains(strtolower($registration->grade->name), 'tpa'));
+            if ($isTpaReg) {
+                $tpaServiceId = \App\Models\SpmbExtraService::where(function($q) {
+                    $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
+                })->value('id');
+                if ($tpaServiceId && !in_array($tpaServiceId, $services)) {
+                    $services[] = $tpaServiceId;
+                }
+            }
+            $registration->extraServices()->sync(array_filter($services));
+        }
+
+        // Capture referral & custom info source fields if present
+        if ($request->has('referral_student_name')) {
+            $additionalInfo['referral_student_name'] = $request->input('referral_student_name');
+            $additionalInfo['referral_student_class'] = $request->input('referral_student_class');
+            $additionalInfo['referral_parent_phone'] = $request->input('referral_parent_phone');
+        }
+        if ($request->has('info_source_custom')) {
+            $additionalInfo['info_source_custom'] = $request->input('info_source_custom');
         }
 
         $additionalInfo['step_' . $stepId . '_saved'] = true;
@@ -1103,10 +1205,14 @@ class WebDashboardController extends Controller
             })
             ->orderBy('order')
             ->get();
+            
+        $isLastStep = ($allSteps->last() && $allSteps->last()->id == $stepId);
         $allCompleted = true;
         foreach ($allSteps as $s) {
+            $hasReq = false;
             foreach ($s->fields as $f) {
                 if ($f->is_required) {
+                    $hasReq = true;
                     $val = $registration->getFieldValue($f->field_name);
                     if (empty($val)) {
                         $allCompleted = false;
@@ -1114,9 +1220,32 @@ class WebDashboardController extends Controller
                     }
                 }
             }
+            if (!$hasReq) {
+                $isSaved = !empty($registration->additional_info['step_' . $s->id . '_saved'])
+                    || ($s->fields->contains('field_name', 'info_source') && !empty($registration->additional_info['info_source']))
+                    || ($s->fields->contains('field_name', 'guardian_name') && !empty($registration->guardian_name));
+
+                if ($s->fields->contains('field_name', 'info_source')) {
+                    $infoSrc = $registration->getFieldValue('info_source');
+                    if ($infoSrc === 'Rekomendasi Wali Murid (Referral)') {
+                        $refName = $registration->getFieldValue('referral_student_name');
+                        $refClass = $registration->getFieldValue('referral_student_class');
+                        if (empty($refName) || empty($refClass)) {
+                            $isSaved = false;
+                        }
+                    }
+                }
+
+                if (!$isSaved) {
+                    $allCompleted = false;
+                    break;
+                }
+            }
         }
 
-        if ($allCompleted && in_array($registration->registration_status, ['draft', 'failed'])) {
+        $shouldSubmit = ($isLastStep && $allCompleted);
+
+        if ($shouldSubmit && in_array($registration->registration_status, ['draft', 'failed'])) {
             $isRevision = ($registration->registration_status === 'failed');
 
             $registration->update([
@@ -1147,7 +1276,7 @@ class WebDashboardController extends Controller
             }
         }
 
-        $stepSuccessMsg = $allCompleted 
+        $stepSuccessMsg = $shouldSubmit 
             ? ($isRevision ?? false ? 'Formulir perbaikan berhasil dikirim kembali! Silakan menunggu verifikasi ulang berkas dari panitia.' : 'Formulir pendaftaran berhasil dikirim! Silakan menunggu verifikasi berkas dari panitia.')
             : 'Langkah "' . $step->title . '" berhasil disimpan.';
 
@@ -1157,12 +1286,12 @@ class WebDashboardController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $stepSuccessMsg,
-                'allCompleted' => $allCompleted,
-                'redirect' => $allCompleted ? route('dashboard.detail', $id) : null
+                'allCompleted' => $shouldSubmit,
+                'redirect' => $shouldSubmit ? route('dashboard.detail', $id) : null
             ]);
         }
 
-        if ($allCompleted) {
+        if ($shouldSubmit) {
             return redirect()->route('dashboard.detail', $id)->with('success', 'Formulir pendaftaran berhasil dikirim! Silakan menunggu verifikasi berkas dari panitia.');
         }
 
@@ -2022,5 +2151,115 @@ class WebDashboardController extends Controller
         }
 
         return $committeeMessage;
+    }
+
+    /**
+     * Update/Track WhatsApp Group join status for registration.
+     */
+    public function joinWaGroup(Request $request, $id)
+    {
+        $registration = $this->getRegistration($id);
+        $additionalInfo = $registration->additional_info ?? [];
+
+        $joined = $request->has('status') ? filter_var($request->input('status'), FILTER_VALIDATE_BOOLEAN) : true;
+        
+        $additionalInfo['wa_group_joined'] = $joined;
+        if ($joined) {
+            $additionalInfo['wa_group_joined_at'] = now()->toIso8601String();
+        } else {
+            unset($additionalInfo['wa_group_joined_at']);
+        }
+
+        $registration->additional_info = $additionalInfo;
+        $registration->save();
+
+        $groupUrl = $registration->unit?->spmb_group_url;
+
+        return response()->json([
+            'success' => true,
+            'joined' => $joined,
+            'group_url' => $groupUrl,
+            'joined_at' => $joined ? now()->translatedFormat('d M Y, H:i') : null,
+            'message' => $joined ? 'Status berhasil diperbarui: Anda telah bergabung ke Group WhatsApp SPMB.' : 'Status bergabung dibatalkan.'
+        ]);
+    }
+
+    /**
+     * Confirm/Update attendance for Ta'aruf / Observation session.
+     */
+    public function confirmAttendance(Request $request, $id)
+    {
+        $registration = $this->getRegistration($id);
+
+        $request->validate([
+            'attendance_status' => 'required|string|in:confirmed_present,reschedule_requested,cancelled',
+            'attendance_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $status = $request->input('attendance_status');
+        $notes = $request->input('attendance_notes');
+
+        $registration->update([
+            'observation_attendance_status' => $status,
+            'observation_attendance_notes' => $notes,
+            'observation_attendance_confirmed_at' => now(),
+        ]);
+
+        // Trigger notification to relevant unit admins & super admins
+        try {
+            $admins = \App\Models\User::getAdminsForUnit($registration->spmb_unit_id);
+            $isConfirmed = ($status === 'confirmed_present');
+            $title = $isConfirmed ? 'Konfirmasi Kehadiran Ta\'aruf' : 'Permohonan Reschedule Ta\'aruf';
+            $notifMessage = $isConfirmed
+                ? 'Calon murid "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') telah mengonfirmasi SIAP HADIR untuk sesi Ta\'aruf pada tanggal ' . ($registration->observation_date ? $registration->observation_date->translatedFormat('d F Y') : '-') . '.'
+                : 'Calon murid "' . $registration->candidate_name . '" (' . ($registration->unit->name ?? 'Unit') . ') mengajukan PERMOHONAN RESCHEDULE Ta\'aruf' . ($notes ? ': "' . $notes . '"' : '.');
+
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SpmbNotification([
+                'title' => $title,
+                'message' => $notifMessage,
+                'url' => route('admin.taaruf') . '?unit_id=' . $registration->spmb_unit_id . '&search=' . urlencode($registration->candidate_name),
+                'type' => $isConfirmed ? 'success' : 'warning',
+                'spmb_unit_id' => $registration->spmb_unit_id,
+                'registration_id' => $registration->id,
+            ]));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send taaruf attendance notification to admin', ['error' => $e->getMessage()]);
+        }
+
+        $message = $status === 'confirmed_present' 
+            ? 'Alhamdulillah, konfirmasi kehadiran Anda berhasil disimpan. Kami tunggu kehadiran ananda sesuai jadwal.' 
+            : ($status === 'reschedule_requested' 
+                ? 'Permohonan penjadwalan ulang (reschedule) berhasil diajukan. Panitia SPMB akan meninjau dan memperbarui jadwal ananda.' 
+                : 'Status konfirmasi berhasil diperbarui.');
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'status' => $status,
+                'notes' => $notes,
+                'confirmed_at' => now()->translatedFormat('d M Y, H:i'),
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Download observation result file for a candidate registration.
+     */
+    public function downloadObservationResult($id)
+    {
+        $registration = $this->getRegistration($id);
+
+        if (empty($registration->observation_result_path) || !Storage::disk('public')->exists($registration->observation_result_path)) {
+            return redirect()->back()->with('error', "Berkas hasil observasi tidak ditemukan.");
+        }
+
+        $filePath = Storage::disk('public')->path($registration->observation_result_path);
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $safeName = 'Hasil-Observasi-' . \Illuminate\Support\Str::slug($registration->candidate_name ?: 'Calon-Murid') . '.' . $extension;
+
+        return response()->download($filePath, $safeName);
     }
 }

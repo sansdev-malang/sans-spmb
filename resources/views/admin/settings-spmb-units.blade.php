@@ -42,7 +42,7 @@
                     <h3 class="font-extrabold text-base text-slate-800">Unit Sekolah</h3>
                     <p class="text-[11px] text-slate-400">Kelola unit sekolah yang tersedia untuk pendaftaran (mis. SANS PAUD, SANS SD).</p>
                 </div>
-                <button onclick="openUnitModal('', '', '', '', '1', true, '{{ route('admin.spmb-settings.units.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                <button onclick="openUnitModal('', '', '', '', '', '1', true, '{{ route('admin.spmb-settings.units.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Unit
                 </button>
             </div>
@@ -54,6 +54,7 @@
                             <th class="py-4 px-6">Nama Unit</th>
                             <th class="py-4 px-6">Kode Unit</th>
                             <th class="py-4 px-6">No. WhatsApp Admin</th>
+                            <th class="py-4 px-6">Group WA SPMB</th>
                             <th class="py-4 px-6 text-center">Status</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
@@ -77,6 +78,17 @@
                                         <span class="text-xs text-slate-400 italic">Belum diatur</span>
                                     @endif
                                 </td>
+                                <td class="py-4 px-6">
+                                    @if(!empty($unit->spmb_group_url))
+                                        <a href="{{ $unit->spmb_group_url }}" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition" title="Buka Link Group WA">
+                                            <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                            <span>Tersedia</span>
+                                            <i data-lucide="external-link" class="w-3 h-3 text-emerald-500"></i>
+                                        </a>
+                                    @else
+                                        <span class="text-xs text-slate-400 italic">Belum diatur</span>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $unit->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $unit->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
@@ -90,7 +102,7 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Unit">
+                                        <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ addslashes($unit->spmb_group_url ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Unit">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($unit->registrations_count > 0)
@@ -120,9 +132,9 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Tingkatan Kelas</h3>
-                    <p class="text-[11px] text-slate-400">Kelola tingkatan kelas untuk setiap Unit (mis. TK A, TK B, Kelas 1).</p>
+                    <p class="text-[11px] text-slate-400">Kelola tingkatan kelas dan batas usia/umur untuk setiap Unit (mis. TK A, TK B, Kelas 1).</p>
                 </div>
-                <button onclick="openGradeModal('', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                <button onclick="openGradeModal('', '', '', '0', '', '0', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Tingkatan
                 </button>
             </div>
@@ -133,6 +145,7 @@
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Tingkatan (Grade)</th>
                             <th class="py-4 px-6">Unit Asal</th>
+                            <th class="py-4 px-6">Batas Usia / Umur</th>
                             <th class="py-4 px-6 text-center">Status</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
@@ -142,7 +155,16 @@
                         @forelse($grades as $grade)
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $grade->name }}</td>
-                                <td class="py-4 px-6 text-slate-600">{{ $grade->unit->name ?? '-' }}</td>
+                                <td class="py-4 px-6 text-slate-600 font-semibold">{{ $grade->unit->name ?? '-' }}</td>
+                                <td class="py-4 px-6">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold {{ $grade->min_age_years !== null || $grade->max_age_years !== null ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-500' }}">
+                                        <i data-lucide="clock" class="w-3 h-3 text-brand-emerald"></i>
+                                        {{ $grade->age_range_label }}
+                                    </span>
+                                    @if(!empty($grade->age_notes))
+                                        <p class="text-[10px] text-slate-400 mt-0.5">{{ $grade->age_notes }}</p>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $grade->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $grade->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
@@ -156,7 +178,7 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button onclick="openGradeModal('{{ $grade->name }}', '{{ $grade->spmb_unit_id }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Tingkatan">
+                                        <button onclick="openGradeModal('{{ addslashes($grade->name) }}', '{{ $grade->spmb_unit_id }}', '{{ $grade->min_age_years ?? '' }}', '{{ $grade->min_age_months ?? 0 }}', '{{ $grade->max_age_years ?? '' }}', '{{ $grade->max_age_months ?? 0 }}', '{{ addslashes($grade->age_notes ?? '') }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Tingkatan">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($grade->registrations_count > 0)
@@ -173,7 +195,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 text-center text-slate-400 text-xs">Belum ada tingkatan yang ditambahkan.</td>
+                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada tingkatan yang ditambahkan.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -351,6 +373,11 @@
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Kontak / Petugas (Opsional)</label>
                         <input type="text" id="unitAdminContactInput" name="admin_contact_name" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: Kak Nisa - Admin PAUD">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Link WhatsApp Group SPMB (Unit)</label>
+                        <input type="url" id="unitGroupUrlInput" name="spmb_group_url" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: https://chat.whatsapp.com/XXXXX">
+                        <span class="text-[10px] text-slate-400 mt-1 block">Tautan group WhatsApp resmi untuk informasi seputar SPMB unit ini (ditampilkan pada tahap Ta'aruf).</span>
+                    </div>
                     <div class="flex items-center gap-3">
                         <input type="checkbox" id="unitActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                         <label for="unitActiveInput" class="text-sm font-bold text-slate-700">Unit Aktif</label>
@@ -397,6 +424,42 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Batas Usia Minimal & Maksimal -->
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                            <i data-lucide="clock" class="w-4 h-4 text-brand-emerald"></i>
+                            <span>Konfigurasi Batas Usia / Umur</span>
+                        </div>
+                        <p class="text-[10.5px] text-slate-400 leading-relaxed">Dihitung relatif per 1 Juli tahun ajaran aktif. Kosongkan jika tanpa batasan usia.</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Usia Minimal</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" id="gradeMinAgeYearsInput" name="min_age_years" min="0" max="25" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 4)">
+                                    <span class="text-[11px] font-bold text-slate-400">Thn</span>
+                                    <input type="number" id="gradeMinAgeMonthsInput" name="min_age_months" min="0" max="11" class="w-16 bg-white border border-slate-300 rounded-xl px-2 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
+                                    <span class="text-[11px] font-bold text-slate-400">Bln</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Usia Maksimal</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" id="gradeMaxAgeYearsInput" name="max_age_years" min="0" max="25" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 5)">
+                                    <span class="text-[11px] font-bold text-slate-400">Thn</span>
+                                    <input type="number" id="gradeMaxAgeMonthsInput" name="max_age_months" min="0" max="11" class="w-16 bg-white border border-slate-300 rounded-xl px-2 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
+                                    <span class="text-[11px] font-bold text-slate-400">Bln</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Catatan Batas Usia (Opsional)</label>
+                            <input type="text" id="gradeAgeNotesInput" name="age_notes" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Contoh: Minimal 4 tahun per 1 Juli">
+                        </div>
+                    </div>
+
                     <div class="flex items-center gap-3">
                         <input type="checkbox" id="gradeActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                         <label for="gradeActiveInput" class="text-sm font-bold text-slate-700">Tingkatan Aktif</label>
@@ -461,7 +524,7 @@
     }
 
     // Modal Unit
-    function openUnitModal(name = '', code = '', whatsapp = '', contactName = '', isActive = '1', isCreate = true, actionUrl = '') {
+    function openUnitModal(name = '', code = '', whatsapp = '', contactName = '', groupUrl = '', isActive = '1', isCreate = true, actionUrl = '') {
         clearModalErrors();
         
         const modal = document.getElementById('unitModal');
@@ -477,6 +540,7 @@
         document.getElementById('unitCodeInput').value = code;
         document.getElementById('unitWhatsappInput').value = whatsapp;
         document.getElementById('unitAdminContactInput').value = contactName;
+        document.getElementById('unitGroupUrlInput').value = groupUrl;
         document.getElementById('unitActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
         
         if (!isCreate) {
@@ -500,7 +564,7 @@
     }
 
     // Modal Grade
-    function openGradeModal(name = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
+    function openGradeModal(name = '', unitId = '', minAgeYears = '', minAgeMonths = '0', maxAgeYears = '', maxAgeMonths = '0', ageNotes = '', isActive = '1', isCreate = true, actionUrl = '') {
         clearModalErrors();
         
         const modal = document.getElementById('gradeModal');
@@ -514,6 +578,11 @@
         form.setAttribute('action', actionUrl);
         document.getElementById('gradeNameInput').value = name;
         document.getElementById('gradeUnitInput').value = unitId;
+        document.getElementById('gradeMinAgeYearsInput').value = minAgeYears;
+        document.getElementById('gradeMinAgeMonthsInput').value = (minAgeMonths !== '' && minAgeMonths !== null) ? minAgeMonths : '0';
+        document.getElementById('gradeMaxAgeYearsInput').value = maxAgeYears;
+        document.getElementById('gradeMaxAgeMonthsInput').value = (maxAgeMonths !== '' && maxAgeMonths !== null) ? maxAgeMonths : '0';
+        document.getElementById('gradeAgeNotesInput').value = ageNotes;
         document.getElementById('gradeActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
         
         if (!isCreate) {
@@ -591,18 +660,18 @@
             let failed = "{{ session('failed_modal') }}";
             if (failed.startsWith('unit_create')) {
                 switchTab('unit');
-                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.units.store') }}');
+                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.units.store') }}');
             } else if (failed.startsWith('unit_edit_')) {
                 switchTab('unit');
                 let id = failed.replace('unit_edit_', '');
-                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
+                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
             } else if (failed.startsWith('grade_create')) {
                 switchTab('grade');
-                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
+                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
             } else if (failed.startsWith('grade_edit_')) {
                 switchTab('grade');
                 let id = failed.replace('grade_edit_', '');
-                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
+                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
             } else if (failed.startsWith('extra_create')) {
                 switchTab('extra');
                 openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');

@@ -278,7 +278,10 @@ class SpmbSettingsController extends Controller
             'code' => 'nullable|string|max:50',
             'whatsapp_number' => 'nullable|string|max:30',
             'admin_contact_name' => 'nullable|string|max:100',
+            'spmb_group_url' => 'nullable|url|max:500',
             'is_active' => 'boolean'
+        ], [
+            'spmb_group_url.url' => 'Tautan Group WhatsApp harus berupa format URL yang valid (menggunakan https:// atau http://).'
         ]);
 
         if ($validator->fails()) {
@@ -300,7 +303,10 @@ class SpmbSettingsController extends Controller
             'code' => 'nullable|string|max:50',
             'whatsapp_number' => 'nullable|string|max:30',
             'admin_contact_name' => 'nullable|string|max:100',
+            'spmb_group_url' => 'nullable|url|max:500',
             'is_active' => 'boolean'
+        ], [
+            'spmb_group_url.url' => 'Tautan Group WhatsApp harus berupa format URL yang valid (menggunakan https:// atau http://).'
         ]);
 
         if ($validator->fails()) {
@@ -333,6 +339,11 @@ class SpmbSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'spmb_unit_id' => 'required|exists:spmb_units,id',
             'name' => 'required|string|max:255',
+            'min_age_years' => 'nullable|integer|min:0|max:30',
+            'min_age_months' => 'nullable|integer|min:0|max:11',
+            'max_age_years' => 'nullable|integer|min:0|max:30',
+            'max_age_months' => 'nullable|integer|min:0|max:11',
+            'age_notes' => 'nullable|string|max:255',
             'is_active' => 'boolean'
         ]);
 
@@ -343,7 +354,12 @@ class SpmbSettingsController extends Controller
                 ->with('failed_modal', 'grade_create');
         }
 
-        SpmbGrade::create($request->all());
+        $data = $request->all();
+        $data['is_active'] = $request->has('is_active');
+        $data['min_age_months'] = $request->input('min_age_months', 0) ?: 0;
+        $data['max_age_months'] = $request->input('max_age_months', 0) ?: 0;
+        
+        SpmbGrade::create($data);
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil ditambahkan.');
     }
 
@@ -353,6 +369,11 @@ class SpmbSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'spmb_unit_id' => 'required|exists:spmb_units,id',
             'name' => 'required|string|max:255',
+            'min_age_years' => 'nullable|integer|min:0|max:30',
+            'min_age_months' => 'nullable|integer|min:0|max:11',
+            'max_age_years' => 'nullable|integer|min:0|max:30',
+            'max_age_months' => 'nullable|integer|min:0|max:11',
+            'age_notes' => 'nullable|string|max:255',
             'is_active' => 'boolean'
         ]);
 
@@ -365,6 +386,8 @@ class SpmbSettingsController extends Controller
         
         $data = $request->all();
         $data['is_active'] = $request->has('is_active');
+        $data['min_age_months'] = $request->input('min_age_months', 0) ?: 0;
+        $data['max_age_months'] = $request->input('max_age_months', 0) ?: 0;
         $grade->update($data);
 
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil diperbarui.');
@@ -555,6 +578,7 @@ class SpmbSettingsController extends Controller
                     $unit->update([
                         'whatsapp_number' => $unitData['whatsapp_number'] ?? null,
                         'admin_contact_name' => $unitData['admin_contact_name'] ?? null,
+                        'spmb_group_url' => $unitData['spmb_group_url'] ?? null,
                     ]);
                 }
             }

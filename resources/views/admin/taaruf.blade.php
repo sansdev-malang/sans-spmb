@@ -70,7 +70,7 @@
             </div>
         </a>
 
-        <!-- 3. Sudah Terjadwal -->
+        <!-- 3. Sudah Terjadwal & Konfirmasi -->
         <a href="{{ route('admin.taaruf', array_merge(request()->query(), ['status' => 'scheduled'])) }}" 
            class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-150 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-blue-400 dark:hover:border-blue-600 transition group">
             <div class="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -78,21 +78,29 @@
             </div>
             <div>
                 <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Sudah Terjadwal</span>
-                <span class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">{{ $counts['scheduled'] }}</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">{{ $counts['scheduled'] }}</span>
+                    @if($counts['confirmed_present'] > 0 || $counts['reschedule_requested'] > 0)
+                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">({{ $counts['confirmed_present'] }} Hadir)</span>
+                    @endif
+                </div>
                 <span class="text-[10px] text-slate-400 block mt-0.5">Menunggu Sesi</span>
             </div>
         </a>
 
-        <!-- 4. Ta'aruf Selesai -->
-        <a href="{{ route('admin.taaruf', array_merge(request()->query(), ['status' => 'completed'])) }}" 
+        <!-- 4. Hasil Observasi & Selesai -->
+        <a href="{{ route('admin.taaruf', array_merge(request()->query(), ['status' => 'has_result'])) }}" 
            class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-150 dark:border-slate-800 shadow-sm flex items-center gap-4 hover:border-emerald-400 dark:hover:border-emerald-600 transition group">
             <div class="h-12 w-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-brand-emerald dark:text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <i data-lucide="user-check" class="w-6 h-6"></i>
+                <i data-lucide="file-check" class="w-6 h-6"></i>
             </div>
             <div>
-                <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Ta'aruf Selesai</span>
-                <span class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">{{ $counts['completed'] }}</span>
-                <span class="text-[10px] text-slate-400 block mt-0.5">Tahap Administrasi</span>
+                <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Hasil Observasi</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">{{ $counts['has_result'] }}</span>
+                    <span class="text-[10px] font-bold text-slate-400">({{ $counts['completed'] }} Selesai)</span>
+                </div>
+                <span class="text-[10px] text-slate-400 block mt-0.5">Berkas Diunggah</span>
             </div>
         </a>
     </div>
@@ -117,9 +125,13 @@
             <!-- Status filter -->
             <div>
                 <select name="status" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                    <option value="all" {{ request('status') === 'all' || !request('status') ? 'selected' : '' }}>Semua Status Jadwal</option>
+                    <option value="all" {{ request('status') === 'all' || !request('status') ? 'selected' : '' }}>Semua Status & Kehadiran</option>
                     <option value="unscheduled" {{ request('status') === 'unscheduled' ? 'selected' : '' }}>⚠️ Belum Terjadwal</option>
                     <option value="scheduled" {{ request('status') === 'scheduled' ? 'selected' : '' }}>📅 Sudah Terjadwal</option>
+                    <option value="confirmed_present" {{ request('status') === 'confirmed_present' ? 'selected' : '' }}>🟢 Konfirmasi Hadir</option>
+                    <option value="reschedule_requested" {{ request('status') === 'reschedule_requested' ? 'selected' : '' }}>🟡 Minta Reschedule</option>
+                    <option value="has_result" {{ request('status') === 'has_result' ? 'selected' : '' }}>📄 Hasil Observasi Ada</option>
+                    <option value="no_result" {{ request('status') === 'no_result' ? 'selected' : '' }}>⚠️ Belum Ada Hasil</option>
                     <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>✅ Ta'aruf Selesai</option>
                 </select>
             </div>
@@ -153,13 +165,13 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-150 dark:border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/70 dark:bg-slate-950/50">
-                        <th class="py-4 px-6">No. Registrasi</th>
-                        <th class="py-4 px-6">Calon Murid</th>
-                        <th class="py-4 px-6">Unit & Jenjang</th>
-                        <th class="py-4 px-6">Jadwal Ta'aruf</th>
-                        <th class="py-4 px-6">Lokasi & Penguji</th>
-                        <th class="py-4 px-6 text-center">Status</th>
-                        <th class="py-4 px-6 text-right">Aksi</th>
+                        <th class="py-4 px-5">No. Registrasi</th>
+                        <th class="py-4 px-5">Calon Murid</th>
+                        <th class="py-4 px-5">Unit & Jenjang</th>
+                        <th class="py-4 px-5">Jadwal & Konfirmasi</th>
+                        <th class="py-4 px-5">Hasil Observasi</th>
+                        <th class="py-4 px-5 text-center">Status</th>
+                        <th class="py-4 px-5 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-xs text-slate-650 dark:text-slate-300 divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -167,6 +179,7 @@
                         @php
                             $isScheduled = !empty($reg->observation_date);
                             $isCompleted = in_array($reg->registration_status, ['taaruf_completed', 'agreement_signed', 'completed']);
+                            $hasResult = !empty($reg->observation_result_path);
                             
                             $isPaudUnit = stripos($reg->unit?->code ?? '', 'PAUD') !== false || stripos($reg->unit?->name ?? '', 'PAUD') !== false || stripos($reg->unit?->name ?? '', 'TK') !== false || stripos($reg->unit?->name ?? '', 'KB') !== false;
                             $fallbackAddress = $isPaudUnit 
@@ -179,7 +192,7 @@
                         @endphp
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-855/40 transition">
                             <!-- 1. No. Registrasi -->
-                            <td class="py-4 px-6">
+                            <td class="py-4 px-5">
                                 <div class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
                                     SANS-{{ substr($reg->period->year ?? '2026', 0, 4) }}-{{ str_pad($reg->id, 4, '0', STR_PAD_LEFT) }}
                                 </div>
@@ -192,7 +205,7 @@
                             </td>
 
                             <!-- 2. Calon Murid -->
-                            <td class="py-4 px-6">
+                            <td class="py-4 px-5">
                                 <div class="font-bold text-slate-800 dark:text-white text-xs">{{ $reg->candidate_name ?? 'Draft' }}</div>
                                 @php
                                     $parentName = $reg->father_name 
@@ -219,14 +232,14 @@
                                 </div>
                             </td>
 
-                            <!-- 2. Unit & Grade -->
-                            <td class="py-4 px-6">
+                            <!-- 3. Unit & Grade -->
+                            <td class="py-4 px-5">
                                 <span class="font-bold text-slate-800 dark:text-white block">{{ $reg->unit?->name }}</span>
                                 <span class="text-[11px] text-slate-400">{{ $reg->grade?->name }} ({{ $reg->classProgram?->name ?? 'Reguler' }})</span>
                             </td>
 
-                            <!-- 3. Schedule Time -->
-                            <td class="py-4 px-6">
+                            <!-- 4. Schedule Time & Attendance RSVP -->
+                            <td class="py-4 px-5">
                                 @if($isScheduled)
                                     <div class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
                                         <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand-emerald"></i>
@@ -236,6 +249,28 @@
                                         <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i>
                                         <span>{{ $reg->observation_time }}</span>
                                     </div>
+
+                                    <!-- Attendance RSVP Badge -->
+                                    <div class="mt-1.5 flex items-center gap-1.5">
+                                        @if($reg->observation_attendance_status === 'confirmed_present')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs" 
+                                                  title="Dikonfirmasi Hadir pada {{ $reg->observation_attendance_confirmed_at ? \Carbon\Carbon::parse($reg->observation_attendance_confirmed_at)->translatedFormat('d M Y, H:i') : '-' }}">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                <span>Hadir</span>
+                                            </span>
+                                        @elseif($reg->observation_attendance_status === 'reschedule_requested')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs cursor-help" 
+                                                  title="Alasan Reschedule: {{ $reg->observation_attendance_notes ?: 'Tanpa keterangan' }}">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                <span>Minta Reschedule</span>
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                <span>Belum Konfirmasi</span>
+                                            </span>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
@@ -244,34 +279,44 @@
                                 @endif
                             </td>
 
-                            <!-- 4. Location, Room, Address & Interviewer -->
-                            <td class="py-4 px-6 max-w-xs">
-                                @if($isScheduled)
-                                    <div class="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 truncate" title="{{ $reg->observation_location }}">
-                                        <span>📍 {{ $reg->observation_location }}</span>
+                            <!-- 5. Observation Result File & Notes -->
+                            <td class="py-4 px-5">
+                                @if($hasResult)
+                                    <div class="space-y-1">
+                                        <div>
+                                            <a href="{{ route('admin.taaruf.download-result', $reg->id) }}" 
+                                               hx-boost="false"
+                                               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-emerald-50 hover:bg-emerald-100 text-brand-emerald dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs transition group cursor-pointer" 
+                                               title="Klik untuk Mengunduh Berkas Hasil Observasi ({{ basename($reg->observation_result_path) }})">
+                                                <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-brand-emerald group-hover:scale-110 transition-transform"></i>
+                                                <span>Hasil</span>
+                                                <i data-lucide="download" class="w-3 h-3 text-emerald-600/70 dark:text-emerald-400/70 ml-0.5"></i>
+                                            </a>
+                                        </div>
+                                        @if($reg->observation_result_uploaded_at)
+                                            <div class="text-[10px] text-slate-400">
+                                                {{ \Carbon\Carbon::parse($reg->observation_result_uploaded_at)->translatedFormat('d M Y, H:i') }}
+                                            </div>
+                                        @endif
+                                        @if($reg->observation_result_notes)
+                                            <div class="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1 italic" title="{{ $reg->observation_result_notes }}">
+                                                "{{ $reg->observation_result_notes }}"
+                                            </div>
+                                        @endif
                                     </div>
-                                    @if($reg->observation_room)
-                                        <div class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 truncate mt-0.5" title="{{ $reg->observation_room }}">
-                                            🚪 {{ $reg->observation_room }}
-                                        </div>
-                                    @endif
-                                    @if($reg->observation_address)
-                                        <div class="text-[10px] text-slate-400 truncate mt-0.5" title="{{ $reg->observation_address }}">
-                                            🏠 {{ $reg->observation_address }}
-                                        </div>
-                                    @endif
-                                    @if($reg->observation_interviewer)
-                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5" title="{{ $reg->observation_interviewer }}">
-                                            👤 {{ $reg->observation_interviewer }}
-                                        </div>
-                                    @endif
                                 @else
-                                    <span class="text-[11px] text-slate-400 italic">-</span>
+                                    <div class="space-y-1">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                                            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                                            <span>Belum Ada Hasil</span>
+                                        </span>
+                                        <p class="text-[10px] text-slate-400">Wajib diunggah sblm selesai</p>
+                                    </div>
                                 @endif
                             </td>
 
-                            <!-- 5. Status Badge -->
-                            <td class="py-4 px-6 text-center">
+                            <!-- 6. Status Badge -->
+                            <td class="py-4 px-5 text-center">
                                 @if($isCompleted)
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                         Ta'aruf Selesai
@@ -287,26 +332,61 @@
                                 @endif
                             </td>
 
-                            <!-- 6. Actions -->
-                            <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <!-- 7. Actions -->
+                            <td class="py-4 px-5 text-right whitespace-nowrap">
                                 <div class="inline-flex items-center justify-end gap-1.5">
                                     @if(!$isCompleted)
                                         @if($isScheduled)
-                                            <!-- Complete Ta'aruf Action (Aksi Utama / Biru) -->
+                                            <!-- Complete Ta'aruf Action (Wajib Ada Hasil Observasi) -->
+                                            @if($hasResult)
+                                                <button type="button" 
+                                                    onclick="showConfirmDialog({
+                                                        title: 'Selesaikan Sesi Ta\'aruf',
+                                                        message: 'Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Berkas hasil observasi sudah lengkap. Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.',
+                                                        confirmText: 'Ya, Selesaikan',
+                                                        type: 'blue',
+                                                        icon: 'check-check',
+                                                        formAction: '{{ route('admin.taaruf.complete', $reg->id) }}',
+                                                        formMethod: 'POST'
+                                                    })"
+                                                    class="h-8 px-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" 
+                                                    title="Selesaikan Sesi Ta'aruf">
+                                                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                                                    <span>Selesai</span>
+                                                </button>
+                                            @else
+                                                <button type="button" 
+                                                    onclick="promptUploadResultRequired(this)"
+                                                    data-reg-id="{{ $reg->id }}"
+                                                    data-candidate-name="{{ $reg->candidate_name }}"
+                                                    data-unit-name="{{ $reg->unit?->name }}"
+                                                    data-upload-url="{{ route('admin.taaruf.upload-result', $reg->id) }}"
+                                                    data-delete-url="{{ route('admin.taaruf.delete-result', $reg->id) }}"
+                                                    data-has-result="0"
+                                                    class="h-8 px-2.5 bg-slate-200 hover:bg-amber-500 hover:text-white text-slate-600 dark:bg-slate-800 dark:hover:bg-amber-600 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" 
+                                                    title="Hasil observasi belum diunggah. Klik untuk unggah hasil sekarang.">
+                                                    <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                                    <span>Selesai</span>
+                                                </button>
+                                            @endif
+
+                                            <!-- Manage/Upload Result Button -->
                                             <button type="button" 
-                                                onclick="showConfirmDialog({
-                                                    title: 'Selesaikan Sesi Ta\'aruf',
-                                                    message: 'Selesaikan sesi Ta\'aruf ananda {{ addslashes($reg->candidate_name) }}? Status pendaftar akan beralih ke tahap Surat Pernyataan Kesanggupan.',
-                                                    confirmText: 'Ya, Selesaikan',
-                                                    type: 'blue',
-                                                    icon: 'check-check',
-                                                    formAction: '{{ route('admin.taaruf.complete', $reg->id) }}',
-                                                    formMethod: 'POST'
-                                                })"
-                                                class="h-8 px-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" 
-                                                title="Selesaikan Sesi Ta'aruf">
-                                                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
-                                                <span>Selesai</span>
+                                                    onclick="openResultModalFromButton(this)" 
+                                                    data-reg-id="{{ $reg->id }}"
+                                                    data-candidate-name="{{ $reg->candidate_name }}"
+                                                    data-unit-name="{{ $reg->unit?->name }}"
+                                                    data-upload-url="{{ route('admin.taaruf.upload-result', $reg->id) }}"
+                                                    data-delete-url="{{ route('admin.taaruf.delete-result', $reg->id) }}"
+                                                    data-download-url="{{ route('admin.taaruf.download-result', $reg->id) }}"
+                                                    data-has-result="{{ $hasResult ? '1' : '0' }}"
+                                                    data-file-name="{{ $reg->observation_result_path ? basename($reg->observation_result_path) : '' }}"
+                                                    data-uploaded-at="{{ $reg->observation_result_uploaded_at ? \Carbon\Carbon::parse($reg->observation_result_uploaded_at)->translatedFormat('d M Y, H:i') : '' }}"
+                                                    data-result-notes="{{ $reg->observation_result_notes }}"
+                                                    class="h-8 px-2.5 {{ $hasResult ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:text-amber-400 border border-amber-200 dark:border-amber-800' }} rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                                    title="{{ $hasResult ? 'Kelola / Lihat Hasil Observasi' : 'Unggah Hasil Observasi' }}">
+                                                <i data-lucide="{{ $hasResult ? 'file-check' : 'upload' }}" class="w-3.5 h-3.5"></i>
+                                                <span>{{ $hasResult ? 'Hasil' : 'Unggah' }}</span>
                                             </button>
 
                                             <!-- Schedule Modal Trigger (Edit Jadwal) -->
@@ -372,6 +452,27 @@
                                     @else
                                         <!-- Ta'aruf Selesai State -->
                                         <div class="inline-flex items-center gap-1.5">
+                                            @if($hasResult)
+                                                <button type="button" 
+                                                        onclick="openResultModalFromButton(this)" 
+                                                        data-reg-id="{{ $reg->id }}"
+                                                        data-candidate-name="{{ $reg->candidate_name }}"
+                                                        data-unit-name="{{ $reg->unit?->name }}"
+                                                        data-upload-url="{{ route('admin.taaruf.upload-result', $reg->id) }}"
+                                                        data-delete-url="{{ route('admin.taaruf.delete-result', $reg->id) }}"
+                                                        data-download-url="{{ route('admin.taaruf.download-result', $reg->id) }}"
+                                                        data-has-result="1"
+                                                        data-file-name="{{ basename($reg->observation_result_path) }}"
+                                                        data-uploaded-at="{{ $reg->observation_result_uploaded_at ? \Carbon\Carbon::parse($reg->observation_result_uploaded_at)->translatedFormat('d M Y, H:i') : '' }}"
+                                                        data-result-notes="{{ $reg->observation_result_notes }}"
+                                                        data-is-completed="1"
+                                                        class="h-8 px-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                                        title="Lihat / Unduh Hasil Observasi">
+                                                    <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+                                                    <span>Hasil</span>
+                                                </button>
+                                            @endif
+
                                             <span class="h-8 px-2.5 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/60 inline-flex items-center gap-1.5 select-none">
                                                 <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
                                                 <span>Selesai</span>
@@ -424,6 +525,111 @@
     </div>
 </div>
 
+<!-- Modal: Upload & Kelola Hasil Observasi -->
+<div id="resultModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in">
+        <form id="resultForm" method="POST" action="" enctype="multipart/form-data" hx-boost="false" class="space-y-0">
+            @csrf
+
+            <!-- Header -->
+            <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/50">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-800 dark:text-white" id="resultModalTitle">Upload Hasil Observasi</h3>
+                        <p class="text-xs text-slate-400 mt-0.5" id="resultModalCandidateInfo">Nama Calon Murid</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeResultModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-5 sm:p-6 text-xs space-y-4">
+                
+                <!-- Notice Alert if Opened by Selesai button prompt -->
+                <div id="resultUploadNotice" class="hidden p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                    <div class="leading-relaxed">
+                        <strong class="font-bold block">Syarat Penyelesaian Ta'aruf:</strong>
+                        <span>Tahapan Ta'aruf hanya dapat diselesaikan setelah berkas hasil observasi diunggah ke sistem. Silakan unggah dokumen hasil evaluasi ananda di bawah ini.</span>
+                    </div>
+                </div>
+
+                <!-- Existing File Card (If already uploaded) -->
+                <div id="existingFileCard" class="hidden p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/80 space-y-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="h-9 w-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                                <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">Berkas Hasil Saat Ini</span>
+                                <span class="font-bold text-slate-800 dark:text-white truncate block text-xs" id="existingFileName">-</span>
+                                <span class="text-[10px] text-slate-400 block" id="existingFileTime">-</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <a id="existingDownloadBtn" href="#" hx-boost="false"
+                               class="h-8 px-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold hover:bg-emerald-50 transition flex items-center gap-1.5 text-xs shadow-2xs">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Unduh</span>
+                            </a>
+                            <button type="button" id="existingDeleteBtn" onclick="deleteExistingResult()" 
+                                    class="h-8 w-8 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 transition flex items-center justify-center text-xs" 
+                                    title="Hapus Berkas Hasil Observasi">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Input Field -->
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                        <span id="fileInputLabel">Pilih Berkas Dokumen Hasil Observasi</span> <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="file" 
+                           id="resultFileInput" 
+                           name="result_file" 
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-950 dark:file:text-indigo-300">
+                    <p class="text-[11px] text-slate-400 mt-1">Format yang didukung: PDF, JPG, PNG, DOC, DOCX (Maksimal 10 MB).</p>
+                </div>
+
+                <!-- Notes / Recommendation Field -->
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                        Catatan & Rekomendasi Hasil Observasi (Opsional)
+                    </label>
+                    <textarea id="resultNotesInput" 
+                              name="result_notes" 
+                              rows="3" 
+                              placeholder="Misal: Ananda menunjukkan kemandirian dan kesiapan belajar yang sangat baik pada aspek motorik dan kognitif..." 
+                              class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald"></textarea>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Catatan ini akan tampil pada ringkasan hasil observasi calon murid.</p>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="p-5 sm:p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeResultModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                    <span>Simpan & Unggah Hasil</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal: Atur Jadwal Ta'aruf Calon Murid -->
 <div id="scheduleModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-scale-in">
@@ -451,10 +657,10 @@
                             Tanggal Pelaksanaan <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" 
-                               id="modalObservationDate" 
-                               name="observation_date" 
-                               required 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
+                                id="modalObservationDate" 
+                                name="observation_date" 
+                                required 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
                     </div>
 
                     <!-- 2. Waktu / Sesi Pelaksanaan -->
@@ -486,11 +692,11 @@
                             Lokasi / Gedung Pelaksanaan <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" 
-                               id="modalObservationLocation" 
-                               name="observation_location" 
-                               required 
-                               placeholder="Misal: Kampus 1 SD Anak Saleh" 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
+                                id="modalObservationLocation" 
+                                name="observation_location" 
+                                required 
+                                placeholder="Misal: Kampus 1 SD Anak Saleh" 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald font-semibold">
                     </div>
 
                     <!-- 4. Ruangan -->
@@ -499,10 +705,10 @@
                             Ruangan Pelaksanaan (Opsional)
                         </label>
                         <input type="text" 
-                               id="modalObservationRoom" 
-                               name="observation_room" 
-                               placeholder="Misal: Ruang Observasi Lantai 1 / Ruang 102" 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                                id="modalObservationRoom" 
+                                name="observation_room" 
+                                placeholder="Misal: Ruang Observasi Lantai 1 / Ruang 102" 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     </div>
 
                     <!-- 5. Alamat Lengkap (Full Width with Preset Chips) -->
@@ -528,10 +734,10 @@
                             </div>
                         </div>
                         <input type="text" 
-                               id="modalObservationAddress" 
-                               name="observation_address" 
-                               placeholder="Misal: Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur" 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                                id="modalObservationAddress" 
+                                name="observation_address" 
+                                placeholder="Misal: Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur" 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     </div>
 
                     <!-- 6. Pewawancara / Penguji (Full Width) -->
@@ -540,10 +746,10 @@
                             Pewawancara / Penguji (Opsional)
                         </label>
                         <input type="text" 
-                               id="modalObservationInterviewer" 
-                               name="observation_interviewer" 
-                               placeholder="Misal: Tim Observasi & Ustadzah Fatimah, S.Pd" 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                                id="modalObservationInterviewer" 
+                                name="observation_interviewer" 
+                                placeholder="Misal: Tim Observasi & Ustadzah Fatimah, S.Pd" 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     </div>
 
                     <!-- 7. Catatan Khusus (Full Width) -->
@@ -650,11 +856,11 @@
                             </div>
                         </div>
                         <input type="text" 
-                               id="unitDefaultAddressInput"
-                               name="taaruf_default_address" 
-                               value="{{ $currentUnit->taaruf_default_address ?? '' }}" 
-                               placeholder="Misal: Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur" 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                                id="unitDefaultAddressInput"
+                                name="taaruf_default_address" 
+                                value="{{ $currentUnit->taaruf_default_address ?? '' }}" 
+                                placeholder="Misal: Jl. Arumba No.31, Tunggulwulung, Kec. Lowokwaru, Kota Malang, Jawa Timur" 
+                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     </div>
 
                     <div>
@@ -694,6 +900,8 @@
 @endif
 
 <script>
+    let currentDeleteUrl = '';
+
     function setModalAddress(addr) {
         const input = document.getElementById('modalObservationAddress');
         if (input) {
@@ -769,6 +977,118 @@
         }
     }
 
+    // Modal Hasil Observasi functions
+    function promptUploadResultRequired(btn) {
+        openResultModalFromButton(btn, true);
+    }
+
+    function openResultModalFromButton(btn, isRequiredPrompt = false) {
+        const regId = btn.getAttribute('data-reg-id');
+        const candidateName = btn.getAttribute('data-candidate-name') || '';
+        const unitName = btn.getAttribute('data-unit-name') || '';
+        const uploadUrl = btn.getAttribute('data-upload-url') || '';
+        const deleteUrl = btn.getAttribute('data-delete-url') || '';
+        const downloadUrl = btn.getAttribute('data-download-url') || '';
+        const hasResult = btn.getAttribute('data-has-result') === '1';
+        const fileName = btn.getAttribute('data-file-name') || '';
+        const uploadedAt = btn.getAttribute('data-uploaded-at') || '';
+        const resultNotes = btn.getAttribute('data-result-notes') || '';
+        const isCompleted = btn.getAttribute('data-is-completed') === '1';
+
+        currentDeleteUrl = deleteUrl;
+
+        const form = document.getElementById('resultForm');
+        form.action = uploadUrl;
+        form.setAttribute('action', uploadUrl);
+
+        document.getElementById('resultModalTitle').innerText = hasResult ? 'Kelola Hasil Observasi' : 'Unggah Hasil Observasi';
+        document.getElementById('resultModalCandidateInfo').innerText = candidateName + (unitName ? ' (' + unitName + ')' : '');
+
+        // Notice alert
+        const noticeEl = document.getElementById('resultUploadNotice');
+        if (isRequiredPrompt) {
+            noticeEl.classList.remove('hidden');
+        } else {
+            noticeEl.classList.add('hidden');
+        }
+
+        // Existing file card
+        const existingCard = document.getElementById('existingFileCard');
+        const fileInputLabel = document.getElementById('fileInputLabel');
+        const fileInput = document.getElementById('resultFileInput');
+
+        if (hasResult) {
+            existingCard.classList.remove('hidden');
+            document.getElementById('existingFileName').innerText = fileName || 'Dokumen Hasil Observasi';
+            document.getElementById('existingFileTime').innerText = uploadedAt ? 'Diunggah: ' + uploadedAt : '';
+            document.getElementById('existingDownloadBtn').href = downloadUrl;
+            
+            const delBtn = document.getElementById('existingDeleteBtn');
+            if (isCompleted) {
+                delBtn.classList.add('hidden');
+            } else {
+                delBtn.classList.remove('hidden');
+            }
+
+            fileInputLabel.innerText = 'Ganti / Perbarui Berkas Dokumen Hasil';
+            fileInput.required = false;
+        } else {
+            existingCard.classList.add('hidden');
+            fileInputLabel.innerText = 'Pilih Berkas Dokumen Hasil Observasi';
+            fileInput.required = true;
+        }
+
+        fileInput.value = '';
+        document.getElementById('resultNotesInput').value = resultNotes;
+
+        document.getElementById('resultModal').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeResultModal() {
+        document.getElementById('resultModal').classList.add('hidden');
+    }
+
+    function deleteExistingResult() {
+        if (!currentDeleteUrl) return;
+        if (!confirm('Apakah Anda yakin ingin menghapus berkas hasil observasi ini?')) return;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+        fetch(currentDeleteUrl, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (window.showToast) {
+                showToast(data.message || 'Berkas hasil observasi berhasil dihapus.', 'success');
+            }
+            closeResultModal();
+            setTimeout(() => {
+                window.location.reload();
+            }, 400);
+        })
+        .catch(error => {
+            let msg = 'Gagal menghapus berkas hasil observasi.';
+            if (error && error.message) msg = error.message;
+            if (window.showToast) {
+                showToast(msg, 'error');
+            } else {
+                alert(msg);
+            }
+        });
+    }
+
     function openUnitSettingsModal() {
         const modal = document.getElementById('unitSettingsModal');
         if (modal) modal.classList.remove('hidden');
@@ -780,8 +1100,72 @@
         if (modal) modal.classList.add('hidden');
     }
 
-    // Handle AJAX submission for scheduleForm
+    // Handle AJAX submission
     document.addEventListener('DOMContentLoaded', function() {
+        // Result Form Submit Handler
+        const resultForm = document.getElementById('resultForm');
+        if (resultForm) {
+            resultForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const actionUrl = resultForm.getAttribute('action') || resultForm.action;
+                if (!actionUrl || actionUrl === window.location.href) {
+                    alert('URL aksi belum terpasang dengan benar.');
+                    return;
+                }
+
+                const submitBtn = resultForm.querySelector('button[type="submit"]');
+                const origHtml = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5"><svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Mengunggah...</span>';
+
+                const formData = new FormData(resultForm);
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+                fetch(actionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw err; });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (window.showToast) {
+                        showToast(data.message || 'Berkas hasil observasi berhasil disimpan.', 'success');
+                    }
+                    closeResultModal();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 400);
+                })
+                .catch(error => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origHtml;
+                    let msg = 'Gagal mengunggah berkas hasil observasi.';
+                    if (error && error.errors) {
+                        msg = Object.values(error.errors).flat().join('\n');
+                    } else if (error && error.message) {
+                        msg = error.message;
+                    }
+                    if (window.showToast) {
+                        showToast(msg, 'error');
+                    } else {
+                        alert(msg);
+                    }
+                });
+            });
+        }
+
+        // Schedule Form Submit Handler
         const scheduleForm = document.getElementById('scheduleForm');
         if (scheduleForm) {
             scheduleForm.addEventListener('submit', function(e) {
@@ -913,6 +1297,12 @@
         }
     });
 
+    document.getElementById('resultModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeResultModal();
+        }
+    });
+
     document.getElementById('unitSettingsModal')?.addEventListener('click', function(e) {
         if (e.target === this) {
             closeUnitSettingsModal();
@@ -923,6 +1313,7 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeScheduleModal();
+            closeResultModal();
             closeUnitSettingsModal();
         }
     });

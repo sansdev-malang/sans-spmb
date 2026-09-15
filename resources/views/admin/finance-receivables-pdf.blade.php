@@ -227,9 +227,9 @@
             </td>
             <td class="meta-box" style="width: 220px;">
                 <div class="doc-badge">BUKU REKAPITULASI PIUTANG</div>
-                <div><strong>Tgl Cetak:</strong> {{ $printedAt }}</div>
-                <div><strong>Dicetak Oleh:</strong> {{ $printedBy }}</div>
-                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel }}</div>
+                <div><strong>Tgl Cetak:</strong> {{ $printedAt ?? (now()->translatedFormat('d F Y, H:i') . ' WIB') }}</div>
+                <div><strong>Dicetak Oleh:</strong> {{ $printedBy ?? (auth()->user()->name ?? 'Administrator Keuangan') }}</div>
+                <div><strong>Filter Unit:</strong> {{ $unitFilterLabel ?? 'Semua Unit' }}</div>
             </td>
         </tr>
     </table>
@@ -238,7 +238,7 @@
     <div class="report-title-section">
         <h2 class="report-title">BUKU REKAPITULASI PIUTANG & TUNGGAKAN BIAYA MASUK MURID</h2>
         <div class="report-subtitle">
-            TAHUN AJARAN {{ $periodName }} &bull; DAFTAR CALON MURID DENGAN KEWAJIBAN BIAYA MASUK BELUM LUNAS
+            TAHUN AJARAN {{ $periodName ?? ($selectedPeriod->year ?? '-') }} &bull; DAFTAR CALON MURID DENGAN KEWAJIBAN BIAYA MASUK BELUM LUNAS
         </div>
     </div>
 

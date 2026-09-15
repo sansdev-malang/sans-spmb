@@ -11,6 +11,7 @@ use App\Notifications\SpmbNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminTaarufController extends Controller
 {
@@ -55,6 +56,9 @@ class AdminTaarufController extends Controller
             'unscheduled' => (clone $baseQuery)->where('registration_status', 'verified')->whereNull('observation_date')->count(),
             'scheduled' => (clone $baseQuery)->where('registration_status', 'verified')->whereNotNull('observation_date')->count(),
             'completed' => (clone $baseQuery)->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed'])->count(),
+            'confirmed_present' => (clone $baseQuery)->where('observation_attendance_status', 'confirmed_present')->count(),
+            'reschedule_requested' => (clone $baseQuery)->where('observation_attendance_status', 'reschedule_requested')->count(),
+            'has_result' => (clone $baseQuery)->whereNotNull('observation_result_path')->count(),
         ];
 
         // Apply Status Filter
@@ -67,6 +71,14 @@ class AdminTaarufController extends Controller
             $query->where('registration_status', 'verified')->whereNotNull('observation_date');
         } elseif ($statusFilter === 'completed') {
             $query->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
+        } elseif ($statusFilter === 'confirmed_present') {
+            $query->where('observation_attendance_status', 'confirmed_present');
+        } elseif ($statusFilter === 'reschedule_requested') {
+            $query->where('observation_attendance_status', 'reschedule_requested');
+        } elseif ($statusFilter === 'has_result') {
+            $query->whereNotNull('observation_result_path');
+        } elseif ($statusFilter === 'no_result') {
+            $query->whereNull('observation_result_path');
         }
 
         // Search Filter
@@ -140,7 +152,7 @@ class AdminTaarufController extends Controller
             'observation_notes' => 'nullable|string|max:2000',
         ]);
 
-        $registration->update([
+        $updateData = [
             'observation_date' => $request->observation_date,
             'observation_time' => $request->observation_time,
             'observation_location' => $request->observation_location,
@@ -148,7 +160,16 @@ class AdminTaarufController extends Controller
             'observation_address' => $request->observation_address,
             'observation_interviewer' => $request->observation_interviewer,
             'observation_notes' => $request->observation_notes,
-        ]);
+        ];
+
+        // Reset attendance status when admin sets a new schedule after a reschedule request or date change
+        if ($registration->observation_attendance_status === 'reschedule_requested' || ($registration->observation_date && $registration->observation_date->format('Y-m-d') !== \Carbon\Carbon::parse($request->observation_date)->format('Y-m-d'))) {
+            $updateData['observation_attendance_status'] = null;
+            $updateData['observation_attendance_notes'] = null;
+            $updateData['observation_attendance_confirmed_at'] = null;
+        }
+
+        $registration->update($updateData);
 
         // Log Activity
         SpmbActivityLog::log(
@@ -231,11 +252,142 @@ class AdminTaarufController extends Controller
     }
 
     /**
+     * Upload observation result file & notes for a candidate.
+     */
+    public function uploadResult(Request $request, $id)
+    {
+        $registration = Registration::with('user')->findOrFail($id);
+
+        $request->validate([
+            'result_file' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
+            'result_notes' => 'nullable|string|max:2000',
+        ]);
+
+        // Delete old file if exists
+        if ($registration->observation_result_path && Storage::disk('public')->exists($registration->observation_result_path)) {
+            Storage::disk('public')->delete($registration->observation_result_path);
+        }
+
+        $path = $request->file('result_file')->store('observation_results', 'public');
+
+        $registration->update([
+            'observation_result_path' => $path,
+            'observation_result_notes' => $request->input('result_notes'),
+            'observation_result_uploaded_at' => now(),
+        ]);
+
+        SpmbActivityLog::log(
+            'UPLOAD_OBSERVATION_RESULT',
+            "Mengunggah berkas hasil observasi ananda {$registration->candidate_name} (ID: {$registration->id})"
+        );
+
+        // Send in-app notification to candidate user
+        try {
+            if ($registration->user) {
+                $registration->user->notify(new SpmbNotification([
+                    'title' => 'Laporan Hasil Observasi Tersedia',
+                    'message' => "Berkas laporan hasil evaluasi & observasi kesiapan belajar ananda {$registration->candidate_name} telah diunggah oleh panitia unit dan dapat dilihat/diunduh.",
+                    'url' => route('dashboard.observation', $registration->id),
+                    'type' => 'success',
+                    'spmb_unit_id' => $registration->spmb_unit_id,
+                    'registration_id' => $registration->id,
+                ]));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send observation result notification to candidate', ['error' => $e->getMessage()]);
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Berkas hasil observasi ananda {$registration->candidate_name} berhasil diunggah.",
+                'file_url' => asset('storage/' . $path),
+                'file_name' => basename($path),
+                'uploaded_at' => now()->translatedFormat('d M Y, H:i'),
+                'notes' => $registration->observation_result_notes,
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Berkas hasil observasi ananda {$registration->candidate_name} berhasil diunggah.");
+    }
+
+    /**
+     * Delete observation result file.
+     */
+    public function deleteResult(Request $request, $id)
+    {
+        $registration = Registration::findOrFail($id);
+
+        if (in_array($registration->registration_status, ['taaruf_completed', 'agreement_signed', 'completed'])) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Berkas hasil observasi tidak dapat dihapus karena tahapan Ta'aruf telah diselesaikan."
+                ], 422);
+            }
+            return redirect()->back()->with('error', "Berkas hasil observasi tidak dapat dihapus karena tahapan Ta'aruf telah diselesaikan.");
+        }
+
+        if ($registration->observation_result_path && Storage::disk('public')->exists($registration->observation_result_path)) {
+            Storage::disk('public')->delete($registration->observation_result_path);
+        }
+
+        $registration->update([
+            'observation_result_path' => null,
+            'observation_result_notes' => null,
+            'observation_result_uploaded_at' => null,
+        ]);
+
+        SpmbActivityLog::log(
+            'DELETE_OBSERVATION_RESULT',
+            "Menghapus berkas hasil observasi ananda {$registration->candidate_name} (ID: {$registration->id})"
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Berkas hasil observasi ananda {$registration->candidate_name} berhasil dihapus."
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Berkas hasil observasi ananda {$registration->candidate_name} berhasil dihapus.");
+    }
+
+    /**
+     * Download observation result file.
+     */
+    public function downloadResult(Request $request, $id)
+    {
+        $registration = Registration::findOrFail($id);
+
+        if (empty($registration->observation_result_path) || !Storage::disk('public')->exists($registration->observation_result_path)) {
+            return redirect()->back()->with('error', "Berkas hasil observasi tidak ditemukan.");
+        }
+
+        $filePath = Storage::disk('public')->path($registration->observation_result_path);
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $safeName = \Illuminate\Support\Str::slug($registration->candidate_name ?: 'Calon Murid') . '-Hasil-Observasi.' . $extension;
+
+        return response()->download($filePath, $safeName);
+    }
+
+    /**
      * Complete Ta'aruf for a candidate (transition to taaruf_completed).
      */
     public function completeTaaruf(Request $request, $id)
     {
         $registration = Registration::with('user')->findOrFail($id);
+
+        // VALIDATION REQUIREMENT: Observation result file MUST be uploaded first!
+        if (empty($registration->observation_result_path)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Hasil observasi belum diunggah. Mohon unggah berkas hasil observasi terlebih dahulu sebelum menyelesaikan sesi Ta'aruf ananda {$registration->candidate_name}."
+                ], 422);
+            }
+            return redirect()->back()->with('error', "Hasil observasi belum diunggah. Mohon unggah berkas hasil observasi terlebih dahulu sebelum menyelesaikan sesi Ta'aruf ananda {$registration->candidate_name}.");
+        }
 
         $registration->update([
             'registration_status' => 'taaruf_completed',
@@ -259,6 +411,13 @@ class AdminTaarufController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Failed to send candidate taaruf completion notification', ['error' => $e->getMessage()]);
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Tahap Ta'aruf ananda {$registration->candidate_name} berhasil diselesaikan. Status pendaftar kini beralih ke tahap Surat Pernyataan Kesanggupan."
+            ]);
         }
 
         return redirect()->back()->with('success', "Tahap Ta'aruf ananda {$registration->candidate_name} berhasil diselesaikan. Status pendaftar kini beralih ke tahap Surat Pernyataan Kesanggupan.");

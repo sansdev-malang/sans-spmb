@@ -40,10 +40,13 @@ class SpmbFeesController extends Controller
 
         $units = SpmbUnit::where('is_active', true)->get();
         $gateways = \App\Models\PaymentGateway::get();
+        $grades = \App\Models\SpmbGrade::where('is_active', true)->orderBy('spmb_unit_id', 'asc')->orderBy('id', 'asc')->get();
+        $classPrograms = \App\Models\SpmbClassProgram::with('units')->get();
+        $types = \App\Models\SpmbType::with('units')->get();
 
         $activeTab = request()->get('tab', 'jenis_biaya');
 
-        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'gateways', 'activeTab'));
+        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'gateways', 'activeTab', 'grades', 'classPrograms', 'types'));
     }
 
     // Fee Category (Jenis Biaya) CRUD
@@ -140,6 +143,12 @@ class SpmbFeesController extends Controller
             'payment_gateway' => 'required|array|min:1',
             'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
+            'applicable_grades' => 'nullable|array',
+            'applicable_grades.*' => 'exists:spmb_grades,id',
+            'applicable_class_programs' => 'nullable|array',
+            'applicable_class_programs.*' => 'exists:spmb_class_programs,id',
+            'applicable_types' => 'nullable|array',
+            'applicable_types.*' => 'exists:spmb_types,id',
         ];
 
         if (auth()->user()->isSuperAdmin()) {
@@ -175,6 +184,10 @@ class SpmbFeesController extends Controller
                 ->with('failed_modal', 'biaya_admin_create');
         }
 
+        $applicableGrades = !empty($request->applicable_grades) ? array_values(array_map('intval', (array)$request->applicable_grades)) : null;
+        $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
+        $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
+
         foreach ($units as $unitId) {
             SpmbFee::create([
                 'name' => $request->name,
@@ -182,6 +195,9 @@ class SpmbFeesController extends Controller
                 'payment_gateway' => $request->payment_gateway,
                 'spmb_fee_category_id' => $request->spmb_fee_category_id,
                 'spmb_unit_id' => $unitId,
+                'applicable_grades' => $applicableGrades,
+                'applicable_class_programs' => $applicableClassPrograms,
+                'applicable_types' => $applicableTypes,
                 'is_active' => true,
             ]);
         }
@@ -209,6 +225,12 @@ class SpmbFeesController extends Controller
             'payment_gateway' => 'required|array|min:1',
             'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
+            'applicable_grades' => 'nullable|array',
+            'applicable_grades.*' => 'exists:spmb_grades,id',
+            'applicable_class_programs' => 'nullable|array',
+            'applicable_class_programs.*' => 'exists:spmb_class_programs,id',
+            'applicable_types' => 'nullable|array',
+            'applicable_types.*' => 'exists:spmb_types,id',
         ];
 
         if (auth()->user()->isSuperAdmin()) {
@@ -237,12 +259,19 @@ class SpmbFeesController extends Controller
             }
         }
 
+        $applicableGrades = !empty($request->applicable_grades) ? array_values(array_map('intval', (array)$request->applicable_grades)) : null;
+        $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
+        $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
+
         $fee->update([
             'name' => $request->name,
             'amount' => $request->amount,
             'payment_gateway' => $request->payment_gateway,
             'spmb_fee_category_id' => $request->spmb_fee_category_id,
             'spmb_unit_id' => $unitId,
+            'applicable_grades' => $applicableGrades,
+            'applicable_class_programs' => $applicableClassPrograms,
+            'applicable_types' => $applicableTypes,
         ]);
 
         self::syncUnpaidRegistrationsFeeSnapshot([$unitId]);

@@ -467,7 +467,7 @@
                             <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
                             Gelombang
                         </label>
-                        <select name="spmb_wave_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                        <select id="waveSelect" name="spmb_wave_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
                             <option value="">Pilih Gelombang...</option>
                             @foreach($waves as $wave)
                                 <option value="{{ $wave->id }}">{{ $wave->name }}</option>
@@ -479,7 +479,7 @@
                             <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
                             Tahun
                         </label>
-                        <input type="text" readonly value="{{ $activePeriod?->year ?? '-' }}" class="w-full bg-slate-100 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 dark:text-slate-400 text-sm font-semibold select-none cursor-not-allowed">
+                        <input type="text" id="periodDisplay" readonly value="{{ $activePeriod?->year ?? '-' }}" class="w-full bg-slate-100 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 dark:text-slate-400 text-sm font-semibold select-none cursor-not-allowed">
                     </div>
                 </div>
             </div>
@@ -506,6 +506,8 @@
     var gradesData = @json($grades);
     var unitsData = @json($units);
     var typesData = @json($types);
+    var wavesData = @json($waves);
+    var activePeriodData = @json($activePeriod);
 
     function openRegistrationModal() {
         const modal = document.getElementById('newRegistrationModal');
@@ -524,6 +526,54 @@
         modal.classList.add('opacity-0', 'pointer-events-none');
         modalBody.classList.remove('scale-100');
         modalBody.classList.add('scale-95');
+    }
+
+    // Fungsi pembaruan dropdown Jalur, Gelombang, Tahun, dan Tingkatan Kelas per Unit
+    function populateUnitOptions(unitId, targetGradeId = null) {
+        const unit = unitsData.find(u => u.id == unitId);
+        
+        // 1. Populate Jalur (Types)
+        const typeSelect = document.getElementById('typeSelect');
+        if (typeSelect) {
+            typeSelect.innerHTML = '<option value="">Pilih Jalur Masuk...</option>';
+            const availableTypes = (unit && unit.types && unit.types.length > 0) ? unit.types : typesData;
+            availableTypes.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.name;
+                opt.setAttribute('data-name', t.name);
+                typeSelect.appendChild(opt);
+            });
+            if (availableTypes.length > 0) {
+                typeSelect.selectedIndex = 1;
+            }
+        }
+
+        // 2. Populate Gelombang (Waves)
+        const waveSelect = document.getElementById('waveSelect');
+        if (waveSelect) {
+            waveSelect.innerHTML = '<option value="">Pilih Gelombang...</option>';
+            const availableWaves = (unit && unit.waves && unit.waves.length > 0) ? unit.waves : wavesData;
+            availableWaves.forEach(w => {
+                const opt = document.createElement('option');
+                opt.value = w.id;
+                opt.textContent = w.name;
+                waveSelect.appendChild(opt);
+            });
+            if (availableWaves.length > 0) {
+                waveSelect.selectedIndex = 1;
+            }
+        }
+
+        // 3. Populate Tahun (Period)
+        const periodDisplay = document.getElementById('periodDisplay');
+        if (periodDisplay) {
+            const activeP = (unit && unit.periods && unit.periods.length > 0) ? unit.periods[0] : activePeriodData;
+            periodDisplay.value = activeP ? activeP.year : '-';
+        }
+
+        // 4. Populate Tingkatan / Kelas (Grades)
+        updateGradeOptions(targetGradeId);
     }
 
     // Fungsi pembaruan dropdown Tingkatan / Kelas berdasarkan Unit & Jalur
@@ -545,15 +595,16 @@
         const unit = unitsData.find(u => u.id == unitId);
         const unitCode = unit ? (unit.code || '').toUpperCase() : '';
 
-        const selectedTypeId = typeSelect ? typeSelect.value : '';
-        const selectedType = typesData.find(t => t.id == selectedTypeId);
-        const typeName = selectedType ? (selectedType.name || '').toLowerCase() : '';
+        let typeName = '';
+        if (typeSelect && typeSelect.selectedIndex > 0) {
+            typeName = (typeSelect.options[typeSelect.selectedIndex].getAttribute('data-name') || typeSelect.options[typeSelect.selectedIndex].textContent || '').toLowerCase();
+        }
 
         // Deteksi apakah jalur yang dipilih adalah Mutasi / Pindahan
         const isMutasi = typeName.includes('mutasi') || typeName.includes('pindah');
 
         // Filter tingkatan aktif untuk unit sekolah yang dipilih
-        let availableGrades = gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+        let availableGrades = (unit && unit.grades) ? unit.grades : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
 
         // Jika BUKAN jalur mutasi, batasi hanya kelas awal untuk SD & SMP
         if (!isMutasi) {
@@ -599,16 +650,8 @@
         const selectedOption = unitSelect.options[unitSelect.selectedIndex];
         document.getElementById('unitNameDisplay').value = selectedOption ? selectedOption.getAttribute('data-name') : '';
         
-        // Defaultkan ke jalur pertama jika belum terpilih
-        const typeSelect = document.getElementById('typeSelect');
-        if (typeSelect && (!typeSelect.value || typeSelect.value === '')) {
-            if (typeSelect.options.length > 1) {
-                typeSelect.selectedIndex = 1; // Pilih opsi pertama setelah placeholder
-            }
-        }
-        
-        // Perbarui opsi tingkatan / kelas
-        updateGradeOptions(gradeId);
+        // Populate unit scoped options (types, waves, period, grades)
+        populateUnitOptions(unitId, gradeId);
     }
     
     // Listener saat jalur diubah
@@ -623,7 +666,7 @@
     var unitSelectElem = document.getElementById('unitSelect');
     if (unitSelectElem) {
         unitSelectElem.addEventListener('change', function() {
-            updateGradeOptions();
+            populateUnitOptions(this.value);
         });
     }
 </script>

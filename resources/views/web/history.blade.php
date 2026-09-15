@@ -490,6 +490,14 @@
                                         @else
                                             <span class="text-[9px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase">Menunggu Jadwal</span>
                                         @endif
+
+                                        @if(empty($reg->observation_result_path) && !in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']))
+                                            @if($reg->observation_attendance_status === 'confirmed_present')
+                                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold uppercase">🟢 Hadir</span>
+                                            @elseif($reg->observation_attendance_status === 'reschedule_requested')
+                                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold uppercase">🟡 Minta Reschedule</span>
+                                            @endif
+                                        @endif
                                     </h5>
                                     <p class="text-[11px] text-slate-500 dark:text-slate-400">Sesi assessment kesiapan belajar ananda serta ta'aruf dan penyelarasan visi orang tua/wali.</p>
                                 </div>
@@ -517,6 +525,81 @@
                                             <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-emerald"></i>
                                             {{ $reg->observation_room ?: ($reg->observation_location ?: 'Kampus Sekolah') }}
                                         </span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(!empty($reg->observation_result_path))
+                                <div class="mt-2.5 p-3.5 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div class="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 font-bold">
+                                            <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="font-bold text-slate-900 dark:text-white block truncate">Berkas Hasil Observasi / Ta'aruf</span>
+                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block">
+                                                {{ $reg->observation_result_notes ? '"' . \Illuminate\Support\Str::limit($reg->observation_result_notes, 60) . '"' : 'Dokumen evaluasi kesiapan belajar' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <a href="{{ route('dashboard.registration.download-result', $reg->id) }}" 
+                                       class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-2xs transition shrink-0">
+                                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                        <span>Unduh Hasil</span>
+                                    </a>
+                                </div>
+                            @endif
+
+                            @if($reg->unit && !empty($reg->unit->spmb_group_url))
+                                @php
+                                    $waJoined = (bool) ($reg->additional_info['wa_group_joined'] ?? false);
+                                    $waJoinedAt = !empty($reg->additional_info['wa_group_joined_at']) ? \Carbon\Carbon::parse($reg->additional_info['wa_group_joined_at'])->translatedFormat('d M Y, H:i') : null;
+                                @endphp
+                                <div id="wa-group-card-{{ $reg->id }}" class="mt-3 p-4 rounded-2xl border transition-all duration-300 {{ $waJoined ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300/80 dark:border-emerald-800' : 'bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border-emerald-400/50 dark:border-emerald-700/60' }}">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                                        <div class="flex items-start sm:items-center gap-3 min-w-0">
+                                            <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm {{ $waJoined ? 'bg-emerald-500 text-white' : 'bg-[#25D366] text-white' }}">
+                                                <i data-lucide="{{ $waJoined ? 'check-circle-2' : 'message-circle' }}" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <h6 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                                                        {{ $waJoined ? '✅ Anda Telah Bergabung ke Group WhatsApp SPMB (' . ($reg->unit->name ?? '') . ')' : 'Group WhatsApp Informasi SPMB ' . ($reg->unit->name ?? '') }}
+                                                    </h6>
+                                                    @if($waJoined)
+                                                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 font-extrabold uppercase">Terhubung</span>
+                                                    @endif
+                                                </div>
+                                                <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed mt-0.5">
+                                                    {{ $waJoined 
+                                                        ? 'Terima kasih telah bergabung. Pembaruan informasi seputar tahapan SPMB akan dibagikan secara berkala melalui grup ini dan portal pendaftaran.' 
+                                                        : 'Silakan bergabung ke group WhatsApp resmi untuk mendapatkan pembaruan informasi seputar tahapan SPMB Sekolah Anak Saleh.' }}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto">
+                                            @if(!$waJoined)
+                                                <button type="button" 
+                                                        onclick="handleJoinWaGroup({{ $reg->id }}, '{{ $reg->unit->spmb_group_url }}', '{{ addslashes($reg->unit->name) }}')" 
+                                                        class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#25D366] hover:bg-[#1EBE5D] shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+                                                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                                    <span>Gabung Group WhatsApp</span>
+                                                </button>
+                                            @else
+                                                <a href="{{ $reg->unit->spmb_group_url }}" target="_blank" rel="noopener noreferrer" 
+                                                   class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-slate-800 shadow-xs transition">
+                                                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                                    <span>Buka Tautan Group</span>
+                                                </a>
+                                                <button type="button" 
+                                                        onclick="toggleWaGroupStatus({{ $reg->id }}, false, '{{ $reg->unit->spmb_group_url }}', '{{ addslashes($reg->unit->name) }}')" 
+                                                        class="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline text-center px-1.5 py-1"
+                                                        title="Klik jika Anda belum bergabung atau ingin mengubah status">
+                                                    Ubah status
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endif
@@ -851,5 +934,125 @@
             });
         });
     });
+
+    // WhatsApp Group Tracker Functions
+    window.handleJoinWaGroup = async function(regId, groupUrl, unitName) {
+        if (groupUrl) {
+            window.open(groupUrl, '_blank', 'noopener,noreferrer');
+        }
+        
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+            const response = await fetch(`/dashboard/registration/${regId}/join-wa-group`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ status: true })
+            });
+            const data = await response.json();
+            if (data.success) {
+                updateWaGroupCardUI(regId, true, groupUrl, unitName);
+            }
+        } catch (e) {
+            console.error('Failed to record WA group join:', e);
+        }
+    };
+
+    window.toggleWaGroupStatus = async function(regId, newStatus, groupUrl, unitName) {
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+            const response = await fetch(`/dashboard/registration/${regId}/join-wa-group`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+            const data = await response.json();
+            if (data.success) {
+                updateWaGroupCardUI(regId, newStatus, groupUrl, unitName);
+            }
+        } catch (e) {
+            console.error('Failed to toggle WA group status:', e);
+        }
+    };
+
+    function updateWaGroupCardUI(regId, joined, groupUrl, unitName) {
+        const card = document.getElementById(`wa-group-card-${regId}`);
+        if (!card) return;
+
+        if (joined) {
+            card.className = "mt-3 p-4 rounded-2xl border transition-all duration-300 bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300/80 dark:border-emerald-800";
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                    <div class="flex items-start sm:items-center gap-3 min-w-0">
+                        <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-emerald-500 text-white">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h6 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                                    ✅ Anda Telah Bergabung ke Group WhatsApp SPMB ${unitName ? '(' + unitName + ')' : ''}
+                                </h6>
+                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 font-extrabold uppercase">Terhubung</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed mt-0.5">
+                                Terima kasih telah bergabung. Pembaruan informasi seputar tahapan SPMB akan dibagikan secara berkala melalui grup ini dan portal pendaftaran.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <a href="${groupUrl}" target="_blank" rel="noopener noreferrer" 
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-slate-800 shadow-xs transition">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            <span>Buka Tautan Group</span>
+                        </a>
+                        <button type="button" 
+                                onclick="toggleWaGroupStatus(${regId}, false, '${groupUrl}', '${unitName}')" 
+                                class="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline px-1 py-1"
+                                title="Klik jika Anda belum bergabung atau ingin mengubah status">
+                            Ubah status
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            card.className = "mt-3 p-4 rounded-2xl border transition-all duration-300 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border-emerald-400/50 dark:border-emerald-700/60";
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                    <div class="flex items-start sm:items-center gap-3 min-w-0">
+                        <div class="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-[#25D366] text-white">
+                            <i data-lucide="message-circle" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h6 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                                Group WhatsApp Informasi SPMB ${unitName}
+                            </h6>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed mt-0.5">
+                                Silakan bergabung ke group WhatsApp resmi untuk mendapatkan pembaruan informasi seputar tahapan SPMB Sekolah Anak Saleh.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <button type="button" 
+                                onclick="handleJoinWaGroup(${regId}, '${groupUrl}', '${unitName}')" 
+                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#25D366] hover:bg-[#1EBE5D] shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                            <span>Gabung Group WhatsApp</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
 </script>
 @endsection

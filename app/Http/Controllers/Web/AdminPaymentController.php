@@ -553,7 +553,7 @@ class AdminPaymentController extends Controller
             'Jalur Masuk',
             'Program Kelas',
             'Layanan Tambahan',
-            'Nama Lengkap Siswa',
+            'Nama Lengkap Murid',
             'Jenis Kelamin',
             'Nama Orang Tua / Wali',
             'No. WhatsApp Orang Tua',
