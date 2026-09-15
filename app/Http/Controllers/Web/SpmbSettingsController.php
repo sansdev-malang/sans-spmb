@@ -61,7 +61,10 @@ class SpmbSettingsController extends Controller
             return $service;
         });
 
-        return view('admin.settings-spmb-units', compact('units', 'grades', 'extraServices'));
+        $activeTab = request()->get('tab', 'unit');
+        $selectedUnitId = request()->get('unit_id', '');
+
+        return view('admin.settings-spmb-units', compact('units', 'grades', 'extraServices', 'activeTab', 'selectedUnitId'));
     }
 
     public function qrcode()

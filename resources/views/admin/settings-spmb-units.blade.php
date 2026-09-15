@@ -6,28 +6,46 @@
 @section('content')
 <div id="spmb-units-container" hx-boost="true" hx-target="#spmb-units-container" hx-select="#spmb-units-container" class="w-full space-y-6">
     
-    <!-- Top Header -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <!-- Top Header with Unit Filter -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800">Master Unit & Tingkatan</h1>
+            <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                <i data-lucide="building-2" class="w-6 h-6 text-brand-emerald"></i>
+                Master Unit & Tingkatan
+            </h1>
             <p class="text-xs text-slate-500 mt-1">Kelola data master unit sekolah dan tingkatan kelas untuk penerimaan murid baru.</p>
+        </div>
+
+        <!-- Unit Filter Switcher -->
+        <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 p-1.5 rounded-2xl shadow-xs self-start md:self-auto overflow-x-auto">
+            <span class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5 px-2 whitespace-nowrap">
+                <i data-lucide="filter" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                Unit:
+            </span>
+            <button type="button" onclick="filterByUnit('')" id="unitFilterBtn-all" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') === '' ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                Semua Unit
+            </button>
+            @foreach($units as $u)
+                <button type="button" onclick="filterByUnit('{{ $u->id }}')" id="unitFilterBtn-{{ $u->id }}" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') == $u->id ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                    <span>{{ strtoupper($u->code ?? $u->name) }}</span>
+                </button>
+            @endforeach
         </div>
     </div>
 
-
-
     @php
-        $activeTab = request()->get('tab', 'unit');
+        $activeTab = $activeTab ?? request()->get('tab', 'unit');
     @endphp
     <!-- Tab Navigation -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-            <button id="tabBtn-unit" onclick="switchTab('unit')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'unit' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+            <button id="tabBtn-unit" onclick="switchTab('unit')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'unit' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
                 <i data-lucide="building-2" class="w-4 h-4"></i> Unit Sekolah
             </button>
-            <button id="tabBtn-grade" onclick="switchTab('grade')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'grade' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+            <button id="tabBtn-grade" onclick="switchTab('grade')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'grade' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
                 <i data-lucide="layers" class="w-4 h-4"></i> Tingkatan Kelas
             </button>
-            <button id="tabBtn-extra" onclick="switchTab('extra')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'extra' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+            <button id="tabBtn-extra" onclick="switchTab('extra')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'extra' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
                 <i data-lucide="sparkles" class="w-4 h-4"></i> Layanan Non-Formal
             </button>
     </div>
@@ -42,7 +60,7 @@
                     <h3 class="font-extrabold text-base text-slate-800">Unit Sekolah</h3>
                     <p class="text-[11px] text-slate-400">Kelola unit sekolah yang tersedia untuk pendaftaran (mis. SANS PAUD, SANS SD).</p>
                 </div>
-                <button onclick="openUnitModal('', '', '', '', '', '1', true, '{{ route('admin.spmb-settings.units.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                <button onclick="openUnitModal('', '', '', '', '', '1', true, '{{ route('admin.spmb-settings.units.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Unit
                 </button>
             </div>
@@ -62,9 +80,9 @@
                     </thead>
                     <tbody class="text-xs divide-y divide-slate-100">
                         @forelse($units as $unit)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            <tr class="unit-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $unit->id }}">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $unit->name }}</td>
-                                <td class="py-4 px-6 text-slate-600">{{ $unit->code ?? '-' }}</td>
+                                <td class="py-4 px-6 text-slate-600 font-semibold">{{ $unit->code ?? '-' }}</td>
                                 <td class="py-4 px-6">
                                     @if(!empty($unit->whatsapp_number))
                                         <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
@@ -102,7 +120,7 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ addslashes($unit->spmb_group_url ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Unit">
+                                        <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ addslashes($unit->spmb_group_url ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Unit">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($unit->registrations_count > 0)
@@ -110,7 +128,7 @@
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @else
-                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.units.delete', $unit->id) }}', 'Apakah Anda yakin ingin menghapus Unit ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Unit">
+                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.units.delete', $unit->id) }}', 'Apakah Anda yakin ingin menghapus Unit ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer" title="Hapus Unit">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @endif
@@ -119,9 +137,12 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada unit yang ditambahkan.</td>
+                                <td colspan="7" class="py-8 text-center text-slate-400 text-xs">Belum ada unit yang ditambahkan.</td>
                             </tr>
                         @endforelse
+                        <tr id="emptyUnitRow-filtered" class="hidden">
+                            <td colspan="7" class="py-8 text-center text-slate-400 text-xs">Tidak ada unit sekolah yang sesuai dengan filter.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -134,7 +155,7 @@
                     <h3 class="font-extrabold text-base text-slate-800">Tingkatan Kelas</h3>
                     <p class="text-[11px] text-slate-400">Kelola tingkatan kelas dan batas usia/umur untuk setiap Unit (mis. TK A, TK B, Kelas 1).</p>
                 </div>
-                <button onclick="openGradeModal('', '', '', '0', '', '0', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                <button onclick="openGradeModal('', currentUnitFilter, '', '0', '', '0', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Tingkatan
                 </button>
             </div>
@@ -153,7 +174,7 @@
                     </thead>
                     <tbody class="text-xs divide-y divide-slate-100">
                         @forelse($grades as $grade)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            <tr class="grade-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $grade->spmb_unit_id }}">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $grade->name }}</td>
                                 <td class="py-4 px-6 text-slate-600 font-semibold">{{ $grade->unit->name ?? '-' }}</td>
                                 <td class="py-4 px-6">
@@ -178,7 +199,7 @@
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button onclick="openGradeModal('{{ addslashes($grade->name) }}', '{{ $grade->spmb_unit_id }}', '{{ $grade->min_age_years ?? '' }}', '{{ $grade->min_age_months ?? 0 }}', '{{ $grade->max_age_years ?? '' }}', '{{ $grade->max_age_months ?? 0 }}', '{{ addslashes($grade->age_notes ?? '') }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Tingkatan">
+                                        <button onclick="openGradeModal('{{ addslashes($grade->name) }}', '{{ $grade->spmb_unit_id }}', '{{ $grade->min_age_years ?? '' }}', '{{ $grade->min_age_months ?? 0 }}', '{{ $grade->max_age_years ?? '' }}', '{{ $grade->max_age_months ?? 0 }}', '{{ addslashes($grade->age_notes ?? '') }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Tingkatan">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($grade->registrations_count > 0)
@@ -186,7 +207,7 @@
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @else
-                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.grades.delete', $grade->id) }}', 'Apakah Anda yakin ingin menghapus Tingkatan ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Tingkatan">
+                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.grades.delete', $grade->id) }}', 'Apakah Anda yakin ingin menghapus Tingkatan ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer" title="Hapus Tingkatan">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         @endif
@@ -198,6 +219,9 @@
                                 <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada tingkatan yang ditambahkan.</td>
                             </tr>
                         @endforelse
+                        <tr id="emptyGradeRow-filtered" class="hidden">
+                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tidak ada tingkatan kelas untuk unit yang dipilih.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -211,8 +235,8 @@
                         <p class="text-[11px] text-slate-400">Kelola layanan tambahan opsional seperti TPA/Daycare dan TPQ.</p>
                     </div>
                     <button
-                        onclick="openExtraModal('', '', '', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
-                        class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1"
+                        onclick="openExtraModal('', '', currentUnitFilter, '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
+                        class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer"
                     >
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                         Tambah Layanan
@@ -233,7 +257,7 @@
                         </thead>
                         <tbody class="text-xs text-slate-650 divide-y divide-slate-50">
                             @forelse($extraServices as $service)
-                                <tr class="hover:bg-slate-50/30 transition">
+                                <tr class="extra-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $service->spmb_unit_id ?? 'all' }}">
                                     <td class="py-4 px-6 font-bold text-slate-800">
                                         {{ $service->name }}
                                     </td>
@@ -260,7 +284,7 @@
                                     </td>
                                     <td class="py-4 px-6">
                                         <div class="flex items-center justify-center gap-1.5">
-                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->spmb_unit_id }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald" title="Edit Layanan">
+                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->spmb_unit_id }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Layanan">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
                                             @if($service->registrations_count > 0)
@@ -268,7 +292,7 @@
                                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             @else
-                                                <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.extra-services.delete', $service->id) }}', 'Apakah Anda yakin ingin menghapus Layanan ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Layanan">
+                                                <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.extra-services.delete', $service->id) }}', 'Apakah Anda yakin ingin menghapus Layanan ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer" title="Hapus Layanan">
                                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             @endif
@@ -280,6 +304,9 @@
                                     <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada layanan non-formal yang ditambahkan.</td>
                                 </tr>
                             @endforelse
+                            <tr id="emptyExtraRow-filtered" class="hidden">
+                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tidak ada layanan non-formal untuk unit yang dipilih.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -488,6 +515,92 @@
     @endif
 
     <script>
+        let currentUnitFilter = "{{ $selectedUnitId ?? '' }}";
+
+        // Dynamic Unit Filtering
+        window.filterByUnit = function(unitId) {
+            currentUnitFilter = unitId ? unitId.toString() : '';
+
+            // Update active button classes
+            document.querySelectorAll('.unit-filter-btn').forEach(btn => {
+                btn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60 cursor-pointer";
+            });
+
+            const activeBtnId = currentUnitFilter ? 'unitFilterBtn-' + currentUnitFilter : 'unitFilterBtn-all';
+            const activeBtn = document.getElementById(activeBtnId);
+            if (activeBtn) {
+                activeBtn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-brand-emerald text-white shadow-xs cursor-pointer";
+            }
+
+            // 1. Filter Tab Unit
+            const unitRows = document.querySelectorAll('.unit-item-row');
+            let visibleUnitCount = 0;
+            unitRows.forEach(row => {
+                const uId = (row.dataset.unitId || '').toString().trim();
+                if (!currentUnitFilter || uId === currentUnitFilter) {
+                    row.style.display = '';
+                    visibleUnitCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            const emptyUnitFiltered = document.getElementById('emptyUnitRow-filtered');
+            if (emptyUnitFiltered) {
+                if (unitRows.length > 0 && visibleUnitCount === 0) emptyUnitFiltered.classList.remove('hidden');
+                else emptyUnitFiltered.classList.add('hidden');
+            }
+
+            // 2. Filter Tab Grade
+            const gradeRows = document.querySelectorAll('.grade-item-row');
+            let visibleGradeCount = 0;
+            gradeRows.forEach(row => {
+                const uId = (row.dataset.unitId || '').toString().trim();
+                if (!currentUnitFilter || uId === currentUnitFilter) {
+                    row.style.display = '';
+                    visibleGradeCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            const emptyGradeFiltered = document.getElementById('emptyGradeRow-filtered');
+            if (emptyGradeFiltered) {
+                if (gradeRows.length > 0 && visibleGradeCount === 0) emptyGradeFiltered.classList.remove('hidden');
+                else emptyGradeFiltered.classList.add('hidden');
+            }
+
+            // 3. Filter Tab Extra Services
+            const extraRows = document.querySelectorAll('.extra-item-row');
+            let visibleExtraCount = 0;
+            extraRows.forEach(row => {
+                const uId = (row.dataset.unitId || '').toString().trim();
+                if (!currentUnitFilter || uId === 'all' || uId === currentUnitFilter) {
+                    row.style.display = '';
+                    visibleExtraCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            const emptyExtraFiltered = document.getElementById('emptyExtraRow-filtered');
+            if (emptyExtraFiltered) {
+                if (extraRows.length > 0 && visibleExtraCount === 0) emptyExtraFiltered.classList.remove('hidden');
+                else emptyExtraFiltered.classList.add('hidden');
+            }
+
+            // Update URL and storage
+            const url = new URL(window.location.href);
+            if (currentUnitFilter) {
+                url.searchParams.set('unit_id', currentUnitFilter);
+            } else {
+                url.searchParams.delete('unit_id');
+            }
+            window.history.replaceState({ path: url.toString() }, '', url.toString());
+            localStorage.setItem('spmb_units_active_unit', currentUnitFilter);
+
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
+        };
+
         // Tab Switching
         window.switchTab = function(tabId) {
             const panel = document.getElementById('tabContent-' + tabId);
@@ -497,210 +610,225 @@
             panel.classList.remove('hidden');
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
+                btn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50 cursor-pointer";
             });
             
             const activeBtn = document.getElementById('tabBtn-' + tabId);
             if (activeBtn) {
-                activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+                activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow cursor-pointer";
             }
             
             // Update URL query parameter to sync with server
-            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
-            window.history.replaceState({ path: newUrl }, '', newUrl);
-
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', tabId);
+            if (currentUnitFilter) {
+                url.searchParams.set('unit_id', currentUnitFilter);
+            }
+            window.history.replaceState({ path: url.toString() }, '', url.toString());
             localStorage.setItem('spmb_units_active_tab', tabId);
-        }
+        };
 
-    document.addEventListener("DOMContentLoaded", function() {
-        // Tab state is handled server-side via Laravel view variable $activeTab
-    });
-
-    // Clear Validation Errors on modal show/hide
-    function clearModalErrors() {
-        document.querySelectorAll('.spmb-unit-errors').forEach(el => {
-            el.classList.add('hidden');
-        });
-    }
-
-    // Modal Unit
-    function openUnitModal(name = '', code = '', whatsapp = '', contactName = '', groupUrl = '', isActive = '1', isCreate = true, actionUrl = '') {
-        clearModalErrors();
-        
-        const modal = document.getElementById('unitModal');
-        const modalBody = document.getElementById('unitModalBody');
-        const form = document.getElementById('unitForm');
-        const methodDiv = document.getElementById('unitMethod');
-        
-        document.getElementById('unitModalTitle').innerText = isCreate ? 'Tambah Unit Pendaftaran' : 'Edit Unit Pendaftaran';
-        document.getElementById('unitSubmitBtn').innerText = isCreate ? 'Simpan Unit' : 'Perbarui Unit';
-        
-        form.setAttribute('action', actionUrl);
-        document.getElementById('unitNameInput').value = name;
-        document.getElementById('unitCodeInput').value = code;
-        document.getElementById('unitWhatsappInput').value = whatsapp;
-        document.getElementById('unitAdminContactInput').value = contactName;
-        document.getElementById('unitGroupUrlInput').value = groupUrl;
-        document.getElementById('unitActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
-        
-        if (!isCreate) {
-            methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
-        } else {
-            methodDiv.innerHTML = '';
-        }
-        
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        modalBody.classList.remove('scale-95');
-        modalBody.classList.add('scale-100');
-    }
-
-    function closeUnitModal() {
-        clearModalErrors();
-        const modal = document.getElementById('unitModal');
-        const modalBody = document.getElementById('unitModalBody');
-        modal.classList.add('opacity-0', 'pointer-events-none');
-        modalBody.classList.remove('scale-100');
-        modalBody.classList.add('scale-95');
-    }
-
-    // Modal Grade
-    function openGradeModal(name = '', unitId = '', minAgeYears = '', minAgeMonths = '0', maxAgeYears = '', maxAgeMonths = '0', ageNotes = '', isActive = '1', isCreate = true, actionUrl = '') {
-        clearModalErrors();
-        
-        const modal = document.getElementById('gradeModal');
-        const modalBody = document.getElementById('gradeModalBody');
-        const form = document.getElementById('gradeForm');
-        const methodDiv = document.getElementById('gradeMethod');
-        
-        document.getElementById('gradeModalTitle').innerText = isCreate ? 'Tambah Tingkatan Kelas' : 'Edit Tingkatan Kelas';
-        document.getElementById('gradeSubmitBtn').innerText = isCreate ? 'Simpan Tingkatan' : 'Perbarui Tingkatan';
-        
-        form.setAttribute('action', actionUrl);
-        document.getElementById('gradeNameInput').value = name;
-        document.getElementById('gradeUnitInput').value = unitId;
-        document.getElementById('gradeMinAgeYearsInput').value = minAgeYears;
-        document.getElementById('gradeMinAgeMonthsInput').value = (minAgeMonths !== '' && minAgeMonths !== null) ? minAgeMonths : '0';
-        document.getElementById('gradeMaxAgeYearsInput').value = maxAgeYears;
-        document.getElementById('gradeMaxAgeMonthsInput').value = (maxAgeMonths !== '' && maxAgeMonths !== null) ? maxAgeMonths : '0';
-        document.getElementById('gradeAgeNotesInput').value = ageNotes;
-        document.getElementById('gradeActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
-        
-        if (!isCreate) {
-            methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
-        } else {
-            methodDiv.innerHTML = '';
-        }
-        
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        modalBody.classList.remove('scale-95');
-        modalBody.classList.add('scale-100');
-    }
-
-    function closeGradeModal() {
-        clearModalErrors();
-        const modal = document.getElementById('gradeModal');
-        const modalBody = document.getElementById('gradeModalBody');
-        modal.classList.add('opacity-0', 'pointer-events-none');
-        modalBody.classList.remove('scale-100');
-        modalBody.classList.add('scale-95');
-    }
-
-    // Modal Extra Service
-    function openExtraModal(name = '', code = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
-        clearModalErrors();
-        
-        const modal = document.getElementById('extraModal');
-        const modalBody = document.getElementById('extraModalBody');
-        const form = document.getElementById('extraForm');
-        const methodDiv = document.getElementById('extraMethod');
-        
-        document.getElementById('extraModalTitle').innerText = isCreate ? 'Tambah Layanan Non-Formal' : 'Edit Layanan Non-Formal';
-        document.getElementById('extraSubmitBtn').innerText = isCreate ? 'Simpan Layanan' : 'Perbarui Layanan';
-        
-        form.setAttribute('action', actionUrl);
-        document.getElementById('extraNameInput').value = name;
-        document.getElementById('extraCodeInput').value = code;
-        document.getElementById('extraUnitInput').value = unitId || '';
-        document.getElementById('extraActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
-        
-        if (!isCreate) {
-            methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
-        } else {
-            methodDiv.innerHTML = '';
-        }
-        
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        modalBody.classList.remove('scale-95');
-        modalBody.classList.add('scale-100');
-    }
-
-    function closeExtraModal() {
-        clearModalErrors();
-        const modal = document.getElementById('extraModal');
-        const modalBody = document.getElementById('extraModalBody');
-        modal.classList.add('opacity-0', 'pointer-events-none');
-        modalBody.classList.remove('scale-100');
-        modalBody.classList.add('scale-95');
-    }
-
-    // Click outside handlers to close modals
-    document.getElementById('unitModal').addEventListener('click', function(e) {
-        if (e.target === this) closeUnitModal();
-    });
-    document.getElementById('gradeModal').addEventListener('click', function(e) {
-        if (e.target === this) closeGradeModal();
-    });
-    document.getElementById('extraModal').addEventListener('click', function(e) {
-        if (e.target === this) closeExtraModal();
-    });
-
-    // Auto-reopen modal if validation failed on redirect
-    @if(session('failed_modal'))
         document.addEventListener("DOMContentLoaded", function() {
-            let failed = "{{ session('failed_modal') }}";
-            if (failed.startsWith('unit_create')) {
-                switchTab('unit');
-                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.units.store') }}');
-            } else if (failed.startsWith('unit_edit_')) {
-                switchTab('unit');
-                let id = failed.replace('unit_edit_', '');
-                openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
-            } else if (failed.startsWith('grade_create')) {
-                switchTab('grade');
-                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
-            } else if (failed.startsWith('grade_edit_')) {
-                switchTab('grade');
-                let id = failed.replace('grade_edit_', '');
-                openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
-            } else if (failed.startsWith('extra_create')) {
-                switchTab('extra');
-                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
-            } else if (failed.startsWith('extra_edit_')) {
-                switchTab('extra');
-                let id = failed.replace('extra_edit_', '');
-                openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlUnit = urlParams.get('unit_id');
+            const savedUnit = localStorage.getItem('spmb_units_active_unit');
+            
+            if (urlUnit !== null) {
+                currentUnitFilter = urlUnit;
+            } else if (savedUnit !== null && savedUnit !== '') {
+                currentUnitFilter = savedUnit;
             }
 
-            // Show errors inside the reopened modal
-            document.querySelectorAll('.spmb-unit-errors').forEach(el => {
-                el.classList.remove('hidden');
-            });
+            if (currentUnitFilter) {
+                filterByUnit(currentUnitFilter);
+            }
         });
-    @endif
 
-    // Escape key listener to close modals
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const uModal = document.getElementById('unitModal');
-            if (uModal && !uModal.classList.contains('pointer-events-none')) closeUnitModal();
-            
-            const gModal = document.getElementById('gradeModal');
-            if (gModal && !gModal.classList.contains('pointer-events-none')) closeGradeModal();
-            
-            const eModal = document.getElementById('extraModal');
-            if (eModal && !eModal.classList.contains('pointer-events-none')) closeExtraModal();
+        // Clear Validation Errors on modal show/hide
+        function clearModalErrors() {
+            document.querySelectorAll('.spmb-unit-errors').forEach(el => {
+                el.classList.add('hidden');
+            });
         }
-    });
-</script>
+
+        // Modal Unit
+        function openUnitModal(name = '', code = '', whatsapp = '', contactName = '', groupUrl = '', isActive = '1', isCreate = true, actionUrl = '') {
+            clearModalErrors();
+            
+            const modal = document.getElementById('unitModal');
+            const modalBody = document.getElementById('unitModalBody');
+            const form = document.getElementById('unitForm');
+            const methodDiv = document.getElementById('unitMethod');
+            
+            document.getElementById('unitModalTitle').innerText = isCreate ? 'Tambah Unit Pendaftaran' : 'Edit Unit Pendaftaran';
+            document.getElementById('unitSubmitBtn').innerText = isCreate ? 'Simpan Unit' : 'Perbarui Unit';
+            
+            form.setAttribute('action', actionUrl);
+            document.getElementById('unitNameInput').value = name;
+            document.getElementById('unitCodeInput').value = code;
+            document.getElementById('unitWhatsappInput').value = whatsapp;
+            document.getElementById('unitAdminContactInput').value = contactName;
+            document.getElementById('unitGroupUrlInput').value = groupUrl;
+            document.getElementById('unitActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
+            
+            if (!isCreate) {
+                methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+            } else {
+                methodDiv.innerHTML = '';
+            }
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-95');
+            modalBody.classList.add('scale-100');
+        }
+
+        function closeUnitModal() {
+            clearModalErrors();
+            const modal = document.getElementById('unitModal');
+            const modalBody = document.getElementById('unitModalBody');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-100');
+            modalBody.classList.add('scale-95');
+        }
+
+        // Modal Grade
+        function openGradeModal(name = '', unitId = '', minAgeYears = '', minAgeMonths = '0', maxAgeYears = '', maxAgeMonths = '0', ageNotes = '', isActive = '1', isCreate = true, actionUrl = '') {
+            clearModalErrors();
+            
+            const modal = document.getElementById('gradeModal');
+            const modalBody = document.getElementById('gradeModalBody');
+            const form = document.getElementById('gradeForm');
+            const methodDiv = document.getElementById('gradeMethod');
+            
+            document.getElementById('gradeModalTitle').innerText = isCreate ? 'Tambah Tingkatan Kelas' : 'Edit Tingkatan Kelas';
+            document.getElementById('gradeSubmitBtn').innerText = isCreate ? 'Simpan Tingkatan' : 'Perbarui Tingkatan';
+            
+            form.setAttribute('action', actionUrl);
+            document.getElementById('gradeNameInput').value = name;
+            document.getElementById('gradeUnitInput').value = unitId || currentUnitFilter || '';
+            document.getElementById('gradeMinAgeYearsInput').value = minAgeYears;
+            document.getElementById('gradeMinAgeMonthsInput').value = (minAgeMonths !== '' && minAgeMonths !== null) ? minAgeMonths : '0';
+            document.getElementById('gradeMaxAgeYearsInput').value = maxAgeYears;
+            document.getElementById('gradeMaxAgeMonthsInput').value = (maxAgeMonths !== '' && maxAgeMonths !== null) ? maxAgeMonths : '0';
+            document.getElementById('gradeAgeNotesInput').value = ageNotes;
+            document.getElementById('gradeActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
+            
+            if (!isCreate) {
+                methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+            } else {
+                methodDiv.innerHTML = '';
+            }
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-95');
+            modalBody.classList.add('scale-100');
+        }
+
+        function closeGradeModal() {
+            clearModalErrors();
+            const modal = document.getElementById('gradeModal');
+            const modalBody = document.getElementById('gradeModalBody');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-100');
+            modalBody.classList.add('scale-95');
+        }
+
+        // Modal Extra Service
+        function openExtraModal(name = '', code = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
+            clearModalErrors();
+            
+            const modal = document.getElementById('extraModal');
+            const modalBody = document.getElementById('extraModalBody');
+            const form = document.getElementById('extraForm');
+            const methodDiv = document.getElementById('extraMethod');
+            
+            document.getElementById('extraModalTitle').innerText = isCreate ? 'Tambah Layanan Non-Formal' : 'Edit Layanan Non-Formal';
+            document.getElementById('extraSubmitBtn').innerText = isCreate ? 'Simpan Layanan' : 'Perbarui Layanan';
+            
+            form.setAttribute('action', actionUrl);
+            document.getElementById('extraNameInput').value = name;
+            document.getElementById('extraCodeInput').value = code;
+            document.getElementById('extraUnitInput').value = unitId || currentUnitFilter || '';
+            document.getElementById('extraActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
+            
+            if (!isCreate) {
+                methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+            } else {
+                methodDiv.innerHTML = '';
+            }
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-95');
+            modalBody.classList.add('scale-100');
+        }
+
+        function closeExtraModal() {
+            clearModalErrors();
+            const modal = document.getElementById('extraModal');
+            const modalBody = document.getElementById('extraModalBody');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalBody.classList.remove('scale-100');
+            modalBody.classList.add('scale-95');
+        }
+
+        // Click outside handlers to close modals
+        document.getElementById('unitModal').addEventListener('click', function(e) {
+            if (e.target === this) closeUnitModal();
+        });
+        document.getElementById('gradeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeGradeModal();
+        });
+        document.getElementById('extraModal').addEventListener('click', function(e) {
+            if (e.target === this) closeExtraModal();
+        });
+
+        // Auto-reopen modal if validation failed on redirect
+        @if(session('failed_modal'))
+            document.addEventListener("DOMContentLoaded", function() {
+                let failed = "{{ session('failed_modal') }}";
+                if (failed.startsWith('unit_create')) {
+                    switchTab('unit');
+                    openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.units.store') }}');
+                } else if (failed.startsWith('unit_edit_')) {
+                    switchTab('unit');
+                    let id = failed.replace('unit_edit_', '');
+                    openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
+                } else if (failed.startsWith('grade_create')) {
+                    switchTab('grade');
+                    openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
+                } else if (failed.startsWith('grade_edit_')) {
+                    switchTab('grade');
+                    let id = failed.replace('grade_edit_', '');
+                    openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
+                } else if (failed.startsWith('extra_create')) {
+                    switchTab('extra');
+                    openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
+                } else if (failed.startsWith('extra_edit_')) {
+                    switchTab('extra');
+                    let id = failed.replace('extra_edit_', '');
+                    openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
+                }
+
+                // Show errors inside the reopened modal
+                document.querySelectorAll('.spmb-unit-errors').forEach(el => {
+                    el.classList.remove('hidden');
+                });
+            });
+        @endif
+
+        // Escape key listener to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const uModal = document.getElementById('unitModal');
+                if (uModal && !uModal.classList.contains('pointer-events-none')) closeUnitModal();
+                
+                const gModal = document.getElementById('gradeModal');
+                if (gModal && !gModal.classList.contains('pointer-events-none')) closeGradeModal();
+                
+                const eModal = document.getElementById('extraModal');
+                if (eModal && !eModal.classList.contains('pointer-events-none')) closeExtraModal();
+            }
+        });
+    </script>
 </div>
 @endsection
