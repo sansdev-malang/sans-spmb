@@ -441,7 +441,7 @@
                                 $currentStageText = 'Administrasi';
                                 $currentStageColor = 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/20 dark:text-pink-400 dark:border-pink-900';
                             } elseif ($status === 'completed') {
-                                $currentStageText = 'Selesai & Lulus';
+                                $currentStageText = 'Selesai';
                                 $currentStageColor = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900';
                             } else {
                                 $currentStageText = str_replace('_', ' ', $status);
@@ -1425,7 +1425,7 @@
             { title: 'Ta\'aruf', desc: 'Observasi & Tes' },
             { title: 'Persetujuan', desc: 'Tanda Tangan Biaya' },
             { title: 'Administrasi', desc: 'Pelunasan / Cicilan' },
-            { title: 'Lulus & Selesai', desc: 'Resmi Diterima' }
+            { title: 'Selesai', desc: 'Resmi Diterima' }
         ];
         
         let html = `

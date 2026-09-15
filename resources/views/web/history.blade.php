@@ -483,7 +483,7 @@
                                     <h5 class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                                         <span>Assessment / Ta'aruf</span>
                                         @if(in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']))
-                                            <span class="text-[9px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-bold uppercase">Selesai & Lulus</span>
+                                            <span class="text-[9px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-bold uppercase">Selesai</span>
                                         @elseif(!empty($reg->observation_date))
                                             <span class="text-[9px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold uppercase">Terjadwal</span>
                                         @else
