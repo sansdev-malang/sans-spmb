@@ -900,7 +900,7 @@
 @endif
 
 <script>
-    let currentDeleteUrl = '';
+    var currentDeleteUrl = '';
 
     function setModalAddress(addr) {
         const input = document.getElementById('modalObservationAddress');

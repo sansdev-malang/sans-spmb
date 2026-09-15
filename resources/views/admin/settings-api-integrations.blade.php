@@ -1007,8 +1007,8 @@ if (hash_equals($signature, $calculated)) {
         });
     }
 
-    let currentActiveLog = null;
-    let currentActiveLogTab = 'req';
+    var currentActiveLog = null;
+    var currentActiveLogTab = 'req';
 
     function switchLogInspectTab(tab) {
         currentActiveLogTab = tab;

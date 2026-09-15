@@ -138,7 +138,7 @@
                         <h3 class="font-extrabold text-base text-slate-800">Daftar Nominal {{ $cat->name }}</h3>
                         <p class="text-[11px] text-slate-400">Atur besaran nominal untuk kategori {{ $cat->name }}.</p>
                     </div>
-                    <button onclick="openFeeModal('biaya_tambahan', '', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '', 'winpay', '{{ $cat->id }}', currentUnitFilter)" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                    <button onclick="openFeeModal('biaya_tambahan', '', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '', 'winpay', '{{ $cat->id }}', window.currentUnitFilter || '')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah {{ $cat->name }}
                     </button>
                 </div>
@@ -474,11 +474,12 @@
 </form>
 
 <script>
-    const currentUserUnitId = "{{ auth()->user()->spmb_unit_id ?? '' }}";
-    const isSuperAdmin = {{ auth()->user()->isSuperAdmin() ? 'true' : 'false' }};
+    var currentUserUnitId = "{{ auth()->user()->spmb_unit_id ?? '' }}";
+    var isSuperAdmin = {{ auth()->user()->isSuperAdmin() ? 'true' : 'false' }};
+    window.currentUnitFilter = "{{ $selectedUnitId ?? '' }}";
 
     // Format as thousands
-    function formatRupiah(value) {
+    window.formatRupiah = function(value) {
         if (!value) return '';
         let str = value.toString();
         if (str.endsWith('.00')) {
@@ -486,13 +487,13 @@
         }
         let clean = str.replace(/\D/g, '');
         return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
+    };
 
     document.addEventListener("DOMContentLoaded", function() {
         const amountInput = document.getElementById('feeAmountInput');
         if (amountInput) {
             amountInput.addEventListener('input', function(e) {
-                let formatted = formatRupiah(e.target.value);
+                let formatted = window.formatRupiah(e.target.value);
                 e.target.value = formatted;
             });
         }
@@ -509,55 +510,55 @@
     });
 
     // Checkbox controls for Category Units (Super Admin)
-    function toggleAllUnits(source) {
+    window.toggleAllUnits = function(source) {
         document.querySelectorAll('.unit-checkbox').forEach(cb => {
             cb.checked = source.checked;
         });
-    }
+    };
 
-    function updateCheckAllState() {
+    window.updateCheckAllState = function() {
         const checkboxes = document.querySelectorAll('.unit-checkbox');
         const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
         const checkAll = document.getElementById('checkAllUnits');
         if (checkAll) {
             checkAll.checked = checkedCount === checkboxes.length;
         }
-    }
+    };
 
     // Fee Units Checkbox controls (Super Admin)
-    function getSelectedFeeUnits() {
+    window.getSelectedFeeUnits = function() {
         const checkedBoxes = document.querySelectorAll('.fee-unit-checkbox:checked');
         return Array.from(checkedBoxes).map(cb => cb.value);
-    }
+    };
 
-    function toggleAllFeeUnits(source) {
+    window.toggleAllFeeUnits = function(source) {
         document.querySelectorAll('.fee-unit-checkbox').forEach(cb => {
             cb.checked = source.checked;
         });
-        filterTargetingCheckboxesByUnit(getSelectedFeeUnits());
-    }
+        window.filterTargetingCheckboxesByUnit(window.getSelectedFeeUnits());
+    };
 
-    function updateCheckAllFeeState() {
+    window.updateCheckAllFeeState = function() {
         const checkboxes = document.querySelectorAll('.fee-unit-checkbox');
         const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
         const checkAll = document.getElementById('checkAllFeeUnits');
         if (checkAll) {
             checkAll.checked = checkedCount === checkboxes.length;
         }
-        filterTargetingCheckboxesByUnit(getSelectedFeeUnits());
-    }
+        window.filterTargetingCheckboxesByUnit(window.getSelectedFeeUnits());
+    };
 
     // Targeting Checkboxes Controls
-    function toggleAllGrades(source) {
+    window.toggleAllGrades = function(source) {
         document.querySelectorAll('.grade-item-wrapper').forEach(wrapper => {
             if (wrapper.style.display !== 'none') {
                 const cb = wrapper.querySelector('.fee-grade-checkbox');
                 if (cb) cb.checked = source.checked;
             }
         });
-    }
+    };
 
-    function updateCheckAllGradesState() {
+    window.updateCheckAllGradesState = function() {
         const visibleWrappers = Array.from(document.querySelectorAll('.grade-item-wrapper')).filter(w => w.style.display !== 'none');
         if (visibleWrappers.length === 0) return;
         const checkedCount = visibleWrappers.filter(w => {
@@ -568,18 +569,18 @@
         if (checkAll) {
             checkAll.checked = checkedCount === visibleWrappers.length;
         }
-    }
+    };
 
-    function toggleAllClassPrograms(source) {
+    window.toggleAllClassPrograms = function(source) {
         document.querySelectorAll('.program-item-wrapper').forEach(wrapper => {
             if (wrapper.style.display !== 'none') {
                 const cb = wrapper.querySelector('.fee-program-checkbox');
                 if (cb) cb.checked = source.checked;
             }
         });
-    }
+    };
 
-    function updateCheckAllClassProgramsState() {
+    window.updateCheckAllClassProgramsState = function() {
         const visibleWrappers = Array.from(document.querySelectorAll('.program-item-wrapper')).filter(w => w.style.display !== 'none');
         if (visibleWrappers.length === 0) return;
         const checkedCount = visibleWrappers.filter(w => {
@@ -590,18 +591,18 @@
         if (checkAll) {
             checkAll.checked = checkedCount === visibleWrappers.length;
         }
-    }
+    };
 
-    function toggleAllTypes(source) {
+    window.toggleAllTypes = function(source) {
         document.querySelectorAll('.type-item-wrapper').forEach(wrapper => {
             if (wrapper.style.display !== 'none') {
                 const cb = wrapper.querySelector('.fee-type-checkbox');
                 if (cb) cb.checked = source.checked;
             }
         });
-    }
+    };
 
-    function updateCheckAllTypesState() {
+    window.updateCheckAllTypesState = function() {
         const visibleWrappers = Array.from(document.querySelectorAll('.type-item-wrapper')).filter(w => w.style.display !== 'none');
         if (visibleWrappers.length === 0) return;
         const checkedCount = visibleWrappers.filter(w => {
@@ -612,10 +613,10 @@
         if (checkAll) {
             checkAll.checked = checkedCount === visibleWrappers.length;
         }
-    }
+    };
 
     // Dynamic Filter for Checklist based on Selected Unit
-    function filterTargetingCheckboxesByUnit(activeUnits) {
+    window.filterTargetingCheckboxesByUnit = function(activeUnits) {
         let unitIds = [];
         if (Array.isArray(activeUnits)) {
             unitIds = activeUnits.map(id => id.toString().trim()).filter(id => id !== '');
@@ -637,7 +638,7 @@
                 if (cb) cb.checked = false;
             }
         });
-        updateCheckAllGradesState();
+        window.updateCheckAllGradesState();
 
         // Filter Class Programs
         document.querySelectorAll('.program-item-wrapper').forEach(wrapper => {
@@ -650,7 +651,7 @@
                 if (cb) cb.checked = false;
             }
         });
-        updateCheckAllClassProgramsState();
+        window.updateCheckAllClassProgramsState();
 
         // Filter Registration Types
         document.querySelectorAll('.type-item-wrapper').forEach(wrapper => {
@@ -663,21 +664,19 @@
                 if (cb) cb.checked = false;
             }
         });
-        updateCheckAllTypesState();
-    }
-
-    let currentUnitFilter = "{{ $selectedUnitId ?? '' }}";
+        window.updateCheckAllTypesState();
+    };
 
     // Dynamic Unit Filtering
-    function filterFeesByUnit(unitId) {
-        currentUnitFilter = unitId ? unitId.toString() : '';
+    window.filterFeesByUnit = function(unitId) {
+        window.currentUnitFilter = unitId ? unitId.toString() : '';
 
         // Update active filter button styling
         document.querySelectorAll('.unit-filter-btn').forEach(btn => {
             btn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60 cursor-pointer";
         });
 
-        const activeBtnId = currentUnitFilter ? 'unitFilterBtn-' + currentUnitFilter : 'unitFilterBtn-all';
+        const activeBtnId = window.currentUnitFilter ? 'unitFilterBtn-' + window.currentUnitFilter : 'unitFilterBtn-all';
         const activeBtn = document.getElementById(activeBtnId);
         if (activeBtn) {
             activeBtn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-brand-emerald text-white shadow-xs cursor-pointer";
@@ -688,7 +687,7 @@
         let visibleCatCount = 0;
         catRows.forEach(row => {
             const uIds = (row.dataset.unitIds || '').split(',').map(s => s.trim()).filter(Boolean);
-            if (!currentUnitFilter || uIds.length === 0 || uIds.includes(currentUnitFilter)) {
+            if (!window.currentUnitFilter || uIds.length === 0 || uIds.includes(window.currentUnitFilter)) {
                 row.style.display = '';
                 visibleCatCount++;
             } else {
@@ -715,7 +714,7 @@
             feeRows.forEach(row => {
                 catId = row.dataset.categoryId;
                 const uId = (row.dataset.unitId || '').toString().trim();
-                if (!currentUnitFilter || uId === currentUnitFilter) {
+                if (!window.currentUnitFilter || uId === window.currentUnitFilter) {
                     row.style.display = '';
                     visibleFeeCount++;
                 } else {
@@ -737,22 +736,22 @@
 
         // Update URL and LocalStorage
         const url = new URL(window.location.href);
-        if (currentUnitFilter) {
-            url.searchParams.set('unit_id', currentUnitFilter);
+        if (window.currentUnitFilter) {
+            url.searchParams.set('unit_id', window.currentUnitFilter);
         } else {
             url.searchParams.delete('unit_id');
         }
         window.history.replaceState({ path: url.toString() }, '', url.toString());
-        localStorage.setItem('spmb_fees_active_unit', currentUnitFilter);
+        localStorage.setItem('spmb_fees_active_unit', window.currentUnitFilter);
 
         // Refresh icons if lucide is available
         if (typeof lucide !== 'undefined' && lucide.createIcons) {
             lucide.createIcons();
         }
-    }
+    };
 
     // Tab Switching
-    function switchFeeTab(tabId) {
+    window.switchFeeTab = function(tabId) {
         const panel = document.getElementById('feeTabContent-' + tabId);
         if (!panel) return;
 
@@ -770,15 +769,15 @@
         
         const url = new URL(window.location.href);
         url.searchParams.set('tab', tabId);
-        if (currentUnitFilter) {
-            url.searchParams.set('unit_id', currentUnitFilter);
+        if (window.currentUnitFilter) {
+            url.searchParams.set('unit_id', window.currentUnitFilter);
         }
         window.history.replaceState({ path: url.toString() }, '', url.toString());
         localStorage.setItem('spmb_fees_active_tab', tabId);
-    }
+    };
 
     // Unified Fee Modal Control
-    function openFeeModal(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee', applicableGrades = [], applicableClassPrograms = [], applicableTypes = []) {
+    window.openFeeModal = function(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee', applicableGrades = [], applicableClassPrograms = [], applicableTypes = []) {
         const errorWrapper = document.getElementById('feeErrorWrapper');
         if (errorWrapper) {
             errorWrapper.classList.add('hidden');
@@ -854,13 +853,13 @@
 
             if (categoryUnitsWrapper) {
                 categoryUnitsWrapper.classList.remove('hidden');
-                let targetUnits = (categoryUnits && categoryUnits.length > 0) ? categoryUnits : (currentUnitFilter ? [currentUnitFilter] : []);
+                let targetUnits = (categoryUnits && categoryUnits.length > 0) ? categoryUnits : (window.currentUnitFilter ? [window.currentUnitFilter] : []);
                 if (targetUnits.length > 0) {
                     targetUnits.forEach(uId => {
                         const cb = document.querySelector(`.unit-checkbox[value="${uId}"]`);
                         if (cb) cb.checked = true;
                     });
-                    updateCheckAllState();
+                    window.updateCheckAllState();
                 }
             }
         } else {
@@ -872,7 +871,7 @@
 
             amountWrapper.classList.remove('hidden');
             if (targetingWrapper) targetingWrapper.classList.remove('hidden');
-            amountInput.value = formatRupiah(amount);
+            amountInput.value = window.formatRupiah(amount);
             amountInput.required = true;
             
             const isLockedBool = (isLocked === 'true' || isLocked === true || isLocked === '1');
@@ -908,7 +907,7 @@
 
             if (unitWrapper) {
                 unitWrapper.classList.remove('hidden');
-                let effectiveUnitId = unitId || currentUnitFilter || (currentUserUnitId || '');
+                let effectiveUnitId = unitId || window.currentUnitFilter || (currentUserUnitId || '');
                 let selectedUnits = [];
                 if (effectiveUnitId) {
                     let unitIdStr = effectiveUnitId.toString();
@@ -921,7 +920,7 @@
                 document.querySelectorAll('.fee-unit-checkbox').forEach(cb => {
                     cb.checked = selectedUnits.includes(cb.value.toString());
                 });
-                updateCheckAllFeeState();
+                window.updateCheckAllFeeState();
             }
 
             // Populate targeting selections
@@ -949,61 +948,61 @@
                 cb.checked = targetTypesArr.includes(cb.value.toString());
             });
 
-            const effectiveUnit = unitId || (isSuperAdmin ? getSelectedFeeUnits() : currentUserUnitId);
-            filterTargetingCheckboxesByUnit(effectiveUnit);
+            const effectiveUnit = unitId || (isSuperAdmin ? window.getSelectedFeeUnits() : currentUserUnitId);
+            window.filterTargetingCheckboxesByUnit(effectiveUnit);
 
             if (categoryUnitsWrapper) categoryUnitsWrapper.classList.add('hidden');
         }
 
         document.getElementById('feeCrudModal').classList.remove('hidden');
-    }
+    };
 
     // Close Modal
-    function closeFeeModal() {
+    window.closeFeeModal = function() {
         document.getElementById('feeCrudModal').classList.add('hidden');
         const errorWrapper = document.getElementById('feeErrorWrapper');
         if (errorWrapper) {
             errorWrapper.classList.add('hidden');
         }
-    }
+    };
 
     document.getElementById('feeCrudModal').addEventListener('click', function(e) {
-        if (e.target === this) closeFeeModal();
+        if (e.target === this) window.closeFeeModal();
     });
 
     // Delete Operations
-    function deleteFeeItem(type, name, isUsed, deleteUrl) {
+    window.deleteFeeItem = function(type, name, isUsed, deleteUrl) {
         let label = (type === 'jenis_biaya') ? 'Jenis Biaya' : 'Nominal Biaya';
         if (isUsed === 'true' || isUsed === true || isUsed === '1') {
             showToast(`Peringatan: Tidak dapat menghapus ${label} "${name}" karena sudah terpakai dalam data transaksi pembayaran aktif!`, 'error');
         } else {
             confirmDelete(deleteUrl, `Apakah Anda yakin ingin menghapus ${label} "${name}"?`);
         }
-    }
+    };
 
     // Auto-reopen modal if validation failed on redirect
     @if(session('failed_modal'))
         document.addEventListener("DOMContentLoaded", function() {
             let failed = "{{ session('failed_modal') }}";
             if (failed.startsWith('jenis_biaya_create')) {
-                switchFeeTab('jenis_biaya');
-                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}], '{{ old('category_type', 'tuition_fee') }}');
+                window.switchFeeTab('jenis_biaya');
+                window.openFeeModal('jenis_biaya', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}], '{{ old('category_type', 'tuition_fee') }}');
             } else if (failed.startsWith('jenis_biaya_edit_')) {
-                switchFeeTab('jenis_biaya');
+                window.switchFeeTab('jenis_biaya');
                 let id = failed.replace('jenis_biaya_edit_', '');
-                openFeeModal('jenis_biaya', '{{ old('name') }}', false, '/admin/spmb-settings/fees/categories/' + id, '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}], '{{ old('category_type', 'tuition_fee') }}');
+                window.openFeeModal('jenis_biaya', '{{ old('name') }}', false, '/admin/spmb-settings/fees/categories/' + id, '', 'winpay', '', '', [{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : '' }}], '{{ old('category_type', 'tuition_fee') }}');
             } else if (failed.startsWith('biaya_admin_create')) {
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
                 if (oldCatId) {
-                    switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}', [], 'tuition_fee', {{ json_encode(old('applicable_grades', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_types', [])) }});
+                    window.switchFeeTab('cat_' + oldCatId);
+                    window.openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}', [], 'tuition_fee', {{ json_encode(old('applicable_grades', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_types', [])) }});
                 }
             } else if (failed.startsWith('biaya_admin_edit_')) {
                 const oldCatId = "{{ old('spmb_fee_category_id') }}";
                 let id = failed.replace('biaya_admin_edit_', '');
                 if (oldCatId) {
-                    switchFeeTab('cat_' + oldCatId);
-                    openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}', [], 'tuition_fee', {{ json_encode(old('applicable_grades', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_types', [])) }});
+                    window.switchFeeTab('cat_' + oldCatId);
+                    window.openFeeModal('biaya_tambahan', '{{ old('name') }}', false, '/admin/spmb-settings/fees/admin-fees/' + id, '{{ old('amount') }}', '{{ is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway') }}', oldCatId, '{{ is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units') }}', [], 'tuition_fee', {{ json_encode(old('applicable_grades', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_types', [])) }});
                 }
             }
 
@@ -1021,13 +1020,13 @@
         const savedUnit = localStorage.getItem('spmb_fees_active_unit');
         
         if (urlUnit !== null) {
-            currentUnitFilter = urlUnit;
+            window.currentUnitFilter = urlUnit;
         } else if (savedUnit !== null && savedUnit !== '') {
-            currentUnitFilter = savedUnit;
+            window.currentUnitFilter = savedUnit;
         }
 
-        if (currentUnitFilter) {
-            filterFeesByUnit(currentUnitFilter);
+        if (window.currentUnitFilter) {
+            window.filterFeesByUnit(window.currentUnitFilter);
         }
     });
 
@@ -1036,7 +1035,7 @@
         if (e.key === 'Escape') {
             const modal = document.getElementById('feeCrudModal');
             if (modal && !modal.classList.contains('hidden')) {
-                closeFeeModal();
+                window.closeFeeModal();
             }
         }
     });

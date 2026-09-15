@@ -155,7 +155,7 @@
                     <h3 class="font-extrabold text-base text-slate-800">Tingkatan Kelas</h3>
                     <p class="text-[11px] text-slate-400">Kelola tingkatan kelas dan batas usia/umur untuk setiap Unit (mis. TK A, TK B, Kelas 1).</p>
                 </div>
-                <button onclick="openGradeModal('', currentUnitFilter, '', '0', '', '0', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                <button onclick="openGradeModal('', window.currentUnitFilter || '', '', '0', '', '0', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Tingkatan
                 </button>
             </div>
@@ -235,7 +235,7 @@
                         <p class="text-[11px] text-slate-400">Kelola layanan tambahan opsional seperti TPA/Daycare dan TPQ.</p>
                     </div>
                     <button
-                        onclick="openExtraModal('', '', currentUnitFilter, '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
+                        onclick="openExtraModal('', '', window.currentUnitFilter || '', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
                         class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer"
                     >
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -515,18 +515,18 @@
     @endif
 
     <script>
-        let currentUnitFilter = "{{ $selectedUnitId ?? '' }}";
+        window.currentUnitFilter = "{{ $selectedUnitId ?? '' }}";
 
         // Dynamic Unit Filtering
         window.filterByUnit = function(unitId) {
-            currentUnitFilter = unitId ? unitId.toString() : '';
+            window.currentUnitFilter = unitId ? unitId.toString() : '';
 
             // Update active button classes
             document.querySelectorAll('.unit-filter-btn').forEach(btn => {
                 btn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60 cursor-pointer";
             });
 
-            const activeBtnId = currentUnitFilter ? 'unitFilterBtn-' + currentUnitFilter : 'unitFilterBtn-all';
+            const activeBtnId = window.currentUnitFilter ? 'unitFilterBtn-' + window.currentUnitFilter : 'unitFilterBtn-all';
             const activeBtn = document.getElementById(activeBtnId);
             if (activeBtn) {
                 activeBtn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-brand-emerald text-white shadow-xs cursor-pointer";
@@ -537,7 +537,7 @@
             let visibleUnitCount = 0;
             unitRows.forEach(row => {
                 const uId = (row.dataset.unitId || '').toString().trim();
-                if (!currentUnitFilter || uId === currentUnitFilter) {
+                if (!window.currentUnitFilter || uId === window.currentUnitFilter) {
                     row.style.display = '';
                     visibleUnitCount++;
                 } else {
@@ -555,7 +555,7 @@
             let visibleGradeCount = 0;
             gradeRows.forEach(row => {
                 const uId = (row.dataset.unitId || '').toString().trim();
-                if (!currentUnitFilter || uId === currentUnitFilter) {
+                if (!window.currentUnitFilter || uId === window.currentUnitFilter) {
                     row.style.display = '';
                     visibleGradeCount++;
                 } else {
@@ -573,7 +573,7 @@
             let visibleExtraCount = 0;
             extraRows.forEach(row => {
                 const uId = (row.dataset.unitId || '').toString().trim();
-                if (!currentUnitFilter || uId === 'all' || uId === currentUnitFilter) {
+                if (!window.currentUnitFilter || uId === 'all' || uId === window.currentUnitFilter) {
                     row.style.display = '';
                     visibleExtraCount++;
                 } else {
@@ -588,13 +588,13 @@
 
             // Update URL and storage
             const url = new URL(window.location.href);
-            if (currentUnitFilter) {
-                url.searchParams.set('unit_id', currentUnitFilter);
+            if (window.currentUnitFilter) {
+                url.searchParams.set('unit_id', window.currentUnitFilter);
             } else {
                 url.searchParams.delete('unit_id');
             }
             window.history.replaceState({ path: url.toString() }, '', url.toString());
-            localStorage.setItem('spmb_units_active_unit', currentUnitFilter);
+            localStorage.setItem('spmb_units_active_unit', window.currentUnitFilter);
 
             if (typeof lucide !== 'undefined' && lucide.createIcons) {
                 lucide.createIcons();
@@ -621,8 +621,8 @@
             // Update URL query parameter to sync with server
             const url = new URL(window.location.href);
             url.searchParams.set('tab', tabId);
-            if (currentUnitFilter) {
-                url.searchParams.set('unit_id', currentUnitFilter);
+            if (window.currentUnitFilter) {
+                url.searchParams.set('unit_id', window.currentUnitFilter);
             }
             window.history.replaceState({ path: url.toString() }, '', url.toString());
             localStorage.setItem('spmb_units_active_tab', tabId);
@@ -634,26 +634,26 @@
             const savedUnit = localStorage.getItem('spmb_units_active_unit');
             
             if (urlUnit !== null) {
-                currentUnitFilter = urlUnit;
+                window.currentUnitFilter = urlUnit;
             } else if (savedUnit !== null && savedUnit !== '') {
-                currentUnitFilter = savedUnit;
+                window.currentUnitFilter = savedUnit;
             }
 
-            if (currentUnitFilter) {
-                filterByUnit(currentUnitFilter);
+            if (window.currentUnitFilter) {
+                window.filterByUnit(window.currentUnitFilter);
             }
         });
 
         // Clear Validation Errors on modal show/hide
-        function clearModalErrors() {
+        window.clearModalErrors = function() {
             document.querySelectorAll('.spmb-unit-errors').forEach(el => {
                 el.classList.add('hidden');
             });
-        }
+        };
 
         // Modal Unit
-        function openUnitModal(name = '', code = '', whatsapp = '', contactName = '', groupUrl = '', isActive = '1', isCreate = true, actionUrl = '') {
-            clearModalErrors();
+        window.openUnitModal = function(name = '', code = '', whatsapp = '', contactName = '', groupUrl = '', isActive = '1', isCreate = true, actionUrl = '') {
+            window.clearModalErrors();
             
             const modal = document.getElementById('unitModal');
             const modalBody = document.getElementById('unitModalBody');
@@ -680,20 +680,20 @@
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
-        }
+        };
 
-        function closeUnitModal() {
-            clearModalErrors();
+        window.closeUnitModal = function() {
+            window.clearModalErrors();
             const modal = document.getElementById('unitModal');
             const modalBody = document.getElementById('unitModalBody');
             modal.classList.add('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-100');
             modalBody.classList.add('scale-95');
-        }
+        };
 
         // Modal Grade
-        function openGradeModal(name = '', unitId = '', minAgeYears = '', minAgeMonths = '0', maxAgeYears = '', maxAgeMonths = '0', ageNotes = '', isActive = '1', isCreate = true, actionUrl = '') {
-            clearModalErrors();
+        window.openGradeModal = function(name = '', unitId = '', minAgeYears = '', minAgeMonths = '0', maxAgeYears = '', maxAgeMonths = '0', ageNotes = '', isActive = '1', isCreate = true, actionUrl = '') {
+            window.clearModalErrors();
             
             const modal = document.getElementById('gradeModal');
             const modalBody = document.getElementById('gradeModalBody');
@@ -705,7 +705,7 @@
             
             form.setAttribute('action', actionUrl);
             document.getElementById('gradeNameInput').value = name;
-            document.getElementById('gradeUnitInput').value = unitId || currentUnitFilter || '';
+            document.getElementById('gradeUnitInput').value = unitId || window.currentUnitFilter || '';
             document.getElementById('gradeMinAgeYearsInput').value = minAgeYears;
             document.getElementById('gradeMinAgeMonthsInput').value = (minAgeMonths !== '' && minAgeMonths !== null) ? minAgeMonths : '0';
             document.getElementById('gradeMaxAgeYearsInput').value = maxAgeYears;
@@ -722,20 +722,20 @@
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
-        }
+        };
 
-        function closeGradeModal() {
-            clearModalErrors();
+        window.closeGradeModal = function() {
+            window.clearModalErrors();
             const modal = document.getElementById('gradeModal');
             const modalBody = document.getElementById('gradeModalBody');
             modal.classList.add('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-100');
             modalBody.classList.add('scale-95');
-        }
+        };
 
         // Modal Extra Service
-        function openExtraModal(name = '', code = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
-            clearModalErrors();
+        window.openExtraModal = function(name = '', code = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
+            window.clearModalErrors();
             
             const modal = document.getElementById('extraModal');
             const modalBody = document.getElementById('extraModalBody');
@@ -748,7 +748,7 @@
             form.setAttribute('action', actionUrl);
             document.getElementById('extraNameInput').value = name;
             document.getElementById('extraCodeInput').value = code;
-            document.getElementById('extraUnitInput').value = unitId || currentUnitFilter || '';
+            document.getElementById('extraUnitInput').value = unitId || window.currentUnitFilter || '';
             document.getElementById('extraActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
             
             if (!isCreate) {
@@ -760,26 +760,26 @@
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
-        }
+        };
 
-        function closeExtraModal() {
-            clearModalErrors();
+        window.closeExtraModal = function() {
+            window.clearModalErrors();
             const modal = document.getElementById('extraModal');
             const modalBody = document.getElementById('extraModalBody');
             modal.classList.add('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-100');
             modalBody.classList.add('scale-95');
-        }
+        };
 
         // Click outside handlers to close modals
         document.getElementById('unitModal').addEventListener('click', function(e) {
-            if (e.target === this) closeUnitModal();
+            if (e.target === this) window.closeUnitModal();
         });
         document.getElementById('gradeModal').addEventListener('click', function(e) {
-            if (e.target === this) closeGradeModal();
+            if (e.target === this) window.closeGradeModal();
         });
         document.getElementById('extraModal').addEventListener('click', function(e) {
-            if (e.target === this) closeExtraModal();
+            if (e.target === this) window.closeExtraModal();
         });
 
         // Auto-reopen modal if validation failed on redirect
@@ -787,26 +787,26 @@
             document.addEventListener("DOMContentLoaded", function() {
                 let failed = "{{ session('failed_modal') }}";
                 if (failed.startsWith('unit_create')) {
-                    switchTab('unit');
-                    openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.units.store') }}');
+                    window.switchTab('unit');
+                    window.openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.units.store') }}');
                 } else if (failed.startsWith('unit_edit_')) {
-                    switchTab('unit');
+                    window.switchTab('unit');
                     let id = failed.replace('unit_edit_', '');
-                    openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
+                    window.openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
                 } else if (failed.startsWith('grade_create')) {
-                    switchTab('grade');
-                    openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
+                    window.switchTab('grade');
+                    window.openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
                 } else if (failed.startsWith('grade_edit_')) {
-                    switchTab('grade');
+                    window.switchTab('grade');
                     let id = failed.replace('grade_edit_', '');
-                    openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
+                    window.openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
                 } else if (failed.startsWith('extra_create')) {
-                    switchTab('extra');
-                    openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
+                    window.switchTab('extra');
+                    window.openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
                 } else if (failed.startsWith('extra_edit_')) {
-                    switchTab('extra');
+                    window.switchTab('extra');
                     let id = failed.replace('extra_edit_', '');
-                    openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
+                    window.openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
                 }
 
                 // Show errors inside the reopened modal
@@ -820,13 +820,13 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 const uModal = document.getElementById('unitModal');
-                if (uModal && !uModal.classList.contains('pointer-events-none')) closeUnitModal();
+                if (uModal && !uModal.classList.contains('pointer-events-none')) window.closeUnitModal();
                 
                 const gModal = document.getElementById('gradeModal');
-                if (gModal && !gModal.classList.contains('pointer-events-none')) closeGradeModal();
+                if (gModal && !gModal.classList.contains('pointer-events-none')) window.closeGradeModal();
                 
                 const eModal = document.getElementById('extraModal');
-                if (eModal && !eModal.classList.contains('pointer-events-none')) closeExtraModal();
+                if (eModal && !eModal.classList.contains('pointer-events-none')) window.closeExtraModal();
             }
         });
     </script>
