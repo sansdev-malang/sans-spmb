@@ -16,7 +16,7 @@
     </div>
 
     @php
-        $activeTab = request()->get('tab', 'jalur_gelombang');
+        $activeTab = request('tab', 'jalur_gelombang');
     @endphp
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
@@ -268,7 +268,7 @@
                 <p class="text-[10px] text-slate-400">Aktifkan atau nonaktifkan tarif biaya pendaftaran formulir, uang pangkal administrasi, dan tambahan operasional per unit.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                 <!-- Loop through Fee Categories dynamically (Match Tarif & Biaya Tabs) -->
                 @foreach($feeCategories as $category)
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">

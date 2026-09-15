@@ -122,6 +122,15 @@
                 <tbody class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($registrations as $reg)
                         @php
+                            $parentContact = $reg->parent_phone 
+                                ?: ($reg->father_phone 
+                                ?: ($reg->mother_phone 
+                                ?: ($reg->guardian_phone 
+                                ?: ($reg->getFieldValue('father_phone') 
+                                ?: ($reg->getFieldValue('mother_phone') 
+                                ?: ($reg->getFieldValue('guardian_phone') 
+                                ?: ($reg->user->phone ?? null)))))));
+
                             $candJson = [
                                 'id_label' => 'SANS-' . substr($reg->period->year ?? '2026', 0, 4) . '-' . str_pad($reg->id, 4, '0', STR_PAD_LEFT),
                                 'name' => $reg->candidate_name ?? 'Draft / Belum Isi',
@@ -158,6 +167,7 @@
                                 'mother_address' => $reg->getFieldValue('mother_address') ?? '-',
                                 'mother_phone' => $reg->getFieldValue('mother_phone') ?? '-',
                                 'parent_phone' => $reg->parent_phone ?? '-',
+                                'parent_contact' => $parentContact ?? '-',
 
                                 // Data Wali
                                 'guardian_name' => $reg->getFieldValue('guardian_name') ?? '-',
@@ -1029,6 +1039,10 @@
                     <button type="button" onclick="closeDetailModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl text-xs font-bold transition">
                         Tutup
                     </button>
+                    <button type="button" id="btn-whatsapp" onclick="sendWhatsappFromModal(event)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5 hidden" title="Kirim Pesan WhatsApp">
+                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                        <span>WhatsApp</span>
+                    </button>
                     <button type="submit" id="btn-reject" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5 hidden">
                         <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
                         <span>Tolak & Minta Perbaikan</span>
@@ -1046,6 +1060,40 @@
 <script>
     // Accordion Management for Detail Modal
     var detailAccordionIds = ['acc-program', 'acc-biodata', 'acc-address', 'acc-parents', 'acc-guardian', 'acc-documents'];
+    var currentCandPhone = '';
+    var currentCandName = '';
+    var currentCandStatus = '';
+
+    function sendWhatsappFromModal(e) {
+        if (e) e.preventDefault();
+        if (!currentCandPhone) {
+            alert('Nomor WhatsApp orang tua tidak ditemukan.');
+            return;
+        }
+
+        var notesVal = document.getElementById('verification-notes')?.value?.trim();
+        var candName = currentCandName || 'Calon Murid';
+        var statusStr = currentCandStatus || '';
+        
+        var waText = '';
+        if (notesVal) {
+            waText = "Assalamualaikum Wr. Wb. Ayah/Bunda, perihal verifikasi pendaftaran ananda " + candName + " di Sekolah Anak Saleh.\n\n"
+                + "Catatan Verifikasi Panitia:\n" + notesVal + "\n\n"
+                + "Silakan login ke website https://spmb.sans.sch.id/login untuk melihat status pendaftaran ananda. Terima kasih.";
+        } else if (statusStr === 'VERIFIED') {
+            waText = "Assalamualaikum Wr. Wb. Ayah/Bunda, berkas pendaftaran ananda " + candName + " di Sekolah Anak Saleh telah BERHASIL DIVERIFIKASI.\n\n"
+                + "Tahap selanjutnya adalah proses Ta'aruf/Observasi. Silakan login ke website https://spmb.sans.sch.id/login untuk melihat jadwal lebih lanjut. Terima kasih.";
+        } else if (statusStr === 'FAILED') {
+            waText = "Assalamualaikum Wr. Wb. Ayah/Bunda, berkas pendaftaran ananda " + candName + " di Sekolah Anak Saleh masih memerlukan perbaikan.\n\n"
+                + "Silakan login ke website https://spmb.sans.sch.id/login untuk melihat rincian perbaikan dan mengunggah ulang berkas. Terima kasih.";
+        } else {
+            waText = "Assalamualaikum Wr. Wb. Ayah/Bunda, perihal pendaftaran ananda " + candName + " di SPMB Sekolah Anak Saleh.\n\n"
+                + "Jika ada pertanyaan atau memerlukan informasi mengenai verifikasi berkas, silakan hubungi kami. Terima kasih.";
+        }
+
+        var waUrl = "https://wa.me/" + currentCandPhone + "?text=" + encodeURIComponent(waText);
+        window.open(waUrl, '_blank');
+    }
 
     function toggleDetailAccordion(id) {
         const body = document.getElementById('body-' + id);
@@ -1084,6 +1132,36 @@
         document.getElementById('det-header-name').innerText = cand.name;
         document.getElementById('det-header-level-program').innerText = cand.admission_level + ' • ' + (cand.class_program || 'Reguler');
         document.getElementById('det-created').innerText = cand.created_at_label;
+
+        // Setup WhatsApp contact & button state
+        var rawPhone = cand.parent_contact && cand.parent_contact !== '-' 
+            ? cand.parent_contact 
+            : (cand.parent_phone && cand.parent_phone !== '-' 
+                ? cand.parent_phone 
+                : (cand.father_phone && cand.father_phone !== '-' 
+                    ? cand.father_phone 
+                    : (cand.mother_phone && cand.mother_phone !== '-' 
+                        ? cand.mother_phone 
+                        : (cand.guardian_phone && cand.guardian_phone !== '-' ? cand.guardian_phone : ''))));
+        
+        var cleanPhone = rawPhone ? rawPhone.replace(/[^0-9]/g, '') : '';
+        if (cleanPhone.startsWith('0')) {
+            cleanPhone = '62' + cleanPhone.substring(1);
+        }
+
+        currentCandPhone = cleanPhone;
+        currentCandName = cand.name || 'Calon Murid';
+        currentCandStatus = cand.status || '';
+
+        const btnWa = document.getElementById('btn-whatsapp');
+        if (btnWa) {
+            if (cleanPhone) {
+                btnWa.classList.remove('hidden');
+                btnWa.title = "Kirim WhatsApp ke (" + rawPhone + ")";
+            } else {
+                btnWa.classList.add('hidden');
+            }
+        }
 
         // Status Badge Style
         const statusEl = document.getElementById('det-status');

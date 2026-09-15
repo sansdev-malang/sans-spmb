@@ -335,6 +335,45 @@
                                         }
                                         $feeTitle = !empty($itemNames) ? implode(', ', $itemNames) : 'Pelunasan Biaya Administrasi';
                                     }
+
+                                    $parentPhone = $reg?->parent_phone 
+                                        ?: ($reg?->father_phone 
+                                        ?: ($reg?->mother_phone 
+                                        ?: ($reg?->guardian_phone 
+                                        ?: ($reg?->user?->phone 
+                                        ?: ($pay->user?->phone ?: null)))));
+                                    $cleanPhone = $parentPhone ? preg_replace('/[^0-9]/', '', $parentPhone) : '';
+                                    if ($cleanPhone && str_starts_with($cleanPhone, '0')) {
+                                        $cleanPhone = '62' . substr($cleanPhone, 1);
+                                    }
+
+                                    $candName = $reg?->candidate_name ?? 'Calon Murid';
+                                    $invoiceNum = $pay->invoice_number;
+                                    $amountFormatted = 'Rp ' . number_format($pay->amount, 0, ',', '.');
+
+                                    if ($pay->status === 'success') {
+                                        $waText = "Halo Ayah/Bunda, konfirmasi pembayaran SPMB Sekolah Anak Saleh untuk ananda " . $candName . ".\n\n"
+                                            . "• Invoice: " . $invoiceNum . "\n"
+                                            . "• Tagihan: " . $feeTitle . "\n"
+                                            . "• Nominal: " . $amountFormatted . "\n"
+                                            . "• Status: LUNAS / BERHASIL\n\n"
+                                            . "Terima kasih.";
+                                    } elseif ($pay->status === 'pending') {
+                                        $waText = "Halo Ayah/Bunda, pengingat tagihan pembayaran SPMB Sekolah Anak Saleh untuk ananda " . $candName . ".\n\n"
+                                            . "• Invoice: " . $invoiceNum . "\n"
+                                            . "• Tagihan: " . $feeTitle . "\n"
+                                            . "• Nominal: " . $amountFormatted . "\n"
+                                            . "• Status: MENUNGGU PEMBAYARAN\n\n"
+                                            . "Mohon untuk segera menyelesaikan pembayaran. Hubungi kami jika ada kendala.";
+                                    } else {
+                                        $waText = "Halo Ayah/Bunda, pemberitahuan status transaksi SPMB Sekolah Anak Saleh untuk ananda " . $candName . ".\n\n"
+                                            . "• Invoice: " . $invoiceNum . "\n"
+                                            . "• Tagihan: " . $feeTitle . "\n"
+                                            . "• Nominal: " . $amountFormatted . "\n"
+                                            . "• Status: " . strtoupper($pay->status) . "\n\n"
+                                            . "Silakan hubungi kami jika memerlukan bantuan.";
+                                    }
+                                    $waUrl = $cleanPhone ? "https://wa.me/" . $cleanPhone . "?text=" . urlencode($waText) : null;
                                 @endphp
                                 <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                                     <span class="font-medium text-slate-700 dark:text-slate-300">{{ $feeTitle }}</span>
@@ -349,6 +388,19 @@
                                                 {{ $unitShort }}
                                             </span>
                                         @endif
+                                    @endif
+                                    @if($waUrl)
+                                        <span class="text-slate-300 dark:text-slate-600">•</span>
+                                        <a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded transition shadow-2xs" title="Kirim pesan WhatsApp ke {{ $parentPhone }}">
+                                            <i data-lucide="message-circle" class="w-3 h-3 text-emerald-500 flex-shrink-0"></i>
+                                            <span>WhatsApp</span>
+                                        </a>
+                                    @elseif($parentPhone)
+                                        <span class="text-slate-300 dark:text-slate-600">•</span>
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 dark:text-slate-500" title="Nomor HP: {{ $parentPhone }}">
+                                            <i data-lucide="phone" class="w-3 h-3 text-slate-400 flex-shrink-0"></i>
+                                            <span>{{ $parentPhone }}</span>
+                                        </span>
                                     @endif
                                 </div>
                             </td>
