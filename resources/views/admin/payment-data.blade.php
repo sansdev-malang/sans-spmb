@@ -295,7 +295,7 @@
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">No. Registrasi</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Calon Murid</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Rincian Komponen Biaya</th>
-                        <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Diskon / Keringanan</th>
+                        <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Keringanan</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Kebijakan Cicilan</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Tagihan & Realisasi</th>
                         <th class="border-b border-slate-200 dark:border-slate-700 px-4 py-3.5">Sisa Tagihan</th>

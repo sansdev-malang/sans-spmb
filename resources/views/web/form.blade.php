@@ -1833,7 +1833,7 @@
                 if (!citySelect) return;
 
                 citySelect.disabled = false;
-                citySelect.innerHTML = '<option value="">⏳ Memuat data Kabupaten / Kota...</option>';
+                citySelect.innerHTML = '<option value=""><i data-lucide="loader" class="w-3 h-3 mr-1"></i> Memuat data Kabupaten / Kota...</option>';
 
                 const regencies = await this.getRegencies(provId);
                 citySelect.innerHTML = '<option value="">-- Pilih Kabupaten / Kota --</option>';
@@ -1863,7 +1863,7 @@
                 if (!kecSelect) return;
 
                 kecSelect.disabled = false;
-                kecSelect.innerHTML = '<option value="">⏳ Memuat data Kecamatan...</option>';
+                kecSelect.innerHTML = '<option value=""><i data-lucide="loader" class="w-3 h-3 mr-1"></i> Memuat data Kecamatan...</option>';
 
                 const districts = await this.getDistricts(regencyId);
                 kecSelect.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
@@ -1893,7 +1893,7 @@
                 if (!kelSelect) return;
 
                 kelSelect.disabled = false;
-                kelSelect.innerHTML = '<option value="">⏳ Memuat data Kelurahan / Desa...</option>';
+                kelSelect.innerHTML = '<option value=""><i data-lucide="loader" class="w-3 h-3 mr-1"></i> Memuat data Kelurahan / Desa...</option>';
 
                 const villages = await this.getVillages(districtId);
                 kelSelect.innerHTML = '<option value="">-- Pilih Kelurahan / Desa --</option>';

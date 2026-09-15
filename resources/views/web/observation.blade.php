@@ -411,7 +411,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100 dark:border-emerald-900/60 pb-5">
                                 <div class="flex items-center gap-3.5">
                                     <div class="h-12 w-12 bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center font-bold text-xl flex-shrink-0">
-                                        ⏳
+                                        <i data-lucide="hourglass" class="w-6 h-6"></i>
                                     </div>
                                     <div>
                                         <h3 class="font-black text-slate-800 dark:text-white text-base">{{ $unitTitle }}</h3>
