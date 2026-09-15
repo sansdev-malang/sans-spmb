@@ -114,7 +114,8 @@
                                 Alhamdulillah, Ananda Dinyatakan <span class="text-brand-emerald dark:text-emerald-400">RESMI DITERIMA!</span>
                             </h3>
                             <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                                Selamat kepada ananda <strong class="text-slate-900 dark:text-white font-extrabold">{{ $reg->candidate_name }}</strong> yang telah resmi terdaftar dan diterima sebagai murid baru di <strong>{{ $reg->unit?->name ?? 'Sekolah Anak Saleh' }}</strong> (TP {{ $reg->period?->year ?? date('Y') }}). Selamat bergabung menjadi bagian dari keluarga besar Sekolah Anak Saleh! Silakan unduh Surat Keterangan Penerimaan (SKP) resmi di bawah ini.
+                                Selamat kepada ananda <strong class="text-slate-900 dark:text-white font-extrabold">{{ $reg->candidate_name }}</strong> yang telah resmi terdaftar dan diterima sebagai murid baru di <strong>{{ $reg->unit?->name ?? 'Sekolah Anak Saleh' }}</strong> (TP {{ $reg->period?->year ?? date('Y') }}). Selamat bergabung menjadi bagian dari keluarga besar Sekolah Anak Saleh! 
+                                <!-- Silakan unduh Surat Keterangan Penerimaan (SKP) resmi di bawah ini. -->
                                 @if($reg->is_dispensation)
                                     <span class="block mt-1 text-xs font-bold text-purple-700 dark:text-purple-300">
                                         ★ Penerimaan melalui persetujuan kebijakan: {{ $reg->dispensation_reason }}
@@ -125,12 +126,12 @@
                     </div>
 
                     <!-- DOWNLOAD ACTION BUTTON -->
-                    <div class="w-full lg:w-auto shrink-0 flex justify-center lg:justify-end">
+                    <!-- <div class="w-full lg:w-auto shrink-0 flex justify-center lg:justify-end">
                         <a href="{{ route('dashboard.admission-letter.download', $reg->id) }}" target="_blank" download class="download-link-animate w-full sm:w-auto min-w-[240px] h-12 bg-brand-emerald hover-emerald border border-brand-emerald text-white px-6 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition inline-flex items-center justify-center gap-2 select-none active:scale-[0.98]">
                             <i data-lucide="file-check" class="w-4 h-4 text-brand-yellow shrink-0"></i>
                             <span>Unduh Surat Penerimaan (SKP)</span>
                         </a>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         @endif
