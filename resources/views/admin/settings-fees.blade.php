@@ -5,19 +5,41 @@
 
 @section('content')
 <div id="spmb-fees-container" hx-boost="true" hx-target="#spmb-fees-container" hx-select="#spmb-fees-container" class="w-full space-y-6">
-    <!-- Header -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <h1 class="text-xl font-extrabold text-slate-800">Manajemen Biaya Pendaftaran (SPMB)</h1>
-        <p class="text-xs text-slate-500 mt-1">Mengatur jenis-jenis kategori biaya dan nominal biaya pendaftaran calon murid baru.</p>
+    <!-- Header with Unit Filter -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                <i data-lucide="coins" class="w-6 h-6 text-brand-emerald"></i>
+                Manajemen Biaya Pendaftaran (SPMB)
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">Mengatur jenis-jenis kategori biaya dan nominal biaya pendaftaran calon murid baru.</p>
+        </div>
+
+        <!-- Unit Filter Switcher -->
+        <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 p-1.5 rounded-2xl shadow-xs self-start md:self-auto overflow-x-auto">
+            <span class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5 px-2 whitespace-nowrap">
+                <i data-lucide="filter" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                Unit:
+            </span>
+            <button type="button" onclick="filterFeesByUnit('')" id="unitFilterBtn-all" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') === '' ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                Semua Unit
+            </button>
+            @foreach($units as $unit)
+                <button type="button" onclick="filterFeesByUnit('{{ $unit->id }}')" id="unitFilterBtn-{{ $unit->id }}" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') == $unit->id ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                    <span>{{ strtoupper($unit->code) }}</span>
+                </button>
+            @endforeach
+        </div>
     </div>
 
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        <button onclick="switchFeeTab('jenis_biaya')" id="feeTabBtn-jenis_biaya" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'jenis_biaya' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+        <button onclick="switchFeeTab('jenis_biaya')" id="feeTabBtn-jenis_biaya" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'jenis_biaya' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
             <i data-lucide="tag" class="w-4 h-4"></i> Jenis Biaya
         </button>
         @foreach($categories as $cat)
-            <button onclick="switchFeeTab('cat_{{ $cat->id }}')" id="feeTabBtn-cat_{{ $cat->id }}" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'cat_' . $cat->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+            <button onclick="switchFeeTab('cat_{{ $cat->id }}')" id="feeTabBtn-cat_{{ $cat->id }}" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'cat_' . $cat->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
                 <i data-lucide="coins" class="w-4 h-4"></i> {{ $cat->name }}
             </button>
         @endforeach
@@ -33,7 +55,7 @@
                     <h3 class="font-extrabold text-base text-slate-800">Kategori Jenis Biaya</h3>
                     <p class="text-[11px] text-slate-400">Kelola kelompok jenis pembayaran masuk.</p>
                 </div>
-                <button onclick="openFeeModal('jenis_biaya', '', '', '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [], 'tuition_fee')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                <button onclick="openFeeModal('jenis_biaya', '', '', '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [], 'tuition_fee')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Jenis Biaya
                 </button>
             </div>
@@ -53,7 +75,7 @@
                     </thead>
                     <tbody class="text-xs divide-y divide-slate-100">
                         @forelse($categories as $cat)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            <tr class="category-item-row hover:bg-slate-50/30 transition" data-unit-ids="{{ implode(',', $cat->units->pluck('id')->toArray()) }}">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $cat->name }}</td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $cat->type_badge_class }}">
@@ -74,12 +96,12 @@
                                 </td>
                                 <td class="py-4 px-6 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button type="button" onclick="openFeeModal('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.update', $cat->id) }}', '', 'winpay', '', '', [{{ implode(',', $cat->units->pluck('id')->toArray()) }}], '{{ $cat->category_type }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
+                                        <button type="button" onclick="openFeeModal('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.update', $cat->id) }}', '', 'winpay', '', '', [{{ implode(',', $cat->units->pluck('id')->toArray()) }}], '{{ $cat->category_type }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer">
                                             <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                             <span>Edit</span>
                                         </button>
                                     @if(!$cat->is_used)
-                                        <button type="button" onclick="deleteFeeItem('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.delete', $cat->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white">
+                                        <button type="button" onclick="deleteFeeItem('jenis_biaya', '{{ addslashes($cat->name) }}', '{{ $cat->is_used }}', '{{ route('admin.spmb-settings.fees.categories.delete', $cat->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer">
                                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                             <span>Hapus</span>
                                         </button>
@@ -97,6 +119,9 @@
                                 <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis biaya.</td>
                             </tr>
                         @endforelse
+                        <tr id="emptyCatRow-filtered" class="hidden">
+                            <td colspan="5" class="py-8 px-6 text-center text-slate-400 text-xs">Tidak ada jenis biaya untuk unit yang dipilih.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -104,13 +129,16 @@
 
         <!-- Dynamic Category Tabs -->
         @foreach($categories as $cat)
+            @php
+                $catFees = $fees->where('spmb_fee_category_id', $cat->id);
+            @endphp
             <div id="feeTabContent-cat_{{ $cat->id }}" class="fee-tab-content p-8 space-y-6 {{ $activeTab === 'cat_' . $cat->id ? '' : 'hidden' }}">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-extrabold text-base text-slate-800">Daftar Nominal {{ $cat->name }}</h3>
                         <p class="text-[11px] text-slate-400">Atur besaran nominal untuk kategori {{ $cat->name }}.</p>
                     </div>
-                    <button onclick="openFeeModal('biaya_tambahan', '', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '', 'winpay', '{{ $cat->id }}', '')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
+                    <button onclick="openFeeModal('biaya_tambahan', '', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '', 'winpay', '{{ $cat->id }}', currentUnitFilter)" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah {{ $cat->name }}
                     </button>
                 </div>
@@ -129,11 +157,13 @@
                             </tr>
                         </thead>
                         <tbody class="text-xs divide-y divide-slate-100">
-                            @forelse($fees->where('spmb_fee_category_id', $cat->id) as $fee)
-                                <tr class="hover:bg-slate-50/30 transition">
+                            @forelse($catFees as $fee)
+                                <tr class="fee-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $fee->spmb_unit_id }}" data-category-id="{{ $cat->id }}">
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $fee->name }}</td>
                                     <td class="py-4 px-6 text-center font-semibold text-slate-500 text-xs">
-                                        {{ $fee->unit->code ?? 'Global' }}
+                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $fee->unit ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-700' }}">
+                                            {{ $fee->unit->code ?? 'Global' }}
+                                        </span>
                                     </td>
                                     <td class="py-4 px-6 text-left">
                                         <div class="space-y-1">
@@ -198,11 +228,11 @@
                                     </td>
                                     <td class="py-4 px-6 text-right">
                                         <div class="flex items-center justify-end gap-2">
-                                            <button type="button" onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}', [], 'tuition_fee', {{ json_encode($fee->applicable_grades ?? []) }}, {{ json_encode($fee->applicable_class_programs ?? []) }}, {{ json_encode($fee->applicable_types ?? []) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white">
+                                            <button type="button" onclick="openFeeModal('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.update', $fee->id) }}', '{{ $fee->amount }}', '{{ is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway }}', '{{ $cat->id }}', '{{ $fee->spmb_unit_id }}', [], 'tuition_fee', {{ json_encode($fee->applicable_grades ?? []) }}, {{ json_encode($fee->applicable_class_programs ?? []) }}, {{ json_encode($fee->applicable_types ?? []) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer">
                                                 <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                                 <span>Edit</span>
                                             </button>
-                                            <button type="button" onclick="deleteFeeItem('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white">
+                                            <button type="button" onclick="deleteFeeItem('biaya_tambahan', '{{ addslashes($fee->name) }}', {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                                 <span>Hapus</span>
                                             </button>
@@ -214,6 +244,9 @@
                                     <td colspan="7" class="py-8 px-6 text-center text-slate-400 text-xs">Belum ada data nominal untuk kategori ini.</td>
                                 </tr>
                             @endforelse
+                            <tr id="emptyFeeRow-{{ $cat->id }}-filtered" class="hidden">
+                                <td colspan="7" class="py-8 px-6 text-center text-slate-400 text-xs">Tidak ada data biaya untuk unit yang dipilih pada kategori ini.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -633,6 +666,91 @@
         updateCheckAllTypesState();
     }
 
+    let currentUnitFilter = "{{ $selectedUnitId ?? '' }}";
+
+    // Dynamic Unit Filtering
+    function filterFeesByUnit(unitId) {
+        currentUnitFilter = unitId ? unitId.toString() : '';
+
+        // Update active filter button styling
+        document.querySelectorAll('.unit-filter-btn').forEach(btn => {
+            btn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60 cursor-pointer";
+        });
+
+        const activeBtnId = currentUnitFilter ? 'unitFilterBtn-' + currentUnitFilter : 'unitFilterBtn-all';
+        const activeBtn = document.getElementById(activeBtnId);
+        if (activeBtn) {
+            activeBtn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-brand-emerald text-white shadow-xs cursor-pointer";
+        }
+
+        // Filter Category Rows in Tab 1 (Jenis Biaya)
+        const catRows = document.querySelectorAll('.category-item-row');
+        let visibleCatCount = 0;
+        catRows.forEach(row => {
+            const uIds = (row.dataset.unitIds || '').split(',').map(s => s.trim()).filter(Boolean);
+            if (!currentUnitFilter || uIds.length === 0 || uIds.includes(currentUnitFilter)) {
+                row.style.display = '';
+                visibleCatCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const emptyCatFiltered = document.getElementById('emptyCatRow-filtered');
+        if (emptyCatFiltered) {
+            if (catRows.length > 0 && visibleCatCount === 0) {
+                emptyCatFiltered.classList.remove('hidden');
+            } else {
+                emptyCatFiltered.classList.add('hidden');
+            }
+        }
+
+        // Filter Fee Rows in Category Tabs
+        document.querySelectorAll('.fee-tab-content').forEach(tabContent => {
+            const feeRows = tabContent.querySelectorAll('.fee-item-row');
+            if (feeRows.length === 0) return;
+
+            let visibleFeeCount = 0;
+            let catId = null;
+            feeRows.forEach(row => {
+                catId = row.dataset.categoryId;
+                const uId = (row.dataset.unitId || '').toString().trim();
+                if (!currentUnitFilter || uId === currentUnitFilter) {
+                    row.style.display = '';
+                    visibleFeeCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (catId) {
+                const filteredEmpty = document.getElementById(`emptyFeeRow-${catId}-filtered`);
+                if (filteredEmpty) {
+                    if (feeRows.length > 0 && visibleFeeCount === 0) {
+                        filteredEmpty.classList.remove('hidden');
+                    } else {
+                        filteredEmpty.classList.add('hidden');
+                    }
+                }
+            }
+        });
+
+        // Update URL and LocalStorage
+        const url = new URL(window.location.href);
+        if (currentUnitFilter) {
+            url.searchParams.set('unit_id', currentUnitFilter);
+        } else {
+            url.searchParams.delete('unit_id');
+        }
+        window.history.replaceState({ path: url.toString() }, '', url.toString());
+        localStorage.setItem('spmb_fees_active_unit', currentUnitFilter);
+
+        // Refresh icons if lucide is available
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
+    }
+
     // Tab Switching
     function switchFeeTab(tabId) {
         const panel = document.getElementById('feeTabContent-' + tabId);
@@ -642,16 +760,20 @@
         panel.classList.remove('hidden');
 
         document.querySelectorAll('.fee-tab-btn').forEach(btn => {
-            btn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
+            btn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50 cursor-pointer";
         });
         
         const activeBtn = document.getElementById('feeTabBtn-' + tabId);
         if (activeBtn) {
-            activeBtn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+            activeBtn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow cursor-pointer";
         }
         
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
-        window.history.replaceState({ path: newUrl }, '', newUrl);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tabId);
+        if (currentUnitFilter) {
+            url.searchParams.set('unit_id', currentUnitFilter);
+        }
+        window.history.replaceState({ path: url.toString() }, '', url.toString());
         localStorage.setItem('spmb_fees_active_tab', tabId);
     }
 
@@ -732,8 +854,9 @@
 
             if (categoryUnitsWrapper) {
                 categoryUnitsWrapper.classList.remove('hidden');
-                if (categoryUnits && categoryUnits.length > 0) {
-                    categoryUnits.forEach(uId => {
+                let targetUnits = (categoryUnits && categoryUnits.length > 0) ? categoryUnits : (currentUnitFilter ? [currentUnitFilter] : []);
+                if (targetUnits.length > 0) {
+                    targetUnits.forEach(uId => {
                         const cb = document.querySelector(`.unit-checkbox[value="${uId}"]`);
                         if (cb) cb.checked = true;
                     });
@@ -785,9 +908,10 @@
 
             if (unitWrapper) {
                 unitWrapper.classList.remove('hidden');
+                let effectiveUnitId = unitId || currentUnitFilter || (currentUserUnitId || '');
                 let selectedUnits = [];
-                if (unitId) {
-                    let unitIdStr = unitId.toString();
+                if (effectiveUnitId) {
+                    let unitIdStr = effectiveUnitId.toString();
                     if (unitIdStr.includes(',')) {
                         selectedUnits = unitIdStr.split(',').map(id => id.trim());
                     } else {
@@ -889,6 +1013,23 @@
             }
         });
     @endif
+
+    // Initial Unit Filter sync on DOM ready
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlUnit = urlParams.get('unit_id');
+        const savedUnit = localStorage.getItem('spmb_fees_active_unit');
+        
+        if (urlUnit !== null) {
+            currentUnitFilter = urlUnit;
+        } else if (savedUnit !== null && savedUnit !== '') {
+            currentUnitFilter = savedUnit;
+        }
+
+        if (currentUnitFilter) {
+            filterFeesByUnit(currentUnitFilter);
+        }
+    });
 
     // Escape key listener to close modal
     document.addEventListener('keydown', function(e) {

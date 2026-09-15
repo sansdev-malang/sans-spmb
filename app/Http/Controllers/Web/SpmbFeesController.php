@@ -45,8 +45,9 @@ class SpmbFeesController extends Controller
         $types = \App\Models\SpmbType::with('units')->get();
 
         $activeTab = request()->get('tab', 'jenis_biaya');
+        $selectedUnitId = request()->get('unit_id', '');
 
-        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'gateways', 'activeTab', 'grades', 'classPrograms', 'types'));
+        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'gateways', 'activeTab', 'grades', 'classPrograms', 'types', 'selectedUnitId'));
     }
 
     // Fee Category (Jenis Biaya) CRUD
