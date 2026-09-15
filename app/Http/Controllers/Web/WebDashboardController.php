@@ -1161,8 +1161,21 @@ class WebDashboardController extends Controller
         // Sync extra services if the step has extra_services field
         if ($step->fields->where('field_name', 'extra_services')->count() > 0) {
             $services = (array)$request->input('extra_services', []);
+
+            // Check if MBK (Murid Berkebutuhan Khusus) program is selected
+            $classProgId = $request->input('spmb_class_program_id', $registration->spmb_class_program_id);
+            $classProgram = $classProgId ? \App\Models\SpmbClassProgram::find($classProgId) : null;
+            $isMbk = $classProgram && (str_contains(strtolower($classProgram->name), 'mbk') || str_contains(strtolower($classProgram->name), 'kebutuhan khusus'));
+
             $isTpaReg = str_contains(strtolower($registration->admission_level ?? ''), 'tpa') || ($registration->grade && str_contains(strtolower($registration->grade->name), 'tpa'));
-            if ($isTpaReg) {
+
+            if ($isMbk) {
+                // If MBK, TPA extra service is not allowed / disabled
+                $tpaServiceIds = \App\Models\SpmbExtraService::where(function($q) {
+                    $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
+                })->pluck('id')->toArray();
+                $services = array_diff($services, $tpaServiceIds);
+            } elseif ($isTpaReg) {
                 $tpaServiceId = \App\Models\SpmbExtraService::where(function($q) {
                     $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
                 })->value('id');

@@ -503,28 +503,36 @@
                                             @if($field->field_name === 'extra_services')
                                                  @php
                                                      $isTpaReg = str_contains(strtolower($registration->admission_level ?? ''), 'tpa') || ($registration->grade && str_contains(strtolower($registration->grade->name), 'tpa'));
+                                                     $currentClassProg = $registration->classProgram ?: ($registration->spmb_class_program_id ? \App\Models\SpmbClassProgram::find($registration->spmb_class_program_id) : null);
+                                                     $isMbkCurrent = $currentClassProg && (str_contains(strtolower($currentClassProg->name), 'mbk') || str_contains(strtolower($currentClassProg->name), 'kebutuhan khusus'));
                                                  @endphp
-                                                 <div class="flex flex-wrap gap-2.5 mt-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                                 <div class="flex flex-wrap gap-2.5 mt-1 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800" id="extra-services-container-{{ $step->id }}">
                                                      @foreach($activeServices as $service)
                                                          @php
                                                              $isTpaService = str_contains(strtolower($service->name), 'taman penitipan anak') || str_contains(strtolower($service->name), 'tpa') || strtoupper($service->code ?? '') === 'TPA';
                                                              $isLockedTpa = $isTpaReg && $isTpaService;
-                                                             $isChecked = $isLockedTpa || in_array($service->id, $selectedServiceIds);
+                                                             $isChecked = !$isMbkCurrent && ($isLockedTpa || in_array($service->id, $selectedServiceIds));
                                                          @endphp
                                                          @if($isLockedTpa)
-                                                             <label class="flex items-center gap-2 bg-emerald-50/80 px-3.5 py-2.5 rounded-xl border border-emerald-200 text-slate-800 shadow-xs select-none cursor-default">
-                                                                 <input type="checkbox" checked disabled class="w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
-                                                                 <input type="hidden" name="extra_services[]" value="{{ $service->id }}">
-                                                                 <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                                             <label id="extra-service-wrapper-{{ $step->id }}-{{ $service->id }}" data-is-tpa="1" class="extra-service-wrapper flex items-center gap-2 {{ $isMbkCurrent ? 'opacity-50 bg-slate-100 dark:bg-slate-800/40 cursor-not-allowed border-dashed' : 'bg-emerald-50/80 dark:bg-emerald-950/40 cursor-default' }} px-3.5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 text-slate-800 dark:text-slate-200 shadow-xs select-none transition-all duration-200">
+                                                                 <input type="checkbox" {{ $isChecked ? 'checked' : '' }} disabled class="extra-service-checkbox w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
+                                                                 <input type="hidden" name="extra_services[]" value="{{ $service->id }}" class="extra-service-hidden-input" {{ $isMbkCurrent ? 'disabled' : '' }}>
+                                                                 <span class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 flex-wrap">
                                                                      {{ $service->name }}
-                                                                     <span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-200">Wajib untuk TPA</span>
+                                                                     <span class="tpa-locked-badge {{ $isMbkCurrent ? 'hidden' : '' }} text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-700">Wajib untuk TPA</span>
+                                                                     <span class="tpa-disabled-badge {{ $isMbkCurrent ? '' : 'hidden' }} text-[9.5px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900/60">Tidak tersedia untuk MBK</span>
                                                                  </span>
                                                              </label>
                                                          @else
-                                                             <label class="flex items-center gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-brand-emerald cursor-pointer transition select-none">
-                                                                 <input type="checkbox" name="extra_services[]" value="{{ $service->id }}" {{ $isChecked ? 'checked' : '' }} class="w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
-                                                                 <span class="text-xs font-bold text-slate-700">
+                                                             <label id="extra-service-wrapper-{{ $step->id }}-{{ $service->id }}" data-is-tpa="{{ $isTpaService ? '1' : '0' }}" class="extra-service-wrapper flex items-center gap-2 {{ ($isTpaService && $isMbkCurrent) ? 'opacity-50 bg-slate-100 dark:bg-slate-800/40 cursor-not-allowed border-dashed border-slate-300 dark:border-slate-700' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-brand-emerald dark:hover:border-emerald-500 cursor-pointer' }} px-3.5 py-2.5 rounded-xl border transition-all duration-200 select-none">
+                                                                 <input type="checkbox" name="extra_services[]" value="{{ $service->id }}" {{ $isChecked ? 'checked' : '' }} {{ ($isTpaService && $isMbkCurrent) ? 'disabled' : '' }} class="extra-service-checkbox w-4 h-4 text-brand-emerald border-slate-300 rounded focus:ring-brand-emerald">
+                                                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 flex-wrap">
                                                                      {{ $service->name }}
+                                                                     @if($isTpaService)
+                                                                         <span class="tpa-disabled-badge {{ $isMbkCurrent ? '' : 'hidden' }} text-[9.5px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-900/60">
+                                                                             Tidak tersedia untuk MBK
+                                                                         </span>
+                                                                     @endif
                                                                  </span>
                                                              </label>
                                                          @endif
@@ -823,7 +831,11 @@
                                                     } elseif ($field->field_name === 'spmb_type_id') {
                                                         $ops = \App\Models\SpmbType::forUnit($regUnitId)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
                                                     } elseif ($field->field_name === 'spmb_class_program_id') {
-                                                        $ops = \App\Models\SpmbClassProgram::forUnit($regUnitId)->get()->map(fn($item) => ['value' => $item->id, 'label' => $item->name]);
+                                                        $ops = \App\Models\SpmbClassProgram::forUnit($regUnitId)->get()->map(fn($item) => [
+                                                            'value' => $item->id, 
+                                                            'label' => $item->name,
+                                                            'is_mbk' => (str_contains(strtolower($item->name), 'mbk') || str_contains(strtolower($item->name), 'kebutuhan khusus')) ? 1 : 0
+                                                        ]);
                                                     } elseif ($field->field_name === 'admission_level') {
                                                         $unitId = $registration->spmb_unit_id ?: 1;
                                                         $ops = \App\Models\SpmbGrade::where('spmb_unit_id', $unitId)
@@ -834,10 +846,14 @@
                                                         $ops = collect(explode(',', $field->options))->map(fn($o) => ['value' => trim($o), 'label' => trim($o)]);
                                                     }
                                                 @endphp
-                                                <select name="{{ $field->field_name }}" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs" {{ $field->is_required ? 'required' : '' }}>
-                                                    <option value="">-- Pilih {{ $fieldLabel }} --</option>
+                                                <select name="{{ $field->field_name }}" 
+                                                        id="input-{{ $field->field_name }}-{{ $step->id }}"
+                                                        class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs {{ $field->field_name === 'spmb_class_program_id' ? 'class-program-select' : '' }}" 
+                                                        {{ $field->is_required ? 'required' : '' }}
+                                                        @if($field->field_name === 'spmb_class_program_id') onchange="window.handleClassProgramChange(this, '{{ $step->id }}')" @endif>
+                                                    <option value="" data-is-mbk="0">-- Pilih {{ $fieldLabel }} --</option>
                                                     @foreach($ops as $op)
-                                                        <option value="{{ $op['value'] }}" {{ $val == $op['value'] ? 'selected' : '' }}>{{ $op['label'] }}</option>
+                                                        <option value="{{ $op['value'] }}" data-is-mbk="{{ $op['is_mbk'] ?? 0 }}" {{ $val == $op['value'] ? 'selected' : '' }}>{{ $op['label'] }}</option>
                                                     @endforeach
                                                 </select>
                                             @elseif($field->type === 'textarea')
@@ -2320,6 +2336,54 @@
             }
         };
 
+        window.handleClassProgramChange = function(selectEl, stepId) {
+            if (!selectEl) return;
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            const optText = (selectedOption ? selectedOption.textContent : '').toLowerCase();
+            const isMbk = (selectedOption && (selectedOption.dataset.isMbk === '1' || optText.includes('mbk') || optText.includes('kebutuhan khusus')));
+
+            const container = document.getElementById('extra-services-container-' + stepId) || document;
+            const tpaWrappers = container.querySelectorAll('[data-is-tpa="1"]');
+
+            tpaWrappers.forEach(wrapper => {
+                const checkbox = wrapper.querySelector('.extra-service-checkbox');
+                const hiddenInput = wrapper.querySelector('.extra-service-hidden-input');
+                const disabledBadge = wrapper.querySelector('.tpa-disabled-badge');
+                const lockedBadge = wrapper.querySelector('.tpa-locked-badge');
+
+                if (isMbk) {
+                    if (checkbox) {
+                        checkbox.checked = false;
+                        checkbox.disabled = true;
+                    }
+                    if (hiddenInput) {
+                        hiddenInput.disabled = true;
+                    }
+                    wrapper.classList.add('opacity-50', 'bg-slate-100', 'dark:bg-slate-800/40', 'cursor-not-allowed', 'border-dashed', 'border-slate-300', 'dark:border-slate-700');
+                    wrapper.classList.remove('cursor-pointer', 'hover:border-brand-emerald', 'dark:hover:border-emerald-500', 'bg-white', 'dark:bg-slate-900', 'bg-emerald-50/80', 'dark:bg-emerald-950/40');
+                    if (disabledBadge) disabledBadge.classList.remove('hidden');
+                    if (lockedBadge) lockedBadge.classList.add('hidden');
+                } else {
+                    const isOriginallyLocked = hiddenInput !== null;
+                    if (checkbox) {
+                        checkbox.disabled = isOriginallyLocked;
+                        if (isOriginallyLocked) checkbox.checked = true;
+                    }
+                    if (hiddenInput) {
+                        hiddenInput.disabled = false;
+                    }
+                    wrapper.classList.remove('opacity-50', 'bg-slate-100', 'dark:bg-slate-800/40', 'cursor-not-allowed', 'border-dashed');
+                    if (isOriginallyLocked) {
+                        wrapper.classList.add('bg-emerald-50/80', 'dark:bg-emerald-950/40', 'cursor-default');
+                    } else {
+                        wrapper.classList.add('bg-white', 'dark:bg-slate-900', 'border-slate-200', 'dark:border-slate-800', 'hover:border-brand-emerald', 'dark:hover:border-emerald-500', 'cursor-pointer');
+                    }
+                    if (disabledBadge) disabledBadge.classList.add('hidden');
+                    if (lockedBadge && isOriginallyLocked) lockedBadge.classList.remove('hidden');
+                }
+            });
+        };
+
         window.handleBirthDateCalculation = function(input, stepId) {
             const previewBox = document.getElementById('birth_date_preview_' + stepId);
             if (!previewBox) return;
@@ -2440,8 +2504,12 @@
             }
         };
 
-        // Initialize calculations for existing birth date inputs
+        // Initialize calculations for existing inputs
         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.class-program-select').forEach(select => {
+                const stepId = select.id.replace('input-spmb_class_program_id-', '');
+                window.handleClassProgramChange(select, stepId);
+            });
             document.querySelectorAll('.birth-date-input').forEach(input => {
                 if (input.value) {
                     window.handleBirthDateCalculation(input, input.dataset.stepId);
