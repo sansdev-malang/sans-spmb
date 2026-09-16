@@ -211,14 +211,14 @@
             <!-- Unit Tabs -->
             <div class="px-6 pt-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 text-xs font-bold">
                 <!-- Semua Unit Tab -->
-                <a href="{{ route(Route::currentRouteName(), request()->except(['page', 'unit_id'])) }}" 
+                <a href="{{ route(Route::currentRouteName() ?: 'admin.payments', request()->except(['page', 'unit_id'])) }}" 
                    class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ !request()->filled('unit_id') ? 'border-brand-emerald text-brand-emerald bg-white dark:bg-slate-800 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' }}">
                     Semua Unit
                 </a>
                 
                 <!-- Dynamic Unit Tabs -->
                 @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
-                    <a href="{{ route(Route::currentRouteName(), array_merge(request()->except(['page']), ['unit_id' => $unit->id])) }}" 
+                    <a href="{{ route(Route::currentRouteName() ?: 'admin.payments', array_merge(request()->except(['page']), ['unit_id' => $unit->id])) }}" 
                        class="px-4 py-2.5 rounded-t-xl transition-all duration-200 border-b-2 {{ request('unit_id') == $unit->id ? 'border-brand-emerald text-brand-emerald bg-white dark:bg-slate-800 shadow-sm' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200' }}">
                         {{ strtoupper($unit->name) }}
                     </a>

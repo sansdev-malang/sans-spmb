@@ -593,6 +593,7 @@ class Registration extends Model
             'name' => $details['name'] ?? 'Formulir Pendaftaran',
             'amount' => (float) ($details['total'] ?? 300000),
             'payment_gateway' => $details['gateways'] ?? ['winpay'],
+            'category' => (object) ['name' => 'Biaya Pendaftaran'],
             'is_active' => true,
         ];
     }

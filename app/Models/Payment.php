@@ -54,8 +54,8 @@ class Payment extends Model
 
         if ($this->payment_type === 'registration_fee') {
             $fee = $this->registration ? $this->registration->getRegistrationFee() : null;
-            if ($fee && $fee->category) {
-                $categoryNames[] = $fee->category->name;
+            if ($fee && !empty($fee->category)) {
+                $categoryNames[] = is_object($fee->category) ? ($fee->category->name ?? 'Biaya Pendaftaran') : (string) $fee->category;
             } else {
                 $cat = SpmbFeeCategory::where(function($q) {
                     $q->where('name', 'like', '%Formulir%')
