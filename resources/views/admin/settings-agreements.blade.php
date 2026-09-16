@@ -172,7 +172,10 @@
 
                     <!-- Hidden Input to store HTML content during submit -->
                     <input type="hidden" name="content" id="hidden-content-unit_{{ $unit->id }}" value="{{ $unit->agreementTemplate->content ?? '' }}">
-                    <p class="text-[10px] text-slate-400">Gunakan toolbar di atas untuk menebalkan teks, membuat judul, atau menambahkan daftar poin terstruktur.</p>
+                    <p class="text-[11px] text-slate-500 flex items-center gap-1.5 mt-1.5">
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-brand-emerald flex-shrink-0"></i>
+                        <span><strong>Tips Penomoran Sub-Poin:</strong> Gunakan tombol <strong>Indent Masuk (Tab / <i class="font-mono text-slate-700">Indent +1</i>)</strong> pada toolbar untuk membuat sub-poin otomatis bertingkat: <strong>1., 2.</strong> &rarr; <strong>a., b., c.</strong> &rarr; <strong>(1), (2), (3)</strong> &rarr; <strong>(a), (b), (c)</strong>.</span>
+                    </p>
                 </div>
 
                 <!-- Helper Card for Placeholders -->
@@ -302,6 +305,7 @@
                                     [{'header': [1, 2, 3, false]}],
                                     ['bold', 'italic', 'underline', 'strike'],
                                     [{'list': 'ordered'}, {'list': 'bullet'}],
+                                    [{'indent': '-1'}, {'indent': '+1'}],
                                     ['clean']
                                 ]
                             }
