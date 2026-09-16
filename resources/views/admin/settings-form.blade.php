@@ -29,6 +29,124 @@
         </div>
     </div>
 
+    <!-- Documentation & Key Guide Card (Collapsible) -->
+    <div x-data="{ openGuide: false }" class="bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-indigo-50/80 border border-emerald-200/80 rounded-2xl p-5 shadow-xs transition-all">
+        <div class="flex items-center justify-between cursor-pointer select-none" @click="openGuide = !openGuide">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-brand-emerald text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                    <i data-lucide="book-open" class="w-5 h-5 text-brand-yellow"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 flex items-center gap-2">
+                        Panduan & Referensi Penamaan Kolom (Key Database)
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">Tips Admin</span>
+                    </h3>
+                    <p class="text-xs text-slate-600 mt-0.5">Klik untuk melihat penjelasan cara kerja Key Database, daftar kolom sistem, dan cara menambah kolom baru secara bebas.</p>
+                </div>
+            </div>
+            <button type="button" class="p-2 text-slate-500 hover:text-brand-emerald rounded-xl hover:bg-white/60 transition">
+                <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-200" :class="{ 'rotate-180': openGuide }"></i>
+            </button>
+        </div>
+
+        <div x-show="openGuide" x-collapse x-cloak class="mt-5 pt-5 border-t border-emerald-200/60 space-y-4 text-xs text-slate-700">
+            <!-- Section 1: Cara Kerja -->
+            <div class="bg-white/90 rounded-xl p-4 border border-emerald-100 space-y-2">
+                <h4 class="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-brand-emerald"></i>
+                    1. Apakah Saya Bebas Membuat Nama Kolom Baru?
+                </h4>
+                <p class="leading-relaxed text-slate-600">
+                    <strong>YA, SANGAT BEBAS!</strong> Sistem formulir SPMB dibuat secara fleksibel (*Dynamic Schema*). Saat Anda mengetik <strong>Label Input</strong> (misal: <em>"Golongan Darah"</em>), sistem akan <strong>otomatis membuatkan Key Database</strong> seperti <code class="bg-slate-100 px-1.5 py-0.5 rounded text-brand-emerald font-mono font-bold">golongan_darah</code>. Anda tidak perlu mengubah database atau koding apa pun. Semua jawaban pendaftar akan otomatis tersimpan dengan rapi.
+                </p>
+            </div>
+
+            <!-- Section 2: Aturan Format -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white/90 rounded-xl p-4 border border-emerald-100 space-y-2">
+                    <h4 class="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                        2. Aturan Format Key Database (Nama Kolom)
+                    </h4>
+                    <ul class="space-y-1.5 text-[11px] text-slate-600 list-disc list-inside">
+                        <li>Gunakan <strong>huruf kecil</strong> semua (contoh: <code class="font-mono text-slate-800">anak_ke</code>).</li>
+                        <li>Gunakan <strong>garis bawah (underscore <code>_</code>)</strong> sebagai pemisah kata, bukan spasi.</li>
+                        <li>Jangan gunakan karakter khusus seperti <code class="text-rose-600">-, /, @, !, ?, .</code></li>
+                        <li>Pastikan nama kolom <strong>unik</strong> dan belum dipakai di tahapan lain.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white/90 rounded-xl p-4 border border-emerald-100 space-y-2">
+                    <h4 class="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs">
+                        <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+                        3. Contoh Kolom Tambahan Kustom yang Sering Digunakan
+                    </h4>
+                    <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 font-mono">
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/60">
+                            <span class="text-brand-emerald font-bold">anak_ke</span> (Number)<br>
+                            <span class="text-brand-emerald font-bold">jumlah_saudara</span> (Number)<br>
+                            <span class="text-brand-emerald font-bold">golongan_darah</span> (Select)
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/60">
+                            <span class="text-brand-emerald font-bold">tinggi_badan</span> (Number)<br>
+                            <span class="text-brand-emerald font-bold">berat_badan</span> (Number)<br>
+                            <span class="text-brand-emerald font-bold">riwayat_alergi</span> (Text)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Kolom Bawaan Sistem -->
+            <div class="bg-white/90 rounded-xl p-4 border border-emerald-100 space-y-2">
+                <h4 class="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs">
+                    <i data-lucide="database" class="w-4 h-4 text-blue-600"></i>
+                    4. Daftar Kolom Bawaan Sistem (Physical Columns)
+                </h4>
+                <p class="text-[11px] text-slate-500">Jika Anda ingin menanyakan data profil standar, gunakan nama kolom bawaan di bawah ini agar terhubung langsung dengan kartu pendaftar dan laporan rekap:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <strong class="text-slate-800 block mb-1">Calon Murid:</strong>
+                        <code class="text-[10px] text-slate-600 block">candidate_name</code>
+                        <code class="text-[10px] text-slate-600 block">nickname</code>
+                        <code class="text-[10px] text-slate-600 block">nik</code>
+                        <code class="text-[10px] text-slate-600 block">family_card_no</code>
+                        <code class="text-[10px] text-slate-600 block">gender</code>
+                        <code class="text-[10px] text-slate-600 block">birth_place</code>
+                        <code class="text-[10px] text-slate-600 block">birth_date</code>
+                        <code class="text-[10px] text-slate-600 block">religion</code>
+                        <code class="text-[10px] text-slate-600 block">previous_school</code>
+                    </div>
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <strong class="text-slate-800 block mb-1">Alamat:</strong>
+                        <code class="text-[10px] text-slate-600 block">address</code>
+                        <code class="text-[10px] text-slate-600 block">house_number</code>
+                        <code class="text-[10px] text-slate-600 block">rt</code> / <code class="text-[10px] text-slate-600">rw</code>
+                        <code class="text-[10px] text-slate-600 block">kelurahan</code>
+                        <code class="text-[10px] text-slate-600 block">kecamatan</code>
+                        <code class="text-[10px] text-slate-600 block">city</code> / <code class="text-[10px] text-slate-600">province</code>
+                    </div>
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <strong class="text-slate-800 block mb-1">Orang Tua / Wali:</strong>
+                        <code class="text-[10px] text-slate-600 block">father_name, father_nik</code>
+                        <code class="text-[10px] text-slate-600 block">father_job, father_phone</code>
+                        <code class="text-[10px] text-slate-600 block">mother_name, mother_nik</code>
+                        <code class="text-[10px] text-slate-600 block">mother_job, mother_phone</code>
+                        <code class="text-[10px] text-slate-600 block">guardian_name, guardian_phone</code>
+                    </div>
+                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <strong class="text-slate-800 block mb-1">Berkas Unggahan:</strong>
+                        <code class="text-[10px] text-slate-600 block">student_photo_path</code>
+                        <code class="text-[10px] text-slate-600 block">birth_certificate_path</code>
+                        <code class="text-[10px] text-slate-600 block">family_card_path</code>
+                        <code class="text-[10px] text-slate-600 block">diploma_certificate_path</code>
+                        <code class="text-[10px] text-slate-600 block">student_card_path</code>
+                        <code class="text-[10px] text-slate-600 block">special_needs_assessment_path</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
         <button onclick="switchFormTab('crud_steps')" id="formTabBtn-crud_steps" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'crud_steps' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
@@ -321,11 +439,17 @@
             
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Label Input (Dibaca Pendaftar)*</label>
-                <input type="text" name="label" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: Golongan Darah">
+                <input type="text" id="add-field-label" name="label" oninput="autoGenerateFieldName(this.value, 'add-field-name')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: Golongan Darah">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Key Database / Nama Kolom (Unik)*</label>
-                <input type="text" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: blood_type">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Key Database / Nama Kolom (Unik)*</label>
+                    <span class="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">⚡ Otomatis dibuat dari Label</span>
+                </div>
+                <input type="text" id="add-field-name" name="field_name" oninput="this.dataset.manuallyEdited = 'true'" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Contoh: golongan_darah">
+                <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                    💡 <strong>Tips:</strong> Key ini adalah identitas teknis untuk menyimpan data. Anda <strong>bebas membuat nama apa saja</strong> (gunakan huruf kecil & underscore <code>_</code>). Contoh: <code>golongan_darah</code>, <code>anak_ke</code>, <code>riwayat_penyakit</code>. Sistem otomatis menyimpannya.
+                </p>
             </div>
             <div>
                 <div class="flex justify-between items-center mb-2">
@@ -405,8 +529,13 @@
                 <input type="text" id="edit-field-label" name="label" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Key Database / Nama Kolom (Unik)*</label>
-                <input type="text" id="edit-field-name" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Key Database / Nama Kolom (Unik)*</label>
+                </div>
+                <input type="text" id="edit-field-name" name="field_name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
+                <p class="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                    💡 <strong>Catatan:</strong> Gunakan huruf kecil dan garis bawah (contoh: <code>riwayat_alergi</code>). Kolom sistem utama terkunci demi integritas data.
+                </p>
             </div>
             <div>
                 <div class="flex justify-between items-center mb-2">
@@ -542,10 +671,33 @@
         confirmDelete(url + '?unit_id={{ $selectedUnitId }}', `Apakah Anda yakin ingin menghapus tahapan "${name}"? Seluruh kolom input di dalam tahapan ini juga akan ikut terhapus.`);
     }
 
+    // Auto-generate Field Name (Key Database) from Label
+    function autoGenerateFieldName(labelValue, targetInputId, force = false) {
+        const targetInput = document.getElementById(targetInputId);
+        if (!targetInput) return;
+        if (targetInput.dataset.manuallyEdited === 'true' && !force) return;
+        
+        let slug = labelValue
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s_]/g, '') // Hapus simbol aneh
+            .replace(/\s+/g, '_')         // Ganti spasi dengan underscore
+            .replace(/_+/g, '_');         // Hapus underscore ganda
+            
+        targetInput.value = slug;
+    }
+
     // Field Modals
     function openAddFieldModal(stepId) {
         clearFormErrors();
         document.getElementById('add-field-step-id').value = stepId;
+        const labelInput = document.getElementById('add-field-label');
+        const nameInput = document.getElementById('add-field-name');
+        if (labelInput) labelInput.value = '';
+        if (nameInput) {
+            nameInput.value = '';
+            nameInput.dataset.manuallyEdited = 'false';
+        }
         document.getElementById('addFieldModal').classList.remove('hidden');
         toggleOptionsInput('add');
         updateToggleUnitsText('addFieldModal');
