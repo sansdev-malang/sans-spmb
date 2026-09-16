@@ -222,10 +222,25 @@ class WebDashboardController extends Controller
         $classPrograms = \App\Models\SpmbClassProgram::where('is_active', true)->orderBy('id', 'asc')->get();
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
 
+        // Build dynamic registration fee mapping per unit from master database
+        $unitFeeMap = [];
+        foreach ($units as $u) {
+            $dummyReg = new Registration(['spmb_unit_id' => $u->id]);
+            $dummyReg->setRelation('unit', $u);
+            $feeObj = $dummyReg->getRegistrationFee();
+            $unitFeeMap[$u->id] = [
+                'unit_id' => $u->id,
+                'unit_code' => strtoupper($u->code),
+                'amount' => (float) ($feeObj->amount ?? 350000),
+                'name' => $feeObj->name ?? 'Enrollment Fee',
+                'formatted' => 'Rp ' . number_format($feeObj->amount ?? 350000, 0, ',', '.')
+            ];
+        }
+
         // Share registrations with layout to prevent duplicate database query
         $allUserRegistrations = $registrations;
 
-        return view('web.dashboard-index', compact('registrations', 'pendingDrafts', 'units', 'grades', 'waves', 'types', 'periods', 'classPrograms', 'activePeriod', 'allUserRegistrations'));
+        return view('web.dashboard-index', compact('registrations', 'pendingDrafts', 'units', 'grades', 'waves', 'types', 'periods', 'classPrograms', 'activePeriod', 'allUserRegistrations', 'unitFeeMap'));
     }
     
     public function history(Request $request)

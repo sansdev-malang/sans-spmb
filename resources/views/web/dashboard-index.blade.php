@@ -591,6 +591,7 @@
     var periodsData = @json($periods);
     var classProgramsData = @json($classPrograms);
     var activePeriodData = @json($activePeriod);
+    var unitFeeMap = @json($unitFeeMap ?? []);
 
     function openRegistrationModal() {
         const modal = document.getElementById('newRegistrationModal');
@@ -798,17 +799,24 @@
         const unit = unitsData.find(u => u.id == unitId);
         const unitCode = unit ? (unit.code || '').toUpperCase() : '';
 
+        let feeName = 'Enrollment Fee';
+        let feeFormatted = 'Rp 350.000';
+
+        if (unitFeeMap && unitFeeMap[unitId]) {
+            feeName = unitFeeMap[unitId].name || 'Enrollment Fee';
+            feeFormatted = unitFeeMap[unitId].formatted;
+        } else if (unitCode === 'SD') {
+            feeFormatted = 'Rp 450.000';
+        } else if (unitCode === 'SMP') {
+            feeFormatted = 'Rp 350.000';
+        } else {
+            feeFormatted = 'Rp 300.000';
+        }
+
         if (breakdownElem && totalElem) {
-            breakdownElem.textContent = 'Enrollment Fee';
-            if (unitCode === 'SD') {
-                totalElem.textContent = 'Rp 350.000';
-                totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
-            } else if (unitCode === 'SMP') {
-                totalElem.textContent = 'Rp 350.000';
-                totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
-            } else {
-                totalElem.textContent = 'Rp 300.000';
-            }
+            breakdownElem.textContent = feeName;
+            totalElem.textContent = feeFormatted;
+            totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
         }
     }
 
