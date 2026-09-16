@@ -1,18 +1,18 @@
 <?php
 
-namespace Database\Seeders;
-
-use Illuminate\Database\Seeder;
-use App\Models\SpmbFormStep;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use App\Models\SpmbFormField;
+use App\Models\SpmbFormStep;
 use Illuminate\Support\Facades\DB;
 
-class SpmbFormStepAndFieldSeeder extends Seeder
+return new class extends Migration
 {
     /**
-     * Run the database seeds.
+     * Run the migrations.
      */
-    public function run(): void
+    public function up(): void
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         SpmbFormField::truncate();
@@ -91,4 +91,12 @@ class SpmbFormStepAndFieldSeeder extends Seeder
             SpmbFormField::create($field);
         }
     }
-}
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // No action needed
+    }
+};

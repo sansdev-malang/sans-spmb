@@ -387,19 +387,21 @@
 
 </div>
 
-<!-- Modal Pendaftaran Baru -->
-<div id="newRegistrationModal" onclick="closeRegistrationModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-200">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-200 overflow-hidden" id="registrationModalBody" onclick="event.stopPropagation()">
+<!-- Modal Pendaftaran Baru (Clean Single-Selector) -->
+<div id="newRegistrationModal" onclick="closeRegistrationModal()" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-200 overflow-y-auto overscroll-contain">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-lg flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-200 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="registrationModalBody" onclick="event.stopPropagation()">
         
         <!-- Header -->
-        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
-            <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 flex-shrink-0 shadow-sm">
+        <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/50 shrink-0 shadow-xs">
                     <i data-lucide="user-plus" class="w-5 h-5"></i>
                 </div>
                 <div>
                     <h2 class="text-base font-extrabold text-slate-850 dark:text-white tracking-tight">Mulai Pendaftaran Ananda</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Pilih unit sekolah dan jalur masuk untuk memulai proses seleksi</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Unit: <span id="modalHeaderUnitName" class="font-bold text-emerald-600 dark:text-emerald-400">PAUD Terpadu Anak Saleh</span>
+                    </p>
                 </div>
             </div>
             <button type="button" onclick="closeRegistrationModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -407,11 +409,20 @@
             </button>
         </div>
 
-        <form method="POST" action="{{ route('dashboard.registration.create') }}" class="flex flex-col flex-1 overflow-hidden">
+        <form method="POST" action="{{ route('dashboard.registration.create') }}" class="flex flex-col flex-1 min-h-0 overflow-hidden" id="newRegistrationForm">
             @csrf
             
-            <!-- Body -->
-            <div class="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+            <input type="hidden" name="spmb_unit_id" id="hiddenUnitInput">
+            <input type="hidden" name="spmb_grade_id" id="hiddenGradeIdInput">
+            <input type="hidden" name="include_tpa" id="hiddenIncludeTpaInput" value="0">
+            <select id="unitSelect" style="display: none;">
+                @foreach($units as $unit)
+                    <option value="{{ $unit->id }}" data-name="{{ $unit->name }}" data-code="{{ $unit->code }}">{{ $unit->name }}</option>
+                @endforeach
+            </select>
+
+            <!-- Body (Scrollable with overscroll-contain & touch scrolling) -->
+            <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain touch-pan-y" style="-webkit-overflow-scrolling: touch;">
                 <!-- Baris 1: Nama Calon Murid -->
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -420,46 +431,50 @@
                     </label>
                     <input type="text" name="candidate_name" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Masukkan nama lengkap anak Anda">
                 </div>
-                
-                <!-- Baris 2: Unit Sekolah & Jalur -->
+
+                <!-- Baris 2: Tahun Ajaran & Kategori Murid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Tahun Ajaran -->
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <i data-lucide="building-2" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
-                            Unit Sekolah
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                            Tahun Ajaran
                         </label>
-                        <input type="hidden" name="spmb_unit_id" id="hiddenUnitInput">
-                        <input type="text" id="unitNameDisplay" readonly class="w-full bg-slate-100 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 dark:text-slate-400 text-sm font-semibold select-none cursor-not-allowed">
-                        <select id="unitSelect" style="display: none;">
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id }}" data-name="{{ $unit->name }}" data-code="{{ $unit->code }}">{{ $unit->name }}</option>
+                        <select id="periodSelect" name="spmb_period_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
+                            <option value="">Pilih Tahun Ajaran...</option>
+                            @foreach($periods as $period)
+                                <option value="{{ $period->id }}">{{ $period->year ? 'TA ' . $period->year : ($period->name ?: 'Tahun Ajaran ' . $period->id) }}</option>
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Kategori Murid -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                            Kategori Murid
+                        </label>
+                        <select id="classProgramSelect" name="spmb_class_program_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
+                            <option value="">Pilih Kategori Murid...</option>
+                            @foreach($classPrograms as $program)
+                                <option value="{{ $program->id }}">{{ $program->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Baris 3: Jalur Masuk & Gelombang -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                             <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
                             Jalur Masuk
                         </label>
-                        <select id="typeSelect" name="spmb_type_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                        <select id="typeSelect" name="spmb_type_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
                             <option value="">Pilih Jalur Masuk...</option>
                             @foreach($types as $type)
                                 <option value="{{ $type->id }}" data-name="{{ $type->name }}">{{ $type->name }}</option>
                             @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Baris 3: Tingkatan/Kelas, Gelombang, & Tahun -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
-                            Tingkatan / Kelas
-                        </label>
-                        <select id="gradeSelect" name="spmb_grade_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <option value="">Pilih Tingkatan...</option>
-                            <!-- Options akan diisi via javascript -->
                         </select>
                     </div>
                     <div>
@@ -467,26 +482,92 @@
                             <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
                             Gelombang
                         </label>
-                        <select id="waveSelect" name="spmb_wave_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                        <select id="waveSelect" name="spmb_wave_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
                             <option value="">Pilih Gelombang...</option>
                             @foreach($waves as $wave)
                                 <option value="{{ $wave->id }}">{{ $wave->name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
-                            Tahun
+                </div>
+
+                <!-- Baris 4: Pilihan Layanan & Tingkatan Kelas (PAUD 2-Dropdowns) -->
+                <div id="paudSection" class="space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Dropdown 1: Pilihan Layanan PAUD -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                                Pilihan Layanan
+                            </label>
+                            <select id="paudProgramSelect" onchange="handlePaudProgramChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
+                                <option value="KB">Kelompok Bermain (KB)</option>
+                                <option value="TK">Taman Kanak-Kanak (TK)</option>
+                                <option value="TPA">Daycare (TPA)</option>
+                            </select>
+                        </div>
+
+                        <!-- Dropdown 2: Tingkatan Kelas -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                                    Tingkatan / Kelas
+                                </span>
+                            </label>
+                            <select id="paudGradeSelect" onchange="handlePaudSelectionChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Small Age Info Helper -->
+                    <div id="paudAgeInfoBadge" class="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40">
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                        <span id="paudAgeInfoText">Ketentuan usia: Minimal 2 tahun (2–3 tahun)</span>
+                    </div>
+
+                    <!-- Checkbox Layanan Daycare (muncul untuk KB & TK) -->
+                    <div id="paudDaycareAddonWrapper" class="pt-0.5">
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200/80 dark:border-emerald-800/70 bg-emerald-50/50 dark:bg-emerald-950/30 cursor-pointer shadow-2xs hover:bg-emerald-100/50 transition">
+                            <input type="checkbox" id="paudDaycareCheckbox" onchange="handlePaudSelectionChange()" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex-1">
+                                <span id="paudDaycareCheckboxLabel">+ Tambah Layanan Daycare (TPA 2)</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">+ Biaya pendaftaran TPA Rp 300.000</span>
+                            </span>
                         </label>
-                        <input type="text" id="periodDisplay" readonly value="{{ $activePeriod?->year ?? '-' }}" class="w-full bg-slate-100 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 dark:text-slate-400 text-sm font-semibold select-none cursor-not-allowed">
+                    </div>
+                </div>
+
+                <!-- Non-PAUD Standard Grade Selector (SD / SMP) -->
+                <div id="standardGradeSelectWrapper" class="hidden">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                        Tingkatan / Kelas
+                    </label>
+                    <select id="gradeSelect" onchange="handleStandardGradeChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <option value="">Pilih Tingkatan...</option>
+                    </select>
+                </div>
+
+                <!-- Live Fee Calculation Preview Banner -->
+                <div id="modalFeePreviewBanner" class="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                            <i data-lucide="receipt" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span id="previewFeeBreakdown" class="text-xs font-bold text-slate-700 dark:text-slate-300">Enrollment Fee</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span id="previewFeeTotal" class="text-base font-black text-brand-emerald dark:text-emerald-400 font-mono">Rp 300.000</span>
                     </div>
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-end gap-3">
-                <button type="button" onclick="closeRegistrationModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50 transition-all">
+            <div class="px-5 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-end gap-3 shrink-0">
+                <button type="button" onclick="closeRegistrationModal()" class="px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50 transition-all">
                     Batal
                 </button>
                 <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition-all shadow-md shadow-emerald-600/20 flex items-center gap-2">
@@ -507,11 +588,16 @@
     var unitsData = @json($units);
     var typesData = @json($types);
     var wavesData = @json($waves);
+    var periodsData = @json($periods);
+    var classProgramsData = @json($classPrograms);
     var activePeriodData = @json($activePeriod);
 
     function openRegistrationModal() {
         const modal = document.getElementById('newRegistrationModal');
         const modalBody = document.getElementById('registrationModalBody');
+        if (!modal || !modalBody) return;
+
+        document.body.classList.add('overflow-hidden');
         modal.classList.remove('opacity-0', 'pointer-events-none');
         modalBody.classList.remove('scale-95');
         modalBody.classList.add('scale-100');
@@ -523,16 +609,252 @@
     function closeRegistrationModal() {
         const modal = document.getElementById('newRegistrationModal');
         const modalBody = document.getElementById('registrationModalBody');
+        if (!modal || !modalBody) return;
+
+        document.body.classList.remove('overflow-hidden');
         modal.classList.add('opacity-0', 'pointer-events-none');
         modalBody.classList.remove('scale-100');
         modalBody.classList.add('scale-95');
     }
 
-    // Fungsi pembaruan dropdown Jalur, Gelombang, Tahun, dan Tingkatan Kelas per Unit
+    // Support keyboard ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeRegistrationModal();
+        }
+    });
+
+    function handlePaudProgramChange(targetGradeId = null) {
+        const progSelect = document.getElementById('paudProgramSelect');
+        const gradeSelect = document.getElementById('paudGradeSelect');
+        const addonWrapper = document.getElementById('paudDaycareAddonWrapper');
+        const addonLabel = document.getElementById('paudDaycareCheckboxLabel');
+        const daycareCheckbox = document.getElementById('paudDaycareCheckbox');
+
+        if (!progSelect || !gradeSelect) return;
+        const prog = progSelect.value;
+
+        gradeSelect.innerHTML = '';
+
+        if (prog === 'KB') {
+            if (addonWrapper) addonWrapper.classList.remove('hidden');
+            if (addonLabel) addonLabel.textContent = '+ Tambah Layanan Daycare (TPA 2)';
+
+            const opt1 = new Option('KB-A (2–3 thn)', '1');
+            const opt2 = new Option('KB-B (3–4 thn)', '14');
+            gradeSelect.add(opt1);
+            gradeSelect.add(opt2);
+        } else if (prog === 'TK') {
+            if (addonWrapper) addonWrapper.classList.remove('hidden');
+            if (addonLabel) addonLabel.textContent = '+ Tambah Layanan Daycare (TPA 3)';
+
+            const opt1 = new Option('TK-A (4–5 thn)', '2');
+            const opt2 = new Option('TK-B (5–6 thn)', '3');
+            gradeSelect.add(opt1);
+            gradeSelect.add(opt2);
+        } else if (prog === 'TPA') {
+            if (addonWrapper) addonWrapper.classList.add('hidden');
+            if (daycareCheckbox) daycareCheckbox.checked = false;
+
+            const opt1 = new Option('TPA 1 Guru YPAS (0–2 thn)', '13:0');
+            const opt2 = new Option('TPA 1 Umum (1–2 thn)', '15:0');
+            const opt3 = new Option('KB-A & TPA 2 (2–3 thn)', '1:1');
+            const opt4 = new Option('KB-B & TPA 2 (3–4 thn)', '14:1');
+            const opt5 = new Option('TK-A & TPA 3 (4–5 thn)', '2:1');
+            const opt6 = new Option('TK-B & TPA 3 (5–6 thn)', '3:1');
+
+            gradeSelect.add(opt1);
+            gradeSelect.add(opt2);
+            gradeSelect.add(opt3);
+            gradeSelect.add(opt4);
+            gradeSelect.add(opt5);
+            gradeSelect.add(opt6);
+        }
+
+        if (targetGradeId) {
+            for (let i = 0; i < gradeSelect.options.length; i++) {
+                if (gradeSelect.options[i].value === String(targetGradeId) || gradeSelect.options[i].value.startsWith(targetGradeId + ':')) {
+                    gradeSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        handlePaudSelectionChange();
+    }
+
+    function handlePaudSelectionChange() {
+        const progSelect = document.getElementById('paudProgramSelect');
+        const gradeSelect = document.getElementById('paudGradeSelect');
+        const daycareCheckbox = document.getElementById('paudDaycareCheckbox');
+        const hiddenGradeIdInput = document.getElementById('hiddenGradeIdInput');
+        const hiddenIncludeTpaInput = document.getElementById('hiddenIncludeTpaInput');
+        const breakdownElem = document.getElementById('previewFeeBreakdown');
+        const totalElem = document.getElementById('previewFeeTotal');
+        const ageBadge = document.getElementById('paudAgeInfoBadge');
+        const ageTextElem = document.getElementById('paudAgeInfoText');
+
+        if (!progSelect || !gradeSelect || !hiddenGradeIdInput || !hiddenIncludeTpaInput) return;
+
+        const prog = progSelect.value;
+        const gradeVal = gradeSelect.value;
+
+        if (prog === 'TPA') {
+            const parts = (gradeVal || '13:0').split(':');
+            const gradeId = parts[0];
+            const includeTpa = parts[1] || '0';
+
+            hiddenGradeIdInput.value = gradeId;
+            hiddenIncludeTpaInput.value = includeTpa;
+
+            // Update Dynamic Small Age Info Helper with gold styling for Teacher
+            if (ageTextElem && ageBadge) {
+                if (gradeId == 13) {
+                    ageBadge.className = 'text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-1.5 font-bold bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/50';
+                    ageTextElem.textContent = '⭐ Khusus putra/putri Guru & Karyawan YPAS (Bebas Biaya / Rp 0)';
+                } else if (gradeId == 15) {
+                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
+                    ageTextElem.textContent = 'Ketentuan usia TPA 1 Umum: 1–2 tahun';
+                } else if (gradeId == 1) {
+                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
+                    ageTextElem.textContent = 'Ketentuan usia: 2–3 tahun (Kelas KB-A & Layanan TPA 2 Playgroup)';
+                } else if (gradeId == 14) {
+                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
+                    ageTextElem.textContent = 'Ketentuan usia: 3–4 tahun (Kelas KB-B & Layanan TPA 2 Playgroup)';
+                } else if (gradeId == 2) {
+                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
+                    ageTextElem.textContent = 'Ketentuan usia: 4–5 tahun (Kelas TK-A & Layanan TPA 3 Kindergarten)';
+                } else if (gradeId == 3) {
+                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
+                    ageTextElem.textContent = 'Ketentuan usia: 5–6 tahun (Kelas TK-B & Layanan TPA 3 Kindergarten)';
+                }
+            }
+
+            if (breakdownElem && totalElem) {
+                breakdownElem.textContent = 'Enrollment Fee';
+                if (gradeId == 13) {
+                    totalElem.textContent = 'Rp 0';
+                    totalElem.className = 'text-base font-black text-emerald-600 dark:text-emerald-400 font-mono';
+                } else if (gradeId == 15) {
+                    totalElem.textContent = 'Rp 300.000';
+                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+                } else {
+                    totalElem.textContent = 'Rp 600.000';
+                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+                }
+            }
+        } else {
+            const gradeId = gradeVal || (prog === 'KB' ? '1' : '2');
+            const isIncludeTpa = daycareCheckbox ? daycareCheckbox.checked : false;
+
+            hiddenGradeIdInput.value = gradeId;
+            hiddenIncludeTpaInput.value = isIncludeTpa ? '1' : '0';
+
+            // Update Dynamic Small Age Info Helper
+            if (ageTextElem && ageBadge) {
+                ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
+                if (prog === 'KB') {
+                    if (gradeId == 1) {
+                        ageTextElem.textContent = 'Ketentuan usia: Minimal 2 tahun (Usia 2–3 tahun per Juli)';
+                    } else {
+                        ageTextElem.textContent = 'Ketentuan usia: Minimal 3 tahun (Usia 3–4 tahun per Juli)';
+                    }
+                } else if (prog === 'TK') {
+                    if (gradeId == 2) {
+                        ageTextElem.textContent = 'Ketentuan usia: Minimal 4 tahun (Usia 4–5 tahun per Juli)';
+                    } else {
+                        ageTextElem.textContent = 'Ketentuan usia: Minimal 5 tahun (Usia 5–6 tahun per Juli)';
+                    }
+                }
+            }
+
+            if (breakdownElem && totalElem) {
+                breakdownElem.textContent = 'Enrollment Fee';
+                if (isIncludeTpa) {
+                    totalElem.textContent = 'Rp 600.000';
+                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+                } else {
+                    totalElem.textContent = 'Rp 300.000';
+                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+                }
+            }
+        }
+    }
+
+    function handleStandardGradeChange() {
+        const gradeSelect = document.getElementById('gradeSelect');
+        const hiddenGradeIdInput = document.getElementById('hiddenGradeIdInput');
+        const hiddenIncludeTpaInput = document.getElementById('hiddenIncludeTpaInput');
+        const hiddenUnitInput = document.getElementById('hiddenUnitInput');
+        const breakdownElem = document.getElementById('previewFeeBreakdown');
+        const totalElem = document.getElementById('previewFeeTotal');
+
+        if (!gradeSelect || !hiddenGradeIdInput) return;
+
+        hiddenGradeIdInput.value = gradeSelect.value;
+        hiddenIncludeTpaInput.value = '0';
+
+        const unitId = hiddenUnitInput ? hiddenUnitInput.value : '';
+        const unit = unitsData.find(u => u.id == unitId);
+        const unitCode = unit ? (unit.code || '').toUpperCase() : '';
+
+        if (breakdownElem && totalElem) {
+            breakdownElem.textContent = 'Enrollment Fee';
+            if (unitCode === 'SD') {
+                totalElem.textContent = 'Rp 350.000';
+                totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+            } else if (unitCode === 'SMP') {
+                totalElem.textContent = 'Rp 350.000';
+                totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+            } else {
+                totalElem.textContent = 'Rp 300.000';
+            }
+        }
+    }
+
     function populateUnitOptions(unitId, targetGradeId = null) {
         const unit = unitsData.find(u => u.id == unitId);
+        const unitCode = unit ? (unit.code || '').toUpperCase() : '';
         
-        // 1. Populate Jalur (Types)
+        // Update header modal info (Unit only, no TA)
+        const headerUnit = document.getElementById('modalHeaderUnitName');
+        if (headerUnit) headerUnit.textContent = unit ? unit.name : 'Sekolah Anak Saleh';
+
+        // 1. Populate Tahun Ajaran (Periods)
+        const periodSelect = document.getElementById('periodSelect');
+        if (periodSelect) {
+            periodSelect.innerHTML = '<option value="">Pilih Tahun Ajaran...</option>';
+            const availablePeriods = (unit && unit.periods && unit.periods.length > 0) ? unit.periods : periodsData;
+            availablePeriods.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.year ? `TA ${p.year}` : (p.name || `Tahun Ajaran ${p.id}`);
+                periodSelect.appendChild(opt);
+            });
+            if (availablePeriods.length > 0) {
+                periodSelect.selectedIndex = 1;
+            }
+        }
+
+        // 2. Populate Kategori Murid (Class Programs)
+        const classProgramSelect = document.getElementById('classProgramSelect');
+        if (classProgramSelect) {
+            classProgramSelect.innerHTML = '<option value="">Pilih Kategori Murid...</option>';
+            const availablePrograms = (unit && unit.class_programs && unit.class_programs.length > 0) 
+                ? unit.class_programs 
+                : ((unit && unit.classPrograms && unit.classPrograms.length > 0) ? unit.classPrograms : classProgramsData);
+            availablePrograms.forEach(cp => {
+                const opt = document.createElement('option');
+                opt.value = cp.id;
+                opt.textContent = cp.name;
+                classProgramSelect.appendChild(opt);
+            });
+            if (availablePrograms.length > 0) {
+                classProgramSelect.selectedIndex = 1;
+            }
+        }
+
+        // 3. Populate Jalur (Types)
         const typeSelect = document.getElementById('typeSelect');
         if (typeSelect) {
             typeSelect.innerHTML = '<option value="">Pilih Jalur Masuk...</option>';
@@ -549,7 +871,7 @@
             }
         }
 
-        // 2. Populate Gelombang (Waves)
+        // 4. Populate Gelombang (Waves)
         const waveSelect = document.getElementById('waveSelect');
         if (waveSelect) {
             waveSelect.innerHTML = '<option value="">Pilih Gelombang...</option>';
@@ -565,75 +887,60 @@
             }
         }
 
-        // 3. Populate Tahun (Period)
-        const periodDisplay = document.getElementById('periodDisplay');
-        if (periodDisplay) {
-            const activeP = (unit && unit.periods && unit.periods.length > 0) ? unit.periods[0] : activePeriodData;
-            periodDisplay.value = activeP ? activeP.year : '-';
-        }
+        // 3. Switch between PAUD Section and Standard Grade Selector
+        const paudSection = document.getElementById('paudSection');
+        const standardGradeSelectWrapper = document.getElementById('standardGradeSelectWrapper');
+        const progSelect = document.getElementById('paudProgramSelect');
 
-        // 4. Populate Tingkatan / Kelas (Grades)
-        updateGradeOptions(targetGradeId);
-    }
+        if (unitCode === 'PAUD') {
+            if (paudSection) paudSection.classList.remove('hidden');
+            if (standardGradeSelectWrapper) standardGradeSelectWrapper.classList.add('hidden');
 
-    // Fungsi pembaruan dropdown Tingkatan / Kelas berdasarkan Unit & Jalur
-    function updateGradeOptions(targetGradeId = null) {
-        const hiddenInput = document.getElementById('hiddenUnitInput');
-        const unitId = hiddenInput ? hiddenInput.value : '';
-        const typeSelect = document.getElementById('typeSelect');
-        const gradeSelect = document.getElementById('gradeSelect');
-        
-        if (!gradeSelect) return;
-        
-        gradeSelect.innerHTML = '<option value="">Pilih Tingkatan...</option>';
-        
-        if (!unitId) {
-            gradeSelect.disabled = true;
-            return;
-        }
-
-        const unit = unitsData.find(u => u.id == unitId);
-        const unitCode = unit ? (unit.code || '').toUpperCase() : '';
-
-        let typeName = '';
-        if (typeSelect && typeSelect.selectedIndex > 0) {
-            typeName = (typeSelect.options[typeSelect.selectedIndex].getAttribute('data-name') || typeSelect.options[typeSelect.selectedIndex].textContent || '').toLowerCase();
-        }
-
-        // Deteksi apakah jalur yang dipilih adalah Mutasi / Pindahan
-        const isMutasi = typeName.includes('mutasi') || typeName.includes('pindah');
-
-        // Filter tingkatan aktif untuk unit sekolah yang dipilih
-        let availableGrades = (unit && unit.grades) ? unit.grades : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
-
-        // Jika BUKAN jalur mutasi, batasi hanya kelas awal untuk SD & SMP
-        if (!isMutasi) {
-            if (unitCode === 'SD') {
-                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 1') || g.name.trim() === '1');
-            } else if (unitCode === 'SMP') {
-                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 7') || g.name.trim() === '7');
+            if (progSelect) {
+                if (targetGradeId == 2 || targetGradeId == 3) {
+                    progSelect.value = 'TK';
+                } else if (targetGradeId == 13 || targetGradeId == 15) {
+                    progSelect.value = 'TPA';
+                } else {
+                    progSelect.value = 'KB';
+                }
             }
-            // PAUD tetap menampilkan seluruh jenjang (KB, TK A, TK B)
-        }
-
-        if (availableGrades.length > 0) {
-            availableGrades.forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g.id;
-                opt.textContent = g.name;
-                gradeSelect.appendChild(opt);
-            });
-            gradeSelect.disabled = false;
-
-            // Auto-select tingkatan
-            if (targetGradeId && availableGrades.some(g => g.id == targetGradeId)) {
-                gradeSelect.value = targetGradeId;
-            } else if (availableGrades.length === 1) {
-                gradeSelect.value = availableGrades[0].id;
-            }
+            handlePaudProgramChange(targetGradeId);
         } else {
-            gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan aktif</option>';
-            gradeSelect.disabled = true;
+            if (paudSection) paudSection.classList.add('hidden');
+            if (standardGradeSelectWrapper) standardGradeSelectWrapper.classList.remove('hidden');
+
+            const gradeSelect = document.getElementById('gradeSelect');
+            if (gradeSelect) {
+                gradeSelect.innerHTML = '<option value="">Pilih Tingkatan...</option>';
+                let availableGrades = (unit && unit.grades) ? unit.grades : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+                
+                if (unitCode === 'SD') {
+                    availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 1') || g.name.trim() === '1');
+                } else if (unitCode === 'SMP') {
+                    availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 7') || g.name.trim() === '7');
+                }
+
+                availableGrades.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    opt.textContent = g.name;
+                    gradeSelect.appendChild(opt);
+                });
+
+                if (availableGrades.length > 0) {
+                    gradeSelect.disabled = false;
+                    if (targetGradeId && availableGrades.some(g => g.id == targetGradeId)) {
+                        gradeSelect.value = targetGradeId;
+                    } else {
+                        gradeSelect.selectedIndex = 1;
+                    }
+                } else {
+                    gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan aktif</option>';
+                    gradeSelect.disabled = true;
+                }
+            }
+            handleStandardGradeChange();
         }
     }
 
@@ -647,9 +954,6 @@
         const unitSelect = document.getElementById('unitSelect');
         unitSelect.value = unitId;
         
-        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
-        document.getElementById('unitNameDisplay').value = selectedOption ? selectedOption.getAttribute('data-name') : '';
-        
         // Populate unit scoped options (types, waves, period, grades)
         populateUnitOptions(unitId, gradeId);
     }
@@ -658,11 +962,17 @@
     var typeSelectElem = document.getElementById('typeSelect');
     if (typeSelectElem) {
         typeSelectElem.addEventListener('change', function() {
-            updateGradeOptions();
+            const hiddenUnitInput = document.getElementById('hiddenUnitInput');
+            const unitId = hiddenUnitInput ? hiddenUnitInput.value : '';
+            const unit = unitsData.find(u => u.id == unitId);
+            const unitCode = unit ? (unit.code || '').toUpperCase() : '';
+            if (unitCode !== 'PAUD') {
+                populateUnitOptions(unitId);
+            }
         });
     }
 
-    // Listener saat unit diubah (jika ada trigger eksternal)
+    // Listener saat unit diubah
     var unitSelectElem = document.getElementById('unitSelect');
     if (unitSelectElem) {
         unitSelectElem.addEventListener('change', function() {

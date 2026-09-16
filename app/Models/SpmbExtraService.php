@@ -33,12 +33,18 @@ class SpmbExtraService extends Model
 
     public function scopeForUnit($query, $unitId)
     {
-        return $query->where(function($q) use ($unitId) {
-            $q->whereHas('units', function ($sub) use ($unitId) {
-                $sub->where('spmb_units.id', $unitId)->where('spmb_extra_service_unit.is_active', true);
-            })->orWhere(function($sub) use ($unitId) {
-                $sub->where('spmb_unit_id', $unitId)->where('is_active', true);
+        return $query->where('is_active', true)
+            ->where(function($q) use ($unitId) {
+                $q->whereHas('units', function ($sub) use ($unitId) {
+                    $sub->where('spmb_units.id', $unitId)->where('spmb_extra_service_unit.is_active', true);
+                })->orWhere(function($sub) use ($unitId) {
+                    $sub->whereDoesntHave('units', function($u) use ($unitId) {
+                        $u->where('spmb_units.id', $unitId);
+                    })
+                    ->where(function($unitQuery) use ($unitId) {
+                        $unitQuery->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $unitId);
+                    });
+                });
             });
-        });
     }
 }

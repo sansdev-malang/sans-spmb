@@ -6,8 +6,8 @@
     // Global Academic Year Queries
     $globalPeriods = \App\Models\SpmbPeriod::orderBy('year', 'desc')->get();
     $selectedPeriodId = session('selected_period_id', function() {
-        return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
-            ?? \App\Models\SpmbPeriod::value('id');
+        return \App\Models\SpmbPeriod::where('is_active', true)->orderBy('id', 'desc')->value('id') 
+            ?? \App\Models\SpmbPeriod::orderBy('id', 'desc')->value('id');
     });
 @endphp
 <!DOCTYPE html>
@@ -790,7 +790,7 @@
             
             <div class="flex items-center gap-1 text-xs font-medium">
                 <!-- Global Academic Year Selector Form -->
-                <form action="{{ route('admin.change-period') }}" method="POST" id="globalPeriodForm" class="mr-1 hidden lg:block">
+                <form action="{{ route('admin.change-period') }}" method="POST" id="globalPeriodForm" class="mr-1 hidden sm:block">
                     @csrf
                     <label for="global_period_selector" class="sr-only">Tahun Ajaran</label>
                     <select name="selected_period_id" id="global_period_selector" onchange="document.getElementById('globalPeriodForm').submit()" class="bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-white rounded-xl py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">

@@ -439,10 +439,33 @@ class Registration extends Model
     }
 
     /**
-     * Get the master registration form fee for this candidate
+     * Get complete registration fee details (including multi-item for package like KB/TK + TPA Daycare)
      */
-    public function getRegistrationFee()
+    public function getRegistrationFeeDetails(): array
     {
+        $gradeName = strtolower($this->grade->name ?? $this->admission_level ?? '');
+        $isTpa1Guru = ($this->spmb_grade_id == 13) || (str_contains($gradeName, 'tpa 1') && (str_contains($gradeName, 'guru') || str_contains($gradeName, 'karyawan')));
+
+        if ($isTpa1Guru) {
+            return [
+                'id' => null,
+                'items' => [
+                    [
+                        'id' => null,
+                        'name' => 'Biaya Pendaftaran TPA 1 (Khusus Putra/Putri Guru & Karyawan)',
+                        'amount' => 0.0,
+                        'gateways' => ['winpay']
+                    ]
+                ],
+                'total' => 0.0,
+                'name' => 'Biaya Pendaftaran TPA 1 (Khusus Guru & Karyawan)',
+                'amount' => 0.0,
+                'gateways' => ['winpay'],
+                'payment_gateway' => ['winpay'],
+                'is_free' => true
+            ];
+        }
+
         $regCatIds = SpmbFeeCategory::where('category_type', SpmbFeeCategory::TYPE_REGISTRATION)
             ->orWhere(function($q) {
                 $q->where('name', 'like', '%Formulir%')
@@ -469,30 +492,109 @@ class Registration extends Model
             })
             ->get();
 
-        if ($fees->isEmpty()) {
-            return null;
+        // 1. Resolve Base Enrollment Fee
+        $isPureTpaGrade = str_contains($gradeName, 'tpa') || in_array($this->spmb_grade_id, [13, 15]);
+
+        $baseFees = $fees->filter(function($f) use ($isPureTpaGrade) {
+            if ($isPureTpaGrade) {
+                return str_contains(strtolower($f->name), 'tpa');
+            }
+            return !str_contains(strtolower($f->name), 'tpa') && !str_contains(strtolower($f->name), 'tpq');
+        });
+        if ($baseFees->isEmpty()) {
+            $baseFees = $fees;
         }
 
-        // Priority 1: Fee that explicitly matches registration with specific targeting
-        $specificMatch = $fees->first(function($fee) {
+        $baseFee = $baseFees->first(function($fee) {
             $hasTarget = !empty($fee->applicable_grades) || !empty($fee->applicable_class_programs) || !empty($fee->applicable_types);
             return $hasTarget && $fee->matchesRegistration($this);
-        });
-
-        if ($specificMatch) {
-            return $specificMatch;
-        }
-
-        // Priority 2: Fee that matches registration (general / untargeted)
-        $generalMatch = $fees->first(function($fee) {
+        }) ?? $baseFees->first(function($fee) {
             return $fee->matchesRegistration($this);
-        });
+        }) ?? $baseFees->first() ?? $fees->first();
 
-        if ($generalMatch) {
-            return $generalMatch;
+        $items = [];
+        $total = 0.0;
+        $gateways = ['winpay'];
+
+        if ($baseFee) {
+            $itemGateways = is_array($baseFee->payment_gateway) ? $baseFee->payment_gateway : [$baseFee->payment_gateway];
+            $items[] = [
+                'id' => $baseFee->id,
+                'name' => $baseFee->name,
+                'amount' => (float) $baseFee->amount,
+                'gateways' => $itemGateways
+            ];
+            $total += (float) $baseFee->amount;
+            $gateways = $itemGateways;
+        } else {
+            $fallbackAmt = ($this->unit && !empty($this->unit->registration_fee)) ? (float)$this->unit->registration_fee : 300000.0;
+            $items[] = [
+                'id' => null,
+                'name' => 'Formulir Pendaftaran ' . ($this->unit->name ?? ''),
+                'amount' => $fallbackAmt,
+                'gateways' => ['winpay']
+            ];
+            $total += $fallbackAmt;
         }
 
-        return $fees->first();
+        // 2. Check if candidate has TPA Daycare Extra Service attached
+        $hasTpaExtra = $this->extraServices->contains(function($es) {
+            $n = strtolower($es->name ?? '');
+            $c = strtoupper($es->code ?? '');
+            return str_contains($n, 'tpa') || str_contains($n, 'penitipan') || str_contains($n, 'daycare') || $c === 'TPA';
+        });
+
+        if ($hasTpaExtra && (!isset($baseFee) || !str_contains(strtolower($baseFee->name), 'tpa'))) {
+            $tpaFee = SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
+                ->where('is_active', true)
+                ->where(function($q) {
+                    $q->where('name', 'like', '%Enrollment%TPA%')
+                      ->orWhere('name', 'like', '%Pendaftaran%TPA%')
+                      ->orWhere('name', 'like', '%Formulir%TPA%');
+                })->first();
+
+            if ($tpaFee) {
+                $tpaGateways = is_array($tpaFee->payment_gateway) ? $tpaFee->payment_gateway : [$tpaFee->payment_gateway];
+                $items[] = [
+                    'id' => $tpaFee->id,
+                    'name' => $tpaFee->name,
+                    'amount' => (float) $tpaFee->amount,
+                    'gateways' => $tpaGateways
+                ];
+                $total += (float) $tpaFee->amount;
+                $gateways = array_values(array_intersect($gateways, $tpaGateways)) ?: ['winpay'];
+            }
+        }
+
+        $feeName = (count($items) > 1)
+            ? 'Pendaftaran & Daycare (' . ($this->grade->name ?? $this->admission_level ?? 'PAUD') . ')'
+            : ($items[0]['name'] ?? 'Formulir Pendaftaran');
+
+        return [
+            'id' => $baseFee->id ?? null,
+            'items' => $items,
+            'total' => $total,
+            'name' => $feeName,
+            'amount' => $total,
+            'gateways' => $gateways,
+            'payment_gateway' => $gateways,
+            'is_free' => ($total <= 0)
+        ];
+    }
+
+    /**
+     * Get the master registration form fee for this candidate
+     */
+    public function getRegistrationFee()
+    {
+        $details = $this->getRegistrationFeeDetails();
+        return (object) [
+            'id' => $details['id'] ?? null,
+            'name' => $details['name'] ?? 'Formulir Pendaftaran',
+            'amount' => (float) ($details['total'] ?? 300000),
+            'payment_gateway' => $details['gateways'] ?? ['winpay'],
+            'is_active' => true,
+        ];
     }
 
     public function getRegistrationFeeNameAttribute()

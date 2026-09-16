@@ -218,12 +218,14 @@ class WebDashboardController extends Controller
         $grades = SpmbGrade::where('is_active', true)->get();
         $waves = \App\Models\SpmbWave::where('is_active', true)->get();
         $types = \App\Models\SpmbType::where('is_active', true)->get();
+        $periods = \App\Models\SpmbPeriod::where('is_active', true)->orderBy('id', 'desc')->get();
+        $classPrograms = \App\Models\SpmbClassProgram::where('is_active', true)->orderBy('id', 'asc')->get();
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
 
         // Share registrations with layout to prevent duplicate database query
         $allUserRegistrations = $registrations;
 
-        return view('web.dashboard-index', compact('registrations', 'pendingDrafts', 'units', 'grades', 'waves', 'types', 'activePeriod', 'allUserRegistrations'));
+        return view('web.dashboard-index', compact('registrations', 'pendingDrafts', 'units', 'grades', 'waves', 'types', 'periods', 'classPrograms', 'activePeriod', 'allUserRegistrations'));
     }
     
     public function history(Request $request)
@@ -274,13 +276,26 @@ class WebDashboardController extends Controller
             'spmb_grade_id' => 'required|exists:spmb_grades,id',
             'spmb_type_id' => 'required|exists:spmb_types,id',
             'spmb_wave_id' => 'required|exists:spmb_waves,id',
+            'spmb_period_id' => 'nullable|exists:spmb_periods,id',
+            'spmb_class_program_id' => 'nullable|exists:spmb_class_programs,id',
         ]);
         
         $selectedUnit = SpmbUnit::find($request->spmb_unit_id);
-        $activePeriod = $selectedUnit ? $selectedUnit->activePeriods()->first() : null;
-        if (!$activePeriod) {
-            $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+        $periodId = $request->spmb_period_id;
+        if (!$periodId) {
+            $activePeriod = $selectedUnit ? $selectedUnit->activePeriods()->first() : null;
+            if (!$activePeriod) {
+                $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+            }
+            $periodId = $activePeriod?->id;
         }
+
+        $classProgramId = $request->spmb_class_program_id;
+        if (!$classProgramId) {
+            $defaultProgram = \App\Models\SpmbClassProgram::where('is_active', true)->where('name', 'like', '%Reguler%')->first();
+            $classProgramId = $defaultProgram?->id;
+        }
+
         $grade = \App\Models\SpmbGrade::find($request->spmb_grade_id);
 
         // Check if user already has an unpaid draft registration in this active period
@@ -290,9 +305,9 @@ class WebDashboardController extends Controller
             ->whereDoesntHave('payments', function($q) {
                 $q->where('payment_type', 'registration_fee')->where('status', 'success');
             })
-            ->where(function($q) use ($activePeriod) {
-                if ($activePeriod) {
-                    $q->where('spmb_period_id', $activePeriod->id)->orWhereNull('spmb_period_id');
+            ->where(function($q) use ($periodId) {
+                if ($periodId) {
+                    $q->where('spmb_period_id', $periodId)->orWhereNull('spmb_period_id');
                 }
             })
             ->latest()
@@ -311,7 +326,8 @@ class WebDashboardController extends Controller
                 'spmb_unit_id' => $request->spmb_unit_id,
                 'spmb_grade_id' => $request->spmb_grade_id,
                 'admission_level' => $grade ? $grade->name : null,
-                'spmb_period_id' => $activePeriod?->id,
+                'spmb_period_id' => $periodId,
+                'spmb_class_program_id' => $classProgramId,
                 'spmb_wave_id' => $request->spmb_wave_id,
                 'spmb_type_id' => $request->spmb_type_id,
                 'registration_status' => 'draft',
@@ -325,7 +341,8 @@ class WebDashboardController extends Controller
                 'spmb_unit_id' => $request->spmb_unit_id,
                 'spmb_grade_id' => $request->spmb_grade_id,
                 'admission_level' => $grade ? $grade->name : null,
-                'spmb_period_id' => $activePeriod?->id,
+                'spmb_period_id' => $periodId,
+                'spmb_class_program_id' => $classProgramId,
                 'spmb_wave_id' => $request->spmb_wave_id,
                 'spmb_type_id' => $request->spmb_type_id,
                 'registration_status' => 'draft',
@@ -333,15 +350,49 @@ class WebDashboardController extends Controller
             ]);
         }
 
-        // If registering for TPA, auto-attach TPA extra service
-        $isTpaReg = $grade && str_contains(strtolower($grade->name), 'tpa');
-        if ($isTpaReg) {
-            $tpaService = \App\Models\SpmbExtraService::where(function($q) {
+        // Handle TPA extra service (Daycare) attachment
+        $includeTpa = $request->boolean('include_tpa');
+        $isTpa1Guru = $grade && ($grade->id == 13 || (str_contains(strtolower($grade->name), 'tpa') && (str_contains(strtolower($grade->name), 'guru') || str_contains(strtolower($grade->name), 'karyawan'))));
+        
+        $tpaService = \App\Models\SpmbExtraService::where('spmb_unit_id', $request->spmb_unit_id)
+            ->where(function($q) {
                 $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
             })->first();
+
+        if ($includeTpa) {
             if ($tpaService) {
                 $registration->extraServices()->syncWithoutDetaching([$tpaService->id]);
             }
+        } elseif (!$isTpa1Guru && $tpaService) {
+            $registration->extraServices()->detach($tpaService->id);
+        }
+
+        // If registering for TPA 1 (Khusus Guru/Karyawan), it's 100% free / internal dispensation
+        if ($isTpa1Guru) {
+            $hasFormSuccessPayment = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
+            if (!$hasFormSuccessPayment) {
+                \App\Models\Payment::create([
+                    'registration_id' => $registration->id,
+                    'invoice_number' => 'INV-FREE-TPA1-' . date('Ymd') . '-' . $registration->id,
+                    'amount' => 0,
+                    'base_amount' => 0,
+                    'admin_fee' => 0,
+                    'payment_method' => 'DISPENSATION',
+                    'reference_id' => 'DISP-TPA1-GURU',
+                    'payment_info' => [
+                        'dispensation' => true,
+                        'dispensation_reason' => 'Program TPA 1 Khusus Putra/Putri Guru & Karyawan Sekolah Anak Saleh'
+                    ],
+                    'status' => 'success',
+                    'payment_type' => 'registration_fee'
+                ]);
+            }
+            $registration->update([
+                'payment_status' => 'paid',
+            ]);
+            
+            session(['active_candidate_id' => $registration->id]);
+            return redirect()->route('dashboard.form', $registration->id)->with('success', 'Pendaftaran TPA 1 (Khusus Guru & Karyawan) berhasil dibuat. Silakan lengkapi formulir pendaftaran.');
         }
         
         session(['active_candidate_id' => $registration->id]);
@@ -834,11 +885,18 @@ class WebDashboardController extends Controller
         } else {
             $currentPaymentType = 'registration_fee';
             $activePayment = $registration->activeRegistrationPayment;
-            $fee = $this->getRegistrationFee($registration);
-            $feeAmount = $activePayment ? $activePayment->amount : ($fee ? $fee->amount : 350000);
-            $feeDetails = null;
-            $feeGateways = $fee ? (is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]) : ['winpay'];
-            $feeName = $fee ? $fee->name : 'Formulir Pendaftaran';
+            $feeDetails = method_exists($registration, 'getRegistrationFeeDetails')
+                ? $registration->getRegistrationFeeDetails()
+                : [
+                    'items' => [],
+                    'total' => 300000,
+                    'name' => 'Formulir Pendaftaran',
+                    'gateways' => ['winpay']
+                ];
+
+            $feeAmount = $activePayment ? (float)$activePayment->amount : (float)($feeDetails['total'] ?? 300000);
+            $feeGateways = $feeDetails['gateways'] ?? ['winpay'];
+            $feeName = $feeDetails['name'] ?? 'Formulir Pendaftaran';
             $grossFee = $feeAmount;
             $discountAmount = 0;
             $discountNotes = null;
@@ -847,6 +905,10 @@ class WebDashboardController extends Controller
             $remainingBalance = $feeAmount;
             $installmentMode = 'none';
             $minPaymentRequired = $feeAmount;
+
+            if (isset($feeDetails['items']) && count($feeDetails['items']) <= 1) {
+                $feeDetails = null;
+            }
         }
 
         // Auto-heal inconsistent pending payment status if no active pending transaction exists
@@ -884,8 +946,7 @@ class WebDashboardController extends Controller
         
         $committeeMessage = $this->getCommitteeMessage($registration);
         
-        $documentFields = SpmbFormField::where('form_step_id', 6)
-            ->orWhere('type', 'file')
+        $documentFields = SpmbFormField::where('type', 'file')
             ->orderBy('order', 'asc')
             ->get();
         
@@ -1162,6 +1223,10 @@ class WebDashboardController extends Controller
         if ($step->fields->where('field_name', 'extra_services')->count() > 0) {
             $services = (array)$request->input('extra_services', []);
 
+            // Restrict to extra services that are active for this unit
+            $activeUnitServiceIds = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->pluck('id')->toArray();
+            $services = array_intersect($services, $activeUnitServiceIds);
+
             // Check if MBK (Murid Berkebutuhan Khusus) program is selected
             $classProgId = $request->input('spmb_class_program_id', $registration->spmb_class_program_id);
             $classProgram = $classProgId ? \App\Models\SpmbClassProgram::find($classProgId) : null;
@@ -1179,7 +1244,7 @@ class WebDashboardController extends Controller
                 $tpaServiceId = \App\Models\SpmbExtraService::where(function($q) {
                     $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
                 })->value('id');
-                if ($tpaServiceId && !in_array($tpaServiceId, $services)) {
+                if ($tpaServiceId && in_array($tpaServiceId, $activeUnitServiceIds) && !in_array($tpaServiceId, $services)) {
                     $services[] = $tpaServiceId;
                 }
             }
@@ -1562,9 +1627,11 @@ class WebDashboardController extends Controller
                     return redirect()->back()->with('error', 'Biaya pendaftaran Anda sudah lunas.');
                 }
                 $paymentType = 'registration_fee';
-                $fee = $this->getRegistrationFee($registration);
-                $amount = $fee ? $fee->amount : 350000;
-                $gateways = $fee ? (is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway]) : ['winpay'];
+                $feeDetails = method_exists($registration, 'getRegistrationFeeDetails')
+                    ? $registration->getRegistrationFeeDetails()
+                    : null;
+                $amount = $feeDetails ? (float)$feeDetails['total'] : 300000;
+                $gateways = $feeDetails['gateways'] ?? ['winpay'];
             } else {
                 return redirect()->back()->with('error', 'Tidak ada tagihan pembayaran aktif pada tahapan ini.');
             }
@@ -1620,8 +1687,8 @@ class WebDashboardController extends Controller
             DB::beginTransaction();
             try {
                 $initialPaymentInfo = ['gateway' => $gateway];
-                if ($paymentType === 'final_fee') {
-                    $initialPaymentInfo['selected_items'] = $feeDetails['items'];
+                if ($paymentType === 'final_fee' || !empty($feeDetails['items'])) {
+                    $initialPaymentInfo['selected_items'] = $feeDetails['items'] ?? [];
                 }
 
                 $payment = Payment::create([
@@ -1637,10 +1704,10 @@ class WebDashboardController extends Controller
                     'payment_type' => $paymentType
                 ]);
 
-                $itemsToStore = ($paymentType === 'final_fee') ? ($feeDetails['items'] ?? []) : [
+                $itemsToStore = !empty($feeDetails['items']) ? $feeDetails['items'] : [
                     [
-                        'id' => $fee->id ?? null,
-                        'name' => $fee->name ?? 'Formulir Pendaftaran',
+                        'id' => $feeDetails['id'] ?? null,
+                        'name' => $feeDetails['name'] ?? 'Formulir Pendaftaran',
                         'amount' => $amount,
                     ]
                 ];

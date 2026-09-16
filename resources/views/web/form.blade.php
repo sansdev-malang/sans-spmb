@@ -286,25 +286,15 @@
                     <div class="border rounded-2xl transition-all duration-200 overflow-hidden {{ $hasInvalidFields ? 'border-red-400 dark:border-red-600 bg-red-50/5 dark:bg-red-950/20 ring-2 ring-red-200 dark:ring-red-900/40' : ($isCurrentActive ? 'border-brand-emerald bg-white dark:bg-slate-900 ring-4 ring-emerald-500/10 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs') }}">
                         
                         @php
-                            $hasActiveExtraServices = \App\Models\SpmbExtraService::where('is_active', true)
-                                ->where(function($q) use ($registration) {
-                                    $q->whereNull('spmb_unit_id')
-                                      ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
-                                })
-                                ->exists();
-
                             $stepDescriptions = [
-                                1 => $hasActiveExtraServices
-                                    ? 'Pilih kategori program belajar ananda serta layanan tambahan non-formal (jika tersedia).'
-                                    : 'Pilih kategori program belajar untuk ananda.',
-                                2 => 'Lengkapi identitas kependudukan, data kelahiran, dan riwayat sekolah calon murid.',
-                                3 => 'Masukkan alamat domisili tempat tinggal calon murid saat ini secara lengkap dan akurat.',
-                                4 => 'Isi data identitas orang tua kandung beserta nomor WhatsApp aktif untuk koordinasi resmi panitia.',
-                                5 => 'Isi data berikut jika calon murid tinggal bersama wali (opsional, dapat dikosongkan jika bersama orang tua).',
-                                6 => 'Unggah dokumen persyaratan pendaftaran seperti Akta Kelahiran, KK, dan Pas Foto (maks. 2MB per berkas).',
-                                7 => 'Beri tahu kami bagaimana Anda mengetahui informasi SPMB Sekolah Anak Saleh dan sertakan data perujuk / rekomendasi (jika ada).',
+                                'Informasi Calon Murid' => 'Lengkapi identitas kependudukan, data kelahiran, dan riwayat sekolah calon murid.',
+                                'Tempat Tinggal' => 'Masukkan alamat domisili tempat tinggal calon murid saat ini secara lengkap dan akurat.',
+                                'Data Orang Tua' => 'Isi data identitas orang tua kandung beserta nomor WhatsApp aktif untuk koordinasi resmi panitia.',
+                                'Data Wali (Opsional)' => 'Isi data berikut jika calon murid tinggal bersama wali (opsional, dapat dikosongkan jika bersama orang tua).',
+                                'Data Lampiran' => 'Unggah dokumen persyaratan pendaftaran seperti Akta Kelahiran, KK, dan Pas Foto (maks. 2MB per berkas).',
+                                'Informasi & Referral' => 'Beri tahu kami bagaimana Anda mengetahui informasi SPMB Sekolah Anak Saleh dan sertakan data perujuk / rekomendasi (jika ada).',
                             ];
-                            $stepDesc = $stepDescriptions[$step->id] ?? $stepDescriptions[$index + 1] ?? 'Lengkapi formulir berikut dengan data yang benar.';
+                            $stepDesc = $stepDescriptions[$step->title] ?? ($stepDescriptions[$step->id] ?? 'Lengkapi formulir berikut dengan data yang benar.');
                         @endphp
 
                         @if ($isAccordionItem)
@@ -421,18 +411,13 @@
                                             }
                                         @endphp
 
-                                        @if($field->field_name === 'previous_school' && $uCode === 'PAUD' && $isKb)
+                                        @if($field->field_name === 'previous_school' && $uCode === 'PAUD')
                                             @continue
                                         @endif
 
                                         @if($field->field_name === 'extra_services')
                                             @php
-                                                $activeServices = \App\Models\SpmbExtraService::where('is_active', true)
-                                                     ->where(function($q) use ($registration) {
-                                                         $q->whereNull('spmb_unit_id')
-                                                           ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
-                                                     })
-                                                     ->get();
+                                                $activeServices = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->get();
                                             @endphp
                                             @if($activeServices->isEmpty())
                                                 @continue
@@ -453,7 +438,7 @@
                                             $hasFieldError = $errors->has($field->field_name);
                                         @endphp
 
-                                        @if($step->id == 4 && $field->field_name === 'father_name')
+                                        @if($field->field_name === 'father_name')
                                             <div class="md:col-span-2 flex items-center gap-2.5 pt-1 pb-2 border-b border-slate-200/70 dark:border-slate-800">
                                                 <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-brand-emerald flex items-center justify-center text-xs shadow-xs">
                                                     👨
@@ -463,7 +448,7 @@
                                                     <p class="text-[10.5px] text-slate-400 font-medium">Informasi identitas dan kontak ayah kandung calon murid</p>
                                                 </div>
                                             </div>
-                                        @elseif($step->id == 4 && $field->field_name === 'mother_name')
+                                        @elseif($field->field_name === 'mother_name')
                                             <div class="md:col-span-2 flex items-center gap-2.5 pt-4 pb-2 border-b border-slate-200/70 dark:border-slate-800 mt-2">
                                                 <div class="w-7 h-7 rounded-lg bg-pink-100 dark:bg-pink-950/60 text-pink-600 flex items-center justify-center text-xs shadow-xs">
                                                     👩
@@ -473,7 +458,7 @@
                                                     <p class="text-[10.5px] text-slate-400 font-medium">Informasi identitas dan kontak ibu kandung calon murid</p>
                                                 </div>
                                             </div>
-                                        @elseif($step->id == 5 && $field->field_name === 'guardian_name')
+                                        @elseif($field->field_name === 'guardian_name')
                                             <div class="md:col-span-2 flex items-center gap-2.5 pt-1 pb-2 border-b border-slate-200/70 dark:border-slate-800">
                                                 <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center text-xs shadow-xs">
                                                     🤝
@@ -722,7 +707,7 @@
                                                         </div>
                                                         <div>
                                                             <span class="font-bold text-slate-800 dark:text-white text-xs block">Alamat disamakan dengan domisili tempat tinggal calon murid:</span>
-                                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed" id="{{ $parentType }}_address_preview_{{ $step->id }}">{{ $candidateFullAddress ?: '(Sesuai alamat calon murid pada Tahap 3)' }}</span>
+                                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed" id="{{ $parentType }}_address_preview_{{ $step->id }}">{{ $candidateFullAddress ?: '(Sesuai alamat domisili calon murid)' }}</span>
                                                         </div>
                                                     </div>
 
@@ -791,7 +776,7 @@
                                                         </div>
                                                         <div>
                                                             <span class="font-bold text-slate-800 dark:text-white text-xs block">Alamat disamakan dengan domisili tempat tinggal calon murid:</span>
-                                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed" id="guardian_address_preview_{{ $step->id }}">{{ $candidateFullAddress ?: '(Sesuai alamat calon murid pada Tahap 3)' }}</span>
+                                                            <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block leading-relaxed" id="guardian_address_preview_{{ $step->id }}">{{ $candidateFullAddress ?: '(Sesuai alamat domisili calon murid)' }}</span>
                                                         </div>
                                                     </div>
 
@@ -1023,8 +1008,8 @@
                         <!-- Readonly Block (Accordion Content) -->
                         @if ($step->is_completed)
                             <div id="readonly-step-{{ $step->id }}" class="hidden px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-800 {{ $hasInvalidFields ? '!hidden' : '' }}">
-                                @if($step->id == 4)
-                                    <!-- Step 4: Data Orang Tua (Terpisah: Kartu Ayah & Kartu Ibu) -->
+                                @if($step->fields->contains('field_name', 'father_name'))
+                                    <!-- Step: Data Orang Tua (Terpisah: Kartu Ayah & Kartu Ibu) -->
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                                         <!-- Card 1: 👨 Data Ayah Kandung -->
                                         <div class="bg-slate-50/80 dark:bg-slate-850/60 p-4 sm:p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 space-y-3.5 shadow-xs">
@@ -1090,8 +1075,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                @elseif($step->id == 5)
-                                    <!-- Step 5: Data Wali (Opsional) -->
+                                @elseif($step->fields->contains('field_name', 'guardian_name'))
+                                    <!-- Step: Data Wali (Opsional) -->
                                     @if(!empty($registration->guardian_name))
                                         <div class="bg-slate-50/80 dark:bg-slate-850/60 p-4 sm:p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 space-y-3.5 mt-3 shadow-xs">
                                             <div class="flex items-center gap-2 pb-2.5 border-b border-slate-200/60 dark:border-slate-800 text-slate-800 dark:text-white font-extrabold text-xs sm:text-sm">
@@ -1129,8 +1114,8 @@
                                             <span>Tidak mengisi data wali (calon murid tinggal bersama orang tua kandung).</span>
                                         </div>
                                     @endif
-                                @elseif($step->id == 6)
-                                    <!-- Step 6: Data Lampiran -->
+                                @elseif($step->fields->where('type', 'file')->count() > 0)
+                                    <!-- Step: Data Lampiran -->
                                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3">
                                         @foreach($step->fields as $field)
                                             @php
@@ -1165,12 +1150,7 @@
                                             @if($field->field_name === 'extra_services')
                                                 @php
                                                     $services = $registration->extraServices;
-                                                    $hasActiveServices = \App\Models\SpmbExtraService::where('is_active', true)
-                                                         ->where(function($q) use ($registration) {
-                                                             $q->whereNull('spmb_unit_id')
-                                                               ->orWhere('spmb_unit_id', $registration->spmb_unit_id);
-                                                         })
-                                                         ->exists();
+                                                    $hasActiveServices = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->exists();
                                                 @endphp
                                                 @if(!$hasActiveServices && $services->isEmpty())
                                                     @continue
@@ -1179,10 +1159,8 @@
                                             @if($field->field_name === 'previous_school')
                                                 @php
                                                     $uCode = strtoupper($registration->unit->code ?? '');
-                                                    $admLevel = strtoupper(trim($registration->admission_level ?? ''));
-                                                    $isKb = ($admLevel === 'KB');
                                                 @endphp
-                                                @if($uCode === 'PAUD' && $isKb)
+                                                @if($uCode === 'PAUD')
                                                     @continue
                                                 @endif
                                             @endif
@@ -2457,34 +2435,38 @@
 
             const minMonths = input.dataset.minMonths !== '' && input.dataset.minMonths !== undefined ? parseInt(input.dataset.minMonths) : null;
             const maxMonths = input.dataset.maxMonths !== '' && input.dataset.maxMonths !== undefined ? parseInt(input.dataset.maxMonths) : null;
-            const minLabel = input.dataset.minLabel || '';
-            const maxLabel = input.dataset.maxLabel || '';
-            const ageNotes = input.dataset.ageNotes || '';
+            const rawMinLabel = input.dataset.minLabel || '';
+            const rawMaxLabel = input.dataset.maxLabel || '';
+            const minLabel = rawMinLabel.replace(/\s*0\s*bln/gi, '').replace(/thn/gi, 'Tahun').replace(/bln/gi, 'Bulan').trim();
+            const maxLabel = rawMaxLabel.replace(/\s*0\s*bln/gi, '').replace(/thn/gi, 'Tahun').replace(/bln/gi, 'Bulan').trim();
             const gradeName = input.dataset.gradeName || 'Tingkatan Kelas';
 
             let isValid = true;
-            let statusMessage = '';
+            let statusTitle = '';
+            let statusSubtitle = '';
 
             if (minMonths !== null && totalMonths < minMonths) {
                 isValid = false;
-                statusMessage = `Usia ananda (${shortText}) belum memenuhi batas minimal untuk ${gradeName} (minimal ${minLabel} per 1 Juli ${cutoffYear}).`;
+                statusTitle = `Usia ananda (${shortText}) belum memenuhi batas minimal ${gradeName}.`;
+                statusSubtitle = `Syarat minimal: <strong>${minLabel}</strong> (per 1 Juli ${cutoffYear}).`;
             } else if (maxMonths !== null && totalMonths > maxMonths) {
                 isValid = false;
-                statusMessage = `Usia ananda (${shortText}) melebihi batas maksimal untuk ${gradeName} (maksimal ${maxLabel} per 1 Juli ${cutoffYear}).`;
+                statusTitle = `Usia ananda (${shortText}) melebihi batas maksimal ${gradeName}.`;
+                statusSubtitle = `Batas maksimal: <strong>${maxLabel}</strong> (per 1 Juli ${cutoffYear}).`;
             }
 
             if (minMonths === null && maxMonths === null) {
                 previewBox.innerHTML = `
                     <div class="p-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2">
                         <i data-lucide="clock" class="w-3.5 h-3.5 text-brand-emerald shrink-0"></i>
-                        <span>Usia ananda per 1 Juli ${cutoffYear}: <strong>${ageText}</strong></span>
+                        <span>Usia per 1 Juli ${cutoffYear}: <strong>${ageText}</strong></span>
                     </div>
                 `;
             } else if (isValid) {
                 previewBox.innerHTML = `
                     <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2 shadow-xs">
                         <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-emerald shrink-0"></i>
-                        <span>Usia per 1 Juli ${cutoffYear}: <strong>${ageText}</strong> — <strong class="text-emerald-700 dark:text-emerald-300 font-bold">Sesuai Syarat Usia</strong></span>
+                        <span>Usia per 1 Juli ${cutoffYear}: <strong>${ageText}</strong> — <strong class="text-emerald-700 dark:text-emerald-300 font-bold">Memenuhi Syarat Usia</strong></span>
                     </div>
                 `;
             } else {
@@ -2492,8 +2474,8 @@
                     <div class="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 rounded-xl text-xs text-rose-800 dark:text-rose-200 flex items-start gap-2 shadow-xs">
                         <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
                         <div>
-                            <p class="font-bold text-rose-700 dark:text-rose-300">${statusMessage}</p>
-                            <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-0.5">Usia ananda per 1 Juli ${cutoffYear}: <strong>${ageText}</strong>${ageNotes ? ` • Catatan: ${ageNotes}` : ''}</p>
+                            <p class="font-bold text-rose-700 dark:text-rose-300">${statusTitle}</p>
+                            <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-0.5">${statusSubtitle}</p>
                         </div>
                     </div>
                 `;

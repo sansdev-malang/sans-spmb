@@ -21,4 +21,12 @@ class SpmbPeriod extends Model
             $q->where('spmb_units.id', $unitId)->where('spmb_period_unit.is_active', true);
         });
     }
+
+    public static function getActivePeriodId()
+    {
+        return session('selected_period_id', function() {
+            return static::where('is_active', true)->orderBy('id', 'desc')->value('id')
+                ?? static::orderBy('id', 'desc')->value('id');
+        });
+    }
 }

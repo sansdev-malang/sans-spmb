@@ -88,13 +88,15 @@ class ApiClient extends Model
 
         if ($steps->isNotEmpty()) {
             foreach ($steps as $step) {
-                $key = match ((int) $step->id) {
-                    1 => 'program',
-                    2 => 'bio',
-                    3 => 'address',
-                    4 => 'parents',
-                    5 => 'guardian',
-                    6 => 'documents',
+                $titleLower = strtolower($step->title);
+                $key = match (true) {
+                    str_contains($titleLower, 'informasi calon') || str_contains($titleLower, 'biodata') => 'bio',
+                    str_contains($titleLower, 'tinggal') || str_contains($titleLower, 'alamat') => 'address',
+                    str_contains($titleLower, 'orang tua') => 'parents',
+                    str_contains($titleLower, 'wali') => 'guardian',
+                    str_contains($titleLower, 'lampiran') || str_contains($titleLower, 'dokumen') => 'documents',
+                    str_contains($titleLower, 'referral') || str_contains($titleLower, 'informasi &') => 'referral',
+                    str_contains($titleLower, 'program') || str_contains($titleLower, 'layanan') => 'program',
                     default => 'step_' . $step->id,
                 };
 
@@ -105,6 +107,7 @@ class ApiClient extends Model
                     'parents' => 'users',
                     'guardian' => 'shield',
                     'documents' => 'file-text',
+                    'referral' => 'megaphone',
                     default => 'folder',
                 };
 

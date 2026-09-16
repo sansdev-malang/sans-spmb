@@ -226,7 +226,7 @@
                     @php
                         $docList = isset($documentFields) && count($documentFields) > 0 
                             ? $documentFields 
-                            : \App\Models\SpmbFormField::where('form_step_id', 6)->orWhere('type', 'file')->orderBy('order', 'asc')->get();
+                            : \App\Models\SpmbFormField::where('type', 'file')->orderBy('order', 'asc')->get();
                     @endphp
 
                     @forelse($docList as $docField)

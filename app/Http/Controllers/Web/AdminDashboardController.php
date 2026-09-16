@@ -18,20 +18,35 @@ class AdminDashboardController extends Controller
     public function index(Request $request)
     {
         $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
+            return SpmbPeriod::where('is_active', true)->orderBy('id', 'desc')->value('id') 
+                ?? SpmbPeriod::orderBy('id', 'desc')->value('id');
         });
+
+        if ($request->filled('period_id')) {
+            if ($request->period_id !== 'all') {
+                session(['selected_period_id' => $request->period_id]);
+                $selectedPeriodId = $request->period_id;
+            } else {
+                $selectedPeriodId = 'all';
+            }
+        }
 
         // Base query for candidate verification (excluding draft)
         $query = Registration::scopedByAdmin()
             ->with(['user', 'activePayment', 'period', 'wave', 'type'])
-            ->where('spmb_period_id', $selectedPeriodId)
             ->where('registration_status', '!=', 'draft');
+
+        if ($selectedPeriodId !== 'all') {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
 
         // Stats calculation for tabs (scoped by period and optional unit)
         $baseStats = Registration::scopedByAdmin()
-            ->where('spmb_period_id', $selectedPeriodId)
             ->where('registration_status', '!=', 'draft');
+
+        if ($selectedPeriodId !== 'all') {
+            $baseStats->where('spmb_period_id', $selectedPeriodId);
+        }
 
         if ($request->filled('unit_id')) {
             $baseStats->where('spmb_unit_id', $request->unit_id);
@@ -76,7 +91,9 @@ class AdminDashboardController extends Controller
             ->orderBy('order', 'asc')
             ->get();
 
-        return view('admin.verification', compact('registrations', 'tabCounts', 'documentFields'));
+        $periods = SpmbPeriod::orderBy('year', 'desc')->get();
+
+        return view('admin.verification', compact('registrations', 'tabCounts', 'documentFields', 'periods', 'selectedPeriodId'));
     }
 
     public function dashboard()

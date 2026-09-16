@@ -86,6 +86,16 @@
                     </button>
                 </div>
                 
+                <!-- Filter Tahun Ajaran (Period) -->
+                <select name="period_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <option value="all" {{ ($selectedPeriodId ?? '') === 'all' ? 'selected' : '' }}>Semua TA</option>
+                    @foreach($periods ?? [] as $period)
+                        <option value="{{ $period->id }}" {{ ($selectedPeriodId ?? '') == $period->id ? 'selected' : '' }}>
+                            TA {{ $period->year }}
+                        </option>
+                    @endforeach
+                </select>
+
                 @if(auth()->user()->isSuperAdmin())
                     <!-- Filter Level / Unit -->
                     <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-5.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
