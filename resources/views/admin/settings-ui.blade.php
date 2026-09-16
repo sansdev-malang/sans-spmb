@@ -52,7 +52,7 @@
     <form id="ui-settings-form" action="{{ route('admin.ui-settings.save') }}" method="POST" enctype="multipart/form-data" hx-boost="false" class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         @csrf
         @php
-            $currentTab = $activeTab ?? request()->get('tab', $isSuperAdmin ? 'global' : ('unit-' . strtolower($units->first()->code ?? '')));
+            $currentTab = $activeTab ?? request()->input('tab', $isSuperAdmin ? 'global' : ('unit-' . strtolower($units->first()->code ?? '')));
         @endphp
         <input type="hidden" name="active_tab" id="active-tab-input" value="{{ $currentTab }}">
         
@@ -370,6 +370,49 @@
 
                                     <input type="file" name="unit_{{ $code }}_attachment" accept="application/pdf,application/zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="text-[10px] text-slate-500 dark:text-slate-400 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-100 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 cursor-pointer" />
                                     <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">PDF, Zip, Word, Excel (Maks 5MB)</p>
+                                </div>
+                            </div>
+
+                            <!-- 7. Uploads Image Header & Card -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+                                <!-- Upload Image Background Hero Jenjang -->
+                                <div class="space-y-3 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mt-4">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Gambar Background Header Hero Jenjang</label>
+                                    
+                                    @if(!empty($settings['unit_' . $code . '_bg_image_url']))
+                                        <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                                            <div class="flex items-center gap-3 overflow-hidden">
+                                                <img src="{{ $settings['unit_' . $code . '_bg_image_url'] }}" alt="Hero Background Preview" class="w-16 h-10 object-cover rounded border border-slate-200 dark:border-slate-700 shrink-0" />
+                                                <a href="{{ $settings['unit_' . $code . '_bg_image_url'] }}" target="_blank" class="flex items-center gap-1 text-[10px] text-brand-emerald dark:text-emerald-400 hover:underline font-extrabold truncate max-w-[200px]"><i data-lucide="eye" class="w-4 h-4 text-brand-emerald mr-1"></i> Lihat Background Aktif</a>
+                                            </div>
+                                            <label class="flex items-center gap-1 text-[9px] text-red-600 dark:text-red-400 font-bold cursor-pointer hover:text-red-700 shrink-0">
+                                                <input type="checkbox" name="delete_unit_{{ $code }}_bg_image" value="1" class="rounded text-red-600 focus:ring-red-500 w-3 h-3"> Hapus Gambar
+                                            </label>
+                                        </div>
+                                    @endif
+
+                                    <input type="file" name="unit_{{ $code }}_bg_image" accept="image/*" class="text-[10px] text-slate-500 dark:text-slate-400 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-100 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 cursor-pointer" />
+                                    <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Gambar Hero/Header (JPG, PNG, WEBP, SVG - Maks 4MB). Rekomendasi rasio 16:9 atau min resolution 1280x480px.</p>
+                                </div>
+
+                                <!-- Upload Gambar Card Unit Halaman Awal -->
+                                <div class="space-y-3 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mt-4">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Gambar Card / Thumbnail Unit (Halaman Awal Landing Page)</label>
+                                    
+                                    @if(!empty($settings['unit_' . $code . '_card_image_url']))
+                                        <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                                            <div class="flex items-center gap-3 overflow-hidden">
+                                                <img src="{{ $settings['unit_' . $code . '_card_image_url'] }}" alt="Card Thumbnail Preview" class="w-16 h-10 object-cover rounded border border-slate-200 dark:border-slate-700 shrink-0" />
+                                                <a href="{{ $settings['unit_' . $code . '_card_image_url'] }}" target="_blank" class="flex items-center gap-1 text-[10px] text-brand-emerald dark:text-emerald-400 hover:underline font-extrabold truncate max-w-[200px]"><i data-lucide="eye" class="w-4 h-4 text-brand-emerald mr-1"></i> Lihat Gambar Card Aktif</a>
+                                            </div>
+                                            <label class="flex items-center gap-1 text-[9px] text-red-600 dark:text-red-400 font-bold cursor-pointer hover:text-red-700 shrink-0">
+                                                <input type="checkbox" name="delete_unit_{{ $code }}_card_image" value="1" class="rounded text-red-600 focus:ring-red-500 w-3 h-3"> Hapus Gambar
+                                            </label>
+                                        </div>
+                                    @endif
+
+                                    <input type="file" name="unit_{{ $code }}_card_image" accept="image/*" class="text-[10px] text-slate-500 dark:text-slate-400 w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-slate-100 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 cursor-pointer" />
+                                    <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">Gambar Thumbnail Card yang tampil di halaman depan (JPG, PNG, WEBP - Maks 4MB). Rekomendasi rasio 16:9 atau min 800x450px.</p>
                                 </div>
                             </div>
                         </div>

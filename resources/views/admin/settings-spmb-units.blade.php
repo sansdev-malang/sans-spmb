@@ -35,7 +35,7 @@
     </div>
 
     @php
-        $activeTab = $activeTab ?? request()->get('tab', 'unit');
+        $activeTab = $activeTab ?? request()->input('tab', 'unit');
     @endphp
     <!-- Tab Navigation -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">

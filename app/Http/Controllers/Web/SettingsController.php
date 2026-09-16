@@ -155,7 +155,7 @@ class SettingsController extends Controller
             }
         }
 
-        $activeTab = request()->get('tab');
+        $activeTab = request()->input('tab');
         if (!$activeTab) {
             $firstGw = $gateways->first();
             $activeTab = $firstGw ? $firstGw->code : 'winpay';
@@ -404,10 +404,12 @@ class SettingsController extends Controller
             $settings['unit_' . $code . '_flow'] = Setting::get('unit_' . $code . '_flow', $this->getDefaultUnitFlow($code));
             $settings['unit_' . $code . '_brochure_url'] = Setting::get('unit_' . $code . '_brochure_url', '');
             $settings['unit_' . $code . '_attachment_url'] = Setting::get('unit_' . $code . '_attachment_url', '');
+            $settings['unit_' . $code . '_bg_image_url'] = Setting::get('unit_' . $code . '_bg_image_url', '');
+            $settings['unit_' . $code . '_card_image_url'] = Setting::get('unit_' . $code . '_card_image_url', '');
         }
 
         $defaultTab = $isSuperAdmin ? 'global' : ('unit-' . strtolower($units->first()->code));
-        $activeTab = request()->get('tab', $defaultTab);
+        $activeTab = request()->input('tab', $defaultTab);
         if (!$isSuperAdmin && !str_starts_with($activeTab, 'unit-') && $activeTab !== 'testimonials') {
             $activeTab = $defaultTab;
         }
@@ -494,6 +496,8 @@ class SettingsController extends Controller
                 $rules['unit_' . $code . '_flow'] = 'required|string';
                 $rules['unit_' . $code . '_brochure'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096';
                 $rules['unit_' . $code . '_attachment'] = 'nullable|file|mimes:pdf,zip,doc,docx,xls,xlsx|max:5120';
+                $rules['unit_' . $code . '_bg_image'] = 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:4096';
+                $rules['unit_' . $code . '_card_image'] = 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:4096';
             }
 
             $request->validate($rules);
@@ -509,13 +513,25 @@ class SettingsController extends Controller
                 // Process brochure upload
                 if ($request->hasFile('unit_' . $code . '_brochure')) {
                     $path = $request->file('unit_' . $code . '_brochure')->store('documents', 'public');
-                    Setting::set('unit_' . $code . '_brochure_url', \Illuminate\Support\Facades\Storage::url($path));
+                    Setting::set('unit_' . $code . '_brochure_url', Storage::url($path));
                 }
 
                 // Process attachment upload
                 if ($request->hasFile('unit_' . $code . '_attachment')) {
                     $path = $request->file('unit_' . $code . '_attachment')->store('documents', 'public');
-                    Setting::set('unit_' . $code . '_attachment_url', \Illuminate\Support\Facades\Storage::url($path));
+                    Setting::set('unit_' . $code . '_attachment_url', Storage::url($path));
+                }
+
+                // Process background image upload
+                if ($request->hasFile('unit_' . $code . '_bg_image')) {
+                    $path = $request->file('unit_' . $code . '_bg_image')->store('branding', 'public');
+                    Setting::set('unit_' . $code . '_bg_image_url', Storage::url($path));
+                }
+
+                // Process card image upload
+                if ($request->hasFile('unit_' . $code . '_card_image')) {
+                    $path = $request->file('unit_' . $code . '_card_image')->store('branding', 'public');
+                    Setting::set('unit_' . $code . '_card_image_url', Storage::url($path));
                 }
 
                 // Process deletions
@@ -524,6 +540,12 @@ class SettingsController extends Controller
                 }
                 if ($request->input('delete_unit_' . $code . '_attachment') == '1') {
                     Setting::set('unit_' . $code . '_attachment_url', '');
+                }
+                if ($request->input('delete_unit_' . $code . '_bg_image') == '1') {
+                    Setting::set('unit_' . $code . '_bg_image_url', '');
+                }
+                if ($request->input('delete_unit_' . $code . '_card_image') == '1') {
+                    Setting::set('unit_' . $code . '_card_image_url', '');
                 }
             }
 
@@ -562,6 +584,8 @@ class SettingsController extends Controller
             $rules['unit_' . $code . '_flow'] = 'required|string';
             $rules['unit_' . $code . '_brochure'] = 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096';
             $rules['unit_' . $code . '_attachment'] = 'nullable|file|mimes:pdf,zip,doc,docx,xls,xlsx|max:5120';
+            $rules['unit_' . $code . '_bg_image'] = 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:4096';
+            $rules['unit_' . $code . '_card_image'] = 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:4096';
         }
 
         $request->validate($rules);
@@ -593,13 +617,25 @@ class SettingsController extends Controller
             // Process brochure upload
             if ($request->hasFile('unit_' . $code . '_brochure')) {
                 $path = $request->file('unit_' . $code . '_brochure')->store('documents', 'public');
-                Setting::set('unit_' . $code . '_brochure_url', \Illuminate\Support\Facades\Storage::url($path));
+                Setting::set('unit_' . $code . '_brochure_url', Storage::url($path));
             }
 
             // Process attachment upload
             if ($request->hasFile('unit_' . $code . '_attachment')) {
                 $path = $request->file('unit_' . $code . '_attachment')->store('documents', 'public');
-                Setting::set('unit_' . $code . '_attachment_url', \Illuminate\Support\Facades\Storage::url($path));
+                Setting::set('unit_' . $code . '_attachment_url', Storage::url($path));
+            }
+
+            // Process background image upload
+            if ($request->hasFile('unit_' . $code . '_bg_image')) {
+                $path = $request->file('unit_' . $code . '_bg_image')->store('branding', 'public');
+                Setting::set('unit_' . $code . '_bg_image_url', Storage::url($path));
+            }
+
+            // Process card image upload
+            if ($request->hasFile('unit_' . $code . '_card_image')) {
+                $path = $request->file('unit_' . $code . '_card_image')->store('branding', 'public');
+                Setting::set('unit_' . $code . '_card_image_url', Storage::url($path));
             }
 
             // Process deletions
@@ -609,12 +645,18 @@ class SettingsController extends Controller
             if ($request->input('delete_unit_' . $code . '_attachment') == '1') {
                 Setting::set('unit_' . $code . '_attachment_url', '');
             }
+            if ($request->input('delete_unit_' . $code . '_bg_image') == '1') {
+                Setting::set('unit_' . $code . '_bg_image_url', '');
+            }
+            if ($request->input('delete_unit_' . $code . '_card_image') == '1') {
+                Setting::set('unit_' . $code . '_card_image_url', '');
+            }
         }
 
         // Process logo upload
         if ($request->hasFile('school_logo')) {
             $path = $request->file('school_logo')->store('branding', 'public');
-            Setting::set('school_logo_url', \Illuminate\Support\Facades\Storage::url($path));
+            Setting::set('school_logo_url', Storage::url($path));
         }
         if ($request->input('clear_school_logo_url') == '1') {
             Setting::set('school_logo_url', '');
@@ -623,7 +665,7 @@ class SettingsController extends Controller
         // Process favicon upload
         if ($request->hasFile('school_favicon')) {
             $path = $request->file('school_favicon')->store('branding', 'public');
-            Setting::set('school_favicon_url', \Illuminate\Support\Facades\Storage::url($path));
+            Setting::set('school_favicon_url', Storage::url($path));
         }
         if ($request->input('clear_school_favicon_url') == '1') {
             Setting::set('school_favicon_url', '');
@@ -641,7 +683,7 @@ class SettingsController extends Controller
             $heroUrls = json_decode(Setting::get('school_hero_images', '[]'), true) ?: [];
             foreach ($request->file('school_hero_images') as $file) {
                 $path = $file->store('branding', 'public');
-                $heroUrls[] = \Illuminate\Support\Facades\Storage::url($path);
+                $heroUrls[] = Storage::url($path);
             }
             Setting::set('school_hero_images', json_encode($heroUrls));
         }
@@ -653,7 +695,7 @@ class SettingsController extends Controller
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         $units = \App\Models\SpmbUnit::all();
         
-        $selectedUnitId = $request->get('unit_id');
+        $selectedUnitId = $request->input('unit_id');
         if (!$selectedUnitId) {
             $selectedUnitId = !$isSuperAdmin ? auth()->user()->spmb_unit_id : \App\Models\SpmbUnit::value('id');
         }
@@ -678,7 +720,7 @@ class SettingsController extends Controller
     {
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         
-        $selectedUnitId = $request->get('unit_id');
+        $selectedUnitId = $request->input('unit_id');
         if (!$selectedUnitId) {
             $selectedUnitId = !$isSuperAdmin ? auth()->user()->spmb_unit_id : \App\Models\SpmbUnit::value('id');
         }
@@ -760,7 +802,7 @@ class SettingsController extends Controller
             'name' => $request->name,
             'role_title' => $request->role_title,
             'spmb_unit_id' => $unitId ?: null,
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'rating' => (int) $request->rating,
             'avatar_url' => $avatarUrl,
             'order' => (int) $order,
@@ -840,7 +882,7 @@ class SettingsController extends Controller
             'name' => $request->name,
             'role_title' => $request->role_title,
             'spmb_unit_id' => $unitId ?: null,
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'rating' => (int) $request->rating,
             'avatar_url' => $avatarUrl,
             'order' => (int) ($request->order ?? $testimonial->order),

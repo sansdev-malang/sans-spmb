@@ -29,6 +29,7 @@
     $uFlow = $parseList(\App\Models\Setting::get('unit_' . $uCode . '_flow', ''));
     $uBrochureUrl = \App\Models\Setting::get('unit_' . $uCode . '_brochure_url', '');
     $uAttachmentUrl = \App\Models\Setting::get('unit_' . $uCode . '_attachment_url', '');
+    $uBgImageUrl = \App\Models\Setting::get('unit_' . $uCode . '_bg_image_url', '');
     
     $iconName = 'book-open';
     if ($uCode === 'paud') {
@@ -39,15 +40,23 @@
 @endphp
 
 <!-- Header Hero Banner for the Unit -->
-<div class="relative bg-slate-50 dark:bg-slate-950 overflow-hidden py-10 md:py-12 border-b border-slate-100 dark:border-slate-800 transition">
-    <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center space-y-3.5">
+<div class="relative bg-slate-50 dark:bg-slate-950 overflow-hidden py-12 md:py-16 border-b border-slate-100 dark:border-slate-800 transition">
+    @if(!empty($uBgImageUrl))
+        <!-- Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
+            <img src="{{ $uBgImageUrl }}" alt="{{ $unit->name }} Hero Background" class="w-full h-full object-cover object-center" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/75 to-slate-900/50 backdrop-blur-[0.5px]"></div>
+        </div>
+    @endif
+
+    <div class="relative z-10 max-w-4xl mx-auto px-6 lg:px-8 text-center space-y-3.5">
         
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight">
-            <span class="block text-slate-800 dark:text-white">Informasi & Pendaftaran</span>
-            <span class="block text-custom-primary dark:text-emerald-400 mt-1">{{ $unit->name }}</span>
+            <span class="block {{ !empty($uBgImageUrl) ? 'text-white drop-shadow-md' : 'text-slate-800 dark:text-white' }}">Informasi & Pendaftaran</span>
+            <span class="block {{ !empty($uBgImageUrl) ? 'text-emerald-400 drop-shadow-md' : 'text-custom-primary dark:text-emerald-400' }} mt-1">{{ $unit->name }}</span>
         </h1>
         
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto leading-relaxed">
+        <p class="text-xs sm:text-sm {{ !empty($uBgImageUrl) ? 'text-slate-200 font-medium drop-shadow-sm' : 'text-slate-500 dark:text-slate-400 font-medium' }} max-w-xl mx-auto leading-relaxed">
             Temukan kurikulum kelas, syarat kelengkapan berkas, dan prosedur pendaftaran awal untuk jenjang {{ $unit->name }} di {{ $schoolName }}.
         </p>
     </div>

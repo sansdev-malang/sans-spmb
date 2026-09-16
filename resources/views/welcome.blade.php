@@ -224,38 +224,73 @@
                     $uDesc = \App\Models\Setting::get('unit_' . $uCode . '_desc', '');
                     $uFeatures = $parseList(\App\Models\Setting::get('unit_' . $uCode . '_features', ''));
                     
-                    // Assign icon based on education level
-                    $iconName = 'book-open';
-                    if ($uCode === 'paud') {
-                        $iconName = 'baby';
-                    } elseif ($uCode === 'smp') {
-                        $iconName = 'flask-conical';
+                    $uCardImageUrl = \App\Models\Setting::get('unit_' . $uCode . '_card_image_url', '');
+                    $uBgImageUrl = \App\Models\Setting::get('unit_' . $uCode . '_bg_image_url', '');
+                    
+                    $displayImage = $uCardImageUrl ?: $uBgImageUrl;
+                    if (empty($displayImage)) {
+                        if ($uCode === 'paud') {
+                            $displayImage = 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=800&auto=format&fit=crop';
+                        } elseif ($uCode === 'sd') {
+                            $displayImage = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop';
+                        } elseif ($uCode === 'smp') {
+                            $displayImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop';
+                        } else {
+                            $displayImage = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop';
+                        }
                     }
                 @endphp
 
-                <div class="bg-slate-50 dark:bg-slate-950 p-8 rounded-3xl border hover:border-custom-primary dark:hover:border-emerald-400 border-slate-200/60 dark:border-slate-800 space-y-6 hover:shadow-lg transition flex flex-col justify-between">
-                        <div class="space-y-6">
-                            <div class="h-12 w-12 bg-custom-primary text-white rounded-2xl flex items-center justify-center shadow-md">
-                                <i data-lucide="{{ $iconName }}" class="w-5 h-5 text-brand-yellow"></i>
+                <div class="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <!-- Modern Card Image Header -->
+                        <div class="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                            <img src="{{ $displayImage }}" 
+                                 alt="{{ $u->name }}" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent"></div>
+                            
+                            <!-- Unit Tag Badge -->
+                            <div class="absolute top-3.5 left-3.5 flex items-center gap-2">
+                                <span class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-custom-primary dark:text-emerald-400 shadow-xs uppercase tracking-wider border border-white/20">
+                                    Jenjang {{ strtoupper($uCode) }}
+                                </span>
                             </div>
-                            <div class="space-y-2">
-                                <h3 class="font-black text-xl text-slate-800 dark:text-white">{{ $u->name }}</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-3 min-h-[3.6rem]" title="{{ $uDesc }}">
-                                    {{ $uDesc }}
-                                </p>
+
+                            <!-- Title Overlay on Image Bottom -->
+                            <div class="absolute bottom-3 left-4 right-4">
+                                <h3 class="font-black text-lg sm:text-xl text-white drop-shadow-md leading-tight">{{ $u->name }}</h3>
                             </div>
                         </div>
-                        <div class="space-y-3 pt-4 border-t border-slate-150 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-450">
-                            @foreach(array_slice($uFeatures, 0, 2) as $feat)
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="check" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
-                                    <span class="truncate" title="{{ trim($feat) }}">{{ trim($feat) }}</span>
-                                </div>
-                            @endforeach
-                            <a href="{{ route('unit.detail', $uCode) }}" class="text-[10px] text-custom-primary dark:text-emerald-400 font-extrabold underline block mt-2 text-left">
-                                Lihat Detail Selengkapnya &rarr;
-                            </a>
+
+                        <!-- Card Body -->
+                        <div class="p-6 space-y-4">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-3 min-h-[3.6rem]" title="{{ $uDesc }}">
+                                {{ $uDesc }}
+                            </p>
+
+                            <!-- Features List -->
+                            <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] font-bold text-slate-600 dark:text-slate-350">
+                                @foreach(array_slice($uFeatures, 0, 2) as $feat)
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-4 h-4 rounded-full bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center flex-shrink-0">
+                                            <i data-lucide="check" class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400"></i>
+                                        </div>
+                                        <span class="truncate" title="{{ trim($feat) }}">{{ trim($feat) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Card Footer Action Button -->
+                    <div class="px-6 pb-6 pt-1">
+                        <a href="{{ route('unit.detail', $uCode) }}" 
+                           class="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-slate-50 hover:bg-custom-primary dark:bg-slate-800 dark:hover:bg-emerald-600 text-slate-700 hover:text-white dark:text-slate-200 dark:hover:text-white text-xs font-extrabold rounded-xl transition-all duration-200 shadow-xs group/btn">
+                            <span>Lihat Detail Selengkapnya</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform"></i>
+                        </a>
+                    </div>
                 </div>
             @endforeach
         </div>
