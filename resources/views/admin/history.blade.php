@@ -64,7 +64,7 @@
                             <option value="all" {{ ($selectedPeriodId ?? '') === 'all' ? 'selected' : '' }}>Semua T.A</option>
                             @foreach($periods as $period)
                                 <option value="{{ $period->id }}" {{ ($selectedPeriodId ?? '') == $period->id ? 'selected' : '' }}>
-                                    {{ $period->name ?? $period->year }}{{ $period->is_active ? ' (Aktif)' : '' }}
+                                    {{ $period->is_active ? '🟢 ' : '' }}{{ $period->name ?? $period->year }}
                                 </option>
                             @endforeach
                         </select>
