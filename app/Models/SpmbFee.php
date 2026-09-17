@@ -104,6 +104,35 @@ class SpmbFee extends Model
             }
         }
 
+        // Gender match (Laki-laki / Perempuan)
+        $regGender = strtolower(trim($registration->gender ?? ''));
+        if (!empty($regGender)) {
+            $isCandidateMale = in_array($regGender, ['l', 'laki-laki', 'male', 'ikhwan', 'putra'], true);
+            $isCandidateFemale = in_array($regGender, ['p', 'perempuan', 'female', 'akhwat', 'putri'], true);
+
+            // 1. Explicit applicable_gender configured on fee
+            if (!empty($this->applicable_gender) && $this->applicable_gender !== 'all') {
+                $feeGender = strtolower(trim($this->applicable_gender));
+                if (in_array($feeGender, ['male', 'laki-laki', 'l', 'putra', 'ikhwan'], true)) {
+                    if (!$isCandidateMale) return false;
+                } elseif (in_array($feeGender, ['female', 'perempuan', 'p', 'putri', 'akhwat'], true)) {
+                    if (!$isCandidateFemale) return false;
+                }
+            } else {
+                // 2. Keyword check on fee name (e.g. "Perlengkapan - Laki-Laki", "Seragam Putri")
+                $feeNameLower = strtolower($this->name);
+                $hasMaleKw = str_contains($feeNameLower, 'laki-laki') || str_contains($feeNameLower, 'laki') || str_contains($feeNameLower, 'putra') || str_contains($feeNameLower, 'ikhwan');
+                $hasFemaleKw = str_contains($feeNameLower, 'perempuan') || str_contains($feeNameLower, 'putri') || str_contains($feeNameLower, 'akhwat');
+
+                if ($hasMaleKw && !$hasFemaleKw && !$isCandidateMale) {
+                    return false;
+                }
+                if ($hasFemaleKw && !$hasMaleKw && !$isCandidateFemale) {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
@@ -141,5 +170,19 @@ class SpmbFee extends Model
         }
         $names = SpmbType::whereIn('id', $this->applicable_types)->pluck('name')->toArray();
         return !empty($names) ? implode(', ', $names) : 'Semua Jalur';
+    }
+
+    /**
+     * Get readable target gender label
+     */
+    public function getTargetGenderTextAttribute(): string
+    {
+        $g = strtolower(trim($this->applicable_gender ?? ''));
+        if (in_array($g, ['male', 'laki-laki', 'l', 'putra'], true)) {
+            return 'Laki-laki (Putra)';
+        } elseif (in_array($g, ['female', 'perempuan', 'p', 'putri'], true)) {
+            return 'Perempuan (Putri)';
+        }
+        return 'Semua Gender';
     }
 }

@@ -135,6 +135,11 @@ class SpmbFeesController extends Controller
     // Admin Fee (Biaya Admin) CRUD
     public function storeFee(Request $request)
     {
+        if ($request->has('amount')) {
+            $cleanedAmount = preg_replace('/[^0-9]/', '', (string) $request->amount);
+            $request->merge(['amount' => $cleanedAmount]);
+        }
+
         $units = auth()->user()->isSuperAdmin() ? $request->spmb_units : [auth()->user()->spmb_unit_id];
 
         $gatewayCodes = \App\Models\PaymentGateway::pluck('code')->toArray();
@@ -150,6 +155,7 @@ class SpmbFeesController extends Controller
             'applicable_class_programs.*' => 'exists:spmb_class_programs,id',
             'applicable_types' => 'nullable|array',
             'applicable_types.*' => 'exists:spmb_types,id',
+            'applicable_gender' => 'nullable|string|in:all,male,female,laki-laki,perempuan',
         ];
 
         if (auth()->user()->isSuperAdmin()) {
@@ -158,6 +164,8 @@ class SpmbFeesController extends Controller
         }
 
         $validator = Validator::make($request->all(), $rules, [
+            'amount.required' => 'Nominal biaya wajib diisi.',
+            'amount.numeric' => 'Nominal biaya harus berupa angka.',
             'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.',
             'amount.max' => 'Nominal biaya pendaftaran maksimal adalah Rp 9.999.999.999.'
         ]);
@@ -188,6 +196,7 @@ class SpmbFeesController extends Controller
         $applicableGrades = !empty($request->applicable_grades) ? array_values(array_map('intval', (array)$request->applicable_grades)) : null;
         $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
         $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
+        $applicableGender = (!empty($request->applicable_gender) && $request->applicable_gender !== 'all') ? $request->applicable_gender : null;
 
         foreach ($units as $unitId) {
             SpmbFee::create([
@@ -199,6 +208,7 @@ class SpmbFeesController extends Controller
                 'applicable_grades' => $applicableGrades,
                 'applicable_class_programs' => $applicableClassPrograms,
                 'applicable_types' => $applicableTypes,
+                'applicable_gender' => $applicableGender,
                 'is_active' => true,
             ]);
         }
@@ -210,15 +220,21 @@ class SpmbFeesController extends Controller
 
     public function updateFee(Request $request, $id)
     {
-        $unitId = auth()->user()->isSuperAdmin() ? ($request->spmb_units[0] ?? auth()->user()->spmb_unit_id) : auth()->user()->spmb_unit_id;
+        if ($request->has('amount')) {
+            $cleanedAmount = preg_replace('/[^0-9]/', '', (string) $request->amount);
+            $request->merge(['amount' => $cleanedAmount]);
+        }
+
+        $fee = SpmbFee::findOrFail($id);
+        $unitId = auth()->user()->isSuperAdmin() ? ($request->spmb_units[0] ?? $fee->spmb_unit_id) : (auth()->user()->spmb_unit_id ?? $fee->spmb_unit_id);
 
         $gatewayCodes = \App\Models\PaymentGateway::pluck('code')->toArray();
         $rules = [
             'name' => [
                 'required',
                 'string',
-                \Illuminate\Validation\Rule::unique('spmb_fees')->ignore($id)->where(function ($query) use ($request, $unitId) {
-                    return $query->where('spmb_fee_category_id', $request->spmb_fee_category_id)
+                \Illuminate\Validation\Rule::unique('spmb_fees')->ignore($id)->where(function ($query) use ($request, $unitId, $fee) {
+                    return $query->where('spmb_fee_category_id', $request->spmb_fee_category_id ?? $fee->spmb_fee_category_id)
                                  ->where('spmb_unit_id', $unitId);
                 })
             ],
@@ -232,14 +248,17 @@ class SpmbFeesController extends Controller
             'applicable_class_programs.*' => 'exists:spmb_class_programs,id',
             'applicable_types' => 'nullable|array',
             'applicable_types.*' => 'exists:spmb_types,id',
+            'applicable_gender' => 'nullable|string|in:all,male,female,laki-laki,perempuan',
         ];
 
-        if (auth()->user()->isSuperAdmin()) {
-            $rules['spmb_units'] = 'required|array|min:1';
+        if (auth()->user()->isSuperAdmin() && $request->has('spmb_units')) {
+            $rules['spmb_units'] = 'nullable|array';
             $rules['spmb_units.*'] = 'exists:spmb_units,id';
         }
 
         $validator = Validator::make($request->all(), $rules, [
+            'amount.required' => 'Nominal biaya wajib diisi.',
+            'amount.numeric' => 'Nominal biaya harus berupa angka.',
             'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.',
             'amount.max' => 'Nominal biaya pendaftaran maksimal adalah Rp 9.999.999.999.',
             'name.unique' => 'Nama biaya sudah digunakan pada unit dan kategori ini.'
@@ -252,10 +271,8 @@ class SpmbFeesController extends Controller
                 ->with('failed_modal', 'biaya_admin_edit_' . $id);
         }
 
-        $fee = SpmbFee::findOrFail($id);
-
         if (self::isFeeUsed($fee)) {
-            if ($fee->amount != $request->amount) {
+            if ((int)$fee->amount != (int)$request->amount) {
                 return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $fee->spmb_fee_category_id])->with('error', 'Tidak dapat mengubah nominal biaya yang sudah digunakan dalam transaksi.');
             }
         }
@@ -263,6 +280,7 @@ class SpmbFeesController extends Controller
         $applicableGrades = !empty($request->applicable_grades) ? array_values(array_map('intval', (array)$request->applicable_grades)) : null;
         $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
         $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
+        $applicableGender = (!empty($request->applicable_gender) && $request->applicable_gender !== 'all') ? $request->applicable_gender : null;
 
         $fee->update([
             'name' => $request->name,
@@ -273,6 +291,7 @@ class SpmbFeesController extends Controller
             'applicable_grades' => $applicableGrades,
             'applicable_class_programs' => $applicableClassPrograms,
             'applicable_types' => $applicableTypes,
+            'applicable_gender' => $applicableGender,
         ]);
 
         self::syncUnpaidRegistrationsFeeSnapshot([$unitId]);
@@ -315,6 +334,17 @@ class SpmbFeesController extends Controller
 
     public static function isFeeUsed($fee)
     {
+        // 0. Direct check via PaymentItem relation if available
+        $hasPaymentItem = \App\Models\PaymentItem::where('spmb_fee_id', $fee->id)
+            ->whereHas('payment', function ($q) {
+                $q->whereIn('status', ['success', 'pending']);
+            })
+            ->exists();
+
+        if ($hasPaymentItem) {
+            return true;
+        }
+
         // 1. If it's a registration fee category or registration fee
         $isRegFee = ($fee->category && preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $fee->category->name))
             || preg_match('/(formulir|pendaftaran|registrasi|enrollment|registration)/i', $fee->name);
