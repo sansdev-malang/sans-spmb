@@ -58,6 +58,18 @@
                         </button>
                     </div>
                     
+                    <!-- Filter Tahun Ajaran -->
+                    @if(isset($periods) && $periods->isNotEmpty())
+                        <select name="period_id" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">
+                            <option value="all" {{ ($selectedPeriodId ?? '') === 'all' ? 'selected' : '' }}>Semua T.A</option>
+                            @foreach($periods as $period)
+                                <option value="{{ $period->id }}" {{ ($selectedPeriodId ?? '') == $period->id ? 'selected' : '' }}>
+                                    {{ $period->name ?? $period->year }}{{ $period->is_active ? ' (Aktif)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+
                     @if(auth()->user()->isSuperAdmin())
                         <!-- Filter Level / Unit -->
                         <select name="unit_id" onchange="this.form.submit()" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">

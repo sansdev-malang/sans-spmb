@@ -21,13 +21,13 @@ class AdminCandidateController extends Controller
      */
     public function index(Request $request)
     {
+        $periods = SpmbPeriod::orderBy('year', 'desc')->get();
         $selectedPeriodId = $request->filled('period_id')
             ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
             : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'wave', 'type', 'payments'])
-            ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name')
             ->where(function($sq) {
                 $sq->where('payment_status', 'paid')
@@ -37,9 +37,12 @@ class AdminCandidateController extends Controller
                   });
             });
 
+        if ($selectedPeriodId !== 'all') {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
+
         // Calculate Stats for Active Candidates with dynamic filters applied
         $baseStatsQuery = Registration::scopedByAdmin()
-            ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name')
             ->where(function($sq) {
                 $sq->where('payment_status', 'paid')
@@ -48,6 +51,10 @@ class AdminCandidateController extends Controller
                         ->whereIn('status', ['success', 'settled']);
                   });
             });
+
+        if ($selectedPeriodId !== 'all') {
+            $baseStatsQuery->where('spmb_period_id', $selectedPeriodId);
+        }
 
         if ($request->filled('unit_id')) {
             $baseStatsQuery->where('spmb_unit_id', $request->unit_id);
@@ -216,7 +223,7 @@ class AdminCandidateController extends Controller
 
         $candidates = $query->latest()->paginate($perPage)->withQueryString();
 
-        return view('admin.candidates', compact('candidates', 'stats', 'waveStats', 'typeStats', 'classProgramStats', 'stageCounts'));
+        return view('admin.candidates', compact('candidates', 'stats', 'waveStats', 'typeStats', 'classProgramStats', 'stageCounts', 'periods', 'selectedPeriodId'));
     }
 
     /**
@@ -224,14 +231,18 @@ class AdminCandidateController extends Controller
      */
     public function history(Request $request)
     {
+        $periods = SpmbPeriod::orderBy('year', 'desc')->get();
         $selectedPeriodId = $request->filled('period_id')
             ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
             : SpmbPeriod::getDefaultPeriodId();
 
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'wave', 'type', 'payments'])
-            ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name');
+
+        if ($selectedPeriodId !== 'all') {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
 
         // Search by Name, WhatsApp, or NIK
         if ($request->filled('search')) {
@@ -314,7 +325,7 @@ class AdminCandidateController extends Controller
 
         $candidates = $query->latest()->paginate($perPage)->withQueryString();
 
-        return view('admin.history', compact('candidates'));
+        return view('admin.history', compact('candidates', 'periods', 'selectedPeriodId'));
     }
 
     /**
@@ -435,7 +446,6 @@ class AdminCandidateController extends Controller
 
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
-            ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name')
             ->where(function($sq) {
                 $sq->where('payment_status', 'paid')
@@ -444,6 +454,10 @@ class AdminCandidateController extends Controller
                         ->whereIn('status', ['success', 'settled']);
                   });
             });
+
+        if ($selectedPeriodId !== 'all') {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
 
         // Search by Name, WhatsApp, or NIK
         if ($request->filled('search')) {
@@ -703,12 +717,18 @@ class AdminCandidateController extends Controller
 
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
-            ->where('spmb_period_id', $selectedPeriodId)
             ->whereNotNull('candidate_name')
-            ->whereHas('payments', function($q) {
-                $q->where('payment_type', 'registration_fee')
-                  ->where('status', 'success');
+            ->where(function($sq) {
+                $sq->where('payment_status', 'paid')
+                  ->orWhereHas('payments', function($q) {
+                      $q->where('payment_type', 'registration_fee')
+                        ->whereIn('status', ['success', 'settled']);
+                  });
             });
+
+        if ($selectedPeriodId !== 'all') {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
 
         // Search by Name, WhatsApp, or NIK
         if ($request->filled('search')) {
