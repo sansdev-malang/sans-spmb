@@ -15,18 +15,26 @@
             <p class="text-xs text-slate-500 mt-1">Kelola tahapan wizard pendaftaran calon murid beserta pertanyaan kolom input secara dinamis.</p>
         </div>
         <!-- Unit Filter -->
-        <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200/65 p-2.5 rounded-2xl shadow-inner">
-            <span class="text-xs font-extrabold text-slate-650 flex items-center gap-1.5 pl-1.5 whitespace-nowrap">
-                <i data-lucide="filter" class="w-4 h-4 text-brand-emerald"></i>
-                Unit Sekolah:
-            </span>
-            <select onchange="const bar = document.getElementById('top-loading-bar'); if(bar){ bar.style.opacity = '1'; bar.style.width = '60%'; setTimeout(() => { if(bar.style.opacity === '1') bar.style.width = '90%'; }, 500); }; window.location.href = '{{ route('admin.spmb-settings.form') }}?tab={{ $activeTab }}&unit_id=' + this.value" class="bg-white border border-slate-300 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                <option value="" {{ $selectedUnitId === '' ? 'selected' : '' }}>-- Semua Unit (Global) --</option>
-                @foreach($units as $unit)
-                    <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
-                @endforeach
-            </select>
-        </div>
+        @if(auth()->user()->isUnitAdmin())
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/65 px-3 py-2 rounded-2xl shadow-inner">
+                <i data-lucide="shield" class="w-4 h-4 text-brand-emerald"></i>
+                <span class="text-xs font-extrabold text-slate-700">Unit: {{ auth()->user()->spmbUnit?->name ?? 'Unit Sekolah' }}</span>
+                <span class="text-[10px] font-extrabold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-lg">Khusus Unit</span>
+            </div>
+        @else
+            <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200/65 p-2.5 rounded-2xl shadow-inner">
+                <span class="text-xs font-extrabold text-slate-650 flex items-center gap-1.5 pl-1.5 whitespace-nowrap">
+                    <i data-lucide="filter" class="w-4 h-4 text-brand-emerald"></i>
+                    Unit Sekolah:
+                </span>
+                <select onchange="const bar = document.getElementById('top-loading-bar'); if(bar){ bar.style.opacity = '1'; bar.style.width = '60%'; setTimeout(() => { if(bar.style.opacity === '1') bar.style.width = '90%'; }, 500); }; window.location.href = '{{ route('admin.spmb-settings.form') }}?tab={{ $activeTab }}&unit_id=' + this.value" class="bg-white border border-slate-300 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">
+                    <option value="" {{ $selectedUnitId === '' ? 'selected' : '' }}>-- Semua Unit (Default) --</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
     </div>
 
     <!-- Documentation & Key Guide Card (Collapsible) -->
@@ -149,9 +157,11 @@
 
     <!-- Tab Navigation Pills -->
     <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        <button onclick="switchFormTab('crud_steps')" id="formTabBtn-crud_steps" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'crud_steps' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
-            <i data-lucide="list-ordered" class="w-4 h-4"></i> Manajemen Tahapan (Steps)
-        </button>
+        @if(!auth()->user()->isUnitAdmin())
+            <button onclick="switchFormTab('crud_steps')" id="formTabBtn-crud_steps" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'crud_steps' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
+                <i data-lucide="list-ordered" class="w-4 h-4"></i> Manajemen Tahapan (Steps)
+            </button>
+        @endif
         @foreach($steps as $step)
             <button onclick="switchFormTab('step_{{ $step->id }}')" id="formTabBtn-step_{{ $step->id }}" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'step_' . $step->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
                 <i data-lucide="folder" class="w-4 h-4"></i> {{ $step->title }}
@@ -162,7 +172,8 @@
     <!-- Tab Contents Container -->
     <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
         
-        <!-- Tab 1: CRUD Steps -->
+        @if(!auth()->user()->isUnitAdmin())
+        <!-- Tab 1: CRUD Steps (Super Admin Only) -->
         <div id="formTabContent-crud_steps" class="form-tab-content p-8 space-y-6 {{ $activeTab === 'crud_steps' ? '' : 'hidden' }}">
             <div class="flex justify-between items-center">
                 <div>
@@ -197,8 +208,8 @@
                                             {{ $u->code }}
                                         </span>
                                     @empty
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-550 border border-slate-200">
-                                            Global (Semua)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+                                            Default
                                         </span>
                                     @endforelse
                                 </td>
@@ -233,6 +244,7 @@
                 </table>
             </div>
         </div>
+        @endif
 
         <!-- Tab 2 to N: Fields for each Step -->
         @foreach($steps as $step)
@@ -242,7 +254,7 @@
                         <h3 class="font-extrabold text-base text-slate-800">Daftar Pertanyaan: {{ $step->title }}</h3>
                         <p class="text-[11px] text-slate-400">Kelola isian kolom formulir di tahapan ini.</p>
                     </div>
-                    <button onclick="openAddFieldModal({{ $step->id }})" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+                    <button onclick="openAddFieldModal({{ $step->id }})" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i> Tambah Kolom Input
                     </button>
                 </div>
@@ -263,17 +275,24 @@
                         </thead>
                         <tbody class="text-sm divide-y divide-slate-100">
                             @forelse($step->fields as $field)
+                                @php
+                                    $isSystemField = in_array($field->field_name, ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id']);
+                                    $isDefaultField = $field->units->isEmpty();
+                                    $isUnitAdmin = auth()->user()->isUnitAdmin();
+                                    $canEditField = !($isUnitAdmin && $isDefaultField);
+                                    $canDeleteField = !$isSystemField && !($isUnitAdmin && $isDefaultField);
+                                @endphp
                                 <tr class="hover:bg-slate-50/30 transition">
                                     <td class="py-4 px-6 text-xs font-bold text-slate-700">#{{ $field->order }}</td>
                                     <td class="py-4 px-6 text-xs font-extrabold text-slate-800">{{ $field->label }}</td>
                                     <td class="py-4 px-6 space-x-1 space-y-1">
                                         @forelse($field->units as $u)
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
-                                                {{ $u->code }}
+                                                {{ $u->code ?: $u->name }}
                                             </span>
                                         @empty
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-500 border border-slate-200">
-                                                Global
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+                                                Default
                                             </span>
                                         @endforelse
                                     </td>
@@ -290,17 +309,24 @@
                                     </td>
                                     <td class="py-4 px-6">
                                         <div class="flex items-center justify-end gap-1.5">
+                                        @if($canEditField)
                                             <button type="button" onclick="openEditFieldModal({{ json_encode($field) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Kolom">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
-                                        @if(in_array($field->field_name, ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id']))
-                                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white cursor-not-allowed" title="Kolom Sistem Utama (Proteksi)">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </span>
                                         @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed" title="Kolom Default Sistem (Hanya dapat diubah oleh Super Admin)">
+                                                <i data-lucide="lock" class="w-3 h-3"></i> Default
+                                            </span>
+                                        @endif
+
+                                        @if($canDeleteField)
                                             <button type="button" onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Kolom">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
+                                        @elseif($canEditField)
+                                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-slate-300 cursor-not-allowed" title="Kolom Sistem Utama (Proteksi)">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </span>
                                         @endif
                                         </div>
                                     </td>
@@ -310,6 +336,11 @@
                                     <td colspan="8" class="py-8 px-6 text-center text-slate-400">Belum ada kolom input formulir di tahapan ini.</td>
                                 </tr>
                             @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -451,21 +482,32 @@
                     💡 <strong>Tips:</strong> Key ini adalah identitas teknis untuk menyimpan data. Anda <strong>bebas membuat nama apa saja</strong> (gunakan huruf kecil & underscore <code>_</code>). Contoh: <code>golongan_darah</code>, <code>anak_ke</code>, <code>riwayat_penyakit</code>. Sistem otomatis menyimpannya.
                 </p>
             </div>
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
-                    <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline">Pilih Semua</button>
+            @if(auth()->user()->isUnitAdmin())
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-center gap-2.5">
+                    <i data-lucide="shield" class="w-5 h-5 text-brand-emerald flex-shrink-0"></i>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">Khusus Unit: {{ auth()->user()->spmbUnit?->name ?? 'Unit Anda' }}</p>
+                        <p class="text-[10px] text-slate-500">Kolom input ini otomatis berlaku khusus untuk unit sekolah Anda.</p>
+                    </div>
+                    <input type="hidden" name="spmb_unit_ids[]" value="{{ auth()->user()->spmb_unit_id }}">
                 </div>
-                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
-                    @foreach($units as $unit)
-                        <label class="flex items-center gap-2 cursor-pointer select-none">
-                            <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'checked' : '' }} class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
-                            <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
-                        </label>
-                    @endforeach
+            @else
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
+                        <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline cursor-pointer">Pilih Semua</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
+                        @foreach($units as $unit)
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'checked' : '' }} class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
+                                <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku sebagai <strong>Default</strong> (Semua Unit).</p>
                 </div>
-                <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara Global (Semua Unit).</p>
-            </div>
+            @endif
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
                 <select name="type" id="add-field-type" onchange="toggleOptionsInput('add')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
@@ -501,8 +543,8 @@
             </div>
  
             <div class="flex justify-end gap-2 pt-4">
-                <button type="button" onclick="closeAddFieldModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">Kembali</button>
-                <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md">Simpan Kolom</button>
+                <button type="button" onclick="closeAddFieldModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer">Kembali</button>
+                <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md cursor-pointer">Simpan Kolom</button>
             </div>
         </form>
     </div>
@@ -539,21 +581,32 @@
                     💡 <strong>Catatan:</strong> Gunakan huruf kecil dan garis bawah (contoh: <code>riwayat_alergi</code>). Kolom sistem utama terkunci demi integritas data.
                 </p>
             </div>
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
-                    <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline">Pilih Semua</button>
+            @if(auth()->user()->isUnitAdmin())
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-center gap-2.5">
+                    <i data-lucide="shield" class="w-5 h-5 text-brand-emerald flex-shrink-0"></i>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">Khusus Unit: {{ auth()->user()->spmbUnit?->name ?? 'Unit Anda' }}</p>
+                        <p class="text-[10px] text-slate-500">Kolom input ini berlaku khusus untuk unit sekolah Anda.</p>
+                    </div>
+                    <input type="hidden" name="spmb_unit_ids[]" value="{{ auth()->user()->spmb_unit_id }}">
                 </div>
-                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
-                    @foreach($units as $unit)
-                        <label class="flex items-center gap-2 cursor-pointer select-none">
-                            <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
-                            <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
-                        </label>
-                    @endforeach
+            @else
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Berlaku Untuk Unit Sekolah</label>
+                        <button type="button" onclick="toggleSelectAllUnits(this)" class="text-[10px] text-brand-emerald font-extrabold hover:underline cursor-pointer">Pilih Semua</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
+                        @foreach($units as $unit)
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" name="spmb_unit_ids[]" value="{{ $unit->id }}" class="rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-350">
+                                <span class="text-xs font-semibold text-slate-750">{{ $unit->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku sebagai <strong>Default</strong> (Semua Unit).</p>
                 </div>
-                <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara Global (Semua Unit).</p>
-            </div>
+            @endif
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Jenis Form (Tipe)*</label>
                 <select name="type" id="edit-field-type" onchange="toggleOptionsInput('edit')" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">

@@ -12,7 +12,17 @@ class SpmbFormSettingsController extends Controller
     public function index()
     {
         $units = \App\Models\SpmbUnit::all();
-        $selectedUnitId = request()->get('unit_id', ''); // '' means 'All Units' / Global
+        $user = auth()->user();
+        $isUnitAdmin = $user && $user->isUnitAdmin();
+
+        if ($isUnitAdmin) {
+            $selectedUnitId = (int)$user->spmb_unit_id;
+        } else {
+            $selectedUnitId = request()->get('unit_id', ''); // '' means 'All Units' / Default
+            if ($selectedUnitId !== '') {
+                $selectedUnitId = (int)$selectedUnitId;
+            }
+        }
 
         $steps = SpmbFormStep::with(['fields' => function($q) use ($selectedUnitId) {
                 $q->with('units');
@@ -38,12 +48,21 @@ class SpmbFormSettingsController extends Controller
             ->orderBy('order')
             ->get();
 
-        $activeTab = request()->get('tab', 'crud_steps');
-        return view('admin.settings-form', compact('steps', 'activeTab', 'units', 'selectedUnitId'));
+        $activeTab = request()->get('tab', $isUnitAdmin ? ('step_' . ($steps->first()?->id ?? 'crud_steps')) : 'crud_steps');
+        if ($isUnitAdmin && $activeTab === 'crud_steps' && $steps->isNotEmpty()) {
+            $activeTab = 'step_' . $steps->first()->id;
+        }
+
+        return view('admin.settings-form', compact('steps', 'activeTab', 'units', 'selectedUnitId', 'isUnitAdmin'));
     }
 
     public function storeStep(Request $request)
     {
+        $user = auth()->user();
+        if ($user && $user->isUnitAdmin()) {
+            return redirect()->route('admin.spmb-settings.form')->with('error', 'Manajemen tahapan formulir hanya dapat dikelola oleh Super Admin.');
+        }
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'order' => 'required|integer',
@@ -73,6 +92,11 @@ class SpmbFormSettingsController extends Controller
 
     public function updateStep(Request $request, $id)
     {
+        $user = auth()->user();
+        if ($user && $user->isUnitAdmin()) {
+            return redirect()->route('admin.spmb-settings.form')->with('error', 'Manajemen tahapan formulir hanya dapat dikelola oleh Super Admin.');
+        }
+
         $step = SpmbFormStep::findOrFail($id);
         $unitIdParam = $request->get('unit_id', '');
 
@@ -102,6 +126,11 @@ class SpmbFormSettingsController extends Controller
 
     public function destroyStep($id)
     {
+        $user = auth()->user();
+        if ($user && $user->isUnitAdmin()) {
+            return redirect()->route('admin.spmb-settings.form')->with('error', 'Manajemen tahapan formulir hanya dapat dikelola oleh Super Admin.');
+        }
+
         $step = SpmbFormStep::with('fields')->findOrFail($id);
 
         foreach ($step->fields as $field) {
@@ -122,7 +151,15 @@ class SpmbFormSettingsController extends Controller
 
     public function storeField(Request $request)
     {
-        $unitIdParam = $request->get('unit_id', '');
+        $user = auth()->user();
+        $isUnitAdmin = $user && $user->isUnitAdmin();
+
+        if ($isUnitAdmin) {
+            $unitIdParam = $user->spmb_unit_id;
+            $request->merge(['spmb_unit_ids' => [$user->spmb_unit_id]]);
+        } else {
+            $unitIdParam = $request->get('unit_id', '');
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'form_step_id' => 'required|exists:spmb_form_steps,id',
@@ -153,15 +190,34 @@ class SpmbFormSettingsController extends Controller
             'order' => $request->order,
         ]);
 
-        $field->units()->sync((array)$request->input('spmb_unit_ids', []));
+        $syncUnits = $isUnitAdmin ? [$user->spmb_unit_id] : (array)$request->input('spmb_unit_ids', []);
+        $field->units()->sync($syncUnits);
 
         return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $request->form_step_id, 'unit_id' => $unitIdParam])->with('success', 'Kolom input formulir berhasil ditambahkan.');
     }
 
     public function updateField(Request $request, $id)
     {
-        $field = SpmbFormField::findOrFail($id);
-        $unitIdParam = $request->get('unit_id', '');
+        $field = SpmbFormField::with('units')->findOrFail($id);
+        $user = auth()->user();
+        $isUnitAdmin = $user && $user->isUnitAdmin();
+
+        if ($isUnitAdmin) {
+            $unitIdParam = $user->spmb_unit_id;
+            // Protect Default fields from unit admin edits
+            if ($field->units->isEmpty()) {
+                return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitIdParam])
+                    ->with('error', 'Kolom Default sistem tidak dapat diubah oleh Admin Unit.');
+            }
+            // Protect other unit fields
+            if (!$field->units->pluck('id')->contains($user->spmb_unit_id)) {
+                return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitIdParam])
+                    ->with('error', 'Anda tidak memiliki akses untuk mengubah kolom unit lain.');
+            }
+            $request->merge(['spmb_unit_ids' => [$user->spmb_unit_id]]);
+        } else {
+            $unitIdParam = $request->get('unit_id', '');
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'label' => 'required|string|max:255',
@@ -195,19 +251,33 @@ class SpmbFormSettingsController extends Controller
             'order' => $request->order,
         ]);
 
-        $field->units()->sync((array)$request->input('spmb_unit_ids', []));
+        $syncUnits = $isUnitAdmin ? [$user->spmb_unit_id] : (array)$request->input('spmb_unit_ids', []);
+        $field->units()->sync($syncUnits);
 
         return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitIdParam])->with('success', 'Kolom input formulir berhasil diperbarui.');
     }
 
     public function destroyField($id)
     {
-        $field = SpmbFormField::findOrFail($id);
-        $unitId = request()->get('unit_id', '');
+        $field = SpmbFormField::with('units')->findOrFail($id);
+        $user = auth()->user();
+        $isUnitAdmin = $user && $user->isUnitAdmin();
+        $unitId = $isUnitAdmin ? $user->spmb_unit_id : request()->get('unit_id', '');
 
         $systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
         if (in_array($field->field_name, $systemFields)) {
             return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitId])->with('error', 'Kolom sistem utama tidak boleh dihapus.');
+        }
+
+        if ($isUnitAdmin) {
+            if ($field->units->isEmpty()) {
+                return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitId])
+                    ->with('error', 'Kolom Default sistem tidak dapat dihapus oleh Admin Unit.');
+            }
+            if (!$field->units->pluck('id')->contains($user->spmb_unit_id)) {
+                return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitId])
+                    ->with('error', 'Anda tidak memiliki akses untuk menghapus kolom unit lain.');
+            }
         }
 
         if (\App\Models\Registration::whereNotNull("additional_info->{$field->field_name}")->exists()) {
