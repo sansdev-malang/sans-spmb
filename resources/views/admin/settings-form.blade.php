@@ -474,6 +474,8 @@
                     <option value="email">Input Email</option>
                     <option value="date">Input Date (Tanggal)</option>
                     <option value="select">Select Dropdown (Pilihan)</option>
+                    <option value="checkbox">Checkbox (Pilihan Centang / Ganda)</option>
+                    <option value="radio">Radio Button (Pilihan Tunggal)</option>
                     <option value="textarea">Textarea (Teks Panjang/Alamat)</option>
                     <option value="file">File Upload (Unggah Berkas)</option>
                 </select>
@@ -560,6 +562,8 @@
                     <option value="email">Input Email</option>
                     <option value="date">Input Date (Tanggal)</option>
                     <option value="select">Select Dropdown (Pilihan)</option>
+                    <option value="checkbox">Checkbox (Pilihan Centang / Ganda)</option>
+                    <option value="radio">Radio Button (Pilihan Tunggal)</option>
                     <option value="textarea">Textarea (Teks Panjang/Alamat)</option>
                     <option value="file">File Upload (Unggah Berkas)</option>
                 </select>
@@ -773,15 +777,15 @@
         confirmDelete(url + '?unit_id={{ $selectedUnitId }}', `Apakah Anda yakin ingin menghapus kolom input "${name}"?`);
     }
 
-    // Toggle options field visibility for 'select' type
+    // Toggle options field visibility for 'select', 'checkbox', 'radio' types
     function toggleOptionsInput(prefix) {
         const typeEl = document.getElementById(prefix + '-field-type');
         const wrapperEl = document.getElementById(prefix + '-options-wrapper');
         const optionsInput = document.getElementById(prefix + '-field-options');
         
-        if (typeEl && typeEl.value === 'select') {
+        if (typeEl && (typeEl.value === 'select' || typeEl.value === 'checkbox' || typeEl.value === 'radio')) {
             wrapperEl.classList.remove('hidden');
-            optionsInput.required = true;
+            optionsInput.required = (typeEl.value === 'select' || typeEl.value === 'radio');
         } else {
             wrapperEl.classList.add('hidden');
             optionsInput.required = false;

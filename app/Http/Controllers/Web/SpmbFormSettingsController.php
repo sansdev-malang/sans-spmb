@@ -122,7 +122,7 @@ class SpmbFormSettingsController extends Controller
             'form_step_id' => 'required|exists:spmb_form_steps,id',
             'label' => 'required|string|max:255',
             'field_name' => 'required|string|max:255',
-            'type' => 'required|in:text,number,email,date,select,textarea,file',
+            'type' => 'required|in:text,number,email,date,select,checkbox,radio,textarea,file',
             'options' => 'nullable|string',
             'is_required' => 'nullable|boolean',
             'order' => 'required|integer',
@@ -160,7 +160,7 @@ class SpmbFormSettingsController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'label' => 'required|string|max:255',
             'field_name' => 'required|string|max:255',
-            'type' => 'required|in:text,number,email,date,select,textarea,file',
+            'type' => 'required|in:text,number,email,date,select,checkbox,radio,textarea,file',
             'options' => 'nullable|string',
             'is_required' => 'nullable|boolean',
             'order' => 'required|integer',
