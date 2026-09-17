@@ -38,9 +38,9 @@ class SpmbFeesController extends Controller
             return $fee;
         });
 
-        $units = SpmbUnit::where('is_active', true)->get();
+        $units = SpmbUnit::all();
         $gateways = \App\Models\PaymentGateway::get();
-        $grades = \App\Models\SpmbGrade::where('is_active', true)->orderBy('spmb_unit_id', 'asc')->orderBy('id', 'asc')->get();
+        $grades = \App\Models\SpmbGrade::orderBy('spmb_unit_id', 'asc')->orderBy('id', 'asc')->get();
         $classPrograms = \App\Models\SpmbClassProgram::with('units')->get();
         $types = \App\Models\SpmbType::with('units')->get();
 

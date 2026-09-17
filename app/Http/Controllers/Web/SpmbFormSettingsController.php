@@ -11,7 +11,7 @@ class SpmbFormSettingsController extends Controller
 {
     public function index()
     {
-        $units = \App\Models\SpmbUnit::where('is_active', true)->get();
+        $units = \App\Models\SpmbUnit::all();
         $selectedUnitId = request()->get('unit_id', ''); // '' means 'All Units' / Global
 
         $steps = SpmbFormStep::with(['fields' => function($q) use ($selectedUnitId) {
