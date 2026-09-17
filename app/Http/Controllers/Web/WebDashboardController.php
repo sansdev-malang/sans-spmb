@@ -1279,13 +1279,14 @@ class WebDashboardController extends Controller
             }
         }
 
-        $shouldSubmit = ($isLastStep && $allCompleted);
+        $shouldSubmit = ($isLastStep && $allCompleted) || ($registration->registration_status === 'failed' && $allCompleted);
 
         if ($shouldSubmit && in_array($registration->registration_status, ['draft', 'failed'])) {
             $isRevision = ($registration->registration_status === 'failed');
 
             $registration->update([
                 'registration_status' => 'submitted',
+                'invalid_fields' => null,
                 'committee_notes' => $isRevision 
                     ? 'Formulir pendaftaran berhasil dikirim kembali. Berkas perbaikan ananda sedang dalam proses verifikasi ulang oleh panitia SPMB.'
                     : 'Formulir & berkas pendaftaran berhasil dikirim. Berkas pendaftaran ananda sedang dalam proses verifikasi oleh panitia SPMB.'
