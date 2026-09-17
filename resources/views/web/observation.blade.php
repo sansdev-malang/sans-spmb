@@ -811,6 +811,9 @@
 
                         <div id="agreement-fields-container" class="space-y-6">
                             <div class="space-y-3">
+                                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">
+                                    Dengan mencentang berarti saya menyetujui dan menandatangani surat pernyataan kesanggupan diatas:
+                                </p>
                                 <label class="flex items-start gap-3 cursor-pointer">
                                     <input type="checkbox" name="agree_rules" class="rounded text-brand-emerald focus:ring-brand-emerald mt-0.5" required>
                                     <span class="text-xs text-slate-650 dark:text-slate-400">
