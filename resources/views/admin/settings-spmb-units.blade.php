@@ -387,9 +387,15 @@
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Unit Sekolah</label>
                         <input type="text" id="unitNameInput" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: SANS SD">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Kode Unit</label>
+                    <div id="unitCodeGroup">
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center justify-between">
+                            <span>Kode Unit</span>
+                            <span id="unitCodeLockBadge" class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 normal-case hidden flex items-center gap-1">
+                                <i data-lucide="lock" class="w-3 h-3"></i> Terkunci sistem
+                            </span>
+                        </label>
                         <input type="text" id="unitCodeInput" name="code" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: SD (Opsional)">
+                        <span id="unitCodeHelper" class="text-[10px] text-slate-400 mt-1 hidden block">Kode unit (PAUD / SD / SMP) dikunci untuk menjaga kestabilan alur formulir dan integrasi sistem.</span>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">No. WhatsApp Admin Unit</label>
@@ -673,13 +679,36 @@
             
             if (!isCreate) {
                 methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+                const codeInput = document.getElementById('unitCodeInput');
+                if (codeInput) {
+                    codeInput.readOnly = true;
+                    codeInput.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                    codeInput.classList.remove('bg-slate-50', 'text-slate-800');
+                }
+                const lockBadge = document.getElementById('unitCodeLockBadge');
+                if (lockBadge) lockBadge.classList.remove('hidden');
+                const helperText = document.getElementById('unitCodeHelper');
+                if (helperText) helperText.classList.remove('hidden');
             } else {
                 methodDiv.innerHTML = '';
+                const codeInput = document.getElementById('unitCodeInput');
+                if (codeInput) {
+                    codeInput.readOnly = false;
+                    codeInput.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+                    codeInput.classList.add('bg-slate-50', 'text-slate-800');
+                }
+                const lockBadge = document.getElementById('unitCodeLockBadge');
+                if (lockBadge) lockBadge.classList.add('hidden');
+                const helperText = document.getElementById('unitCodeHelper');
+                if (helperText) helperText.classList.add('hidden');
             }
             
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
         };
 
         window.closeUnitModal = function() {

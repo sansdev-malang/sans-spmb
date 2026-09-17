@@ -321,6 +321,9 @@ class SpmbSettingsController extends Controller
         
         $data = $request->all();
         $data['is_active'] = $request->has('is_active');
+        if (!empty($unit->code)) {
+            $data['code'] = $unit->code; // Preserve existing unit code
+        }
         $unit->update($data);
 
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'unit'])->with('success', 'Unit berhasil diperbarui.');
