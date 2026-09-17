@@ -438,6 +438,7 @@
             
             <input type="hidden" name="spmb_unit_id" id="hiddenUnitInput">
             <input type="hidden" name="spmb_grade_id" id="hiddenGradeIdInput">
+            <input type="hidden" name="spmb_secondary_grade_id" id="hiddenSecondaryGradeIdInput">
             <input type="hidden" name="include_tpa" id="hiddenIncludeTpaInput" value="0">
             <select id="unitSelect" style="display: none;">
                 @foreach($units as $unit)
@@ -982,6 +983,7 @@
         }
 
         const isIncludeTpa = (matchingDaycareGrade && !isMbk && daycareCheckbox) ? daycareCheckbox.checked : false;
+        const hiddenSecondaryGradeIdInput = document.getElementById('hiddenSecondaryGradeIdInput');
 
         if (!gradeId) {
             if (ageBadge && ageTextElem) {
@@ -994,11 +996,15 @@
             }
             hiddenGradeIdInput.value = '';
             hiddenIncludeTpaInput.value = '0';
+            if (hiddenSecondaryGradeIdInput) hiddenSecondaryGradeIdInput.value = '';
             return;
         }
 
         hiddenGradeIdInput.value = gradeId;
         hiddenIncludeTpaInput.value = isIncludeTpa ? '1' : '0';
+        if (hiddenSecondaryGradeIdInput) {
+            hiddenSecondaryGradeIdInput.value = (isIncludeTpa && matchingDaycareGrade) ? matchingDaycareGrade.id : '';
+        }
 
         const isTeacherTpa = selectedGradeObj && (
             selectedGradeObj.id == 13 || 

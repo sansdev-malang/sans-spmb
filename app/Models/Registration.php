@@ -163,6 +163,11 @@ class Registration extends Model
         return $this->belongsTo(SpmbGrade::class, 'spmb_grade_id');
     }
 
+    public function secondaryGrade()
+    {
+        return $this->belongsTo(SpmbGrade::class, 'spmb_secondary_grade_id');
+    }
+
     public function classProgram()
     {
         return $this->belongsTo(SpmbClassProgram::class, 'spmb_class_program_id');
@@ -557,21 +562,27 @@ class Registration extends Model
             $total += $fallbackAmt;
         }
 
-        // 2. Check if candidate has TPA Daycare Extra Service attached
-        $hasTpaExtra = $this->extraServices->contains(function($es) {
-            $n = strtolower($es->name ?? '');
-            $c = strtoupper($es->code ?? '');
-            return str_contains($n, 'tpa') || str_contains($n, 'penitipan') || str_contains($n, 'daycare') || $c === 'TPA';
-        });
+        // 2. Check if candidate has TPA Daycare attached (via secondaryGrade, additional_info, or extraServices fallback)
+        $hasTpa = ($this->spmb_secondary_grade_id !== null)
+            || ($this->secondaryGrade !== null)
+            || !empty($this->additional_info['include_tpa'])
+            || !empty($this->additional_info['secondary_grade_id'])
+            || $this->extraServices->contains(function($es) {
+                $n = strtolower($es->name ?? '');
+                $c = strtoupper($es->code ?? '');
+                return str_contains($n, 'tpa') || str_contains($n, 'penitipan') || str_contains($n, 'daycare') || $c === 'TPA';
+            });
 
-        if ($hasTpaExtra && (!isset($baseFee) || !str_contains(strtolower($baseFee->name), 'tpa'))) {
-            $subUnit = strtolower($this->grade->sub_unit ?? '');
-            $gName = strtolower($this->grade->name ?? '');
-            $targetDaycareGradeId = null;
-            if (str_contains($subUnit, 'playgroup') || str_contains($gName, 'kb')) {
-                $targetDaycareGradeId = 16; // TPA 2
-            } elseif (str_contains($subUnit, 'tk') || str_contains($gName, 'tk')) {
-                $targetDaycareGradeId = 17; // TPA 3
+        if ($hasTpa && (!isset($baseFee) || !str_contains(strtolower($baseFee->name), 'tpa'))) {
+            $targetDaycareGradeId = $this->spmb_secondary_grade_id ?? ($this->additional_info['secondary_grade_id'] ?? null);
+            if (!$targetDaycareGradeId) {
+                $subUnit = strtolower($this->grade->sub_unit ?? '');
+                $gName = strtolower($this->grade->name ?? '');
+                if (str_contains($subUnit, 'playgroup') || str_contains($gName, 'kb')) {
+                    $targetDaycareGradeId = 16; // TPA 2
+                } elseif (str_contains($subUnit, 'tk') || str_contains($gName, 'tk')) {
+                    $targetDaycareGradeId = 17; // TPA 3
+                }
             }
 
             $tpaFee = null;
@@ -619,11 +630,15 @@ class Registration extends Model
         if (count($items) > 1) {
             $subUnitName = $this->grade->sub_unit ?? ($this->unit->code ?? 'PAUD');
             $daycareGradeName = '';
-            $gradeNameLower = strtolower($this->grade->name ?? '');
-            if (str_contains(strtolower($subUnitName), 'playgroup') || str_contains($gradeNameLower, 'kb')) {
-                $daycareGradeName = 'TPA 2';
-            } elseif (str_contains(strtolower($subUnitName), 'tk') || str_contains($gradeNameLower, 'tk')) {
-                $daycareGradeName = 'TPA 3';
+            if ($this->secondaryGrade) {
+                $daycareGradeName = $this->secondaryGrade->name;
+            } else {
+                $gradeNameLower = strtolower($this->grade->name ?? '');
+                if (str_contains(strtolower($subUnitName), 'playgroup') || str_contains($gradeNameLower, 'kb')) {
+                    $daycareGradeName = 'TPA 2';
+                } elseif (str_contains(strtolower($subUnitName), 'tk') || str_contains($gradeNameLower, 'tk')) {
+                    $daycareGradeName = 'TPA 3';
+                }
             }
             $feeName = $subUnitName . ' + Layanan Daycare' . ($daycareGradeName ? " ({$daycareGradeName})" : '');
         } else {
@@ -678,20 +693,23 @@ class Registration extends Model
             return null;
         }
 
-        $hasTpaExtra = $this->relationLoaded('extraServices')
-            ? $this->extraServices->contains(function($es) {
+        $hasSecondaryDaycare = false;
+        if ($this->secondaryGrade) {
+            $secSu = strtolower($this->secondaryGrade->sub_unit ?? '');
+            $hasSecondaryDaycare = str_contains($secSu, 'daycare') || str_contains($secSu, 'tpa');
+        } elseif (!empty($this->spmb_secondary_grade_id)) {
+            $hasSecondaryDaycare = true;
+        } elseif (!empty($this->additional_info['include_tpa']) || !empty($this->additional_info['secondary_grade_id'])) {
+            $hasSecondaryDaycare = true;
+        } elseif ($this->relationLoaded('extraServices')) {
+            $hasSecondaryDaycare = $this->extraServices->contains(function($es) {
                 $n = strtolower($es->name ?? '');
                 $c = strtoupper($es->code ?? '');
                 return str_contains($n, 'tpa') || str_contains($n, 'penitipan') || str_contains($n, 'daycare') || $c === 'TPA';
-            })
-            : $this->extraServices()->where(function($q) {
-                $q->where('name', 'like', '%tpa%')
-                  ->orWhere('name', 'like', '%daycare%')
-                  ->orWhere('name', 'like', '%penitipan%')
-                  ->orWhere('code', 'TPA');
-            })->exists();
+            });
+        }
 
-        if ($hasTpaExtra && !str_contains(strtolower($primarySubUnit), 'daycare') && !str_contains(strtolower($primarySubUnit), 'tpa')) {
+        if ($hasSecondaryDaycare && !str_contains(strtolower($primarySubUnit), 'daycare') && !str_contains(strtolower($primarySubUnit), 'tpa')) {
             return $primarySubUnit . ' + Daycare';
         }
 
@@ -706,20 +724,20 @@ class Registration extends Model
     {
         $primaryGrade = $this->grade->name ?? ($this->admission_level ?: '-');
         
-        $hasTpaExtra = $this->relationLoaded('extraServices')
-            ? $this->extraServices->contains(function($es) {
+        if ($this->secondaryGrade && !str_contains(strtolower($primaryGrade), 'tpa') && !str_contains(strtolower($primaryGrade), 'daycare')) {
+            return $primaryGrade . ' & ' . $this->secondaryGrade->name;
+        }
+
+        $hasSecondaryDaycare = !empty($this->spmb_secondary_grade_id) || !empty($this->additional_info['include_tpa']) || !empty($this->additional_info['secondary_grade_id']);
+        if (!$hasSecondaryDaycare && $this->relationLoaded('extraServices')) {
+            $hasSecondaryDaycare = $this->extraServices->contains(function($es) {
                 $n = strtolower($es->name ?? '');
                 $c = strtoupper($es->code ?? '');
                 return str_contains($n, 'tpa') || str_contains($n, 'penitipan') || str_contains($n, 'daycare') || $c === 'TPA';
-            })
-            : $this->extraServices()->where(function($q) {
-                $q->where('name', 'like', '%tpa%')
-                  ->orWhere('name', 'like', '%daycare%')
-                  ->orWhere('name', 'like', '%penitipan%')
-                  ->orWhere('code', 'TPA');
-            })->exists();
+            });
+        }
 
-        if ($hasTpaExtra && !str_contains(strtolower($primaryGrade), 'tpa') && !str_contains(strtolower($primaryGrade), 'daycare')) {
+        if ($hasSecondaryDaycare && !str_contains(strtolower($primaryGrade), 'tpa') && !str_contains(strtolower($primaryGrade), 'daycare')) {
             $subUnit = strtolower($this->grade->sub_unit ?? '');
             $gName = strtolower($primaryGrade);
             $daycareGradeName = 'TPA 2';

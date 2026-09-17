@@ -321,40 +321,45 @@ class WebDashboardController extends Controller
 
         $grade = \App\Models\SpmbGrade::find($request->spmb_grade_id);
 
+        // Resolve secondary grade (Daycare TPA 2 / TPA 3) if requested
+        $includeTpa = $request->boolean('include_tpa');
+        $secondaryGradeId = $request->input('spmb_secondary_grade_id');
+        
+        if ($includeTpa && empty($secondaryGradeId) && $grade) {
+            $subUnit = strtolower($grade->sub_unit ?? '');
+            $gName = strtolower($grade->name ?? '');
+            if (str_contains($subUnit, 'playgroup') || str_contains($gName, 'kb')) {
+                $secondaryGradeId = 16; // TPA 2
+            } elseif (str_contains($subUnit, 'tk') || str_contains($gName, 'tk')) {
+                $secondaryGradeId = 17; // TPA 3
+            }
+        }
+
+        $additionalInfo = [];
+        if ($includeTpa) {
+            $additionalInfo['include_tpa'] = 1;
+            if ($secondaryGradeId) {
+                $additionalInfo['secondary_grade_id'] = (int)$secondaryGradeId;
+            }
+        }
+
         $registration = Registration::create([
             'user_id' => auth()->id(),
             'candidate_name' => $request->candidate_name,
             'spmb_unit_id' => $request->spmb_unit_id,
             'spmb_grade_id' => $request->spmb_grade_id,
+            'spmb_secondary_grade_id' => $secondaryGradeId ?: null,
             'admission_level' => $grade ? $grade->name : null,
             'spmb_period_id' => $periodId,
             'spmb_class_program_id' => $classProgramId,
             'spmb_wave_id' => $request->spmb_wave_id,
             'spmb_type_id' => $request->spmb_type_id,
             'registration_status' => 'draft',
-            'payment_status' => 'unpaid'
+            'payment_status' => 'unpaid',
+            'additional_info' => !empty($additionalInfo) ? $additionalInfo : null
         ]);
 
-        // Handle TPA extra service (Daycare) attachment
-        $includeTpa = $request->boolean('include_tpa');
         $isTpa1Guru = $grade && ($grade->id == 13 || (str_contains(strtolower($grade->name), 'tpa') && (str_contains(strtolower($grade->name), 'guru') || str_contains(strtolower($grade->name), 'karyawan'))));
-        
-        $tpaService = \App\Models\SpmbExtraService::where('spmb_unit_id', $request->spmb_unit_id)
-            ->where(function($q) {
-                $q->where('name', 'like', '%TPA%')
-                  ->orWhere('name', 'like', '%Daycare%')
-                  ->orWhere('name', 'like', '%Penitipan%')
-                  ->orWhere('code', 'like', '%TPA%')
-                  ->orWhere('code', 'like', '%Daycare%');
-            })->first();
-
-        if ($includeTpa) {
-            if ($tpaService) {
-                $registration->extraServices()->syncWithoutDetaching([$tpaService->id]);
-            }
-        } elseif (!$isTpa1Guru && $tpaService) {
-            $registration->extraServices()->detach($tpaService->id);
-        }
 
         session(['active_candidate_id' => $registration->id]);
         
