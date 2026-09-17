@@ -71,13 +71,14 @@ class UserController extends Controller
             });
         }
         $candidatesCount = (clone $candidatesQuery)->count();
+        $perPage = $request->input('per_page') === 'all' ? 999999 : $request->integer('per_page', 10);
         $candidates = $candidatesQuery->with(['registrations' => function($rq) use ($selectedPeriodId, $targetUnitId) {
             if ($selectedPeriodId) $rq->where('spmb_period_id', $selectedPeriodId);
             if ($targetUnitId) {
                 $rq->where('spmb_unit_id', $targetUnitId);
             }
             $rq->with(['unit', 'payments']);
-        }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'candidates_page');
+        }])->latest()->paginate($perPage, ['*'], 'candidates_page')->withQueryString();
 
         // 3. Unregistered / Unpaid Leads (Belum memilih unit ATAU memiliki pendaftaran draf/belum bayar di unit ini)
         $unregisteredQuery = User::where('role', 'candidate');
@@ -144,7 +145,7 @@ class UserController extends Controller
                 $rq->where('spmb_unit_id', $targetUnitId);
             }
             $rq->with(['unit', 'payments']);
-        }])->latest()->paginate($request->integer('per_page', 10), ['*'], 'unregistered_page');
+        }])->latest()->paginate($perPage, ['*'], 'unregistered_page')->withQueryString();
             
         $units = $isSuperAdmin ? \App\Models\SpmbUnit::all() : \App\Models\SpmbUnit::where('id', auth()->user()->spmb_unit_id)->get();
 

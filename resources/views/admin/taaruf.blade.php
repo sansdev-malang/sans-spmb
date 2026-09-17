@@ -107,7 +107,7 @@
 
     <!-- Filter & Search Toolbar -->
     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-150 dark:border-slate-800 shadow-sm">
-        <form method="GET" action="{{ route('admin.taaruf') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <form method="GET" action="{{ route('admin.taaruf') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             @if($currentUnitId)
                 <input type="hidden" name="unit_id" value="{{ $currentUnitId }}">
             @endif
@@ -144,13 +144,24 @@
                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
             </div>
 
+            <!-- Per Page Select -->
+            <div>
+                <select name="per_page" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
+                    <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
+                    <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
+                    <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
+                    <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
+                </select>
+            </div>
+
             <!-- Action buttons -->
             <div class="flex items-center gap-2">
                 <button type="submit" class="flex-1 bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5">
                     <i data-lucide="filter" class="w-3.5 h-3.5"></i>
                     <span>Terapkan</span>
                 </button>
-                @if(request()->hasAny(['search', 'status', 'date']))
+                @if(request()->hasAny(['search', 'status', 'date', 'per_page']))
                     <a href="{{ route('admin.taaruf', ['unit_id' => $currentUnitId]) }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition" title="Reset Filter">
                         <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                     </a>
@@ -547,7 +558,7 @@
             </table>
         </div>
 
-        @if($registrations->hasPages())
+        @if($registrations->total() > 0)
             <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
                 {{ $registrations->links() }}
             </div>

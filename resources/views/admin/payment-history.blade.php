@@ -89,6 +89,7 @@
                         <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
                         <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
+                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
                     </select>
 
                     <!-- Advanced Filter Toggle Button -->
@@ -511,7 +512,7 @@
             </table>
         </div>
         
-        @if($payments->hasPages())
+        @if($payments->total() > 0)
             <div class="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
                 {{ $payments->links() }}
             </div>

@@ -91,6 +91,7 @@
                         <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
                         <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
+                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
                     </select>
                 </div>
             </div>
@@ -248,9 +249,9 @@
                     </tbody>
                 </table>
             </div>
-            @if($candidates->hasPages())
+            @if($candidates->total() > 0)
                 <div class="pt-4">
-                    {{ $candidates->appends(request()->query())->links() }}
+                    {{ $candidates->links() }}
                 </div>
             @endif
         </div>
@@ -379,9 +380,9 @@
                     </tbody>
                 </table>
             </div>
-            @if($unregistered->hasPages())
+            @if($unregistered->total() > 0)
                 <div class="pt-4">
-                    {{ $unregistered->appends(request()->query())->links() }}
+                    {{ $unregistered->links() }}
                 </div>
             @endif
         </div>

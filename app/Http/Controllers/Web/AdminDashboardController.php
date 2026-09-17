@@ -59,9 +59,14 @@ class AdminDashboardController extends Controller
         }
 
         // Per page limit
-        $perPage = intval($request->input('per_page', 10));
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
+        $perPageInput = $request->input('per_page', 10);
+        if ($perPageInput === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = intval($perPageInput);
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 10;
+            }
         }
 
         $registrations = $query->latest()->paginate($perPage)->withQueryString();
@@ -491,8 +496,8 @@ class AdminDashboardController extends Controller
             $query->where('action', $request->action_type);
         }
 
-        $perPage = $request->integer('per_page', 10);
-        $logs = $query->latest()->paginate($perPage);
+        $perPage = $request->input('per_page') === 'all' ? 999999 : $request->integer('per_page', 10);
+        $logs = $query->latest()->paginate($perPage)->withQueryString();
 
         // Get distinct action types for filter dropdown
         $actionTypes = SpmbActivityLog::select('action')->distinct()->pluck('action');

@@ -124,9 +124,14 @@ class AdminPaymentController extends Controller
         }
 
         // Per page limit
-        $perPage = intval($request->get('per_page', 10));
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
+        $perPageInput = $request->get('per_page', 10);
+        if ($perPageInput === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = intval($perPageInput);
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 10;
+            }
         }
 
         $registrations = $query->latest()->paginate($perPage)->withQueryString();
@@ -288,9 +293,14 @@ class AdminPaymentController extends Controller
         $isSpamView = ($request->get('view') === 'spam');
 
         // Per page limit
-        $perPage = intval($request->get('per_page', 10));
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
+        $perPageInput = $request->get('per_page', 10);
+        if ($perPageInput === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = intval($perPageInput);
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 10;
+            }
         }
 
         $payments = $query->latest()->paginate($perPage)->withQueryString();

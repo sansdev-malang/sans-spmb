@@ -104,6 +104,17 @@ class AdminTaarufController extends Controller
         // 1. Belum punya jadwal (butuh tindakan segera)
         // 2. Sudah dijadwalkan (urut jadwal terdekat)
         // 3. Sudah selesai Ta'aruf
+        // Per page limit
+        $perPageInput = $request->get('per_page', 10);
+        if ($perPageInput === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = intval($perPageInput);
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 10;
+            }
+        }
+
         $registrations = $query->orderByRaw("
             CASE 
                 WHEN registration_status = 'verified' AND observation_date IS NULL THEN 1
@@ -113,7 +124,7 @@ class AdminTaarufController extends Controller
         ")
             ->orderBy('observation_date', 'asc')
             ->orderBy('id', 'desc')
-            ->paginate(15)
+            ->paginate($perPage)
             ->withQueryString();
 
         return view('admin.taaruf', compact(

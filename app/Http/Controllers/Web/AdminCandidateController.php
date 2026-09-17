@@ -204,9 +204,14 @@ class AdminCandidateController extends Controller
         }
 
         // Per page limit
-        $perPage = intval($request->get('per_page', 10));
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
+        $perPageInput = $request->get('per_page', 10);
+        if ($perPageInput === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = intval($perPageInput);
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 10;
+            }
         }
 
         $candidates = $query->latest()->paginate($perPage)->withQueryString();
@@ -297,9 +302,14 @@ class AdminCandidateController extends Controller
         }
 
         // Per page limit
-        $perPage = intval($request->get('per_page', 10));
-        if (!in_array($perPage, [10, 25, 50, 100])) {
-            $perPage = 10;
+        $perPageInput = $request->get('per_page', 10);
+        if ($perPageInput === 'all') {
+            $perPage = 999999;
+        } else {
+            $perPage = intval($perPageInput);
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 10;
+            }
         }
 
         $candidates = $query->latest()->paginate($perPage)->withQueryString();
