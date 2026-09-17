@@ -447,11 +447,13 @@
                                             foreach ($feeCategories as $cat) {
                                                 $catName = $cat->name;
                                                 $isFormulir = ($cat->category_type === 'registration_fee')
-                                                    || (stripos($catName, 'Formulir') !== false)
-                                                    || (stripos($catName, 'Enrollment') !== false)
-                                                    || (stripos($catName, 'Pendaftaran') !== false)
-                                                    || (stripos($catName, 'Registrasi') !== false)
-                                                    || (stripos($catName, 'Daftar') !== false);
+                                                    || ($cat->isRegistration())
+                                                    || (!in_array($cat->category_type, ['tuition_fee', 'extra_service']) && (
+                                                        (stripos($catName, 'Formulir') !== false)
+                                                        || (stripos($catName, 'Enrollment') !== false)
+                                                        || (stripos($catName, 'Biaya Pendaftaran') !== false)
+                                                        || (stripos($catName, 'Registrasi Awal') !== false)
+                                                    ));
 
                                                 // Biaya Administrasi & Biaya Tambahan hanya muncul jika pendaftar sudah menyetujui surat pernyataan
                                                 if (!$hasAgreed && !$isFormulir) {
@@ -532,7 +534,10 @@
                                                             $actualPaid = 0;
                                                         }
                                                     } else {
-                                                        if ($isAllFinalPaid) {
+                                                        $matchedPaidAmount = $cand->getItemPaidAmount($feeName, $fee->id);
+                                                        $isItemPaid = ($matchedPaidAmount >= $feeAmount && $feeAmount > 0);
+
+                                                        if ($isAllFinalPaid || $isItemPaid) {
                                                             $isPaid = true;
                                                             $status = 'paid';
                                                             $latestPay = $finalSuccessPayments->sortByDesc('id')->first();
@@ -543,26 +548,23 @@
                                                             }
                                                             $actualPaid = $feeAmount;
                                                             $paidCount++;
-                                                        } else {
-                                                            $matchedPay = $finalSuccessPayments->first(function($p) use ($feeName) {
-                                                                if (!isset($p->payment_info['selected_items'])) return false;
-                                                                $itemsList = collect($p->payment_info['selected_items']);
-                                                                return $itemsList->contains(function($si) use ($feeName) {
-                                                                    $siName = strtolower(trim($si['name'] ?? ''));
-                                                                    $fName = strtolower(trim($feeName));
-                                                                    return $siName === $fName || str_contains($siName, $fName) || str_contains($fName, $siName);
-                                                                });
-                                                            });
-
-                                                            if ($matchedPay) {
-                                                                $isPaid = true;
-                                                                $status = 'paid';
-                                                                $invoiceNo = $matchedPay->invoice_number ?: ($matchedPay->order_id ?: ('PAY-' . $matchedPay->id));
-                                                                $method = $matchedPay->payment_channel ?: ($matchedPay->payment_method ?: 'Online');
-                                                                $paidTime = $matchedPay->paid_at ? $matchedPay->paid_at->format('d M Y, H:i') . ' WIB' : ($matchedPay->created_at ? $matchedPay->created_at->format('d M Y, H:i') . ' WIB' : '-');
-                                                                $actualPaid = $feeAmount;
-                                                                $paidCount++;
+                                                        } elseif ($matchedPaidAmount > 0) {
+                                                            $isPaid = false;
+                                                            $status = 'pending';
+                                                            $latestPay = $finalSuccessPayments->sortByDesc('id')->first();
+                                                            if ($latestPay) {
+                                                                $invoiceNo = $latestPay->invoice_number ?: ($latestPay->order_id ?: ('PAY-' . $latestPay->id));
+                                                                $method = $latestPay->payment_channel ?: ($latestPay->payment_method ?: 'Online');
+                                                                $paidTime = $latestPay->paid_at ? $latestPay->paid_at->format('d M Y, H:i') . ' WIB' : ($latestPay->created_at ? $latestPay->created_at->format('d M Y, H:i') . ' WIB' : '-');
                                                             }
+                                                            $actualPaid = $matchedPaidAmount;
+                                                        } else {
+                                                            $isPaid = false;
+                                                            $status = 'unpaid';
+                                                            $invoiceNo = '-';
+                                                            $method = '-';
+                                                            $paidTime = '-';
+                                                            $actualPaid = 0;
                                                         }
                                                     }
 
