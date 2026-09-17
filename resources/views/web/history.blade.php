@@ -489,7 +489,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                 <div class="space-y-0.5">
                                     <h5 class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
-                                        <span>Assessment / Ta'aruf</span>
+                                        <span>Jadwal Assesment dan Ta'aruf</span>
                                         @if(in_array($status, ['taaruf_completed', 'agreement_signed', 'completed']))
                                             <span class="text-[9px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-bold uppercase">Selesai</span>
                                         @elseif(!empty($reg->observation_date))
@@ -513,7 +513,7 @@
                             @if(!empty($reg->observation_date))
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
                                     <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tanggal Assessment / Ta'aruf</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tanggal Jadwal Assesment dan Ta'aruf</span>
                                         <span class="font-bold text-slate-900 dark:text-white flex items-center gap-1 mt-1">
                                             <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand-emerald"></i>
                                             {{ \Carbon\Carbon::parse($reg->observation_date)->translatedFormat('d F Y') }}

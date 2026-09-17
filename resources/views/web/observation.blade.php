@@ -154,7 +154,7 @@
             <div class="flex items-center justify-between gap-2.5 w-full">
                 <h2 class="font-extrabold text-sm sm:text-lg text-white flex items-center gap-2 leading-tight min-w-0">
                     <i data-lucide="users" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-yellow shrink-0"></i>
-                    <span class="truncate sm:whitespace-normal">Assessment / Ta'aruf</span>
+                    <span class="truncate sm:whitespace-normal">Jadwal Assesment dan Ta'aruf</span>
                 </h2>
                 
                 <div class="shrink-0 self-center sm:self-start pt-0">
@@ -181,7 +181,7 @@
             </div>
 
             <!-- Full-width subtitle -->
-            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Assessment / Ta'aruf serta persetujuan komitmen biaya pendidikan.</p>
+            <p class="text-xs text-brand-yellow/90 font-medium leading-relaxed w-full">Jadwal assesment dan ta'aruf serta persetujuan komitmen biaya pendidikan.</p>
 
             <!-- Integrated Candidate Context Info -->
             <div class="bg-black/20 backdrop-blur-md rounded-2xl p-3.5 sm:p-5 border border-white/15 shadow-sm space-y-3">
@@ -578,7 +578,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-extrabold text-slate-800 dark:text-white text-xs">Langkah & Tahapan Selanjutnya</h4>
-                                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Alur setelah pelaksanaan sesi Assessment / Ta'aruf</p>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Alur setelah pelaksanaan sesi Jadwal Assesment dan Ta'aruf</p>
                                     </div>
                                 </div>
 
@@ -599,7 +599,7 @@
                                             <span>Validasi Panitia</span>
                                         </div>
                                         <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                                            Setelah sesi Assessment / Ta'aruf selesai, panitia akan mengunggah berkas hasil observasi.
+                                            Setelah sesi Jadwal Assesment dan Ta'aruf selesai, panitia akan mengunggah berkas hasil observasi.
                                         </p>
                                     </div>
 
@@ -654,7 +654,7 @@
                             </div>
 
                             <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed">
-                                Berkas pendaftaran ananda telah berhasil diverifikasi oleh panitia. Saat ini, rincian tanggal, sesi waktu, dan ruangan pelaksanaan <strong>Assessment / Ta'aruf</strong> sedang dalam proses alokasi oleh panitia unit <strong>{{ $registration->unit->name }}</strong>. Mohon senantiasa memantau halaman ini secara berkala karena jadwal resmi akan langsung terbit dan diperbarui secara otomatis di sini.
+                                Berkas pendaftaran ananda telah berhasil diverifikasi oleh panitia. Saat ini, rincian tanggal, sesi waktu, dan ruangan pelaksanaan <strong>Jadwal Assesment dan Ta'aruf</strong> sedang dalam proses alokasi oleh panitia unit <strong>{{ $registration->unit->name }}</strong>. Mohon senantiasa memantau halaman ini secara berkala karena jadwal resmi akan langsung terbit dan diperbarui secara otomatis di sini.
                             </p>
                         </div>
                     @endif
@@ -697,9 +697,9 @@
                             <i data-lucide="check" class="w-5 h-5"></i>
                         </span>
                         <div>
-                            <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">Assessment / Ta'aruf Selesai</h3>
+                            <h3 class="font-extrabold text-slate-800 dark:text-white text-sm">Assesment &amp; Ta'aruf Selesai</h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                                Ananda telah menyelesaikan rangkaian sesi Assessment / Ta'aruf kesiapan belajar. Selanjutnya, silakan baca dan setujui Pernyataan Kesanggupan berikut ini untuk melanjutkan ke tahap administrasi keuangan.
+                                Ananda telah menyelesaikan rangkaian sesi Jadwal Assesment dan Ta'aruf kesiapan belajar. Selanjutnya, silakan baca dan setujui Pernyataan Kesanggupan berikut ini untuk melanjutkan ke tahap administrasi keuangan.
                             </p>
                         </div>
                     </div>
@@ -881,7 +881,7 @@
                     </span>
                     <h3 class="font-bold text-slate-800 dark:text-white text-sm">Belum Dibuka</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-450 max-w-sm mx-auto leading-relaxed">
-                        Tahapan sesi Assessment / Ta'aruf dan penandatanganan kesanggupan hanya akan aktif setelah berkas pendaftaran Anda lolos verifikasi sukses di menu <strong>Verifikasi Data</strong>.
+                        Tahapan sesi Jadwal Assesment dan Ta'aruf dan penandatanganan kesanggupan hanya akan aktif setelah berkas pendaftaran Anda lolos verifikasi sukses di menu <strong>Verifikasi Data</strong>.
                     </p>
                 </div>
             @endif

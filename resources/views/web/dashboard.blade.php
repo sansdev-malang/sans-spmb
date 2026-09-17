@@ -348,7 +348,7 @@
                             </p>
                         @else
                             <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                Berkas persyaratan dinyatakan lolos verifikasi. Panitia unit sedang mengalokasikan jadwal sesi Assessment / Ta'aruf untuk ananda.
+                                Berkas persyaratan dinyatakan lolos verifikasi. Panitia unit sedang mengalokasikan jadwal sesi Jadwal Assesment dan Ta'aruf untuk ananda.
                             </p>
                         @endif
                         <div class="pt-2">
@@ -366,7 +366,7 @@
                         </div>
                         <h3 class="text-base font-extrabold text-slate-850 dark:text-white">Persetujuan Pernyataan Kesanggupan</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Sesi Assessment / Ta'aruf selesai dilakukan. Silakan mengisi dan menyepakati formulir komitmen biaya pendidikan serta tata tertib yayasan sebelum mencetak tagihan administrasi akhir.
+                            Sesi Jadwal Assesment dan Ta'aruf selesai dilakukan. Silakan mengisi dan menyepakati formulir komitmen biaya pendidikan serta tata tertib yayasan sebelum mencetak tagihan administrasi akhir.
                         </p>
                         <div class="pt-4">
                             <a href="{{ route('dashboard.observation', $registration->id) }}" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition inline-flex items-center gap-1.5">
@@ -821,14 +821,14 @@
                             @endif
                         </div>
 
-                        <!-- Step 4: Assessment / Ta'aruf -->
+                        <!-- Step 4: Jadwal Assesment dan Ta'aruf -->
                         <div class="flex items-start gap-2.5">
                             @if(in_array($status, ['verified']))
                                 <span class="flex-shrink-0 w-5 h-5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-450 mt-0.5">
                                     <i data-lucide="calendar" class="w-3 h-3"></i>
                                 </span>
                                 <div>
-                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Assessment / Ta'aruf</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Jadwal Assesment dan Ta'aruf</span>
                                     <span class="text-[10px] text-amber-600 font-semibold block uppercase">Dijadwalkan</span>
                                 </div>
                             @elseif(in_array($status, ['accepted', 'agreement_signed', 'completed']))
@@ -836,7 +836,7 @@
                                     <i data-lucide="check" class="w-3 h-3"></i>
                                 </span>
                                 <div>
-                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Assessment / Ta'aruf</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 block">Jadwal Assesment dan Ta'aruf</span>
                                     <span class="text-[10px] text-green-600 font-semibold block uppercase">Selesai</span>
                                 </div>
                             @else
@@ -844,7 +844,7 @@
                                     <i data-lucide="circle" class="w-3 h-3"></i>
                                 </span>
                                 <div>
-                                    <span class="font-bold text-slate-500 dark:text-slate-400 block">Assessment / Ta'aruf</span>
+                                    <span class="font-bold text-slate-500 dark:text-slate-400 block">Jadwal Assesment dan Ta'aruf</span>
                                     <span class="text-[10px] text-slate-400 block uppercase">Menunggu Jadwal</span>
                                 </div>
                             @endif

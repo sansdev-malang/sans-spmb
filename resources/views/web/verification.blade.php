@@ -299,11 +299,11 @@
                             Langkah Selanjutnya
                         </h4>
                         <p class="text-xs text-slate-650 leading-relaxed max-w-xl">
-                            Dokumen pendaftaran Anda telah lengkap diverifikasi dengan benar. Tahapan sesi Assessment / Ta'aruf kini telah aktif. Silakan lanjut ke tahapan <strong>Assessment / Ta'aruf</strong> untuk melihat ketentuan pelaksanaan di unit sekolah.
+                            Dokumen pendaftaran Anda telah lengkap diverifikasi dengan benar. Tahapan sesi Jadwal Assesment dan Ta'aruf kini telah aktif. Silakan lanjut ke tahapan <strong>Jadwal Assesment dan Ta'aruf</strong> untuk melihat ketentuan pelaksanaan di unit sekolah.
                         </p>
                     </div>
                     <a href="{{ route('dashboard.observation', $registration->id) }}" class="w-full sm:w-auto whitespace-nowrap bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
-                        <span>Lanjutkan ke Assessment / Ta'aruf</span>
+                        <span>Lanjutkan ke Jadwal Assesment dan Ta'aruf</span>
                         <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </a>
                 </div>
@@ -315,7 +315,7 @@
                             Tahapan Selesai
                         </h4>
                         <p class="text-xs text-slate-650 leading-relaxed max-w-xl">
-                            Seluruh berkas persyaratan telah terverifikasi dan sesi Assessment / Ta'aruf telah diselesaikan. Silakan lanjut ke tahapan <strong>Administrasi</strong> untuk melihat rincian pembiayaan dan status penerimaan.
+                            Seluruh berkas persyaratan telah terverifikasi dan sesi Jadwal Assesment dan Ta'aruf telah diselesaikan. Silakan lanjut ke tahapan <strong>Administrasi</strong> untuk melihat rincian pembiayaan dan status penerimaan.
                         </p>
                     </div>
                     <a href="{{ route('dashboard.result', $registration->id) }}" class="w-full sm:w-auto whitespace-nowrap bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
