@@ -247,7 +247,7 @@
                 </a>
 
                 <!-- Center Navigation area -->
-                <div class="hidden md:flex items-center gap-8">
+                <div class="hidden lg:flex items-center gap-6 xl:gap-8">
                     @if(!$isLanding)
                         <!-- Candidate Active Registration stages tabs -->
                         <div class="flex items-center gap-6 text-xs font-bold">
@@ -324,15 +324,15 @@
                             <i id="theme-toggle-icon-guest" data-lucide="moon" class="w-4 h-4"></i>
                         </button>
 
-                        <div class="hidden md:block h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="hidden lg:block h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
 
-                        <a href="{{ route('login') }}" class="hidden md:block text-custom-primary dark:text-emerald-400 hover:opacity-80 transition py-2 font-bold">Login</a>
-                        <a href="{{ route('register') }}" class="hidden md:inline-flex items-center gap-1.5 bg-custom-primary hover:opacity-90 text-white px-5 py-2.5 rounded-xl transition shadow-sm font-bold dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                        <a href="{{ route('login') }}" class="hidden lg:block text-custom-primary dark:text-emerald-400 hover:opacity-80 transition py-2 font-bold">Login</a>
+                        <a href="{{ route('register') }}" class="hidden lg:inline-flex items-center gap-1.5 bg-custom-primary hover:opacity-90 text-white px-5 py-2.5 rounded-xl transition shadow-sm font-bold dark:bg-emerald-600 dark:hover:bg-emerald-500">
                             Daftar Sekarang
                         </a>
 
-                        <!-- Mobile Hamburger Button -->
-                        <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Menu">
+                        <!-- Mobile / Tablet Hamburger Button -->
+                        <button onclick="toggleMobileMenu()" class="lg:hidden p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Menu">
                             <i id="mobile-menu-icon" data-lucide="menu" class="w-5 h-5"></i>
                         </button>
                     @else
@@ -353,7 +353,7 @@
                         </div>
 
                         <!-- User Profile & Candidate Dropdown Toggle (Option B: Compact Multi-Context) -->
-                        <div class="hidden md:block relative">
+                        <div class="hidden lg:block relative">
                             <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-2.5 py-1 px-2.5 rounded-xl hover:bg-slate-100/80 dark:hover:bg-slate-800 transition text-xs font-bold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 shadow-xs group" title="Pengaturan Akun & Pilihan Ananda">
                                 <div class="relative">
                                     <div class="h-7 w-7 rounded-lg bg-custom-primary text-white flex items-center justify-center font-black text-xs uppercase dark:bg-emerald-600 shadow-xs">
@@ -478,8 +478,8 @@
                             </div>
                         </div>
 
-                        <!-- Mobile Hamburger Button -->
-                        <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Menu">
+                        <!-- Mobile / Tablet Hamburger Button -->
+                        <button onclick="toggleMobileMenu()" class="lg:hidden p-2 text-slate-500 hover:text-custom-primary dark:text-slate-400 dark:hover:text-emerald-400 rounded-xl transition" title="Menu">
                             <i id="mobile-menu-icon" data-lucide="menu" class="w-5 h-5"></i>
                         </button>
                     @endguest
@@ -487,9 +487,11 @@
             </div>
         </div>
 
-        <!-- Mobile Menu Drawer -->
-        <div id="mobile-menu" class="hidden md:hidden max-w-7xl mx-auto mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-lg overflow-hidden transition-all duration-300">
-            <div class="px-4 py-4 space-y-2">
+        
+
+        <!-- Mobile / Tablet Menu Drawer -->
+        <div id="mobile-menu" class="hidden lg:hidden max-w-7xl mx-auto mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-lg overflow-hidden transition-all duration-300">
+            <div class="px-4 py-4 sm:px-6 space-y-2">
                 @auth
                     <!-- Mobile User Card Header -->
                     <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-750 mb-2">
@@ -549,7 +551,7 @@
                         $resultUnlockedMob = $resultUnlocked;
                         $historyUnlockedMob = $historyUnlocked;
                     @endphp
-                    <div class="space-y-1">
+                    <div class="space-y-1 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
                         <a href="{{ route('dashboard') }}" onclick="closeMobileMenu()" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold {{ Route::is('dashboard') ? 'text-custom-primary dark:text-emerald-400 bg-emerald-50/60 dark:bg-slate-800 font-extrabold' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50' }} rounded-xl transition">
                             <i data-lucide="home" class="w-4 h-4"></i> Beranda
                         </a>
@@ -606,8 +608,8 @@
                         @endif
                     </div>
                 @else
-                    <!-- Mobile Landing Page Links -->
-                    <div class="space-y-1">
+                    <!-- Mobile / Tablet Landing Page Links -->
+                    <div class="space-y-1 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-2 sm:space-y-0">
                         <a href="/#program" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Program</a>
                         <a href="/#panca-karakter" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Panca Karakter</a>
                         <a href="/#partnership" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Partnership</a>

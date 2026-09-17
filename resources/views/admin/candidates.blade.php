@@ -401,7 +401,7 @@
                         <th class="py-4 px-6">No. Registrasi</th>
                         <th class="py-4 px-6">Calon Murid</th>
                         <th class="py-4 px-6">Unit & Jenjang</th>
-                        <th class="py-4 px-6">Tahapan Pendaftaran</th>
+                        <th class="py-4 px-6 text-center">Tahapan Pendaftaran</th>
                         <th class="py-4 px-6 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -532,19 +532,19 @@
                                 <span class="font-bold text-slate-800 dark:text-white block text-xs">{{ $cand->unit?->name }}@if($cand->sub_unit_display_name) <span class="text-emerald-600 font-semibold">({{ $cand->sub_unit_display_name }})</span>@endif</span>
                                 <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ $cand->class_display_name }} ({{ $cand->classProgram?->name ?? 'Reguler' }})</span>
                             </td>
-                            <td class="py-4 px-6">
-                                <span class="px-2 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
+                            <td class="py-4 px-6 text-center whitespace-nowrap">
+                                <span class="inline-flex items-center justify-center px-2.5 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
                                     {{ $currentStageText }}
                                 </span>
                                 @if($cand->is_dispensation)
-                                    <div class="mt-1">
+                                    <div class="mt-1 flex justify-center">
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" title="Dispensasi: {{ $cand->dispensation_reason }}">
                                             <i data-lucide="award" class="w-3 h-3"></i> Dispensasi
                                         </span>
                                     </div>
                                 @endif
                             </td>
-                            <td class="py-4 px-6 text-center">
+                            <td class="py-4 px-6 text-center whitespace-nowrap">
                                 @php
                                     $finalFeeCalc = $cand->getFinalFeeDetails();
                                     $tab3FeeItems = $finalFeeCalc['items'] ?? [];

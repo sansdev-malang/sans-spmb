@@ -385,8 +385,8 @@
             </table>
         </div>
 
-        @if($registrations->hasPages())
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800">
+        @if($registrations->total() > 0)
+            <div class="px-6 py-4 bg-slate-50/60 dark:bg-slate-950/40 border-t border-slate-150 dark:border-slate-800">
                 {{ $registrations->links() }}
             </div>
         @endif

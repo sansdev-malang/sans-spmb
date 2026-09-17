@@ -253,17 +253,47 @@
                                     <!-- Attendance RSVP Badge -->
                                     <div class="mt-1.5 flex items-center gap-1.5">
                                         @if($reg->observation_attendance_status === 'confirmed_present')
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs" 
-                                                  title="Dikonfirmasi Hadir pada {{ $reg->observation_attendance_confirmed_at ? \Carbon\Carbon::parse($reg->observation_attendance_confirmed_at)->translatedFormat('d M Y, H:i') : '-' }}">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                <span>Hadir</span>
-                                            </span>
+                                            <div class="relative inline-flex group">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs cursor-help">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                    <span>Hadir</span>
+                                                </span>
+
+                                                <!-- Modern Tailwind Tooltip -->
+                                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:-translate-y-0.5 transition-all duration-200 ease-out z-50 flex flex-col items-center">
+                                                    <div class="w-max max-w-[220px] p-2.5 rounded-xl bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-sm text-white shadow-xl border border-slate-700/60">
+                                                        <div class="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 mb-0.5">
+                                                            <i data-lucide="check-circle" class="w-3 h-3 shrink-0"></i>
+                                                            <span class="uppercase tracking-wider">Waktu Konfirmasi</span>
+                                                        </div>
+                                                        <p class="text-[11px] text-slate-200 font-normal leading-relaxed break-words">
+                                                            {{ $reg->observation_attendance_confirmed_at ? \Carbon\Carbon::parse($reg->observation_attendance_confirmed_at)->translatedFormat('d M Y, H:i') : '-' }} WIB
+                                                        </p>
+                                                    </div>
+                                                    <div class="w-2 h-2 bg-slate-900/95 dark:bg-slate-800/95 rotate-45 -mt-1 border-r border-b border-slate-700/60"></div>
+                                                </div>
+                                            </div>
                                         @elseif($reg->observation_attendance_status === 'reschedule_requested')
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs cursor-help" 
-                                                  title="Alasan Reschedule: {{ $reg->observation_attendance_notes ?: 'Tanpa keterangan' }}">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                <span>Minta Reschedule</span>
-                                            </span>
+                                            <div class="relative inline-flex group">
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs cursor-help">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                    <span>Minta Reschedule</span>
+                                                </span>
+
+                                                <!-- Modern Tailwind Tooltip -->
+                                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:-translate-y-0.5 transition-all duration-200 ease-out z-50 flex flex-col items-center">
+                                                    <div class="w-max max-w-[240px] p-2.5 rounded-xl bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-sm text-white shadow-xl border border-slate-700/60">
+                                                        <div class="flex items-center gap-1.5 text-[10px] font-bold text-amber-400 mb-1">
+                                                            <i data-lucide="help-circle" class="w-3 h-3 shrink-0"></i>
+                                                            <span class="uppercase tracking-wider">Alasan Reschedule</span>
+                                                        </div>
+                                                        <p class="text-[11px] text-slate-200 font-normal leading-relaxed break-words">
+                                                            {{ $reg->observation_attendance_notes ?: 'Tanpa keterangan' }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="w-2 h-2 bg-slate-900/95 dark:bg-slate-800/95 rotate-45 -mt-1 border-r border-b border-slate-700/60"></div>
+                                                </div>
+                                            </div>
                                         @else
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
