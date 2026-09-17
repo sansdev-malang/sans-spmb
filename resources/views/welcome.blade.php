@@ -230,11 +230,11 @@
                     $displayImage = $uCardImageUrl ?: $uBgImageUrl;
                     if (empty($displayImage)) {
                         if ($uCode === 'paud') {
-                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-Paud-16.jpg?q=80&w=800&auto=format&fit=crop';
+                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-Paud-13.jpg?q=80&w=800&auto=format&fit=crop';
                         } elseif ($uCode === 'sd') {
-                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-Masjid-4.jpg?q=80&w=800&auto=format&fit=crop';
+                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-Masjid-2.jpg?q=80&w=800&auto=format&fit=crop';
                         } elseif ($uCode === 'smp') {
-                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2026/09/13552284993552799377.png?q=80&w=800&auto=format&fit=crop';
+                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2026/09/PXL_20260723_011741111-scaled.jpg?q=80&w=800&auto=format&fit=crop';
                         } else {
                             $displayImage = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop';
                         }
