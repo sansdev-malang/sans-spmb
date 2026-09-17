@@ -895,7 +895,7 @@
             }
         }
 
-        // 3. Switch between PAUD Section and Standard Grade Selector
+        // 5. Switch between PAUD Section and Standard Grade Selector
         const paudSection = document.getElementById('paudSection');
         const standardGradeSelectWrapper = document.getElementById('standardGradeSelectWrapper');
         const progSelect = document.getElementById('paudProgramSelect');
@@ -918,38 +918,54 @@
             if (paudSection) paudSection.classList.add('hidden');
             if (standardGradeSelectWrapper) standardGradeSelectWrapper.classList.remove('hidden');
 
-            const gradeSelect = document.getElementById('gradeSelect');
-            if (gradeSelect) {
-                gradeSelect.innerHTML = '<option value="">Pilih Tingkatan...</option>';
-                let availableGrades = (unit && unit.grades) ? unit.grades : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
-                
-                if (unitCode === 'SD') {
-                    availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 1') || g.name.trim() === '1');
-                } else if (unitCode === 'SMP') {
-                    availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 7') || g.name.trim() === '7');
-                }
-
-                availableGrades.forEach(g => {
-                    const opt = document.createElement('option');
-                    opt.value = g.id;
-                    opt.textContent = g.name;
-                    gradeSelect.appendChild(opt);
-                });
-
-                if (availableGrades.length > 0) {
-                    gradeSelect.disabled = false;
-                    if (targetGradeId && availableGrades.some(g => g.id == targetGradeId)) {
-                        gradeSelect.value = targetGradeId;
-                    } else {
-                        gradeSelect.selectedIndex = 1;
-                    }
-                } else {
-                    gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan aktif</option>';
-                    gradeSelect.disabled = true;
-                }
-            }
-            handleStandardGradeChange();
+            const selectedTypeId = typeSelect ? typeSelect.value : null;
+            updateStandardGrades(unitId, selectedTypeId, targetGradeId);
         }
+    }
+
+    function updateStandardGrades(unitId, selectedTypeId, targetGradeId = null) {
+        const unit = unitsData.find(u => u.id == unitId);
+        const unitCode = unit ? (unit.code || '').toUpperCase() : '';
+        const gradeSelect = document.getElementById('gradeSelect');
+        if (!gradeSelect) return;
+
+        // Check if selected type is Mutasi Masuk / Pindahan
+        const typeObj = typesData.find(t => t.id == selectedTypeId) || ((unit && unit.types) ? unit.types.find(t => t.id == selectedTypeId) : null);
+        const typeName = typeObj ? (typeObj.name || '').toLowerCase() : '';
+        const isTransfer = typeName.includes('mutasi') || typeName.includes('pindah');
+
+        gradeSelect.innerHTML = '<option value="">Pilih Tingkatan...</option>';
+        let availableGrades = (unit && unit.grades) ? unit.grades : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+        
+        if (!isTransfer) {
+            // Jalur Murid Baru -> hanya tingkatan kelas awal
+            if (unitCode === 'SD') {
+                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 1') || g.name.trim() === '1');
+            } else if (unitCode === 'SMP') {
+                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 7') || g.name.trim() === '7');
+            }
+        }
+        // Jalur Mutasi Masuk / Pindahan -> seluruh tingkatan kelas SD (1-6) / SMP (7-9) dapat dipilih
+
+        availableGrades.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = g.name;
+            gradeSelect.appendChild(opt);
+        });
+
+        if (availableGrades.length > 0) {
+            gradeSelect.disabled = false;
+            if (targetGradeId && availableGrades.some(g => g.id == targetGradeId)) {
+                gradeSelect.value = targetGradeId;
+            } else {
+                gradeSelect.selectedIndex = 1;
+            }
+        } else {
+            gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan aktif</option>';
+            gradeSelect.disabled = true;
+        }
+        handleStandardGradeChange();
     }
 
     function startRegistrationWithUnit(unitId, gradeId) {
@@ -975,7 +991,7 @@
             const unit = unitsData.find(u => u.id == unitId);
             const unitCode = unit ? (unit.code || '').toUpperCase() : '';
             if (unitCode !== 'PAUD') {
-                populateUnitOptions(unitId);
+                updateStandardGrades(unitId, this.value);
             }
         });
     }
