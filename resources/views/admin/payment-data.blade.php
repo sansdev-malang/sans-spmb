@@ -181,16 +181,72 @@
                         </button>
                     </div>
 
-                    <!-- Filter Tahun Ajaran -->
+                    <!-- Filter Tahun Ajaran (Custom CSS Dropdown) -->
                     @if(isset($periods) && $periods->isNotEmpty())
-                        <select name="period_id" onchange="this.form.submit()" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">
-                            <option value="all" {{ ($selectedPeriodId ?? '') === 'all' ? 'selected' : '' }}>Semua T.A</option>
-                            @foreach($periods as $period)
-                                <option value="{{ $period->id }}" {{ ($selectedPeriodId ?? '') == $period->id ? 'selected' : '' }}>
-                                    {{ $period->name ?? $period->year }}{{ $period->is_active ? ' 🟢' : '' }}
-                                </option>
-                            @endforeach
-                        </select>
+                        @php
+                            $activePeriodObj = $periods->firstWhere('id', $selectedPeriodId);
+                            $displayText = ($selectedPeriodId === 'all' || !$activePeriodObj) ? 'Semua T.A' : ($activePeriodObj->name ?? $activePeriodObj->year);
+                            $isSelectedActive = $activePeriodObj && $activePeriodObj->is_active;
+                        @endphp
+                        <div x-data="{ open: false }" class="relative inline-block text-left" @click.outside="open = false">
+                            <input type="hidden" name="period_id" id="filter_period_id_payments" value="{{ $selectedPeriodId ?? 'all' }}">
+                            
+                            <button type="button" @click="open = !open" 
+                                    class="inline-flex items-center justify-between gap-2 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-650 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-xs">
+                                <span class="flex items-center gap-2">
+                                    <span>{{ $displayText }}</span>
+                                    @if($isSelectedActive)
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-950 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
+                                    @endif
+                                </span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div x-show="open" 
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 class="absolute left-0 mt-1.5 min-w-[175px] w-max bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-1.5 z-50 focus:outline-none"
+                                 style="display: none;">
+                                
+                                <button type="button" 
+                                        @click="document.getElementById('filter_period_id_payments').value = 'all'; open = false; document.getElementById('paymentFilterForm').submit();"
+                                        class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-emerald-50/70 dark:hover:bg-slate-700/60 transition cursor-pointer {{ ($selectedPeriodId ?? 'all') === 'all' ? 'font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-slate-700/40' : 'font-semibold text-slate-700 dark:text-slate-200' }}">
+                                    <span>Semua T.A</span>
+                                    @if(($selectedPeriodId ?? 'all') === 'all')
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @endif
+                                </button>
+
+                                <div class="my-1 border-t border-slate-100 dark:border-slate-700"></div>
+
+                                @foreach($periods as $period)
+                                    @php $isCurrent = (($selectedPeriodId ?? '') == $period->id); @endphp
+                                    <button type="button" 
+                                            @click="document.getElementById('filter_period_id_payments').value = '{{ $period->id }}'; open = false; document.getElementById('paymentFilterForm').submit();"
+                                            class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between gap-3 hover:bg-emerald-50/70 dark:hover:bg-slate-700/60 transition cursor-pointer {{ $isCurrent ? 'font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-slate-700/40' : 'font-semibold text-slate-700 dark:text-slate-200' }}">
+                                        <span class="flex items-center gap-2">
+                                            <span>{{ $period->name ?? $period->year }}</span>
+                                            @if($period->is_active)
+                                                <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-950 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
+                                            @endif
+                                        </span>
+                                        @if($isCurrent)
+                                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
                     @endif
                     
                     @if(auth()->check() && auth()->user()->isSuperAdmin())

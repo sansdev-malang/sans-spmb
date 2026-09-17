@@ -58,7 +58,7 @@
         </div>
 
         <!-- Search & Filter Form -->
-        <form action="{{ route('admin.verification') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <form id="verificationFilterForm" action="{{ route('admin.verification') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <!-- Search Input Container -->
                 <div class="relative w-full md:w-80 flex items-center">
@@ -86,15 +86,73 @@
                     </button>
                 </div>
                 
-                <!-- Filter Tahun Ajaran (Period) -->
-                <select name="period_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-6 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                    <option value="all" {{ ($selectedPeriodId ?? '') === 'all' ? 'selected' : '' }}>Semua TA</option>
-                    @foreach($periods ?? [] as $period)
-                        <option value="{{ $period->id }}" {{ ($selectedPeriodId ?? '') == $period->id ? 'selected' : '' }}>
-                            {{ $period->name ?? ('TA ' . $period->year) }}{{ $period->is_active ? ' 🟢' : '' }}
-                        </option>
-                    @endforeach
-                </select>
+                <!-- Filter Tahun Ajaran (Custom CSS Dropdown) -->
+                @if(isset($periods) && $periods->isNotEmpty())
+                    @php
+                        $activePeriodObj = $periods->firstWhere('id', $selectedPeriodId);
+                        $displayText = ($selectedPeriodId === 'all' || !$activePeriodObj) ? 'Semua T.A' : ($activePeriodObj->name ?? ('TA ' . $activePeriodObj->year));
+                        $isSelectedActive = $activePeriodObj && $activePeriodObj->is_active;
+                    @endphp
+                    <div x-data="{ open: false }" class="relative inline-block text-left" @click.outside="open = false">
+                        <input type="hidden" name="period_id" id="filter_period_id_verification" value="{{ $selectedPeriodId ?? 'all' }}">
+                        
+                        <button type="button" @click="open = !open" 
+                                class="inline-flex items-center justify-between gap-2 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-xs">
+                            <span class="flex items-center gap-2">
+                                <span>{{ $displayText }}</span>
+                                @if($isSelectedActive)
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-950 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
+                                @endif
+                            </span>
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute left-0 mt-1.5 min-w-[175px] w-max bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-50 focus:outline-none"
+                             style="display: none;">
+                            
+                            <button type="button" 
+                                    @click="document.getElementById('filter_period_id_verification').value = 'all'; open = false; htmx.trigger(document.getElementById('verificationFilterForm'), 'submit');"
+                                    class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-emerald-50/70 dark:hover:bg-slate-800 transition cursor-pointer {{ ($selectedPeriodId ?? 'all') === 'all' ? 'font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-slate-800' : 'font-semibold text-slate-700 dark:text-slate-300' }}">
+                                <span>Semua T.A</span>
+                                @if(($selectedPeriodId ?? 'all') === 'all')
+                                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                @endif
+                            </button>
+
+                            <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+
+                            @foreach($periods as $period)
+                                @php $isCurrent = (($selectedPeriodId ?? '') == $period->id); @endphp
+                                <button type="button" 
+                                        @click="document.getElementById('filter_period_id_verification').value = '{{ $period->id }}'; open = false; htmx.trigger(document.getElementById('verificationFilterForm'), 'submit');"
+                                        class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between gap-3 hover:bg-emerald-50/70 dark:hover:bg-slate-800 transition cursor-pointer {{ $isCurrent ? 'font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-slate-800' : 'font-semibold text-slate-700 dark:text-slate-300' }}">
+                                    <span class="flex items-center gap-2">
+                                        <span>{{ $period->name ?? $period->year }}</span>
+                                        @if($period->is_active)
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-950 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
+                                        @endif
+                                    </span>
+                                    @if($isCurrent)
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @endif
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 @if(auth()->user()->isSuperAdmin())
                     <!-- Filter Level / Unit -->
