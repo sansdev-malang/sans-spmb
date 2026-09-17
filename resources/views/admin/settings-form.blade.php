@@ -28,7 +28,7 @@
                     Unit Sekolah:
                 </span>
                 <select onchange="const bar = document.getElementById('top-loading-bar'); if(bar){ bar.style.opacity = '1'; bar.style.width = '60%'; setTimeout(() => { if(bar.style.opacity === '1') bar.style.width = '90%'; }, 500); }; window.location.href = '{{ route('admin.spmb-settings.form') }}?tab={{ $activeTab }}&unit_id=' + this.value" class="bg-white border border-slate-300 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">
-                    <option value="" {{ $selectedUnitId === '' ? 'selected' : '' }}>-- Semua Unit (Default) --</option>
+                    <option value="" {{ $selectedUnitId === '' ? 'selected' : '' }}>-- Semua Unit (Global) --</option>
                     @foreach($units as $unit)
                         <option value="{{ $unit->id }}" {{ $selectedUnitId == $unit->id ? 'selected' : '' }}>{{ $unit->name }}</option>
                     @endforeach
@@ -208,8 +208,8 @@
                                             {{ $u->code }}
                                         </span>
                                     @empty
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
-                                            Default
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-550 border border-slate-200">
+                                            Global (Semua)
                                         </span>
                                     @endforelse
                                 </td>
@@ -291,8 +291,8 @@
                                                 {{ $u->code ?: $u->name }}
                                             </span>
                                         @empty
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
-                                                Default
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-slate-50 text-slate-550 border border-slate-200">
+                                                Global
                                             </span>
                                         @endforelse
                                     </td>
@@ -500,7 +500,7 @@
                             </label>
                         @endforeach
                     </div>
-                    <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku sebagai <strong>Default</strong> (Semua Unit).</p>
+                    <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara <strong>Global</strong> (Semua Unit).</p>
                 </div>
             @endif
             <div>
@@ -599,7 +599,7 @@
                             </label>
                         @endforeach
                     </div>
-                    <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku sebagai <strong>Default</strong> (Semua Unit).</p>
+                    <p class="text-[10px] text-slate-450 mt-1.5">*Kosongkan jika ingin berlaku secara <strong>Global</strong> (Semua Unit).</p>
                 </div>
             @endif
             <div>
