@@ -22,15 +22,19 @@ class AdminPaymentController extends Controller
      */
     public function data(Request $request)
     {
+        $periods = SpmbPeriod::orderBy('is_active', 'desc')->orderBy('id', 'desc')->get();
         $selectedPeriodId = $request->filled('period_id')
             ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
             : SpmbPeriod::getDefaultPeriodId();
         
         // Base query for candidate billing (Khusus calon murid yang telah lolos seleksi / masuk tahap daftar ulang DSP)
         $query = Registration::scopedByAdmin()
-            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
-            ->where('spmb_period_id', $selectedPeriodId)
+            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices', 'period'])
             ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
+
+        if ($selectedPeriodId !== 'all' && $selectedPeriodId) {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
 
         // Filter stats query
         $baseStatsQuery = (clone $query);
@@ -142,7 +146,7 @@ class AdminPaymentController extends Controller
         }
         $waves = SpmbWave::orderBy('id', 'asc')->get();
 
-        return view('admin.payment-data', compact('registrations', 'stats', 'units', 'waves'));
+        return view('admin.payment-data', compact('registrations', 'stats', 'units', 'waves', 'periods', 'selectedPeriodId'));
     }
 
     /**
@@ -151,10 +155,13 @@ class AdminPaymentController extends Controller
     protected function getPaymentHistoryQuery(Request $request, $selectedPeriodId)
     {
         $query = Payment::scopedByAdmin()
-            ->with(['registration.unit', 'registration.grade', 'registration.wave', 'registration.type', 'registration.classProgram', 'items'])
-            ->whereHas('registration', function($q) use ($selectedPeriodId) {
+            ->with(['registration.unit', 'registration.grade', 'registration.wave', 'registration.type', 'registration.classProgram', 'items']);
+
+        if ($selectedPeriodId !== 'all' && $selectedPeriodId) {
+            $query->whereHas('registration', function($q) use ($selectedPeriodId) {
                 $q->where('spmb_period_id', $selectedPeriodId);
             });
+        }
 
         // Search by Invoice, Reference ID, Candidate Name, or Gateway Info
         if ($request->filled('search')) {
@@ -470,9 +477,12 @@ class AdminPaymentController extends Controller
             : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
-            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
-            ->where('spmb_period_id', $selectedPeriodId)
+            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices', 'period'])
             ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
+
+        if ($selectedPeriodId !== 'all' && $selectedPeriodId) {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
 
         // Search
         if ($request->filled('search')) {
@@ -543,8 +553,8 @@ class AdminPaymentController extends Controller
             if ($u) $unitCode = strtoupper($u->code ?: Str::slug($u->name));
         }
 
-        $period = SpmbPeriod::find($selectedPeriodId);
-        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $period = ($selectedPeriodId !== 'all' && $selectedPeriodId) ? SpmbPeriod::find($selectedPeriodId) : null;
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'semua-ta';
         $filename = 'Data-Rincian-Tagihan-DSP-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.xlsx';
 
         $tuitionFeeLabel = SpmbFeeCategory::getTuitionCategoryName();
@@ -686,9 +696,12 @@ class AdminPaymentController extends Controller
             : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
-            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
-            ->where('spmb_period_id', $selectedPeriodId)
+            ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices', 'period'])
             ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
+
+        if ($selectedPeriodId !== 'all' && $selectedPeriodId) {
+            $query->where('spmb_period_id', $selectedPeriodId);
+        }
 
         // Base stats query
         $baseStatsQuery = (clone $query);
@@ -798,9 +811,9 @@ class AdminPaymentController extends Controller
             }
         }
 
-        $period = SpmbPeriod::find($selectedPeriodId);
-        $periodName = $period ? ($period->name ?? $period->year) : 'SPMB';
-        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'SPMB';
+        $period = ($selectedPeriodId !== 'all' && $selectedPeriodId) ? SpmbPeriod::find($selectedPeriodId) : null;
+        $periodName = $period ? ($period->name ?? $period->year) : 'Semua Tahun Ajaran';
+        $periodLabel = $period ? Str::slug($period->name ?? $period->year) : 'semua-ta';
         $filename = 'Laporan-Tagihan-DSP-' . $unitCode . '-' . $periodLabel . '-' . date('Ymd_His') . '.pdf';
 
         $printedAt = now()->translatedFormat('d F Y, H:i') . ' WIB';
