@@ -110,6 +110,12 @@ class SpmbFormSettingsController extends Controller
             }
         }
 
+        foreach ($step->fields as $field) {
+            $field->units()->detach();
+            $field->delete();
+        }
+
+        $step->units()->detach();
         $step->delete();
         return redirect()->route('admin.spmb-settings.form', ['tab' => 'crud_steps'])->with('success', 'Langkah formulir berhasil dihapus.');
     }
@@ -208,6 +214,7 @@ class SpmbFormSettingsController extends Controller
             return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitId])->with('error', 'Tidak dapat menghapus kolom input ini karena sudah diisi oleh pendaftar.');
         }
 
+        $field->units()->detach();
         $field->delete();
         return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitId])->with('success', 'Kolom input formulir berhasil dihapus.');
     }
