@@ -86,7 +86,12 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <span class="text-[10px] text-white/60 font-semibold block leading-none">Kelas & Kategori</span>
-                            <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->class_display_name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
+                            <span class="font-bold text-white truncate block text-xs mt-1" title="{{ $registration->class_display_name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})@if($registration->non_formal_services->isNotEmpty()) • {{ $registration->non_formal_services->pluck('name')->join(', ') }}@endif">
+                                {{ $registration->class_display_name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})
+                                @if($registration->non_formal_services->isNotEmpty())
+                                    <span class="text-brand-yellow font-extrabold" title="{{ $registration->non_formal_services->pluck('name')->join(', ') }}">• {{ $registration->non_formal_services->map(fn($s) => $s->code ?: $s->name)->join(', ') }}</span>
+                                @endif
+                            </span>
                         </div>
                     </div>
 
