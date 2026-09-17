@@ -230,11 +230,11 @@
                     $displayImage = $uCardImageUrl ?: $uBgImageUrl;
                     if (empty($displayImage)) {
                         if ($uCode === 'paud') {
-                            $displayImage = 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=800&auto=format&fit=crop';
+                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-Paud-16.jpg?q=80&w=800&auto=format&fit=crop';
                         } elseif ($uCode === 'sd') {
-                            $displayImage = 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop';
+                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2025/07/Galeri-Masjid-4.jpg?q=80&w=800&auto=format&fit=crop';
                         } elseif ($uCode === 'smp') {
-                            $displayImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop';
+                            $displayImage = 'https://www.sekolahanaksaleh.sch.id/wp-content/uploads/2026/09/13552284993552799377.png?q=80&w=800&auto=format&fit=crop';
                         } else {
                             $displayImage = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop';
                         }
@@ -249,13 +249,6 @@
                                  alt="{{ $u->name }}" 
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent"></div>
-                            
-                            <!-- Unit Tag Badge -->
-                            <div class="absolute top-3.5 left-3.5 flex items-center gap-2">
-                                <span class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-custom-primary dark:text-emerald-400 shadow-xs uppercase tracking-wider border border-white/20">
-                                    Jenjang {{ strtoupper($uCode) }}
-                                </span>
-                            </div>
 
                             <!-- Title Overlay on Image Bottom -->
                             <div class="absolute bottom-3 left-4 right-4">
@@ -319,7 +312,10 @@
                 <div>
                     <div class="flex items-center justify-between mb-5">
                         <div class="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                            <i data-lucide="mosque" class="w-6 h-6"></i>
+                            <img src="https://lh3.googleusercontent.com/d/1COuVw5kLp1uQcERLPLjkjDDPNwD3hKCH"
+                                 alt="Ikon Kesalehan Personal"
+                                 class="w-7 h-7 object-contain rounded-lg"
+                                 loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">01</span>
                     </div>
@@ -335,7 +331,10 @@
                 <div>
                     <div class="flex items-center justify-between mb-5">
                         <div class="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                            <i data-lucide="heart-handshake" class="w-6 h-6"></i>
+                            <img src="https://lh3.googleusercontent.com/d/1B51_sjZl_60XvGrf3HRSfkTIx18X6l67"
+                                 alt="Ikon Kesalehan Sosial"
+                                 class="w-7 h-7 object-contain rounded-lg"
+                                 loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">02</span>
                     </div>
@@ -351,7 +350,10 @@
                 <div>
                     <div class="flex items-center justify-between mb-5">
                         <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-custom-primary dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                            <i data-lucide="sprout" class="w-6 h-6"></i>
+                            <img src="https://lh3.googleusercontent.com/d/1LIdIP-RXNh0wNRA3j6RH-eErV8Bp6ewY"
+                                 alt="Ikon Kesalehan Kealamiahan"
+                                 class="w-7 h-7 object-contain rounded-lg"
+                                 loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">03</span>
                     </div>
@@ -367,7 +369,10 @@
                 <div>
                     <div class="flex items-center justify-between mb-5">
                         <div class="h-12 w-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                            <i data-lucide="globe-lock" class="w-6 h-6"></i>
+                            <img src="https://lh3.googleusercontent.com/d/1Hp_FfETsxIMfY-_WKwi8_5Upt5dY7tAI"
+                                 alt="Ikon Kesalehan Kebangsaan"
+                                 class="w-7 h-7 object-contain rounded-lg"
+                                 loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">04</span>
                     </div>
@@ -382,8 +387,11 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/70 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group sm:col-span-2 lg:col-span-1">
                 <div>
                     <div class="flex items-center justify-between mb-5">
-                        <div class="h-16 w-16 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                            <i data-lucide="brain" class="w-6 h-6"></i>
+                        <div class="h-12 w-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                            <img src="https://lh3.googleusercontent.com/d/1mvC1ciPRfv8UfncFOEQ9jZdIdu0ViQl0"
+                                 alt="Ikon Kesalehan Kecendikiaan"
+                                 class="w-7 h-7 object-contain rounded-lg"
+                                 loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">05</span>
                     </div>

@@ -74,7 +74,7 @@
                     <!-- Clear (X) Button -->
                     @if(request('search'))
                         <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; htmx.trigger(this.form, 'submit');" 
-                                class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition"
+                                class="absolute right-12 inset-y-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
                                 title="Hapus Pencarian">
                             <i data-lucide="x" class="w-3.5 h-3.5"></i>
                         </button>
@@ -87,7 +87,7 @@
                 </div>
                 
                 <!-- Filter Tahun Ajaran (Period) -->
-                <select name="period_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                <select name="period_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-6 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
                     <option value="all" {{ ($selectedPeriodId ?? '') === 'all' ? 'selected' : '' }}>Semua TA</option>
                     @foreach($periods ?? [] as $period)
                         <option value="{{ $period->id }}" {{ ($selectedPeriodId ?? '') == $period->id ? 'selected' : '' }}>
