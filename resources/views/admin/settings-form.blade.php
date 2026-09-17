@@ -341,11 +341,6 @@
                 </div>
             </div>
         @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endforeach
 
     </div>
 </div>
