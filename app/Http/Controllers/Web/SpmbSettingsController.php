@@ -20,8 +20,12 @@ class SpmbSettingsController extends Controller
 {
     public function index()
     {
-        $periods = SpmbPeriod::all()->map(function ($period) {
+        $userUnitId = (!auth()->user()->isSuperAdmin()) ? auth()->user()->spmb_unit_id : null;
+        $defaultPeriodId = SpmbPeriod::getDefaultPeriodId($userUnitId);
+
+        $periods = SpmbPeriod::orderBy('year', 'desc')->get()->map(function ($period) use ($defaultPeriodId) {
             $period->registrations_count = Registration::where('spmb_period_id', $period->id)->count();
+            $period->is_current_default = ($period->id == $defaultPeriodId);
             return $period;
         });
 
@@ -41,7 +45,7 @@ class SpmbSettingsController extends Controller
         });
 
         $activeTab = request()->input('tab', 'periode');
-        return view('admin.settings-spmb', compact('periods', 'waves', 'types', 'classPrograms', 'activeTab'));
+        return view('admin.settings-spmb', compact('periods', 'waves', 'types', 'classPrograms', 'activeTab', 'defaultPeriodId'));
     }
 
     public function unitsGrades()
@@ -178,6 +182,16 @@ class SpmbSettingsController extends Controller
 
         $period->update(['year' => $request->year]);
         return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('success', 'Periode akademik berhasil diperbarui.');
+    }
+
+    public function setDefaultPeriod(Request $request, $id)
+    {
+        $period = SpmbPeriod::findOrFail($id);
+        $unitId = (!auth()->user()->isSuperAdmin()) ? auth()->user()->spmb_unit_id : $request->get('unit_id', null);
+
+        SpmbPeriod::setDefaultPeriod($period->id, $unitId);
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('success', 'Tahun Pelajaran ' . $period->year . ' berhasil dijadikan sebagai Tahun Default Sistem.');
     }
 
     public function destroyPeriod($id)

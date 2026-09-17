@@ -17,19 +17,9 @@ class AdminDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->orderBy('id', 'desc')->value('id') 
-                ?? SpmbPeriod::orderBy('id', 'desc')->value('id');
-        });
-
-        if ($request->filled('period_id')) {
-            if ($request->period_id !== 'all') {
-                session(['selected_period_id' => $request->period_id]);
-                $selectedPeriodId = $request->period_id;
-            } else {
-                $selectedPeriodId = 'all';
-            }
-        }
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
 
         // Base query for candidate verification (excluding draft)
         $query = Registration::scopedByAdmin()
@@ -96,12 +86,11 @@ class AdminDashboardController extends Controller
         return view('admin.verification', compact('registrations', 'tabCounts', 'documentFields', 'periods', 'selectedPeriodId'));
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
 
         $isSuperAdmin = auth()->user()->isSuperAdmin();
 

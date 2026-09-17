@@ -35,7 +35,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Tahun Pelajaran (Periode Akademik)</h3>
-                    <p class="text-[11px] text-slate-400">Atur periode ajaran baru yang sedang dibuka.</p>
+                    <p class="text-[11px] text-slate-400">Atur periode ajaran baru. Tentukan 1 <strong>Tahun Default</strong> agar seluruh halaman admin otomatis terbuka pada tahun tersebut.</p>
                 </div>
                 <button onclick="openModal('periode', '', '', '{{ route('admin.spmb-settings.periods.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Periode
@@ -47,6 +47,7 @@
                     <thead>
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Tahun Pelajaran (Periode)</th>
+                            <th class="py-4 px-6 text-center">Tahun Default</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
@@ -54,7 +55,30 @@
                     <tbody class="text-sm divide-y divide-slate-100">
                         @forelse($periods as $period)
                             <tr class="hover:bg-slate-50/30 transition">
-                                <td class="py-4 px-6 text-xs font-extrabold text-slate-800">{{ $period->year }}</td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-extrabold text-slate-800">{{ $period->year }}</span>
+                                        @if($period->is_current_default ?? ($period->id == ($defaultPeriodId ?? null) || $period->is_default))
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-brand-emerald border border-emerald-200 shadow-2xs">
+                                                <i data-lucide="check-circle-2" class="w-3 h-3 text-brand-emerald"></i> Aktif Default
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-center">
+                                    @if($period->is_current_default ?? ($period->id == ($defaultPeriodId ?? null) || $period->is_default))
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-white shadow-sm shadow-emerald-200">
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-white text-white"></i> Default Sistem
+                                        </span>
+                                    @else
+                                        <form action="{{ route('admin.spmb-settings.periods.default', $period->id) }}" method="POST" class="inline-block">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-brand-emerald hover:text-white text-slate-600 transition shadow-2xs cursor-pointer group" title="Jadikan sebagai Tahun Pelajaran default untuk seluruh admin panel">
+                                                <i data-lucide="star" class="w-3.5 h-3.5 text-slate-400 group-hover:text-white"></i> Jadikan Default
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $period->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
                                         {{ $period->registrations_count }} Pendaftar
@@ -79,7 +103,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="py-8 px-6 text-center text-slate-400">Belum ada data periode akademik.</td>
+                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data periode akademik.</td>
                             </tr>
                         @endforelse
                     </tbody>

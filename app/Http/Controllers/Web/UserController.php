@@ -15,10 +15,9 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return \App\Models\SpmbPeriod::where('is_active', true)->value('id') 
-                ?? \App\Models\SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : \App\Models\SpmbPeriod::getDefaultPeriodId();
 
         $isSuperAdmin = auth()->user()->isSuperAdmin();
         $search = $request->search;

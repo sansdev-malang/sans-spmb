@@ -22,10 +22,9 @@ class AdminPaymentController extends Controller
      */
     public function data(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
         
         // Base query for candidate billing (Khusus calon murid yang telah lolos seleksi / masuk tahap daftar ulang DSP)
         $query = Registration::scopedByAdmin()
@@ -280,10 +279,9 @@ class AdminPaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
         
         $query = $this->getPaymentHistoryQuery($request, $selectedPeriodId);
 
@@ -457,10 +455,9 @@ class AdminPaymentController extends Controller
      */
     public function export(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
@@ -674,10 +671,9 @@ class AdminPaymentController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices'])
@@ -820,10 +816,9 @@ class AdminPaymentController extends Controller
      */
     public function exportHistory(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
         
         $query = $this->getPaymentHistoryQuery($request, $selectedPeriodId);
         $payments = $query->latest()->get();
@@ -947,10 +942,9 @@ class AdminPaymentController extends Controller
      */
     public function exportHistoryPdf(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
         
         $query = $this->getPaymentHistoryQuery($request, $selectedPeriodId);
         $payments = $query->latest()->get();

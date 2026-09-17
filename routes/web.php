@@ -241,6 +241,7 @@ Route::middleware('auth')->group(function () {
             // Period CRUD
             Route::post('/admin/spmb-settings/periods', [SpmbSettingsController::class, 'storePeriod'])->name('admin.spmb-settings.periods.store');
             Route::post('/admin/spmb-settings/periods/{id}', [SpmbSettingsController::class, 'updatePeriod'])->name('admin.spmb-settings.periods.update');
+            Route::post('/admin/spmb-settings/periods/{id}/default', [SpmbSettingsController::class, 'setDefaultPeriod'])->name('admin.spmb-settings.periods.default');
             Route::delete('/admin/spmb-settings/periods/{id}', [SpmbSettingsController::class, 'destroyPeriod'])->name('admin.spmb-settings.periods.delete');
 
             // Wave CRUD

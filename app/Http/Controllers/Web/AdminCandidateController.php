@@ -21,10 +21,9 @@ class AdminCandidateController extends Controller
      */
     public function index(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'wave', 'type', 'payments'])
@@ -220,10 +219,9 @@ class AdminCandidateController extends Controller
      */
     public function history(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
 
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'wave', 'type', 'payments'])
@@ -421,10 +419,9 @@ class AdminCandidateController extends Controller
      */
     public function export(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
 
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
@@ -690,10 +687,9 @@ class AdminCandidateController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
 
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])

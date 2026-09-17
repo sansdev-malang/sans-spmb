@@ -24,10 +24,9 @@ class AdminFinanceReportController extends Controller
      */
     protected function prepareFinanceData(Request $request): array
     {
-        $selectedPeriodId = session('selected_period_id', function() {
-            return SpmbPeriod::where('is_active', true)->value('id') 
-                ?? SpmbPeriod::value('id');
-        });
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
 
         $registrationFeeLabel = SpmbFeeCategory::getRegistrationCategoryName();
         $finalFeeLabel = SpmbFeeCategory::getTuitionCategoryName();

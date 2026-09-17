@@ -20,7 +20,9 @@ class AdminTaarufController extends Controller
      */
     public function index(Request $request)
     {
-        $selectedPeriodId = session('selected_period_id', SpmbPeriod::where('is_active', true)->value('id') ?? 1);
+        $selectedPeriodId = $request->filled('period_id')
+            ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
+            : SpmbPeriod::getDefaultPeriodId();
 
         // Fetch Units (scoped if admin is assigned to a specific unit)
         $user = auth()->user();
