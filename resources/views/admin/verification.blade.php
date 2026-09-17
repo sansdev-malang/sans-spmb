@@ -108,12 +108,12 @@
 
                 <!-- Per Page Select -->
                 <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-350 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                    <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
-                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Baris</option>
-                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Baris</option>
-                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Baris</option>
-                    <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
-                </select>
+                        <option value="10" {{ request('per_page', 10) == '10' ? 'selected' : '' }}>10 Baris</option>
+                        <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
+                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 Baris</option>
+                        <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100 Baris</option>
+                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
+                    </select>
             </div>
         </form>
 

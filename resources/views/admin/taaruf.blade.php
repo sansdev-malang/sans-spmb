@@ -147,12 +147,12 @@
             <!-- Per Page Select -->
             <div>
                 <select name="per_page" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
-                    <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 Baris</option>
-                    <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25 Baris</option>
-                    <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50 Baris</option>
-                    <option value="100" {{ request('per_page', 100) == 100 ? 'selected' : '' }}>100 Baris</option>
-                    <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
-                </select>
+                        <option value="10" {{ request('per_page', 10) == '10' ? 'selected' : '' }}>10 Baris</option>
+                        <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
+                        <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 Baris</option>
+                        <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100 Baris</option>
+                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
+                    </select>
             </div>
 
             <!-- Action buttons -->
