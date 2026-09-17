@@ -484,11 +484,19 @@
                         @if($c->nickname)
                             <span style="color: #64748b; font-size: 7px;">({{ $c->nickname }})</span>
                         @endif
+                        @if($c->class_display_name)
+                            <br><span style="color: #64748b; font-size: 6.5px;">{{ $c->class_display_name }} ({{ $c->classProgram?->name ?? 'Reguler' }})</span>
+                        @endif
                     </td>
                     <td class="text-center font-bold" style="color: {{ $genderCode === 'L' ? '#1d4ed8' : '#be123c' }};">
                         {{ $genderCode }}
                     </td>
-                    <td><strong>{{ strtoupper($c->unit->code ?? ($c->unit->name ?? '-')) }}</strong></td>
+                    <td>
+                        <strong>{{ strtoupper($c->unit->code ?? ($c->unit->name ?? '-')) }}</strong>
+                        @if(!empty($c->sub_unit_display_name))
+                            <br><span style="color: #059669; font-size: 6.5px; font-weight: bold;">{{ $c->sub_unit_display_name }}</span>
+                        @endif
+                    </td>
                     <td>{{ $c->wave->name ?? '-' }}</td>
                     <td>{{ $c->type->name ?? '-' }}</td>
                     <td class="text-center">

@@ -252,7 +252,7 @@
             </tr>
             <tr>
                 <td class="label">Unit Pendidikan</td>
-                <td class="value">{{ $registration->unit->name ?? '-' }} ({{ $registration->admission_level }})</td>
+                <td class="value">{{ $registration->unit->name ?? '-' }}@if(!empty($registration->sub_unit_display_name)) • {{ $registration->sub_unit_display_name }}@endif ({{ $registration->class_display_name ?: ($registration->admission_level ?? '-') }})</td>
             </tr>
             <tr>
                 <td class="label">Kategori Murid</td>

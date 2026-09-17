@@ -422,7 +422,7 @@ class AdminReportAnalyticsController extends Controller
         // 4. Marketing Information Sources (Real survey responses if present)
         $sourceCounts = [];
         foreach ($candidates as $c) {
-            if ($c->registration_status === 'draft' && empty($c->additional_info['step_7_saved'])) {
+            if ($c->registration_status === 'draft' && empty($c->additional_info['step_6_saved']) && empty($c->additional_info['step_7_saved'])) {
                 continue;
             }
             $source = null;
@@ -443,7 +443,7 @@ class AdminReportAnalyticsController extends Controller
         // 5. Referral Program (Data Rekomendasi Murid TA 2026/2027)
         $referralList = [];
         foreach ($candidates as $c) {
-            if ($c->registration_status === 'draft' && empty($c->additional_info['step_7_saved'])) {
+            if ($c->registration_status === 'draft' && empty($c->additional_info['step_6_saved']) && empty($c->additional_info['step_7_saved'])) {
                 continue;
             }
             if (!empty($c->additional_info) && is_array($c->additional_info)) {

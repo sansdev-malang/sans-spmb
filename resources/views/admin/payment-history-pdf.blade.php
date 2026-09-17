@@ -326,7 +326,7 @@
                     $candName = $reg?->candidate_name ?? 'Draft / Belum Isi';
                     $regId = $reg?->id_label ?? '-';
                     $unitName = $reg?->unit?->name ?? '-';
-                    $gradeName = $reg?->grade?->name ?? ($reg?->admission_level ?? '-');
+                    $gradeName = $reg?->class_display_name ?: ($reg?->grade?->name ?? ($reg?->admission_level ?? '-'));
 
                     if ($pay->payment_type === 'registration_fee') {
                         $fee = $reg ? $reg->getRegistrationFee() : null;
@@ -372,6 +372,9 @@
                     </td>
                     <td>
                         <strong>{{ $unitName }}</strong>
+                        @if(!empty($reg?->sub_unit_display_name))
+                            <br><span style="color: #059669; font-size: 6.5px; font-weight: bold;">{{ $reg->sub_unit_display_name }}</span>
+                        @endif
                         <div style="font-size: 6.5px; color: #64748b;">{{ $gradeName }}</div>
                     </td>
                     <td>

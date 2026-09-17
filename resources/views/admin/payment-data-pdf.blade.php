@@ -369,11 +369,19 @@
                     <td style="font-family: monospace; font-weight: bold; color: #0f172a;">{{ $c->id_label ?? '-' }}</td>
                     <td>
                         <strong style="color: #0f172a;">{{ $c->candidate_name ?? '-' }}</strong>
+                        @if($c->class_display_name)
+                            <div style="font-size: 6.5px; color: #64748b;">{{ $c->class_display_name }}</div>
+                        @endif
                         <div style="font-size: 6.5px; color: #64748b; margin-top: 1px;">
                             WA: {{ $c->parent_phone ?: ($c->father_phone ?: ($c->mother_phone ?: '-')) }}
                         </div>
                     </td>
-                    <td><strong>{{ strtoupper($c->unit->code ?? ($c->unit->name ?? '-')) }}</strong></td>
+                    <td>
+                        <strong>{{ strtoupper($c->unit->code ?? ($c->unit->name ?? '-')) }}</strong>
+                        @if(!empty($c->sub_unit_display_name))
+                            <br><span style="color: #059669; font-size: 6.5px; font-weight: bold;">{{ $c->sub_unit_display_name }}</span>
+                        @endif
+                    </td>
                     <td>{{ $c->wave->name ?? '-' }}</td>
                     <td>
                         @if(empty($feeItems))
