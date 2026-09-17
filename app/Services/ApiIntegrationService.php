@@ -121,9 +121,7 @@ class ApiIntegrationService
             $unitId = $reg->spmb_unit_id;
 
             // 1. Ambil form fields untuk dokumen / berkas yang relevan dengan unit atau global
-            $docFormFields = \App\Models\SpmbFormField::where(function($q) {
-                    $q->where('form_step_id', 6)->orWhere('type', 'file');
-                })
+            $docFormFields = \App\Models\SpmbFormField::where('type', 'file')
                 ->where(function($q) use ($unitId) {
                     if ($unitId) {
                         $q->whereDoesntHave('units')
