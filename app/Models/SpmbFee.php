@@ -43,14 +43,18 @@ class SpmbFee extends Model
         // Grade match
         if (!empty($this->applicable_grades) && is_array($this->applicable_grades)) {
             $gradeIds = array_map('intval', $this->applicable_grades);
-            if ($registration->spmb_grade_id && !in_array((int)$registration->spmb_grade_id, $gradeIds, true)) {
+            $matchesPrimary = $registration->spmb_grade_id && in_array((int)$registration->spmb_grade_id, $gradeIds, true);
+            $matchesSecondary = $registration->spmb_secondary_grade_id && in_array((int)$registration->spmb_secondary_grade_id, $gradeIds, true);
+            if (!$matchesPrimary && !$matchesSecondary) {
                 return false;
             }
         } elseif (empty($this->applicable_grades)) {
             // Backward-compatibility: if targeting not explicitly set, match by grade keyword if present in fee name
             $gradeName = $registration->grade->name ?? '';
+            $secGradeName = $registration->secondaryGrade->name ?? '';
             $feeNameUpper = strtoupper($this->name);
             $gradeNameUpper = strtoupper($gradeName);
+            $secGradeNameUpper = strtoupper($secGradeName);
 
             $allGradeKeywords = [
                 'TPA 1', 'TPA 2', 'TPA 3', 'TPA',
@@ -62,14 +66,15 @@ class SpmbFee extends Model
             $hasOtherGradeKeyword = false;
 
             $normalizedGrade = str_replace('-', ' ', $gradeNameUpper);
+            $normalizedSecGrade = str_replace('-', ' ', $secGradeNameUpper);
 
             foreach ($allGradeKeywords as $kw) {
                 if (str_contains($feeNameUpper, $kw)) {
                     $normalizedKw = str_replace('-', ' ', $kw);
-                    if (!empty($gradeNameUpper) && (
-                        str_contains($gradeNameUpper, $kw) ||
-                        str_contains($normalizedGrade, $normalizedKw)
-                    )) {
+                    if (
+                        (!empty($gradeNameUpper) && (str_contains($gradeNameUpper, $kw) || str_contains($normalizedGrade, $normalizedKw)))
+                        || (!empty($secGradeNameUpper) && (str_contains($secGradeNameUpper, $kw) || str_contains($normalizedSecGrade, $normalizedKw)))
+                    ) {
                         $hasOtherGradeKeyword = false;
                         break;
                     } else {

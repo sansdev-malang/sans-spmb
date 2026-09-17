@@ -284,6 +284,7 @@ class Registration extends Model
                 } else {
                     $feeNameUpper = strtoupper($fee->name);
                     $gradeNameUpper = strtoupper($gradeName);
+                    $secGradeNameUpper = strtoupper($this->secondaryGrade->name ?? '');
 
                     $allGradeKeywords = [
                         'TPA 1', 'TPA 2', 'TPA 3', 'TPA',
@@ -294,14 +295,15 @@ class Registration extends Model
                     ];
                     $hasOtherGradeKeyword = false;
                     $normalizedGrade = str_replace('-', ' ', $gradeNameUpper);
+                    $normalizedSecGrade = str_replace('-', ' ', $secGradeNameUpper);
 
                     foreach ($allGradeKeywords as $kw) {
                         if (str_contains($feeNameUpper, $kw)) {
                             $normalizedKw = str_replace('-', ' ', $kw);
-                            if (!empty($gradeNameUpper) && (
-                                str_contains($gradeNameUpper, $kw) ||
-                                str_contains($normalizedGrade, $normalizedKw)
-                            )) {
+                            if (
+                                (!empty($gradeNameUpper) && (str_contains($gradeNameUpper, $kw) || str_contains($normalizedGrade, $normalizedKw)))
+                                || (!empty($secGradeNameUpper) && (str_contains($secGradeNameUpper, $kw) || str_contains($normalizedSecGrade, $normalizedKw)))
+                            ) {
                                 $hasOtherGradeKeyword = false;
                                 break;
                             } else {

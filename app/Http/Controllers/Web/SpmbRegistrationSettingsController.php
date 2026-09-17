@@ -234,11 +234,16 @@ class SpmbRegistrationSettingsController extends Controller
                 SpmbGrade::where('spmb_unit_id', $selectedUnitId)->whereIn('id', $activeGradeIds)->update(['is_active' => true]);
             }
 
-            // 8. Update Fees for this unit
-            SpmbFee::where('spmb_unit_id', $selectedUnitId)->update(['is_active' => false]);
-            if (!empty($activeFeeIds)) {
-                SpmbFee::where('spmb_unit_id', $selectedUnitId)->whereIn('id', $activeFeeIds)->update(['is_active' => true]);
+            // 8. Update Fees for this unit (only if explicitly submitted)
+            if ($request->has('active_fees')) {
+                SpmbFee::where('spmb_unit_id', $selectedUnitId)->update(['is_active' => false]);
+                if (!empty($activeFeeIds)) {
+                    SpmbFee::where('spmb_unit_id', $selectedUnitId)->whereIn('id', $activeFeeIds)->update(['is_active' => true]);
+                }
             }
+
+            // Sync fee snapshots for unpaid candidates in this unit
+            \App\Http\Controllers\Web\SpmbFeesController::syncUnpaidRegistrationsFeeSnapshot([$selectedUnitId]);
 
             // 9. Payment Channels (if submitted)
             if ($request->has('has_channel_config')) {
