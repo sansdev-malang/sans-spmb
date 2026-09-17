@@ -314,36 +314,36 @@
         </div>
 
         <!-- Modal for Extra Service (Layanan Non-Formal) -->
-        <div id="extraModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
-            <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-all duration-100" id="extraModalBody">
-                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                    <h2 class="text-lg font-extrabold text-slate-800" id="extraModalTitle">Tambah Layanan Non-Formal</h2>
-                    <button onclick="closeExtraModal()" type="button" class="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-650 transition">
+        <div id="extraModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-150 overflow-y-auto overscroll-contain">
+            <div class="bg-white dark:bg-slate-900 w-full max-w-md flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-150 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="extraModalBody">
+                <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30 shrink-0">
+                    <h2 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white" id="extraModalTitle">Tambah Layanan Non-Formal</h2>
+                    <button onclick="closeExtraModal()" type="button" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <form id="extraForm" method="POST" action="" hx-boost="false">
+                <form id="extraForm" method="POST" action="" hx-boost="false" class="flex flex-col flex-1 min-h-0 overflow-hidden">
                     @csrf
                     <div id="extraMethod"></div>
                     @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'extra_'))
-                        <div class="spmb-unit-errors mx-6 mt-4 text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-205 font-semibold space-y-1">
+                        <div class="spmb-unit-errors mx-5 sm:mx-6 mt-4 text-xs text-red-650 bg-red-50 dark:bg-red-950/40 p-3.5 rounded-xl border border-red-200 dark:border-red-900/40 font-semibold space-y-1">
                             @foreach($errors->all() as $error)
                                 <p>⚠️ {{ $error }}</p>
                             @endforeach
                         </div>
                     @endif
-                    <div class="p-6 space-y-4">
+                    <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain touch-pan-y" style="-webkit-overflow-scrolling: touch;">
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Layanan</label>
-                            <input type="text" id="extraNameInput" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: Taman Penitipan Anak (TPA)">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Nama Layanan</label>
+                            <input type="text" id="extraNameInput" name="name" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: Taman Penitipan Anak (TPA)">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Kode Layanan</label>
-                            <input type="text" id="extraCodeInput" name="code" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: TPA">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Kode Layanan</label>
+                            <input type="text" id="extraCodeInput" name="code" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: TPA">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Asal (Terkait Unit Sekolah)</label>
-                            <select id="extraUnitInput" name="spmb_unit_id" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
+                            <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Unit Asal (Terkait Unit Sekolah)</label>
+                            <select id="extraUnitInput" name="spmb_unit_id" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
                                 <option value="">Semua Unit (Umum)</option>
                                 @foreach($units as $u)
                                     <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -352,11 +352,11 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <input type="checkbox" id="extraActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                            <label for="extraActiveInput" class="text-sm font-bold text-slate-700">Layanan Aktif</label>
+                            <label for="extraActiveInput" class="text-sm font-bold text-slate-700 dark:text-slate-300">Layanan Aktif</label>
                         </div>
                     </div>
-                    <div class="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-end gap-3">
-                        <button type="button" onclick="closeExtraModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Batal</button>
+                    <div class="px-5 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 rounded-b-3xl flex justify-end gap-3 shrink-0">
+                        <button type="button" onclick="closeExtraModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
                         <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-emerald hover-emerald transition shadow-sm" id="extraSubmitBtn">Simpan Layanan</button>
                     </div>
                 </form>
@@ -364,54 +364,54 @@
         </div>
 
     <!-- Modal for Unit -->
-    <div id="unitModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-all duration-100" id="unitModalBody">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 class="text-lg font-extrabold text-slate-800" id="unitModalTitle">Tambah Unit Pendaftaran</h2>
-                <button onclick="closeUnitModal()" type="button" class="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition">
+    <div id="unitModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-150 overflow-y-auto overscroll-contain">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-150 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="unitModalBody">
+            <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30 shrink-0">
+                <h2 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white" id="unitModalTitle">Tambah Unit Pendaftaran</h2>
+                <button onclick="closeUnitModal()" type="button" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <form id="unitForm" method="POST" action="" hx-boost="false">
+            <form id="unitForm" method="POST" action="" hx-boost="false" class="flex flex-col flex-1 min-h-0 overflow-hidden">
                 @csrf
                 <div id="unitMethod"></div>
                 @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'unit_'))
-                    <div class="spmb-unit-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-205 font-semibold space-y-1">
+                    <div class="spmb-unit-errors mx-5 sm:mx-6 mt-4 text-xs text-red-655 bg-red-50 dark:bg-red-950/40 p-3.5 rounded-xl border border-red-200 dark:border-red-900/40 font-semibold space-y-1">
                         @foreach($errors->all() as $error)
                             <p>⚠️ {{ $error }}</p>
                         @endforeach
                     </div>
                 @endif
-                <div class="p-6 space-y-4">
+                <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain touch-pan-y" style="-webkit-overflow-scrolling: touch;">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Unit Sekolah</label>
-                        <input type="text" id="unitNameInput" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: SANS SD">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Nama Unit Sekolah</label>
+                        <input type="text" id="unitNameInput" name="name" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: SANS SD">
                     </div>
                     <div id="unitCodeGroup">
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Kode Unit</label>
-                        <input type="text" id="unitCodeInput" name="code" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: SD (Opsional)">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Kode Unit</label>
+                        <input type="text" id="unitCodeInput" name="code" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: SD (Opsional)">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">No. WhatsApp Admin Unit</label>
-                        <input type="text" id="unitWhatsappInput" name="whatsapp_number" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: 081234567890">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">No. WhatsApp Admin Unit</label>
+                        <input type="text" id="unitWhatsappInput" name="whatsapp_number" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: 081234567890">
                         <span class="text-[10px] text-slate-400 mt-1 block">Nomor ini akan dihubungi oleh orang tua calon murid unit ini.</span>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama Kontak / Petugas (Opsional)</label>
-                        <input type="text" id="unitAdminContactInput" name="admin_contact_name" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: Kak Nisa - Admin PAUD">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Nama Kontak / Petugas (Opsional)</label>
+                        <input type="text" id="unitAdminContactInput" name="admin_contact_name" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: Kak Nisa - Admin PAUD">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Link WhatsApp Group SPMB (Unit)</label>
-                        <input type="url" id="unitGroupUrlInput" name="spmb_group_url" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: https://chat.whatsapp.com/XXXXX">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Link WhatsApp Group SPMB (Unit)</label>
+                        <input type="url" id="unitGroupUrlInput" name="spmb_group_url" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: https://chat.whatsapp.com/XXXXX">
                         <span class="text-[10px] text-slate-400 mt-1 block">Tautan group WhatsApp resmi untuk informasi seputar SPMB unit ini (ditampilkan pada tahap Ta'aruf).</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <input type="checkbox" id="unitActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                        <label for="unitActiveInput" class="text-sm font-bold text-slate-700">Unit Aktif</label>
+                        <label for="unitActiveInput" class="text-sm font-bold text-slate-700 dark:text-slate-300">Unit Aktif</label>
                     </div>
                 </div>
-                <div class="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-end gap-3">
-                    <button type="button" onclick="closeUnitModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Batal</button>
+                <div class="px-5 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 rounded-b-3xl flex justify-end gap-3 shrink-0">
+                    <button type="button" onclick="closeUnitModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
                     <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-emerald hover-emerald transition shadow-sm" id="unitSubmitBtn">Simpan Unit</button>
                 </div>
             </form>
@@ -419,32 +419,32 @@
     </div>
 
     <!-- Modal for Grade -->
-    <div id="gradeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 opacity-0 pointer-events-none transition-all duration-100">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl transform scale-95 transition-all duration-100" id="gradeModalBody">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 class="text-lg font-extrabold text-slate-800" id="gradeModalTitle">Tambah Tingkatan Kelas</h2>
-                <button onclick="closeGradeModal()" type="button" class="p-2 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition">
+    <div id="gradeModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-150 overflow-y-auto overscroll-contain">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-150 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="gradeModalBody">
+            <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30 shrink-0">
+                <h2 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white" id="gradeModalTitle">Tambah Tingkatan Kelas</h2>
+                <button onclick="closeGradeModal()" type="button" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <form id="gradeForm" method="POST" action="" hx-boost="false">
+            <form id="gradeForm" method="POST" action="" hx-boost="false" class="flex flex-col flex-1 min-h-0 overflow-hidden">
                 @csrf
                 <div id="gradeMethod"></div>
                 @if($errors->any() && session('failed_modal') && str_starts_with(session('failed_modal'), 'grade_'))
-                    <div class="spmb-unit-errors mx-6 mt-4 text-xs text-red-655 bg-red-50 p-3.5 rounded-xl border border-red-205 font-semibold space-y-1">
+                    <div class="spmb-unit-errors mx-5 sm:mx-6 mt-4 text-xs text-red-655 bg-red-50 dark:bg-red-950/40 p-3.5 rounded-xl border border-red-200 dark:border-red-900/40 font-semibold space-y-1">
                         @foreach($errors->all() as $error)
                             <p>⚠️ {{ $error }}</p>
                         @endforeach
                     </div>
                 @endif
-                <div class="p-6 space-y-4">
+                <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain touch-pan-y" style="-webkit-overflow-scrolling: touch;">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Tingkatan (Grade)</label>
-                        <input type="text" id="gradeNameInput" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: TK A, Kelas 1">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Tingkatan (Grade)</label>
+                        <input type="text" id="gradeNameInput" name="name" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: TK A, Kelas 1">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Unit Terkait</label>
-                        <select id="gradeUnitInput" name="spmb_unit_id" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Unit Terkait</label>
+                        <select id="gradeUnitInput" name="spmb_unit_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
                             <option value="">-- Pilih Unit --</option>
                             @foreach($units as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -453,47 +453,47 @@
                     </div>
 
                     <!-- Batas Usia Minimal & Maksimal -->
-                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
-                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
                             <i data-lucide="clock" class="w-4 h-4 text-brand-emerald"></i>
                             <span>Konfigurasi Batas Usia / Umur</span>
                         </div>
-                        <p class="text-[10.5px] text-slate-400 leading-relaxed">Dihitung relatif per 1 Juli tahun ajaran aktif. Kosongkan jika tanpa batasan usia.</p>
+                        <p class="text-[10.5px] text-slate-400 dark:text-slate-500 leading-relaxed">Dihitung relatif per 1 Juli tahun ajaran aktif. Kosongkan jika tanpa batasan usia.</p>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Usia Minimal</label>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Usia Minimal</label>
                                 <div class="flex items-center gap-1.5">
-                                    <input type="number" id="gradeMinAgeYearsInput" name="min_age_years" min="0" max="25" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 4)">
+                                    <input type="number" id="gradeMinAgeYearsInput" name="min_age_years" min="0" max="25" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 4)">
                                     <span class="text-[11px] font-bold text-slate-400">Thn</span>
-                                    <input type="number" id="gradeMinAgeMonthsInput" name="min_age_months" min="0" max="11" class="w-16 bg-white border border-slate-300 rounded-xl px-2 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
+                                    <input type="number" id="gradeMinAgeMonthsInput" name="min_age_months" min="0" max="11" class="w-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
                                     <span class="text-[11px] font-bold text-slate-400">Bln</span>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Usia Maksimal</label>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Usia Maksimal</label>
                                 <div class="flex items-center gap-1.5">
-                                    <input type="number" id="gradeMaxAgeYearsInput" name="max_age_years" min="0" max="25" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 5)">
+                                    <input type="number" id="gradeMaxAgeYearsInput" name="max_age_years" min="0" max="25" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 5)">
                                     <span class="text-[11px] font-bold text-slate-400">Thn</span>
-                                    <input type="number" id="gradeMaxAgeMonthsInput" name="max_age_months" min="0" max="11" class="w-16 bg-white border border-slate-300 rounded-xl px-2 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
+                                    <input type="number" id="gradeMaxAgeMonthsInput" name="max_age_months" min="0" max="11" class="w-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
                                     <span class="text-[11px] font-bold text-slate-400">Bln</span>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Catatan Batas Usia (Opsional)</label>
-                            <input type="text" id="gradeAgeNotesInput" name="age_notes" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Contoh: Minimal 4 tahun per 1 Juli">
+                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Catatan Batas Usia (Opsional)</label>
+                            <input type="text" id="gradeAgeNotesInput" name="age_notes" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Contoh: Minimal 4 tahun per 1 Juli">
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3">
                         <input type="checkbox" id="gradeActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
-                        <label for="gradeActiveInput" class="text-sm font-bold text-slate-700">Tingkatan Aktif</label>
+                        <label for="gradeActiveInput" class="text-sm font-bold text-slate-700 dark:text-slate-300">Tingkatan Aktif</label>
                     </div>
                 </div>
-                <div class="p-6 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-end gap-3">
-                    <button type="button" onclick="closeGradeModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition">Batal</button>
+                <div class="px-5 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 rounded-b-3xl flex justify-end gap-3 shrink-0">
+                    <button type="button" onclick="closeGradeModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
                     <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-emerald hover-emerald transition shadow-sm" id="gradeSubmitBtn">Simpan Tingkatan</button>
                 </div>
             </form>
