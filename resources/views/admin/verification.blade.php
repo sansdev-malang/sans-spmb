@@ -273,6 +273,11 @@
                                 'wave' => $reg->wave->name ?? '-',
                                 'type' => $reg->type->name ?? '-',
                                 'extra_services' => $reg->extraServices->pluck('name')->join(', ') ?: '-',
+                                'info_source' => $reg->getFieldValue('info_source') ?: '-',
+                                'info_source_custom' => $reg->getFieldValue('info_source_custom') ?: null,
+                                'referral_student_name' => $reg->getFieldValue('referral_student_name') ?: null,
+                                'referral_student_class' => $reg->getFieldValue('referral_student_class') ?: null,
+                                'referral_parent_phone' => $reg->getFieldValue('referral_parent_phone') ?: null,
                             ];
                         @endphp
                         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-850/50 transition">
@@ -598,6 +603,24 @@
                                     </label>
                                 </div>
                                 <span id="det-extras" class="font-semibold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                            </div>
+
+                            <div class="sm:col-span-2 md:col-span-3 verify-field-container p-2.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 transition">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Saluran Informasi Pendaftaran</span>
+                                    <label class="inline-flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-400 hover:text-red-500 verification-check hidden select-none">
+                                        <input type="checkbox" data-field="info_source" data-label="Saluran Informasi Pendaftaran" checked class="w-3.5 h-3.5 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                                        <span>OK</span>
+                                    </label>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span id="det-info-source" class="font-bold text-slate-800 dark:text-slate-200 text-xs">-</span>
+                                </div>
+                                <div id="det-referral-wrap" class="hidden mt-2 p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 text-[11px] text-emerald-800 dark:text-emerald-300 space-y-0.5">
+                                    <div class="font-bold text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Detail Referral:</div>
+                                    <div>Nama Siswa: <span id="det-referral-name" class="font-bold">-</span> (<span id="det-referral-class">-</span>)</div>
+                                    <div>Kontak Ortu: <span id="det-referral-phone" class="font-bold">-</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1267,6 +1290,25 @@
         document.getElementById('det-level').innerText = cand.admission_level;
         document.getElementById('det-program').innerText = cand.class_program || 'Reguler';
         document.getElementById('det-extras').innerText = cand.extra_services || '-';
+
+        // Saluran Informasi & Referral
+        var infoSrc = cand.info_source || '-';
+        if (cand.info_source_custom) {
+            infoSrc += ' (' + cand.info_source_custom + ')';
+        }
+        document.getElementById('det-info-source').innerText = infoSrc;
+
+        const refWrap = document.getElementById('det-referral-wrap');
+        if (refWrap) {
+            if (cand.referral_student_name || cand.referral_parent_phone) {
+                refWrap.classList.remove('hidden');
+                document.getElementById('det-referral-name').innerText = cand.referral_student_name || '-';
+                document.getElementById('det-referral-class').innerText = cand.referral_student_class || '-';
+                document.getElementById('det-referral-phone').innerText = cand.referral_parent_phone || '-';
+            } else {
+                refWrap.classList.add('hidden');
+            }
+        }
 
         // 2. Biodata Calon Murid
         document.getElementById('det-name').innerText = cand.name;
