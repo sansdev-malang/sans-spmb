@@ -5,10 +5,45 @@
 
 @section('content')
 <div id="spmb-master-container" hx-boost="true" hx-target="#spmb-master-container" hx-select="#spmb-master-container" class="w-full space-y-6">
-    <!-- Header -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <h1 class="text-xl font-extrabold text-slate-800">Master Jalur & Gelombang</h1>
-        <p class="text-xs text-slate-500 mt-1">Kelola data periode akademik, gelombang masuk, kategori jenis pendaftaran, dan kategori murid.</p>
+    <!-- Header with Unit Filter Selector -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-extrabold text-slate-800">Master Jalur & Gelombang</h1>
+            <p class="text-xs text-slate-500 mt-1">Kelola kamus data periode akademik, gelombang masuk, kategori jenis pendaftaran, dan kategori murid.</p>
+        </div>
+
+        @if($isSuperAdmin)
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-500 whitespace-nowrap"><i data-lucide="filter" class="w-3.5 h-3.5 inline text-brand-emerald"></i> Filter Unit:</span>
+                <select onchange="window.location.href='{{ route('admin.spmb-settings') }}?tab={{ $activeTab }}&unit_id=' + this.value" 
+                        class="py-2 px-3.5 text-xs rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer">
+                    <option value="" {{ empty($selectedUnitId) ? 'selected' : '' }}>Semua Unit (Yayasan)</option>
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}" {{ ($selectedUnitId == $unit->id) ? 'selected' : '' }}>
+                            {{ $unit->name }} ({{ strtoupper($unit->code) }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @elseif(!empty($selectedUnitId))
+            @php $userUnit = $units->firstWhere('id', $selectedUnitId); @endphp
+            @if($userUnit)
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <i data-lucide="building" class="w-3.5 h-3.5"></i> Unit: {{ $userUnit->name }}
+                </span>
+            @endif
+        @endif
+    </div>
+
+    <!-- Activation Context Notice -->
+    <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex items-start gap-3 text-xs text-slate-600">
+        <div class="h-6 w-6 rounded-lg bg-emerald-100 text-brand-emerald flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i data-lucide="info" class="w-4 h-4"></i>
+        </div>
+        <div class="flex-1 leading-relaxed">
+            <span class="font-bold text-slate-800">Petunjuk Status & Visual Redup:</span>
+            Komponen dengan baris <strong class="text-slate-500">agak redup (muted)</strong> menandakan gelombang/jalur/periode tersebut saat ini sedang <strong>dinonaktifkan / ditutup</strong> untuk pendaftaran online. Anda dapat membuka atau menutup status pendaftaran per unit secara independen melalui menu <a href="{{ route('admin.spmb-settings.registration', ['unit_id' => $selectedUnitId ?: ($units->first()->id ?? 1)]) }}" class="font-bold text-brand-emerald underline hover:text-emerald-700">Aktivasi SPMB</a>.
+        </div>
     </div>
 
     <!-- Tab Navigation Pills -->
@@ -47,6 +82,7 @@
                     <thead>
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Tahun Pelajaran (Periode)</th>
+                            <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Tahun Default</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
@@ -54,21 +90,51 @@
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
                         @forelse($periods as $period)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            @php
+                                $isRowActive = (bool) ($period->is_active_for_selected ?? true);
+                            @endphp
+                            <tr class="transition {{ $isRowActive ? 'hover:bg-slate-50/30' : 'opacity-60 bg-slate-50/40 text-slate-400' }}">
                                 <td class="py-4 px-6">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-xs font-extrabold text-slate-800">{{ $period->year }}</span>
+                                        <span class="text-xs font-extrabold {{ $isRowActive ? 'text-slate-800' : 'text-slate-500' }}">{{ $period->year }}</span>
                                         @if($period->is_current_default ?? ($period->id == ($defaultPeriodId ?? null) || $period->is_default))
                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-brand-emerald border border-emerald-200 shadow-2xs">
-                                                <i data-lucide="check-circle-2" class="w-3 h-3 text-brand-emerald"></i> Aktif Default
+                                                <i data-lucide="check-circle-2" class="w-3 h-3 text-brand-emerald"></i> Default Sistem
                                             </span>
                                         @endif
                                     </div>
                                 </td>
                                 <td class="py-4 px-6 text-center">
+                                    @if(!empty($selectedUnitId))
+                                        @if($isRowActive)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Buka / Aktif
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Tutup / Nonaktif
+                                            </span>
+                                        @endif
+                                    @else
+                                        @if($period->active_units && $period->active_units->isNotEmpty())
+                                            <div class="flex flex-wrap items-center justify-center gap-1">
+                                                @foreach($period->active_units as $au)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-brand-emerald border border-emerald-200" title="Aktif di {{ $au->name }}">
+                                                        {{ strtoupper($au->code ?: $au->name) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-400 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Tutup di Semua Unit
+                                            </span>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6 text-center">
                                     @if($period->is_current_default ?? ($period->id == ($defaultPeriodId ?? null) || $period->is_default))
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-white shadow-sm shadow-emerald-200">
-                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-white text-white"></i> Default Sistem
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-white text-white"></i> Default Utama
                                         </span>
                                     @else
                                         <form action="{{ route('admin.spmb-settings.periods.default', $period->id) }}" method="POST" class="inline-block">
@@ -103,7 +169,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data periode akademik.</td>
+                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada data periode akademik.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -128,17 +194,53 @@
                     <thead>
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Nama Gelombang</th>
+                            <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
                         @forelse($waves as $wave)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            @php
+                                $isRowActive = (bool) ($wave->is_active_for_selected ?? true);
+                            @endphp
+                            <tr class="transition {{ $isRowActive ? 'hover:bg-slate-50/30' : 'opacity-60 bg-slate-50/40 text-slate-400' }}">
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-800">{{ $wave->name }}</div>
+                                    <div class="font-extrabold {{ $isRowActive ? 'text-slate-800' : 'text-slate-500' }} flex items-center gap-2">
+                                        <span>{{ $wave->name }}</span>
+                                        @if(!$isRowActive)
+                                            <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">Nonaktif</span>
+                                        @endif
+                                    </div>
                                     @if($wave->description)
                                         <div class="text-[11px] text-slate-400 font-medium mt-0.5">{{ $wave->description }}</div>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6 text-center">
+                                    @if(!empty($selectedUnitId))
+                                        @if($isRowActive)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Buka / Aktif
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Tutup / Nonaktif
+                                            </span>
+                                        @endif
+                                    @else
+                                        @if($wave->active_units && $wave->active_units->isNotEmpty())
+                                            <div class="flex flex-wrap items-center justify-center gap-1">
+                                                @foreach($wave->active_units as $au)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-brand-emerald border border-emerald-200" title="Aktif di {{ $au->name }}">
+                                                        {{ strtoupper($au->code ?: $au->name) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-400 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Tutup di Semua Unit
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="py-4 px-6 text-center">
@@ -165,7 +267,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="py-8 px-6 text-center text-slate-400">Belum ada data gelombang pendaftaran.</td>
+                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data gelombang pendaftaran.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -190,17 +292,53 @@
                     <thead>
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Kategori Jenis</th>
+                            <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
                         @forelse($types as $type)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            @php
+                                $isRowActive = (bool) ($type->is_active_for_selected ?? true);
+                            @endphp
+                            <tr class="transition {{ $isRowActive ? 'hover:bg-slate-50/30' : 'opacity-60 bg-slate-50/40 text-slate-400' }}">
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-800">{{ $type->name }}</div>
+                                    <div class="font-extrabold {{ $isRowActive ? 'text-slate-800' : 'text-slate-500' }} flex items-center gap-2">
+                                        <span>{{ $type->name }}</span>
+                                        @if(!$isRowActive)
+                                            <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">Nonaktif</span>
+                                        @endif
+                                    </div>
                                     @if($type->description)
                                         <div class="text-[11px] text-slate-400 font-medium mt-0.5">{{ $type->description }}</div>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6 text-center">
+                                    @if(!empty($selectedUnitId))
+                                        @if($isRowActive)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Buka / Aktif
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Tutup / Nonaktif
+                                            </span>
+                                        @endif
+                                    @else
+                                        @if($type->active_units && $type->active_units->isNotEmpty())
+                                            <div class="flex flex-wrap items-center justify-center gap-1">
+                                                @foreach($type->active_units as $au)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-brand-emerald border border-emerald-200" title="Aktif di {{ $au->name }}">
+                                                        {{ strtoupper($au->code ?: $au->name) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-400 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Tutup di Semua Unit
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="py-4 px-6 text-center">
@@ -227,7 +365,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis pendaftaran.</td>
+                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis pendaftaran.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -252,25 +390,54 @@
                     <thead>
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Nama Kategori Murid</th>
-                            <th class="py-4 px-6 text-center">Status</th>
+                            <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
                             <th class="py-4 px-6 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
                         @forelse($classPrograms as $program)
-                            <tr class="hover:bg-slate-50/30 transition">
+                            @php
+                                $isRowActive = (bool) ($program->is_active_for_selected ?? true);
+                            @endphp
+                            <tr class="transition {{ $isRowActive ? 'hover:bg-slate-50/30' : 'opacity-60 bg-slate-50/40 text-slate-400' }}">
                                 <td class="py-4 px-6">
-                                    <div class="font-extrabold text-slate-850">{{ $program->name }}</div>
+                                    <div class="font-extrabold {{ $isRowActive ? 'text-slate-850' : 'text-slate-500' }} flex items-center gap-2">
+                                        <span>{{ $program->name }}</span>
+                                        @if(!$isRowActive)
+                                            <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">Nonaktif</span>
+                                        @endif
+                                    </div>
                                     @if($program->description)
                                         <div class="text-[11px] text-slate-400 font-medium mt-0.5">{{ $program->description }}</div>
                                     @endif
                                 </td>
                                 <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $program->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ $program->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
-                                        {{ $program->is_active ? 'Aktif' : 'Non-Aktif' }}
-                                    </span>
+                                    @if(!empty($selectedUnitId))
+                                        @if($isRowActive)
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Buka / Aktif
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-500 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Tutup / Nonaktif
+                                            </span>
+                                        @endif
+                                    @else
+                                        @if($program->active_units && $program->active_units->isNotEmpty())
+                                            <div class="flex flex-wrap items-center justify-center gap-1">
+                                                @foreach($program->active_units as $au)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-brand-emerald border border-emerald-200" title="Aktif di {{ $au->name }}">
+                                                        {{ strtoupper($au->code ?: $au->name) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-400 border border-slate-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Tutup di Semua Unit
+                                            </span>
+                                        @endif
+                                    @endif
                                 </td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $program->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
@@ -304,7 +471,6 @@
             </div>
         </div>
     </div>
-
 
 </div>
 
@@ -350,20 +516,7 @@
                 </button>
             </div>
         </form>
-    @if(session('success'))
-        <script>
-            if (typeof showToast === 'function') {
-                showToast("{{ session('success') }}", 'success');
-            }
-        </script>
-    @endif
-    @if(session('error'))
-        <script>
-            if (typeof showToast === 'function') {
-                showToast("{{ session('error') }}", 'error');
-            }
-        </script>
-    @endif
+    </div>
 </div>
 
 <!-- Hidden Delete Form -->
@@ -393,18 +546,14 @@
             activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
         }
         
-        // Update URL query parameter
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+        // Update URL query parameter while preserving unit_id
+        const unitId = "{{ $selectedUnitId ?? '' }}";
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId + (unitId ? '&unit_id=' + unitId : '');
         window.history.replaceState({ path: newUrl }, '', newUrl);
 
         // Save to localStorage as fallback
         localStorage.setItem('spmb_active_tab', tabId);
     }
-
-    // On Load Restore Active Tab
-    document.addEventListener("DOMContentLoaded", function() {
-        // Tab state is handled server-side via Laravel view variable $activeTab
-    });
 
     // Modal Control
     function openModal(moduleType, val = '', isLocked = false, actionUrl = '', isActive = '1', desc = '') {

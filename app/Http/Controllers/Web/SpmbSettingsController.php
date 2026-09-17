@@ -20,32 +20,105 @@ class SpmbSettingsController extends Controller
 {
     public function index()
     {
-        $userUnitId = (!auth()->user()->isSuperAdmin()) ? auth()->user()->spmb_unit_id : null;
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $units = SpmbUnit::orderBy('id', 'asc')->get();
+        $selectedUnitId = request()->get('unit_id', '');
+
+        if (!$isSuperAdmin && auth()->user()->spmb_unit_id) {
+            $selectedUnitId = (string) auth()->user()->spmb_unit_id;
+        }
+
+        $userUnitId = (!empty($selectedUnitId)) ? (int)$selectedUnitId : null;
         $defaultPeriodId = SpmbPeriod::getDefaultPeriodId($userUnitId);
 
-        $periods = SpmbPeriod::orderBy('year', 'desc')->get()->map(function ($period) use ($defaultPeriodId) {
-            $period->registrations_count = Registration::where('spmb_period_id', $period->id)->count();
+        // Preload unit pivot active lookups for fast mapping
+        $periodUnitPivots = \Illuminate\Support\Facades\DB::table('spmb_period_unit')
+            ->where('is_active', true)
+            ->get()
+            ->groupBy('spmb_period_id');
+
+        $waveUnitPivots = \Illuminate\Support\Facades\DB::table('spmb_wave_unit')
+            ->where('is_active', true)
+            ->get()
+            ->groupBy('spmb_wave_id');
+
+        $typeUnitPivots = \Illuminate\Support\Facades\DB::table('spmb_type_unit')
+            ->where('is_active', true)
+            ->get()
+            ->groupBy('spmb_type_id');
+
+        $programUnitPivots = \Illuminate\Support\Facades\DB::table('spmb_class_program_unit')
+            ->where('is_active', true)
+            ->get()
+            ->groupBy('spmb_class_program_id');
+
+        $periods = SpmbPeriod::orderBy('year', 'desc')->get()->map(function ($period) use ($defaultPeriodId, $periodUnitPivots, $selectedUnitId, $units) {
+            $regCountQuery = Registration::where('spmb_period_id', $period->id);
+            if (!empty($selectedUnitId)) {
+                $regCountQuery->where('spmb_unit_id', $selectedUnitId);
+            }
+            $period->registrations_count = $regCountQuery->count();
             $period->is_current_default = ($period->id == $defaultPeriodId);
+
+            $activeUnitIds = isset($periodUnitPivots[$period->id]) ? $periodUnitPivots[$period->id]->pluck('spmb_unit_id')->toArray() : [];
+            $period->active_units = $units->whereIn('id', $activeUnitIds);
+            $period->is_active_for_selected = !empty($selectedUnitId)
+                ? in_array((int)$selectedUnitId, $activeUnitIds, true)
+                : (!empty($activeUnitIds) || (bool)$period->is_active);
+
             return $period;
         });
 
-        $waves = SpmbWave::all()->map(function ($wave) {
-            $wave->registrations_count = Registration::where('spmb_wave_id', $wave->id)->count();
+        $waves = SpmbWave::all()->map(function ($wave) use ($waveUnitPivots, $selectedUnitId, $units) {
+            $regCountQuery = Registration::where('spmb_wave_id', $wave->id);
+            if (!empty($selectedUnitId)) {
+                $regCountQuery->where('spmb_unit_id', $selectedUnitId);
+            }
+            $wave->registrations_count = $regCountQuery->count();
+
+            $activeUnitIds = isset($waveUnitPivots[$wave->id]) ? $waveUnitPivots[$wave->id]->pluck('spmb_unit_id')->toArray() : [];
+            $wave->active_units = $units->whereIn('id', $activeUnitIds);
+            $wave->is_active_for_selected = !empty($selectedUnitId)
+                ? in_array((int)$selectedUnitId, $activeUnitIds, true)
+                : (!empty($activeUnitIds) || (bool)$wave->is_active);
+
             return $wave;
         });
 
-        $types = SpmbType::all()->map(function ($type) {
-            $type->registrations_count = Registration::where('spmb_type_id', $type->id)->count();
+        $types = SpmbType::all()->map(function ($type) use ($typeUnitPivots, $selectedUnitId, $units) {
+            $regCountQuery = Registration::where('spmb_type_id', $type->id);
+            if (!empty($selectedUnitId)) {
+                $regCountQuery->where('spmb_unit_id', $selectedUnitId);
+            }
+            $type->registrations_count = $regCountQuery->count();
+
+            $activeUnitIds = isset($typeUnitPivots[$type->id]) ? $typeUnitPivots[$type->id]->pluck('spmb_unit_id')->toArray() : [];
+            $type->active_units = $units->whereIn('id', $activeUnitIds);
+            $type->is_active_for_selected = !empty($selectedUnitId)
+                ? in_array((int)$selectedUnitId, $activeUnitIds, true)
+                : (!empty($activeUnitIds) || (bool)$type->is_active);
+
             return $type;
         });
 
-        $classPrograms = SpmbClassProgram::all()->map(function ($program) {
-            $program->registrations_count = Registration::where('spmb_class_program_id', $program->id)->count();
+        $classPrograms = SpmbClassProgram::all()->map(function ($program) use ($programUnitPivots, $selectedUnitId, $units) {
+            $regCountQuery = Registration::where('spmb_class_program_id', $program->id);
+            if (!empty($selectedUnitId)) {
+                $regCountQuery->where('spmb_unit_id', $selectedUnitId);
+            }
+            $program->registrations_count = $regCountQuery->count();
+
+            $activeUnitIds = isset($programUnitPivots[$program->id]) ? $programUnitPivots[$program->id]->pluck('spmb_unit_id')->toArray() : [];
+            $program->active_units = $units->whereIn('id', $activeUnitIds);
+            $program->is_active_for_selected = !empty($selectedUnitId)
+                ? in_array((int)$selectedUnitId, $activeUnitIds, true)
+                : (!empty($activeUnitIds) || (bool)$program->is_active);
+
             return $program;
         });
 
         $activeTab = request()->input('tab', 'periode');
-        return view('admin.settings-spmb', compact('periods', 'waves', 'types', 'classPrograms', 'activeTab', 'defaultPeriodId'));
+        return view('admin.settings-spmb', compact('periods', 'waves', 'types', 'classPrograms', 'activeTab', 'defaultPeriodId', 'units', 'selectedUnitId', 'isSuperAdmin'));
     }
 
     public function unitsGrades()
