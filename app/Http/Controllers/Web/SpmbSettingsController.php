@@ -46,25 +46,58 @@ class SpmbSettingsController extends Controller
 
     public function unitsGrades()
     {
-        $units = SpmbUnit::all()->map(function ($unit) {
-            $unit->registrations_count = Registration::where('spmb_unit_id', $unit->id)->count();
-            return $unit;
-        });
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        $userUnitId = auth()->user()->spmb_unit_id;
 
-        $grades = SpmbGrade::with('unit')->get()->map(function ($grade) {
-            $grade->registrations_count = Registration::where('spmb_grade_id', $grade->id)->count();
-            return $grade;
-        });
+        if (!$isSuperAdmin && $userUnitId) {
+            $units = SpmbUnit::where('id', $userUnitId)->get()->map(function ($unit) {
+                $unit->registrations_count = Registration::where('spmb_unit_id', $unit->id)->count();
+                return $unit;
+            });
 
-        $extraServices = SpmbExtraService::with('unit')->get()->map(function ($service) {
-            $service->registrations_count = $service->registrations()->count();
-            return $service;
-        });
+            $grades = SpmbGrade::with('unit')->where('spmb_unit_id', $userUnitId)->get()->map(function ($grade) {
+                $grade->registrations_count = Registration::where('spmb_grade_id', $grade->id)->count();
+                return $grade;
+            });
+
+            $extraServices = SpmbExtraService::with('unit')
+                ->where(function($q) use ($userUnitId) {
+                    $q->where('spmb_unit_id', $userUnitId)
+                      ->orWhereNull('spmb_unit_id');
+                })
+                ->get()
+                ->map(function ($service) {
+                    $service->registrations_count = $service->registrations()->count();
+                    return $service;
+                });
+
+            $selectedUnitId = (string)$userUnitId;
+        } else {
+            $units = SpmbUnit::all()->map(function ($unit) {
+                $unit->registrations_count = Registration::where('spmb_unit_id', $unit->id)->count();
+                return $unit;
+            });
+
+            $grades = SpmbGrade::with('unit')->get()->map(function ($grade) {
+                $grade->registrations_count = Registration::where('spmb_grade_id', $grade->id)->count();
+                return $grade;
+            });
+
+            $extraServices = SpmbExtraService::with('unit')->get()->map(function ($service) {
+                $service->registrations_count = $service->registrations()->count();
+                return $service;
+            });
+
+            $selectedUnitId = request()->get('unit_id', '');
+        }
 
         $activeTab = request()->get('tab', 'unit');
-        $selectedUnitId = request()->get('unit_id', '');
+        $types = SpmbType::where('is_active', true)->get();
+        $classPrograms = SpmbClassProgram::where('is_active', true)->get();
+        $waves = SpmbWave::where('is_active', true)->get();
+        $periods = SpmbPeriod::orderBy('year', 'desc')->get();
 
-        return view('admin.settings-spmb-units', compact('units', 'grades', 'extraServices', 'activeTab', 'selectedUnitId'));
+        return view('admin.settings-spmb-units', compact('units', 'grades', 'extraServices', 'activeTab', 'selectedUnitId', 'isSuperAdmin', 'types', 'classPrograms', 'waves', 'periods'));
     }
 
     public function qrcode()
@@ -276,6 +309,10 @@ class SpmbSettingsController extends Controller
     // Unit CRUD
     public function storeUnit(Request $request)
     {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat menambahkan unit baru.');
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
@@ -300,6 +337,10 @@ class SpmbSettingsController extends Controller
 
     public function updateUnit(Request $request, $id)
     {
+        if (!auth()->user()->isSuperAdmin() && $id != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses tidak diizinkan untuk unit ini.');
+        }
+
         $unit = SpmbUnit::findOrFail($id);
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -331,6 +372,10 @@ class SpmbSettingsController extends Controller
 
     public function destroyUnit($id)
     {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat menghapus unit.');
+        }
+
         $unit = SpmbUnit::findOrFail($id);
         if (Registration::where('spmb_unit_id', $unit->id)->exists()) {
             return redirect()->back()->with('error', 'Gagal menghapus! Unit sedang digunakan oleh pendaftar.');
@@ -342,14 +387,27 @@ class SpmbSettingsController extends Controller
     // Grade CRUD
     public function storeGrade(Request $request)
     {
+        if (!auth()->user()->isSuperAdmin()) {
+            $request->merge(['spmb_unit_id' => auth()->user()->spmb_unit_id]);
+        }
+
         $validator = Validator::make($request->all(), [
             'spmb_unit_id' => 'required|exists:spmb_units,id',
+            'sub_unit' => 'nullable|string|max:100',
             'name' => 'required|string|max:255',
             'min_age_years' => 'nullable|integer|min:0|max:30',
             'min_age_months' => 'nullable|integer|min:0|max:11',
             'max_age_years' => 'nullable|integer|min:0|max:30',
             'max_age_months' => 'nullable|integer|min:0|max:11',
             'age_notes' => 'nullable|string|max:255',
+            'applicable_types' => 'nullable|array',
+            'applicable_types.*' => 'integer',
+            'applicable_class_programs' => 'nullable|array',
+            'applicable_class_programs.*' => 'integer',
+            'applicable_waves' => 'nullable|array',
+            'applicable_waves.*' => 'integer',
+            'applicable_periods' => 'nullable|array',
+            'applicable_periods.*' => 'integer',
             'is_active' => 'boolean'
         ]);
 
@@ -361,9 +419,25 @@ class SpmbSettingsController extends Controller
         }
 
         $data = $request->all();
+        $data['sub_unit'] = $request->filled('sub_unit') ? trim($request->sub_unit) : null;
         $data['is_active'] = $request->has('is_active');
         $data['min_age_months'] = $request->input('min_age_months', 0) ?: 0;
         $data['max_age_months'] = $request->input('max_age_months', 0) ?: 0;
+        
+        $totalTypes = SpmbType::where('is_active', true)->count();
+        $totalProgs = SpmbClassProgram::where('is_active', true)->count();
+        $totalWaves = SpmbWave::where('is_active', true)->count();
+        $totalPeriods = SpmbPeriod::where('is_active', true)->count();
+
+        $reqTypes = !empty($request->applicable_types) ? array_map('intval', (array)$request->applicable_types) : null;
+        $reqProgs = !empty($request->applicable_class_programs) ? array_map('intval', (array)$request->applicable_class_programs) : null;
+        $reqWaves = !empty($request->applicable_waves) ? array_map('intval', (array)$request->applicable_waves) : null;
+        $reqPeriods = !empty($request->applicable_periods) ? array_map('intval', (array)$request->applicable_periods) : null;
+
+        $data['applicable_types'] = ($reqTypes && count($reqTypes) < $totalTypes) ? $reqTypes : null;
+        $data['applicable_class_programs'] = ($reqProgs && count($reqProgs) < $totalProgs) ? $reqProgs : null;
+        $data['applicable_waves'] = ($reqWaves && count($reqWaves) < $totalWaves) ? $reqWaves : null;
+        $data['applicable_periods'] = ($reqPeriods && count($reqPeriods) < $totalPeriods) ? $reqPeriods : null;
         
         SpmbGrade::create($data);
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil ditambahkan.');
@@ -372,14 +446,31 @@ class SpmbSettingsController extends Controller
     public function updateGrade(Request $request, $id)
     {
         $grade = SpmbGrade::findOrFail($id);
+
+        if (!auth()->user()->isSuperAdmin()) {
+            if ($grade->spmb_unit_id != auth()->user()->spmb_unit_id) {
+                abort(403, 'Akses tidak diizinkan untuk tingkatan unit ini.');
+            }
+            $request->merge(['spmb_unit_id' => auth()->user()->spmb_unit_id]);
+        }
+
         $validator = Validator::make($request->all(), [
             'spmb_unit_id' => 'required|exists:spmb_units,id',
+            'sub_unit' => 'nullable|string|max:100',
             'name' => 'required|string|max:255',
             'min_age_years' => 'nullable|integer|min:0|max:30',
             'min_age_months' => 'nullable|integer|min:0|max:11',
             'max_age_years' => 'nullable|integer|min:0|max:30',
             'max_age_months' => 'nullable|integer|min:0|max:11',
             'age_notes' => 'nullable|string|max:255',
+            'applicable_types' => 'nullable|array',
+            'applicable_types.*' => 'integer',
+            'applicable_class_programs' => 'nullable|array',
+            'applicable_class_programs.*' => 'integer',
+            'applicable_waves' => 'nullable|array',
+            'applicable_waves.*' => 'integer',
+            'applicable_periods' => 'nullable|array',
+            'applicable_periods.*' => 'integer',
             'is_active' => 'boolean'
         ]);
 
@@ -391,9 +482,26 @@ class SpmbSettingsController extends Controller
         }
         
         $data = $request->all();
+        $data['sub_unit'] = $request->filled('sub_unit') ? trim($request->sub_unit) : null;
         $data['is_active'] = $request->has('is_active');
         $data['min_age_months'] = $request->input('min_age_months', 0) ?: 0;
         $data['max_age_months'] = $request->input('max_age_months', 0) ?: 0;
+        
+        $totalTypes = SpmbType::where('is_active', true)->count();
+        $totalProgs = SpmbClassProgram::where('is_active', true)->count();
+        $totalWaves = SpmbWave::where('is_active', true)->count();
+        $totalPeriods = SpmbPeriod::where('is_active', true)->count();
+
+        $reqTypes = !empty($request->applicable_types) ? array_map('intval', (array)$request->applicable_types) : null;
+        $reqProgs = !empty($request->applicable_class_programs) ? array_map('intval', (array)$request->applicable_class_programs) : null;
+        $reqWaves = !empty($request->applicable_waves) ? array_map('intval', (array)$request->applicable_waves) : null;
+        $reqPeriods = !empty($request->applicable_periods) ? array_map('intval', (array)$request->applicable_periods) : null;
+
+        $data['applicable_types'] = ($reqTypes && count($reqTypes) < $totalTypes) ? $reqTypes : null;
+        $data['applicable_class_programs'] = ($reqProgs && count($reqProgs) < $totalProgs) ? $reqProgs : null;
+        $data['applicable_waves'] = ($reqWaves && count($reqWaves) < $totalWaves) ? $reqWaves : null;
+        $data['applicable_periods'] = ($reqPeriods && count($reqPeriods) < $totalPeriods) ? $reqPeriods : null;
+        
         $grade->update($data);
 
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil diperbarui.');
@@ -402,6 +510,11 @@ class SpmbSettingsController extends Controller
     public function destroyGrade($id)
     {
         $grade = SpmbGrade::findOrFail($id);
+
+        if (!auth()->user()->isSuperAdmin() && $grade->spmb_unit_id != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses tidak diizinkan untuk menghapus tingkatan unit ini.');
+        }
+
         if (Registration::where('spmb_grade_id', $grade->id)->exists()) {
             return redirect()->back()->with('error', 'Gagal menghapus! Tingkatan sedang digunakan oleh pendaftar.');
         }
@@ -473,10 +586,24 @@ class SpmbSettingsController extends Controller
     // Extra Services CRUD
     public function storeExtraService(Request $request)
     {
+        if (!auth()->user()->isSuperAdmin()) {
+            $request->merge(['spmb_unit_id' => auth()->user()->spmb_unit_id]);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_extra_services,code',
             'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'applicable_types' => 'nullable|array',
+            'applicable_types.*' => 'integer',
+            'applicable_class_programs' => 'nullable|array',
+            'applicable_class_programs.*' => 'integer',
+            'applicable_waves' => 'nullable|array',
+            'applicable_waves.*' => 'integer',
+            'applicable_periods' => 'nullable|array',
+            'applicable_periods.*' => 'integer',
+            'applicable_grades' => 'nullable|array',
+            'applicable_grades.*' => 'integer',
             'is_active' => 'boolean'
         ]);
 
@@ -490,6 +617,25 @@ class SpmbSettingsController extends Controller
         $data = $request->all();
         $data['spmb_unit_id'] = $request->filled('spmb_unit_id') ? $request->spmb_unit_id : null;
         $data['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
+
+        $totalTypes = SpmbType::where('is_active', true)->count();
+        $totalProgs = SpmbClassProgram::where('is_active', true)->count();
+        $totalWaves = SpmbWave::where('is_active', true)->count();
+        $totalPeriods = SpmbPeriod::where('is_active', true)->count();
+        $totalGrades = SpmbGrade::where('is_active', true)->count();
+
+        $reqTypes = !empty($request->applicable_types) ? array_map('intval', (array)$request->applicable_types) : null;
+        $reqProgs = !empty($request->applicable_class_programs) ? array_map('intval', (array)$request->applicable_class_programs) : null;
+        $reqWaves = !empty($request->applicable_waves) ? array_map('intval', (array)$request->applicable_waves) : null;
+        $reqPeriods = !empty($request->applicable_periods) ? array_map('intval', (array)$request->applicable_periods) : null;
+        $reqGrades = !empty($request->applicable_grades) ? array_map('intval', (array)$request->applicable_grades) : null;
+
+        $data['applicable_types'] = ($reqTypes && count($reqTypes) < $totalTypes) ? $reqTypes : null;
+        $data['applicable_class_programs'] = ($reqProgs && count($reqProgs) < $totalProgs) ? $reqProgs : null;
+        $data['applicable_waves'] = ($reqWaves && count($reqWaves) < $totalWaves) ? $reqWaves : null;
+        $data['applicable_periods'] = ($reqPeriods && count($reqPeriods) < $totalPeriods) ? $reqPeriods : null;
+        $data['applicable_grades'] = ($reqGrades && count($reqGrades) < $totalGrades) ? $reqGrades : null;
+
         SpmbExtraService::create($data);
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil ditambahkan.');
     }
@@ -497,10 +643,28 @@ class SpmbSettingsController extends Controller
     public function updateExtraService(Request $request, $id)
     {
         $service = SpmbExtraService::findOrFail($id);
+
+        if (!auth()->user()->isSuperAdmin()) {
+            if ($service->spmb_unit_id && $service->spmb_unit_id != auth()->user()->spmb_unit_id) {
+                abort(403, 'Akses tidak diizinkan untuk layanan unit ini.');
+            }
+            $request->merge(['spmb_unit_id' => auth()->user()->spmb_unit_id]);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:spmb_extra_services,code,' . $id,
             'spmb_unit_id' => 'nullable|exists:spmb_units,id',
+            'applicable_types' => 'nullable|array',
+            'applicable_types.*' => 'integer',
+            'applicable_class_programs' => 'nullable|array',
+            'applicable_class_programs.*' => 'integer',
+            'applicable_waves' => 'nullable|array',
+            'applicable_waves.*' => 'integer',
+            'applicable_periods' => 'nullable|array',
+            'applicable_periods.*' => 'integer',
+            'applicable_grades' => 'nullable|array',
+            'applicable_grades.*' => 'integer',
             'is_active' => 'boolean'
         ]);
 
@@ -514,6 +678,25 @@ class SpmbSettingsController extends Controller
         $data = $request->all();
         $data['spmb_unit_id'] = $request->filled('spmb_unit_id') ? $request->spmb_unit_id : null;
         $data['is_active'] = $request->has('is_active') || $request->input('is_active') == '1';
+
+        $totalTypes = SpmbType::where('is_active', true)->count();
+        $totalProgs = SpmbClassProgram::where('is_active', true)->count();
+        $totalWaves = SpmbWave::where('is_active', true)->count();
+        $totalPeriods = SpmbPeriod::where('is_active', true)->count();
+        $totalGrades = SpmbGrade::where('is_active', true)->count();
+
+        $reqTypes = !empty($request->applicable_types) ? array_map('intval', (array)$request->applicable_types) : null;
+        $reqProgs = !empty($request->applicable_class_programs) ? array_map('intval', (array)$request->applicable_class_programs) : null;
+        $reqWaves = !empty($request->applicable_waves) ? array_map('intval', (array)$request->applicable_waves) : null;
+        $reqPeriods = !empty($request->applicable_periods) ? array_map('intval', (array)$request->applicable_periods) : null;
+        $reqGrades = !empty($request->applicable_grades) ? array_map('intval', (array)$request->applicable_grades) : null;
+
+        $data['applicable_types'] = ($reqTypes && count($reqTypes) < $totalTypes) ? $reqTypes : null;
+        $data['applicable_class_programs'] = ($reqProgs && count($reqProgs) < $totalProgs) ? $reqProgs : null;
+        $data['applicable_waves'] = ($reqWaves && count($reqWaves) < $totalWaves) ? $reqWaves : null;
+        $data['applicable_periods'] = ($reqPeriods && count($reqPeriods) < $totalPeriods) ? $reqPeriods : null;
+        $data['applicable_grades'] = ($reqGrades && count($reqGrades) < $totalGrades) ? $reqGrades : null;
+
         $service->update($data);
 
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil diperbarui.');
@@ -522,6 +705,11 @@ class SpmbSettingsController extends Controller
     public function destroyExtraService($id)
     {
         $service = SpmbExtraService::findOrFail($id);
+
+        if (!auth()->user()->isSuperAdmin() && $service->spmb_unit_id != auth()->user()->spmb_unit_id) {
+            abort(403, 'Akses tidak diizinkan untuk menghapus layanan unit ini.');
+        }
+
         if ($service->registrations()->exists()) {
             return redirect()->back()->with('error', 'Gagal menghapus! Layanan tambahan sedang digunakan oleh pendaftar.');
         }

@@ -13,8 +13,12 @@
                         <i data-lucide="tag" class="w-3 h-3 text-emerald-600 dark:text-emerald-400"></i> {{ $registration->id_label }}
                     </span>
                 </div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <span class="font-semibold text-brand-emerald dark:text-emerald-400">{{ $registration->unit?->name }}</span>
+                    @if($registration->sub_unit_display_name)
+                        <span>•</span>
+                        <span class="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.2 rounded-md border border-emerald-200/60 dark:border-emerald-800/60 text-[10px]">{{ $registration->sub_unit_display_name }}</span>
+                    @endif
                     <span>•</span>
                     <span>{{ $registration->grade?->name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
                 </div>

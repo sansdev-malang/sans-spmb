@@ -69,7 +69,9 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <span class="text-[10px] text-white/60 font-semibold block leading-none">Unit Sekolah</span>
-                            <span class="font-bold text-emerald-300 truncate block text-xs mt-1">{{ $registration->unit?->name ?? '-' }}</span>
+                            <span class="font-bold text-emerald-300 truncate block text-xs mt-1">
+                                {{ $registration->unit?->name ?? '-' }}@if($registration->sub_unit_display_name) <span class="text-emerald-200 font-normal">({{ $registration->sub_unit_display_name }})</span>@endif
+                            </span>
                         </div>
                     </div>
 
@@ -80,7 +82,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <span class="text-[10px] text-white/60 font-semibold block leading-none">Kelas & Kategori</span>
-                            <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->grade?->name ?? '-' }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
+                            <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->class_display_name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
                         </div>
                     </div>
 
@@ -417,7 +419,15 @@
 
                                         @if($field->field_name === 'extra_services')
                                             @php
-                                                $activeServices = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->get();
+                                                $activeServices = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->get()->filter(function($s) use ($registration) {
+                                                    return $s->matchesEligibility(
+                                                        $registration->spmb_type_id,
+                                                        $registration->spmb_class_program_id,
+                                                        $registration->spmb_wave_id,
+                                                        $registration->spmb_period_id,
+                                                        $registration->spmb_grade_id
+                                                    );
+                                                });
                                             @endphp
                                             @if($activeServices->isEmpty())
                                                 @continue
@@ -960,8 +970,8 @@
                                                        data-cutoff-year="{{ $cutoffYear }}"
                                                        data-min-months="{{ $currentGrade?->min_age_total_months ?? '' }}"
                                                        data-max-months="{{ $currentGrade?->max_age_total_months ?? '' }}"
-                                                       data-min-label="{{ $currentGrade?->min_age_years !== null ? ($currentGrade->min_age_years . ' thn ' . ($currentGrade->min_age_months > 0 ? $currentGrade->min_age_months . ' bln' : '0 bln')) : '' }}"
-                                                       data-max-label="{{ $currentGrade?->max_age_years !== null ? ($currentGrade->max_age_years . ' thn ' . ($currentGrade->max_age_months > 0 ? $currentGrade->max_age_months . ' bln' : '0 bln')) : '' }}"
+                                                       data-min-label="{{ $currentGrade?->min_age_years !== null ? ($currentGrade->min_age_years . ' th ' . ($currentGrade->min_age_months > 0 ? $currentGrade->min_age_months . ' bln' : '0 bln')) : '' }}"
+                                                       data-max-label="{{ $currentGrade?->max_age_years !== null ? ($currentGrade->max_age_years . ' th ' . ($currentGrade->max_age_months > 0 ? $currentGrade->max_age_months . ' bln' : '0 bln')) : '' }}"
                                                        data-age-notes="{{ $currentGrade?->age_notes ?? '' }}"
                                                        data-grade-name="{{ $currentGrade?->name ?? 'Tingkatan Kelas' }}"
                                                        onchange="handleBirthDateCalculation(this, '{{ $step->id }}')"
@@ -969,6 +979,53 @@
 
                                                 <!-- Live feedback box -->
                                                 <div id="birth_date_preview_{{ $step->id }}" class="mt-2 space-y-1"></div>
+                                            @elseif($field->field_name === 'extra_services')
+                                                @php
+                                                    $activeServices = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->get()->filter(function($s) use ($registration) {
+                                                        return $s->matchesEligibility(
+                                                            $registration->spmb_type_id,
+                                                            $registration->spmb_class_program_id,
+                                                            $registration->spmb_wave_id,
+                                                            $registration->spmb_period_id,
+                                                            $registration->spmb_grade_id
+                                                        );
+                                                    });
+                                                    $selectedServiceIds = $registration->extraServices->pluck('id')->toArray();
+                                                @endphp
+                                                @if($activeServices->isEmpty())
+                                                    <div class="p-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-400 italic flex items-center gap-2">
+                                                        <i data-lucide="info" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                                        <span>Tidak ada layanan non-formal tambahan untuk pilihan unit / kelas ini.</span>
+                                                    </div>
+                                                @else
+                                                    <div class="space-y-3">
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            @foreach($activeServices as $service)
+                                                                <label class="flex items-start gap-3 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 cursor-pointer hover:border-brand-emerald dark:hover:border-emerald-500 transition select-none shadow-xs group">
+                                                                    <input type="checkbox" 
+                                                                           name="extra_services[]" 
+                                                                           value="{{ $service->id }}" 
+                                                                           {{ in_array($service->id, $selectedServiceIds) ? 'checked' : '' }}
+                                                                           class="mt-0.5 w-4 h-4 rounded text-brand-emerald border-slate-300 dark:border-slate-700 focus:ring-brand-emerald">
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                                                            <span class="text-xs font-bold text-slate-800 dark:text-white group-hover:text-brand-emerald transition-colors">
+                                                                                {{ $service->name }}
+                                                                            </span>
+                                                                            @if($service->code)
+                                                                                <span class="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-semibold">{{ $service->code }}</span>
+                                                                            @endif
+                                                                        </div>
+                                                                        @if(!empty($service->description))
+                                                                            <p class="text-[10.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-relaxed">{{ $service->description }}</p>
+                                                                        @endif
+                                                                    </div>
+                                                                </label>
+                                                            @endforeach
+                                                        </div>
+                                                        <p class="text-[10.5px] text-slate-400 dark:text-slate-500 italic">Centang layanan non-formal yang ingin diikuti calon murid (opsional).</p>
+                                                    </div>
+                                                @endif
                                             @else
                                                 <input type="{{ $field->type }}" name="{{ $field->field_name }}" value="{{ $val }}" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-850 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs" {{ $field->is_required ? 'required' : '' }}>
                                             @endif
@@ -2431,14 +2488,14 @@
 
             const totalMonths = (years * 12) + months;
             const ageText = `${years} Tahun ${months} Bulan` + (days > 0 ? ` ${days} Hari` : '');
-            const shortText = `${years} thn ${months} bln`;
+            const shortText = `${years} th ${months} bln`;
 
             const minMonths = input.dataset.minMonths !== '' && input.dataset.minMonths !== undefined ? parseInt(input.dataset.minMonths) : null;
             const maxMonths = input.dataset.maxMonths !== '' && input.dataset.maxMonths !== undefined ? parseInt(input.dataset.maxMonths) : null;
             const rawMinLabel = input.dataset.minLabel || '';
             const rawMaxLabel = input.dataset.maxLabel || '';
-            const minLabel = rawMinLabel.replace(/\s*0\s*bln/gi, '').replace(/thn/gi, 'Tahun').replace(/bln/gi, 'Bulan').trim();
-            const maxLabel = rawMaxLabel.replace(/\s*0\s*bln/gi, '').replace(/thn/gi, 'Tahun').replace(/bln/gi, 'Bulan').trim();
+            const minLabel = rawMinLabel.replace(/\s*0\s*bln/gi, '').replace(/\bth\b|thn/gi, 'Tahun').replace(/bln/gi, 'Bulan').trim();
+            const maxLabel = rawMaxLabel.replace(/\s*0\s*bln/gi, '').replace(/\bth\b|thn/gi, 'Tahun').replace(/bln/gi, 'Bulan').trim();
             const gradeName = input.dataset.gradeName || 'Tingkatan Kelas';
 
             let isValid = true;

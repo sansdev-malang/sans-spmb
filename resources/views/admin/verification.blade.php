@@ -152,8 +152,9 @@
                                 'birth_date' => $reg->birth_date ? $reg->birth_date->format('d F Y') : '-',
                                 'religion' => $reg->religion ?? '-',
                                 'previous_school' => $reg->previous_school ?? 'Tidak ada',
-                                'admission_level' => $reg->admission_level ?? '-',
+                                'admission_level' => $reg->class_display_name ?: ($reg->admission_level ?? '-'),
                                 'class_program' => $reg->classProgram->name ?? 'Reguler',
+                                'sub_unit_name' => $reg->sub_unit_display_name,
                                 
                                 // Tempat Tinggal
                                 'address' => $reg->getFieldValue('address') ?? '-',
@@ -258,8 +259,8 @@
                             </td>
                             <!-- Unit & Jenjang -->
                             <td class="py-4 px-6">
-                                <span class="font-bold text-slate-800 dark:text-white block text-xs">{{ $reg->unit?->name }}</span>
-                                <span class="text-[11px] text-slate-400 dark:text-slate-500">{{ $reg->grade?->name ?: ($reg->admission_level ?? '-') }} ({{ $reg->classProgram?->name ?? 'Reguler' }})</span>
+                                <span class="font-bold text-slate-800 dark:text-white block text-xs">{{ $reg->unit?->name }}@if($reg->sub_unit_display_name) <span class="text-emerald-600 font-semibold">({{ $reg->sub_unit_display_name }})</span>@endif</span>
+                                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ $reg->class_display_name }} ({{ $reg->classProgram?->name ?? 'Reguler' }})</span>
                             </td>
                             <td class="py-4 px-6 space-y-1">
                                 @php

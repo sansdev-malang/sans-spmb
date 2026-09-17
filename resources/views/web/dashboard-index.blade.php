@@ -31,7 +31,7 @@
                                     <span class="text-xs text-slate-400 font-medium">• {{ $draft->created_at->diffForHumans() }}</span>
                                 </div>
                                 <h3 class="font-extrabold text-sm text-slate-850 dark:text-white">
-                                    {{ $draft->candidate_name ?? 'Calon Murid' }} — <span class="text-emerald-700 dark:text-emerald-400 font-bold">{{ $draft->unit->name ?? 'Unit Sekolah' }}</span>
+                                    {{ $draft->candidate_name ?? 'Calon Murid' }} — <span class="text-emerald-700 dark:text-emerald-400 font-bold">{{ $draft->unit->name ?? 'Unit Sekolah' }}@if($draft->sub_unit_display_name) ({{ $draft->sub_unit_display_name }})@endif</span>
                                 </h3>
                                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                                     Biaya awal pendaftaran belum dibayar. Anda dapat melanjutkan pembayaran atau mengganti pilihan unit pendaftaran.
@@ -194,7 +194,7 @@
                                 @else
                                     @if($isPaid)
                                         <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-200 dark:border-amber-900/40">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draf Formulir
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pengisian Formulir
                                         </span>
                                     @else
                                         <span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-rose-200 dark:border-rose-900/40">
@@ -215,6 +215,12 @@
                                 <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mt-1">
                                     {{ $reg->unit->name ?? '-' }}
                                 </p>
+                                @if($reg->sub_unit_display_name)
+                                    <div class="mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60 text-[11px] font-extrabold text-emerald-800 dark:text-emerald-300 shadow-2xs">
+                                        <i data-lucide="sparkles" class="w-3 h-3 text-emerald-600 dark:text-emerald-400"></i>
+                                        <span>{{ $reg->sub_unit_display_name }}</span>
+                                    </div>
+                                @endif
                             </div>
                             
                             <!-- Mini Visual Progress Tracker -->
@@ -249,9 +255,15 @@
                             
                             <!-- Detailed Information Chips / Table Grid -->
                             <div class="bg-slate-50 dark:bg-slate-950 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 text-xs space-y-2 mb-4">
+                                @if($reg->sub_unit_display_name)
+                                    <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                                        <span class="flex items-center gap-1.5"><i data-lucide="layout-grid" class="w-3.5 h-3.5 text-slate-400"></i> Pilihan Layanan</span>
+                                        <span class="font-bold text-brand-emerald dark:text-emerald-400">{{ $reg->sub_unit_display_name }}</span>
+                                    </div>
+                                @endif
                                 <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                                     <span class="flex items-center gap-1.5"><i data-lucide="layers" class="w-3.5 h-3.5 text-slate-400"></i> Jenjang / Tingkat</span>
-                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->grade->name ?? ($reg->admission_level ?: '-') }}</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $reg->class_display_name }}</span>
                                 </div>
                                 <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                                     <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i> Tahun Pelajaran</span>
@@ -265,26 +277,25 @@
                                     <span class="flex items-center gap-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-400"></i> Kategori Murid</span>
                                     <span class="font-bold text-brand-emerald dark:text-emerald-400">{{ $reg->classProgram->name ?? ($reg->getFieldValue('class_program') ?: 'Reguler') }}</span>
                                 </div>
-                                @if($reg->extraServices && $reg->extraServices->count() > 0)
+                                @if($reg->non_formal_services->isNotEmpty())
                                     <div class="flex justify-between items-center text-slate-600 dark:text-slate-400 border-t border-slate-200/60 dark:border-slate-800 pt-1.5 mt-1.5">
                                         <span class="flex items-center gap-1.5"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i> Layanan Non-Formal</span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{{ $reg->extraServices->pluck('name')->implode(', ') }}</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{{ $reg->non_formal_services->pluck('name')->implode(', ') }}</span>
                                     </div>
                                 @endif
                             </div>
 
                             <!-- Stage Next Action Banner / Hint -->
-                            <!-- Stage Next Action Banner / Hint -->
                             <div class="mb-4">
                                 @if(!$isPaid)
                                     <div class="p-2.5 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/40 text-[10px] text-rose-700 dark:text-rose-400 font-bold flex items-center gap-2">
                                         <i data-lucide="credit-card" class="w-4 h-4 flex-shrink-0"></i>
-                                        <span>Biaya pendaftaran formulir belum diselesaikan.</span>
+                                        <span>Biaya pendaftaran belum dibayar. Selesaikan pembayaran untuk membuka akses formulir.</span>
                                     </div>
                                 @elseif($status === 'draft')
                                     <div class="p-2.5 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/40 text-[10px] text-amber-700 dark:text-amber-400 font-bold flex items-center gap-2">
                                         <i data-lucide="edit-3" class="w-4 h-4 flex-shrink-0"></i>
-                                        <span>Formulir & berkas belum dikirim ke panitia.</span>
+                                        <span>Biaya pendaftaran lunas. Silakan lengkapi formulir & berkas persyaratan.</span>
                                     </div>
                                 @elseif($status === 'submitted')
                                     <div class="p-2.5 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/40 text-[10px] text-blue-700 dark:text-blue-400 font-bold flex items-center gap-2">
@@ -342,11 +353,24 @@
 
                         <!-- Main Action Button (Hanya tampil jika belum selesai/diterima) -->
                         @if($status !== 'completed')
-                            <div class="pt-2">
-                                <a href="{{ $stageTargetUrl }}" class="w-full py-3.5 px-4 bg-slate-900 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 text-white text-xs font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group-hover:shadow-md">
+                            <div class="pt-2 flex flex-col gap-2">
+                                <a href="{{ $stageTargetUrl }}" class="w-full py-3.5 px-4 {{ !$isPaid ? 'bg-brand-emerald hover:bg-emerald-600 shadow-md ring-2 ring-emerald-500/30' : 'bg-slate-900 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 shadow-sm' }} text-white text-xs font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 group-hover:shadow-md">
+                                    @if(!$isPaid)
+                                        <i data-lucide="credit-card" class="w-4 h-4"></i>
+                                    @endif
                                     <span>{{ $stageButtonLabel }}</span>
                                     <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                                 </a>
+                                @if(!$isPaid)
+                                    <form method="POST" action="{{ route('dashboard.registration.draft.delete', $reg->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan draf pendaftaran ananda {{ $reg->candidate_name }}?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 dark:hover:bg-rose-950/40 text-slate-500 dark:text-slate-400 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            <span>Batalkan Draf Pendaftaran</span>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         @endif
 
@@ -491,19 +515,16 @@
                     </div>
                 </div>
 
-                <!-- Baris 4: Pilihan Layanan & Tingkatan Kelas (PAUD 2-Dropdowns) -->
-                <div id="paudSection" class="space-y-3">
+                <!-- Baris 4: Pilihan Layanan & Tingkatan Kelas (Multi-Sub-Unit / Layanan) -->
+                <div id="subUnitSection" class="space-y-3 hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Dropdown 1: Pilihan Layanan PAUD -->
+                        <!-- Dropdown 1: Pilihan Layanan / Sub-Unit -->
                         <div>
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
                                 Pilihan Layanan
                             </label>
-                            <select id="paudProgramSelect" onchange="handlePaudProgramChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
-                                <option value="KB">Kelompok Bermain (KB)</option>
-                                <option value="TK">Taman Kanak-Kanak (TK)</option>
-                                <option value="TPA">Daycare (TPA)</option>
+                            <select id="subUnitSelect" onchange="handleSubUnitChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
                             </select>
                         </div>
 
@@ -515,24 +536,24 @@
                                     Tingkatan / Kelas
                                 </span>
                             </label>
-                            <select id="paudGradeSelect" onchange="handlePaudSelectionChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
+                            <select id="subUnitGradeSelect" onchange="handleSubUnitSelectionChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all truncate">
                             </select>
                         </div>
                     </div>
 
                     <!-- Dynamic Small Age Info Helper -->
-                    <div id="paudAgeInfoBadge" class="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40">
+                    <div id="subUnitAgeInfoBadge" class="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40">
                         <i data-lucide="info" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
-                        <span id="paudAgeInfoText">Ketentuan usia: Minimal 2 tahun (2–3 tahun)</span>
+                        <span id="subUnitAgeInfoText">Ketentuan usia sesuai jenjang pendidikan.</span>
                     </div>
 
-                    <!-- Checkbox Layanan Daycare (muncul untuk KB & TK) -->
-                    <div id="paudDaycareAddonWrapper" class="pt-0.5">
+                    <!-- Checkbox Layanan Daycare (muncul jika memilih Playgroup atau TK) -->
+                    <div id="daycareAddonWrapper" class="pt-0.5 hidden">
                         <label class="flex items-center gap-2.5 p-3 rounded-xl border border-emerald-200/80 dark:border-emerald-800/70 bg-emerald-50/50 dark:bg-emerald-950/30 cursor-pointer shadow-2xs hover:bg-emerald-100/50 transition">
-                            <input type="checkbox" id="paudDaycareCheckbox" onchange="handlePaudSelectionChange()" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
+                            <input type="checkbox" id="daycareAddonCheckbox" onchange="handleSubUnitSelectionChange()" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex-1">
-                                <span id="paudDaycareCheckboxLabel">+ Tambah Layanan Daycare (TPA 2)</span>
-                                <span class="block text-[10px] text-slate-400 font-normal">+ Biaya pendaftaran TPA Rp 300.000</span>
+                                <span id="daycareAddonCheckboxLabel">+ Tambah Layanan Daycare (TPA)</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">+ Biaya pendaftaran Daycare / TPA Rp 300.000</span>
                             </span>
                         </label>
                     </div>
@@ -547,6 +568,21 @@
                     <select id="gradeSelect" onchange="handleStandardGradeChange()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-3 text-slate-850 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <option value="">Pilih Tingkatan...</option>
                     </select>
+                </div>
+
+                <!-- Banner Informasi Khusus Putra/Putri Guru & Karyawan YPAS -->
+                <div id="teacherChildNoticeBanner" class="p-4 bg-amber-50/90 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800/60 space-y-2 hidden">
+                    <div class="flex items-start gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="text-xs font-extrabold text-amber-900 dark:text-amber-300">Konfirmasi Admin SPMB Diperlukan</h4>
+                            <p class="text-[11px] text-amber-800 dark:text-amber-400 leading-relaxed font-medium">
+                                Jalur Khusus Putra/Putri Guru & Karyawan YPAS memerlukan verifikasi identitas kepegawaian oleh Admin SPMB. Setelah klik <strong>Buat Pendaftaran</strong>, Anda akan diarahkan untuk menghubungi Admin SPMB Unit terkait guna konfirmasi & aktivasi formulir pendaftaran.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Live Fee Calculation Preview Banner -->
@@ -590,8 +626,82 @@
     var wavesData = @json($waves);
     var periodsData = @json($periods);
     var classProgramsData = @json($classPrograms);
+    var extraServicesData = @json($extraServices ?? []);
     var activePeriodData = @json($activePeriod);
     var unitFeeMap = @json($unitFeeMap ?? []);
+    var registrationFeesData = @json($registrationFees ?? []);
+
+    function getRegistrationFeeForGrade(unitId, gradeId, typeId, classProgramId) {
+        if (!unitId) return null;
+        
+        if (registrationFeesData && registrationFeesData.length > 0) {
+            const unitFees = registrationFeesData.filter(f => !f.spmb_unit_id || f.spmb_unit_id == unitId);
+            
+            if (gradeId) {
+                // 1. Match by applicable_grades array
+                const exactGradeFee = unitFees.find(f => {
+                    if (f.applicable_grades && Array.isArray(f.applicable_grades) && f.applicable_grades.length > 0) {
+                        return f.applicable_grades.map(Number).includes(Number(gradeId));
+                    }
+                    return false;
+                });
+                if (exactGradeFee) {
+                    return {
+                        id: exactGradeFee.id,
+                        name: exactGradeFee.name,
+                        amount: Number(exactGradeFee.amount)
+                    };
+                }
+
+                // 2. Match by grade name in fee name (e.g. "TPA 1", "TPA 2", "TPA 3", "KB", "TK", "SD", "SMP")
+                const gradeObj = gradesData.find(g => g.id == gradeId);
+                if (gradeObj && gradeObj.name) {
+                    const gName = gradeObj.name.toLowerCase();
+                    const nameMatchFee = unitFees.find(f => {
+                        const fName = (f.name || '').toLowerCase();
+                        if (gName.includes('tpa 1') && fName.includes('tpa 1')) return true;
+                        if (gName.includes('tpa 2') && fName.includes('tpa 2')) return true;
+                        if (gName.includes('tpa 3') && fName.includes('tpa 3')) return true;
+                        if (gName.includes('kb') && (fName.includes('kb') || fName.includes('paud'))) return true;
+                        if (gName.includes('tk') && (fName.includes('tk') || fName.includes('paud'))) return true;
+                        return false;
+                    });
+                    if (nameMatchFee) {
+                        return {
+                            id: nameMatchFee.id,
+                            name: nameMatchFee.name,
+                            amount: Number(nameMatchFee.amount)
+                        };
+                    }
+                }
+            }
+
+            // Fallback for general fee of unit
+            const generalFee = unitFees.find(f => !f.applicable_grades || f.applicable_grades.length === 0);
+            if (generalFee) {
+                return {
+                    id: generalFee.id,
+                    name: generalFee.name,
+                    amount: Number(generalFee.amount)
+                };
+            }
+        }
+
+        // Fallback to unitFeeMap
+        if (unitFeeMap && unitFeeMap[unitId]) {
+            return {
+                id: null,
+                name: unitFeeMap[unitId].name,
+                amount: Number(unitFeeMap[unitId].amount)
+            };
+        }
+
+        return {
+            id: null,
+            name: 'Enrollment Fee',
+            amount: 300000
+        };
+    }
 
     function openRegistrationModal() {
         const modal = document.getElementById('newRegistrationModal');
@@ -625,159 +735,321 @@
         }
     });
 
-    function handlePaudProgramChange(targetGradeId = null) {
-        const progSelect = document.getElementById('paudProgramSelect');
-        const gradeSelect = document.getElementById('paudGradeSelect');
-        const addonWrapper = document.getElementById('paudDaycareAddonWrapper');
-        const addonLabel = document.getElementById('paudDaycareCheckboxLabel');
-        const daycareCheckbox = document.getElementById('paudDaycareCheckbox');
+    function formatGradeAgeLabel(grade) {
+        if (!grade) return '';
+        const minY = grade.min_age_years;
+        const maxY = grade.max_age_years;
+        if (minY !== null && minY !== undefined && maxY !== null && maxY !== undefined) {
+            return `(${minY}–${maxY} th)`;
+        } else if (minY !== null && minY !== undefined) {
+            return `(Min. ${minY} th)`;
+        }
+        return '';
+    }
 
-        if (!progSelect || !gradeSelect) return;
-        const prog = progSelect.value;
+    function formatGradeAgeRequirement(grade, isTeacherTpa = false) {
+        if (!grade) return 'Ketentuan usia mengikuti regulasi unit.';
+        if (isTeacherTpa || grade.id == 13) {
+            return '⭐ Khusus putra/putri Guru & Karyawan YPAS';
+        }
+        const minY = grade.min_age_years;
+        const maxY = grade.max_age_years;
+        if (minY !== null && minY !== undefined && maxY !== null && maxY !== undefined) {
+            return `Ketentuan usia: Minimal ${minY} tahun (Usia ${minY}–${maxY} tahun per Juli)`;
+        } else if (minY !== null && minY !== undefined) {
+            return `Ketentuan usia: Minimal ${minY} tahun per Juli`;
+        }
+        return 'Ketentuan usia sesuai standar jenjang pendidikan.';
+    }
+
+    function isGradeEligible(grade, typeId, classProgramId, waveId, periodId) {
+        if (!grade) return false;
+        
+        // Check applicable_types
+        if (typeId && Array.isArray(grade.applicable_types) && grade.applicable_types.length > 0) {
+            const types = grade.applicable_types.map(Number);
+            if (!types.includes(Number(typeId))) return false;
+        }
+        
+        // Check applicable_class_programs
+        if (classProgramId && Array.isArray(grade.applicable_class_programs) && grade.applicable_class_programs.length > 0) {
+            const progs = grade.applicable_class_programs.map(Number);
+            if (!progs.includes(Number(classProgramId))) return false;
+        }
+
+        // Check applicable_waves
+        if (waveId && Array.isArray(grade.applicable_waves) && grade.applicable_waves.length > 0) {
+            const waves = grade.applicable_waves.map(Number);
+            if (!waves.includes(Number(waveId))) return false;
+        }
+
+        // Check applicable_periods
+        if (periodId && Array.isArray(grade.applicable_periods) && grade.applicable_periods.length > 0) {
+            const periods = grade.applicable_periods.map(Number);
+            if (!periods.includes(Number(periodId))) return false;
+        }
+
+        return true;
+    }
+
+    function getEligibleDaycareGrade(selectedGradeObj, selectedSubUnitLower, eligibleGrades) {
+        if (!eligibleGrades || eligibleGrades.length === 0) return null;
+
+        const activeDaycareGrades = eligibleGrades.filter(g => {
+            const su = (g.sub_unit || '').trim().toLowerCase();
+            return (su === 'daycare' || su === 'tpa' || su.includes('daycare') || su.includes('tpa') || su.includes('penitipan')) &&
+                   (g.is_active === undefined || g.is_active == 1 || g.is_active == true);
+        });
+
+        if (activeDaycareGrades.length === 0) {
+            return null;
+        }
+
+        const gradeName = selectedGradeObj ? (selectedGradeObj.name || '').toLowerCase() : '';
+
+        // If Playgroup (or grade is KB A / KB B)
+        if (selectedSubUnitLower.includes('playgroup') || selectedSubUnitLower.includes('kb') || selectedSubUnitLower.includes('bermain') || gradeName.includes('kb')) {
+            const tpa2 = activeDaycareGrades.find(g => {
+                const n = (g.name || '').toLowerCase();
+                return (n.includes('tpa 2') || n === 'tpa 2') && !n.includes('guru') && !n.includes('karyawan');
+            });
+            if (tpa2) return tpa2;
+            
+            return activeDaycareGrades.find(g => {
+                return g.min_age_years <= 3 && g.max_age_years >= 3 && !g.name.toLowerCase().includes('guru');
+            }) || null;
+        }
+
+        // If TK (or grade is TK A / TK B)
+        if (selectedSubUnitLower.includes('tk') || selectedSubUnitLower.includes('kanak') || gradeName.includes('tk')) {
+            const tpa3 = activeDaycareGrades.find(g => {
+                const n = (g.name || '').toLowerCase();
+                return (n.includes('tpa 3') || n === 'tpa 3') && !n.includes('guru') && !n.includes('karyawan');
+            });
+            if (tpa3) return tpa3;
+            
+            return activeDaycareGrades.find(g => {
+                return g.min_age_years <= 5 && g.max_age_years >= 5 && !g.name.toLowerCase().includes('guru');
+            }) || null;
+        }
+
+        return null;
+    }
+
+    function handleSubUnitChange(targetGradeId = null) {
+        const subUnitSelect = document.getElementById('subUnitSelect');
+        const gradeSelect = document.getElementById('subUnitGradeSelect');
+        const classProgramSelect = document.getElementById('classProgramSelect');
+        const waveSelect = document.getElementById('waveSelect');
+        const periodSelect = document.getElementById('periodSelect');
+        const typeSelect = document.getElementById('typeSelect');
+        const hiddenUnitInput = document.getElementById('hiddenUnitInput');
+
+        if (!subUnitSelect || !gradeSelect) return;
+
+        const unitId = hiddenUnitInput ? hiddenUnitInput.value : '';
+        const typeId = typeSelect ? typeSelect.value : null;
+        const classProgramId = classProgramSelect ? classProgramSelect.value : null;
+        const waveId = waveSelect ? waveSelect.value : null;
+        const periodId = periodSelect ? periodSelect.value : null;
+
+        const selectedSubUnit = (subUnitSelect.value || '').trim();
+        const selectedSubUnitLower = selectedSubUnit.toLowerCase();
+
+        // Get all active grades for this unit
+        const unit = unitsData.find(u => u.id == unitId);
+        const allUnitGrades = (unit && unit.grades && unit.grades.length > 0)
+            ? unit.grades
+            : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+
+        // Filter eligible grades using isGradeEligible
+        const eligibleGrades = allUnitGrades.filter(g => isGradeEligible(g, typeId, classProgramId, waveId, periodId));
+
+        // Filter grades for this specific sub_unit
+        const matchingGrades = eligibleGrades.filter(g => (g.sub_unit || '').trim().toLowerCase() === selectedSubUnitLower);
 
         gradeSelect.innerHTML = '';
 
-        if (prog === 'KB') {
-            if (addonWrapper) addonWrapper.classList.remove('hidden');
-            if (addonLabel) addonLabel.textContent = '+ Tambah Layanan Daycare (TPA 2)';
+        matchingGrades.forEach(g => {
+            const isGuru = (g.name || '').toLowerCase().includes('guru') || (g.name || '').toLowerCase().includes('karyawan') || g.id == 13;
+            const ageLabel = isGuru ? '(0–2 th)' : formatGradeAgeLabel(g);
+            const opt = new Option(`${g.name} ${ageLabel}`.trim(), String(g.id));
+            gradeSelect.add(opt);
+        });
 
-            const opt1 = new Option('KB-A (2–3 thn)', '1');
-            const opt2 = new Option('KB-B (3–4 thn)', '14');
-            gradeSelect.add(opt1);
-            gradeSelect.add(opt2);
-        } else if (prog === 'TK') {
-            if (addonWrapper) addonWrapper.classList.remove('hidden');
-            if (addonLabel) addonLabel.textContent = '+ Tambah Layanan Daycare (TPA 3)';
-
-            const opt1 = new Option('TK-A (4–5 thn)', '2');
-            const opt2 = new Option('TK-B (5–6 thn)', '3');
-            gradeSelect.add(opt1);
-            gradeSelect.add(opt2);
-        } else if (prog === 'TPA') {
-            if (addonWrapper) addonWrapper.classList.add('hidden');
-            if (daycareCheckbox) daycareCheckbox.checked = false;
-
-            const opt1 = new Option('TPA 1 Guru YPAS (0–2 thn)', '13:0');
-            const opt2 = new Option('TPA 1 Umum (1–2 thn)', '15:0');
-            const opt3 = new Option('KB-A & TPA 2 (2–3 thn)', '1:1');
-            const opt4 = new Option('KB-B & TPA 2 (3–4 thn)', '14:1');
-            const opt5 = new Option('TK-A & TPA 3 (4–5 thn)', '2:1');
-            const opt6 = new Option('TK-B & TPA 3 (5–6 thn)', '3:1');
-
-            gradeSelect.add(opt1);
-            gradeSelect.add(opt2);
-            gradeSelect.add(opt3);
-            gradeSelect.add(opt4);
-            gradeSelect.add(opt5);
-            gradeSelect.add(opt6);
-        }
-
-        if (targetGradeId) {
-            for (let i = 0; i < gradeSelect.options.length; i++) {
-                if (gradeSelect.options[i].value === String(targetGradeId) || gradeSelect.options[i].value.startsWith(targetGradeId + ':')) {
-                    gradeSelect.selectedIndex = i;
-                    break;
+        if (gradeSelect.options.length === 0) {
+            gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan yang sesuai kriteria</option>';
+            gradeSelect.disabled = true;
+        } else {
+            gradeSelect.disabled = false;
+            let matched = false;
+            if (targetGradeId) {
+                for (let i = 0; i < gradeSelect.options.length; i++) {
+                    if (gradeSelect.options[i].value === String(targetGradeId)) {
+                        gradeSelect.selectedIndex = i;
+                        matched = true;
+                        break;
+                    }
                 }
+            }
+            if (!matched && gradeSelect.options.length > 0) {
+                gradeSelect.selectedIndex = 0;
             }
         }
 
-        handlePaudSelectionChange();
+        handleSubUnitSelectionChange();
     }
 
-    function handlePaudSelectionChange() {
-        const progSelect = document.getElementById('paudProgramSelect');
-        const gradeSelect = document.getElementById('paudGradeSelect');
-        const daycareCheckbox = document.getElementById('paudDaycareCheckbox');
+    function handleSubUnitSelectionChange() {
+        const subUnitSelect = document.getElementById('subUnitSelect');
+        const gradeSelect = document.getElementById('subUnitGradeSelect');
+        const addonWrapper = document.getElementById('daycareAddonWrapper');
+        const addonLabel = document.getElementById('daycareAddonCheckboxLabel');
+        const daycareCheckbox = document.getElementById('daycareAddonCheckbox');
+        const classProgramSelect = document.getElementById('classProgramSelect');
+        const waveSelect = document.getElementById('waveSelect');
+        const periodSelect = document.getElementById('periodSelect');
+        const typeSelect = document.getElementById('typeSelect');
         const hiddenGradeIdInput = document.getElementById('hiddenGradeIdInput');
         const hiddenIncludeTpaInput = document.getElementById('hiddenIncludeTpaInput');
+        const hiddenUnitInput = document.getElementById('hiddenUnitInput');
         const breakdownElem = document.getElementById('previewFeeBreakdown');
         const totalElem = document.getElementById('previewFeeTotal');
-        const ageBadge = document.getElementById('paudAgeInfoBadge');
-        const ageTextElem = document.getElementById('paudAgeInfoText');
+        const ageBadge = document.getElementById('subUnitAgeInfoBadge');
+        const ageTextElem = document.getElementById('subUnitAgeInfoText');
 
-        if (!progSelect || !gradeSelect || !hiddenGradeIdInput || !hiddenIncludeTpaInput) return;
+        if (!subUnitSelect || !gradeSelect || !hiddenGradeIdInput || !hiddenIncludeTpaInput) return;
 
-        const prog = progSelect.value;
-        const gradeVal = gradeSelect.value;
+        const unitId = hiddenUnitInput ? hiddenUnitInput.value : '';
+        const typeId = typeSelect ? typeSelect.value : null;
+        const classProgramId = classProgramSelect ? classProgramSelect.value : null;
+        const waveId = waveSelect ? waveSelect.value : null;
+        const periodId = periodSelect ? periodSelect.value : null;
 
-        if (prog === 'TPA') {
-            const parts = (gradeVal || '13:0').split(':');
-            const gradeId = parts[0];
-            const includeTpa = parts[1] || '0';
+        // Check if current classProgram is MBK
+        const selectedProgramObj = classProgramsData.find(cp => cp.id == classProgramId);
+        const isMbk = selectedProgramObj && (
+            (selectedProgramObj.name || '').toLowerCase().includes('mbk') || 
+            (selectedProgramObj.name || '').toLowerCase().includes('kebutuhan khusus')
+        );
 
-            hiddenGradeIdInput.value = gradeId;
-            hiddenIncludeTpaInput.value = includeTpa;
+        const selectedSubUnit = (subUnitSelect.value || '').trim();
+        const selectedSubUnitLower = selectedSubUnit.toLowerCase();
 
-            // Update Dynamic Small Age Info Helper with gold styling for Teacher
-            if (ageTextElem && ageBadge) {
-                if (gradeId == 13) {
-                    ageBadge.className = 'text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-1.5 font-bold bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/50';
-                    ageTextElem.textContent = '⭐ Khusus putra/putri Guru & Karyawan YPAS (Bebas Biaya / Rp 0)';
-                } else if (gradeId == 15) {
-                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
-                    ageTextElem.textContent = 'Ketentuan usia TPA 1 Umum: 1–2 tahun';
-                } else if (gradeId == 1) {
-                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
-                    ageTextElem.textContent = 'Ketentuan usia: 2–3 tahun (Kelas KB-A & Layanan TPA 2 Playgroup)';
-                } else if (gradeId == 14) {
-                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
-                    ageTextElem.textContent = 'Ketentuan usia: 3–4 tahun (Kelas KB-B & Layanan TPA 2 Playgroup)';
-                } else if (gradeId == 2) {
-                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
-                    ageTextElem.textContent = 'Ketentuan usia: 4–5 tahun (Kelas TK-A & Layanan TPA 3 Kindergarten)';
-                } else if (gradeId == 3) {
-                    ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
-                    ageTextElem.textContent = 'Ketentuan usia: 5–6 tahun (Kelas TK-B & Layanan TPA 3 Kindergarten)';
-                }
+        // Get all active grades for this unit
+        const unit = unitsData.find(u => u.id == unitId);
+        const allUnitGrades = (unit && unit.grades && unit.grades.length > 0)
+            ? unit.grades
+            : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+
+        // Filter eligible grades using isGradeEligible
+        const eligibleGrades = allUnitGrades.filter(g => isGradeEligible(g, typeId, classProgramId, waveId, periodId));
+
+        const gradeId = gradeSelect.value;
+        const selectedGradeObj = gradesData.find(g => g.id == gradeId);
+
+        // Check Daycare Addon eligibility dynamically
+        const matchingDaycareGrade = getEligibleDaycareGrade(selectedGradeObj, selectedSubUnitLower, eligibleGrades);
+
+        const baseFeeInfo = getRegistrationFeeForGrade(unitId, gradeId, typeId, classProgramId);
+        const baseFeeAmount = baseFeeInfo ? Number(baseFeeInfo.amount) : 300000;
+        const baseFeeName = baseFeeInfo ? baseFeeInfo.name : 'Enrollment Fee';
+
+        let tpaAddonAmount = 300000;
+        let tpaAddonName = 'Enrollment Fee TPA';
+        if (matchingDaycareGrade) {
+            const daycareFeeInfo = getRegistrationFeeForGrade(unitId, matchingDaycareGrade.id, typeId, classProgramId);
+            if (daycareFeeInfo) {
+                tpaAddonAmount = Number(daycareFeeInfo.amount);
+                tpaAddonName = daycareFeeInfo.name;
             }
+        }
 
+        const daycareSubtextElem = document.getElementById('daycareAddonCheckboxSubtext');
+        if (addonWrapper) {
+            if (matchingDaycareGrade && !isMbk) {
+                addonWrapper.classList.remove('hidden');
+                if (addonLabel) {
+                    addonLabel.textContent = `+ Tambah Layanan Daycare (${matchingDaycareGrade.name})`;
+                }
+                if (daycareSubtextElem) {
+                    daycareSubtextElem.textContent = `+ Biaya pendaftaran Daycare / TPA Rp ${Number(tpaAddonAmount).toLocaleString('id-ID')}`;
+                }
+            } else {
+                addonWrapper.classList.add('hidden');
+                if (daycareCheckbox) daycareCheckbox.checked = false;
+            }
+        }
+
+        const isIncludeTpa = (matchingDaycareGrade && !isMbk && daycareCheckbox) ? daycareCheckbox.checked : false;
+
+        if (!gradeId) {
+            if (ageBadge && ageTextElem) {
+                ageBadge.className = 'text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700';
+                ageTextElem.textContent = 'Silakan pilih kriteria/tingkatan yang tersedia.';
+            }
             if (breakdownElem && totalElem) {
                 breakdownElem.textContent = 'Enrollment Fee';
-                if (gradeId == 13) {
-                    totalElem.textContent = 'Rp 0';
-                    totalElem.className = 'text-base font-black text-emerald-600 dark:text-emerald-400 font-mono';
-                } else if (gradeId == 15) {
-                    totalElem.textContent = 'Rp 300.000';
-                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
-                } else {
-                    totalElem.textContent = 'Rp 600.000';
-                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
-                }
+                totalElem.textContent = 'Rp 0';
+            }
+            hiddenGradeIdInput.value = '';
+            hiddenIncludeTpaInput.value = '0';
+            return;
+        }
+
+        hiddenGradeIdInput.value = gradeId;
+        hiddenIncludeTpaInput.value = isIncludeTpa ? '1' : '0';
+
+        const isTeacherTpa = selectedGradeObj && (
+            selectedGradeObj.id == 13 || 
+            (selectedGradeObj.name || '').toLowerCase().includes('guru') || 
+            (selectedGradeObj.name || '').toLowerCase().includes('karyawan')
+        );
+
+        const teacherNoticeBanner = document.getElementById('teacherChildNoticeBanner');
+        const modalFeeBanner = document.getElementById('modalFeePreviewBanner');
+
+        if (isTeacherTpa) {
+            if (modalFeeBanner) modalFeeBanner.classList.add('hidden');
+            if (teacherNoticeBanner) {
+                teacherNoticeBanner.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         } else {
-            const gradeId = gradeVal || (prog === 'KB' ? '1' : '2');
-            const isIncludeTpa = daycareCheckbox ? daycareCheckbox.checked : false;
+            if (teacherNoticeBanner) teacherNoticeBanner.classList.add('hidden');
+            if (modalFeeBanner) modalFeeBanner.classList.remove('hidden');
+        }
 
-            hiddenGradeIdInput.value = gradeId;
-            hiddenIncludeTpaInput.value = isIncludeTpa ? '1' : '0';
-
-            // Update Dynamic Small Age Info Helper
-            if (ageTextElem && ageBadge) {
+        // Update age badge
+        if (ageBadge && ageTextElem) {
+            if (isTeacherTpa) {
+                ageBadge.className = 'text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-1.5 font-bold bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/50';
+                ageTextElem.textContent = '⭐ Khusus putra/putri Guru & Karyawan YPAS';
+            } else {
                 ageBadge.className = 'text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-medium bg-emerald-50/60 dark:bg-emerald-950/30 px-3 py-1.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40';
-                if (prog === 'KB') {
-                    if (gradeId == 1) {
-                        ageTextElem.textContent = 'Ketentuan usia: Minimal 2 tahun (Usia 2–3 tahun per Juli)';
-                    } else {
-                        ageTextElem.textContent = 'Ketentuan usia: Minimal 3 tahun (Usia 3–4 tahun per Juli)';
-                    }
-                } else if (prog === 'TK') {
-                    if (gradeId == 2) {
-                        ageTextElem.textContent = 'Ketentuan usia: Minimal 4 tahun (Usia 4–5 tahun per Juli)';
-                    } else {
-                        ageTextElem.textContent = 'Ketentuan usia: Minimal 5 tahun (Usia 5–6 tahun per Juli)';
-                    }
-                }
+                ageTextElem.textContent = formatGradeAgeRequirement(selectedGradeObj, false);
             }
+        }
 
-            if (breakdownElem && totalElem) {
-                breakdownElem.textContent = 'Enrollment Fee';
-                if (isIncludeTpa) {
-                    totalElem.textContent = 'Rp 600.000';
-                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
-                } else {
-                    totalElem.textContent = 'Rp 300.000';
-                    totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
-                }
+        const isDaycare = selectedSubUnitLower.includes('daycare') || selectedSubUnitLower.includes('tpa') || selectedSubUnitLower.includes('penitipan');
+
+        // Update fee breakdown & preview
+        if (breakdownElem && totalElem) {
+            if (isIncludeTpa) {
+                const totalFee = baseFeeAmount + tpaAddonAmount;
+                const subUnitName = selectedSubUnit || 'Playgroup';
+                const daycareGradeName = matchingDaycareGrade ? matchingDaycareGrade.name : 'TPA';
+                breakdownElem.textContent = `${subUnitName} + Layanan Daycare (${daycareGradeName})`;
+                totalElem.textContent = 'Rp ' + Number(totalFee).toLocaleString('id-ID');
+                totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+            } else if (isDaycare) {
+                breakdownElem.textContent = baseFeeName;
+                totalElem.textContent = 'Rp ' + Number(baseFeeAmount).toLocaleString('id-ID');
+                totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
+            } else {
+                breakdownElem.textContent = baseFeeName;
+                totalElem.textContent = 'Rp ' + Number(baseFeeAmount).toLocaleString('id-ID');
+                totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
             }
         }
     }
@@ -796,26 +1068,19 @@
         hiddenIncludeTpaInput.value = '0';
 
         const unitId = hiddenUnitInput ? hiddenUnitInput.value : '';
-        const unit = unitsData.find(u => u.id == unitId);
-        const unitCode = unit ? (unit.code || '').toUpperCase() : '';
+        const gradeId = gradeSelect.value;
+        const typeSelect = document.getElementById('typeSelect');
+        const classProgramSelect = document.getElementById('classProgramSelect');
+        const typeId = typeSelect ? typeSelect.value : null;
+        const classProgramId = classProgramSelect ? classProgramSelect.value : null;
 
-        let feeName = 'Enrollment Fee';
-        let feeFormatted = 'Rp 350.000';
-
-        if (unitFeeMap && unitFeeMap[unitId]) {
-            feeName = unitFeeMap[unitId].name || 'Enrollment Fee';
-            feeFormatted = unitFeeMap[unitId].formatted;
-        } else if (unitCode === 'SD') {
-            feeFormatted = 'Rp 450.000';
-        } else if (unitCode === 'SMP') {
-            feeFormatted = 'Rp 350.000';
-        } else {
-            feeFormatted = 'Rp 300.000';
-        }
+        const feeInfo = getRegistrationFeeForGrade(unitId, gradeId, typeId, classProgramId);
+        let feeName = feeInfo ? feeInfo.name : 'Enrollment Fee';
+        let feeAmount = feeInfo ? Number(feeInfo.amount) : 350000;
 
         if (breakdownElem && totalElem) {
             breakdownElem.textContent = feeName;
-            totalElem.textContent = feeFormatted;
+            totalElem.textContent = 'Rp ' + Number(feeAmount).toLocaleString('id-ID');
             totalElem.className = 'text-base font-black text-brand-emerald dark:text-emerald-400 font-mono';
         }
     }
@@ -824,7 +1089,7 @@
         const unit = unitsData.find(u => u.id == unitId);
         const unitCode = unit ? (unit.code || '').toUpperCase() : '';
         
-        // Update header modal info (Unit only, no TA)
+        // Update header modal info
         const headerUnit = document.getElementById('modalHeaderUnitName');
         if (headerUnit) headerUnit.textContent = unit ? unit.name : 'Sekolah Anak Saleh';
 
@@ -895,27 +1160,45 @@
             }
         }
 
-        // 5. Switch between PAUD Section and Standard Grade Selector
-        const paudSection = document.getElementById('paudSection');
-        const standardGradeSelectWrapper = document.getElementById('standardGradeSelectWrapper');
-        const progSelect = document.getElementById('paudProgramSelect');
+        // 5. Check if Unit has Sub-Units
+        const unitGrades = (unit && unit.grades && unit.grades.length > 0)
+            ? unit.grades
+            : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
 
-        if (unitCode === 'PAUD') {
-            if (paudSection) paudSection.classList.remove('hidden');
+        const subUnits = [];
+        unitGrades.forEach(g => {
+            if (g.sub_unit && g.sub_unit.trim() !== '' && (g.is_active === undefined || g.is_active == 1 || g.is_active == true) && !subUnits.includes(g.sub_unit.trim())) {
+                subUnits.push(g.sub_unit.trim());
+            }
+        });
+
+        const subUnitSection = document.getElementById('subUnitSection');
+        const standardGradeSelectWrapper = document.getElementById('standardGradeSelectWrapper');
+        const subUnitSelect = document.getElementById('subUnitSelect');
+
+        if (subUnits.length > 0) {
+            // Multi-tier / Sub-unit unit (e.g. PG-TK-DAYCARE)
+            if (subUnitSection) subUnitSection.classList.remove('hidden');
             if (standardGradeSelectWrapper) standardGradeSelectWrapper.classList.add('hidden');
 
-            if (progSelect) {
-                if (targetGradeId == 2 || targetGradeId == 3) {
-                    progSelect.value = 'TK';
-                } else if (targetGradeId == 13 || targetGradeId == 15) {
-                    progSelect.value = 'TPA';
-                } else {
-                    progSelect.value = 'KB';
+            if (subUnitSelect) {
+                subUnitSelect.innerHTML = '';
+                subUnits.forEach(su => {
+                    const opt = new Option(su, su);
+                    subUnitSelect.add(opt);
+                });
+
+                if (targetGradeId) {
+                    const targetGrade = unitGrades.find(g => g.id == targetGradeId);
+                    if (targetGrade && targetGrade.sub_unit) {
+                        subUnitSelect.value = targetGrade.sub_unit.trim();
+                    }
                 }
             }
-            handlePaudProgramChange(targetGradeId);
+            handleSubUnitChange(targetGradeId);
         } else {
-            if (paudSection) paudSection.classList.add('hidden');
+            // Single-tier unit (e.g. SD, SMP)
+            if (subUnitSection) subUnitSection.classList.add('hidden');
             if (standardGradeSelectWrapper) standardGradeSelectWrapper.classList.remove('hidden');
 
             const selectedTypeId = typeSelect ? typeSelect.value : null;
@@ -929,23 +1212,35 @@
         const gradeSelect = document.getElementById('gradeSelect');
         if (!gradeSelect) return;
 
-        // Check if selected type is Mutasi Masuk / Pindahan
-        const typeObj = typesData.find(t => t.id == selectedTypeId) || ((unit && unit.types) ? unit.types.find(t => t.id == selectedTypeId) : null);
-        const typeName = typeObj ? (typeObj.name || '').toLowerCase() : '';
-        const isTransfer = typeName.includes('mutasi') || typeName.includes('pindah');
+        const classProgramSelect = document.getElementById('classProgramSelect');
+        const waveSelect = document.getElementById('waveSelect');
+        const periodSelect = document.getElementById('periodSelect');
+
+        const typeId = selectedTypeId || (document.getElementById('typeSelect') ? document.getElementById('typeSelect').value : null);
+        const classProgramId = classProgramSelect ? classProgramSelect.value : null;
+        const waveId = waveSelect ? waveSelect.value : null;
+        const periodId = periodSelect ? periodSelect.value : null;
 
         gradeSelect.innerHTML = '<option value="">Pilih Tingkatan...</option>';
-        let availableGrades = (unit && unit.grades) ? unit.grades : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+        let allUnitGrades = (unit && unit.grades) ? unit.grades : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
         
-        if (!isTransfer) {
-            // Jalur Murid Baru -> hanya tingkatan kelas awal
-            if (unitCode === 'SD') {
-                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 1') || g.name.trim() === '1');
-            } else if (unitCode === 'SMP') {
-                availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 7') || g.name.trim() === '7');
+        // Filter with isGradeEligible
+        let availableGrades = allUnitGrades.filter(g => isGradeEligible(g, typeId, classProgramId, waveId, periodId));
+
+        // Fallback if dynamic targeting is completely unset for all unit grades
+        const anyConfigured = allUnitGrades.some(g => Array.isArray(g.applicable_types) && g.applicable_types.length > 0);
+        if (!anyConfigured && typeId) {
+            const typeObj = typesData.find(t => t.id == typeId) || ((unit && unit.types) ? unit.types.find(t => t.id == typeId) : null);
+            const typeName = typeObj ? (typeObj.name || '').toLowerCase() : '';
+            const isTransfer = typeName.includes('mutasi') || typeName.includes('pindah');
+            if (!isTransfer) {
+                if (unitCode === 'SD') {
+                    availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 1') || g.name.trim() === '1');
+                } else if (unitCode === 'SMP') {
+                    availableGrades = availableGrades.filter(g => g.name.toLowerCase().includes('kelas 7') || g.name.trim() === '7');
+                }
             }
         }
-        // Jalur Mutasi Masuk / Pindahan -> seluruh tingkatan kelas SD (1-6) / SMP (7-9) dapat dipilih
 
         availableGrades.forEach(g => {
             const opt = document.createElement('option');
@@ -962,7 +1257,7 @@
                 gradeSelect.selectedIndex = 1;
             }
         } else {
-            gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan aktif</option>';
+            gradeSelect.innerHTML = '<option value="">Tidak ada tingkatan yang sesuai kriteria</option>';
             gradeSelect.disabled = true;
         }
         handleStandardGradeChange();
@@ -982,19 +1277,31 @@
         populateUnitOptions(unitId, gradeId);
     }
     
-    // Listener saat jalur diubah
-    var typeSelectElem = document.getElementById('typeSelect');
-    if (typeSelectElem) {
-        typeSelectElem.addEventListener('change', function() {
-            const hiddenUnitInput = document.getElementById('hiddenUnitInput');
-            const unitId = hiddenUnitInput ? hiddenUnitInput.value : '';
-            const unit = unitsData.find(u => u.id == unitId);
-            const unitCode = unit ? (unit.code || '').toUpperCase() : '';
-            if (unitCode !== 'PAUD') {
-                updateStandardGrades(unitId, this.value);
-            }
-        });
+    // Dynamic refresh when criteria dropdowns change
+    function triggerGradeRefresh() {
+        const hiddenUnitInput = document.getElementById('hiddenUnitInput');
+        const unitId = hiddenUnitInput ? hiddenUnitInput.value : '';
+        const unit = unitsData.find(u => u.id == unitId);
+        const unitGrades = (unit && unit.grades && unit.grades.length > 0)
+            ? unit.grades
+            : gradesData.filter(g => g.spmb_unit_id == unitId && (g.is_active === undefined || g.is_active == 1 || g.is_active == true));
+        const hasSubUnits = unitGrades.some(g => g.sub_unit && g.sub_unit.trim() !== '');
+
+        if (hasSubUnits) {
+            const currentGradeVal = document.getElementById('subUnitGradeSelect') ? document.getElementById('subUnitGradeSelect').value : null;
+            handleSubUnitChange(currentGradeVal);
+        } else {
+            const currentGradeVal = document.getElementById('gradeSelect') ? document.getElementById('gradeSelect').value : null;
+            updateStandardGrades(unitId, document.getElementById('typeSelect') ? document.getElementById('typeSelect').value : null, currentGradeVal);
+        }
     }
+
+    ['typeSelect', 'classProgramSelect', 'waveSelect', 'periodSelect'].forEach(selectId => {
+        const elem = document.getElementById(selectId);
+        if (elem) {
+            elem.addEventListener('change', triggerGradeRefresh);
+        }
+    });
 
     // Listener saat unit diubah
     var unitSelectElem = document.getElementById('unitSelect');

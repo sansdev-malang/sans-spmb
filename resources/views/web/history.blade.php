@@ -62,6 +62,10 @@
                                 <span class="font-bold text-xs leading-snug {{ $isActiveTab ? 'text-white' : 'text-slate-900 dark:text-white' }}">{{ $regItem->candidate_name }}</span>
                                 <div class="flex items-center gap-1.5 text-[10px] mt-0.5 {{ $isActiveTab ? 'text-emerald-100' : 'text-slate-400' }}">
                                     <span>{{ $regItem->unit?->code }}</span>
+                                    @if($regItem->sub_unit_display_name)
+                                        <span>•</span>
+                                        <span class="font-bold {{ $isActiveTab ? 'text-white' : 'text-emerald-600 dark:text-emerald-400' }}">{{ $regItem->sub_unit_display_name }}</span>
+                                    @endif
                                     <span>•</span>
                                     <span>{{ $regItem->id_label }}</span>
                                 </div>
@@ -148,7 +152,13 @@
                             {{ strtoupper(substr(trim($reg->candidate_name ?? 'A'), 0, 1)) }}
                         </div>
                         <div class="space-y-1 min-w-0">
-                            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block leading-none">Calon Murid Baru</span>
+                            <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                <span class="text-brand-emerald dark:text-emerald-400">{{ $reg->unit?->name }}</span>
+                                @if($reg->sub_unit_display_name)
+                                    <span>•</span>
+                                    <span class="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 text-[10px] font-extrabold">{{ $reg->sub_unit_display_name }}</span>
+                                @endif
+                            </div>
                             <div class="flex items-center gap-2.5 flex-wrap">
                                 <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">{{ $reg->candidate_name }}</h3>
                                 <span class="text-xs font-mono font-extrabold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 inline-flex items-center gap-1.5 shadow-2xs">
@@ -217,10 +227,7 @@
                         <div class="min-w-0 flex-1">
                             <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block leading-none">Jenjang & Kelas</span>
                             <span class="font-bold text-slate-900 dark:text-white truncate block text-xs sm:text-sm mt-1">
-                                {{ $reg->grade?->name ?? ($reg->admission_level ?? '-') }} ({{ $reg->classProgram?->name ?? 'Reguler' }})
-                                @if($reg->extraServices && $reg->extraServices->isNotEmpty())
-                                    <span class="text-amber-600 dark:text-amber-400 font-bold text-xs">• {{ $reg->extraServices->pluck('name')->join(', ') }}</span>
-                                @endif
+                                {{ $reg->class_display_name }} ({{ $reg->classProgram?->name ?? 'Reguler' }})
                             </span>
                         </div>
                     </div>

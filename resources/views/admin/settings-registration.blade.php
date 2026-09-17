@@ -225,10 +225,10 @@
                         {{ $selectedUnit->code }}
                     </span>
                 </div>
-                <p class="text-[10px] text-slate-400">Aktifkan unit sekolah, tingkatan kelas per jenjang, serta layanan non-formal tambahan untuk unit <strong>{{ $selectedUnit->name }}</strong>.</p>
+                <p class="text-[10px] text-slate-400">Aktifkan unit sekolah, sub-unit, tingkatan kelas per jenjang, serta layanan non-formal tambahan untuk unit <strong>{{ $selectedUnit->name }}</strong>.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 {{ $subUnitData->isNotEmpty() ? 'lg:grid-cols-4' : 'lg:grid-cols-3' }} gap-6">
                 <!-- Card 5: Status Unit Pendidikan -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
                     <div class="space-y-2">
@@ -260,6 +260,58 @@
                     </div>
                 </div>
 
+                @if($subUnitData->isNotEmpty())
+                    <!-- Card Sub-Unit: Aktivasi Sub-Unit Pendidikan -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-brand-emerald font-extrabold text-xs border-b border-slate-100 pb-2">
+                                <i data-lucide="shapes" class="w-4 h-4"></i>
+                                <h3>Aktivasi Sub-Unit</h3>
+                            </div>
+                            <p class="text-[10px] text-slate-400 leading-relaxed font-medium">Buka atau tutup pendaftaran untuk sub-unit di bawah {{ $selectedUnit->name }}.</p>
+                        </div>
+                        
+                        <div class="space-y-2.5 pt-2 max-h-[250px] overflow-y-auto pr-1">
+                            @foreach($subUnitData as $su)
+                                @php
+                                    $suTheme = match(strtolower($su->name)) {
+                                        'playgroup', 'kb' => ['dot' => 'bg-sky-500', 'badge' => 'bg-sky-50 text-sky-700 border-sky-200/80'],
+                                        'tk' => ['dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200/80'],
+                                        'daycare', 'tpa' => ['dot' => 'bg-amber-500', 'badge' => 'bg-amber-50 text-amber-700 border-amber-200/80'],
+                                        default => ['dot' => 'bg-indigo-500', 'badge' => 'bg-indigo-50 text-indigo-700 border-indigo-200/80']
+                                    };
+                                @endphp
+                                <label class="flex items-center justify-between p-3 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-75 has-[:checked]:opacity-100 hover:opacity-100 bg-slate-50/40">
+                                    <div class="space-y-0.5">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full {{ $suTheme['dot'] }}"></span>
+                                            <span class="text-xs font-extrabold text-slate-800">{{ $su->name }}</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 font-semibold block sub-unit-counter" data-sub-unit="{{ $su->name }}">
+                                            {{ $su->active_count }}/{{ $su->total_count }} kelas aktif
+                                        </span>
+                                    </div>
+                                    <div class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" 
+                                               data-sub-unit-toggle="{{ $su->name }}" 
+                                               onchange="toggleSubUnit('{{ $su->name }}', this.checked)" 
+                                               {{ $su->is_active ? 'checked' : '' }} 
+                                               class="sr-only peer">
+                                        <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-150/70 text-[10px] text-slate-500 space-y-0.5">
+                            <div class="font-bold text-slate-700 flex items-center gap-1">
+                                <i data-lucide="info" class="w-3 h-3 text-brand-emerald"></i> Info Sub-Unit
+                            </div>
+                            <p class="leading-relaxed">Menonaktifkan sub-unit akan otomatis menonaktifkan seluruh tingkatan kelas di dalamnya.</p>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Card 6: Tingkatan Kelas Unit -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-4 flex flex-col justify-between">
                     <div class="space-y-2">
@@ -272,13 +324,34 @@
                     
                     <div class="space-y-2 pt-2 max-h-[250px] overflow-y-auto pr-1">
                         @forelse($grades as $grade)
+                            @php
+                                $gradeSuTheme = match(strtolower($grade->sub_unit ?? '')) {
+                                    'playgroup', 'kb' => 'bg-sky-50 text-sky-700 border-sky-200/80',
+                                    'tk' => 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+                                    'daycare', 'tpa' => 'bg-amber-50 text-amber-700 border-amber-200/80',
+                                    default => 'bg-slate-100 text-slate-600 border-slate-200'
+                                };
+                            @endphp
                             <label class="flex items-center justify-between p-2.5 rounded-xl border border-slate-150 hover:bg-slate-50/50 cursor-pointer transition opacity-55 has-[:checked]:opacity-100 hover:opacity-85">
                                 <div>
-                                    <span class="text-xs font-bold text-slate-700 block">{{ $grade->name }}</span>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-xs font-bold text-slate-700">{{ $grade->name }}</span>
+                                        @if($grade->sub_unit)
+                                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border {{ $gradeSuTheme }}">
+                                                {{ $grade->sub_unit }}
+                                            </span>
+                                        @endif
+                                    </div>
                                     <span class="text-[9px] text-slate-400 font-semibold">{{ $selectedUnit->name }}</span>
                                 </div>
                                 <div class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="active_grades[]" value="{{ $grade->id }}" {{ $grade->is_active ? 'checked' : '' }} class="sr-only peer">
+                                    <input type="checkbox" 
+                                           name="active_grades[]" 
+                                           value="{{ $grade->id }}" 
+                                           data-sub-unit="{{ $grade->sub_unit ?? '' }}" 
+                                           onchange="syncGradeToSubUnit(this)" 
+                                           {{ $grade->is_active ? 'checked' : '' }} 
+                                           class="sr-only peer grade-checkbox">
                                     <div class="w-9 h-5 bg-slate-200 rounded-full transition-all peer-checked-emerald after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
                                 </div>
                             </label>
@@ -474,6 +547,43 @@
             localStorage.setItem('spmb_activation_active_tab', tabId);
         }
         window.switchActivationTab = switchActivationTab;
+
+        function toggleSubUnit(subUnitName, isChecked) {
+            const gradeCheckboxes = document.querySelectorAll(`input.grade-checkbox[data-sub-unit="${subUnitName}"]`);
+            gradeCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSubUnitCounter(subUnitName);
+        }
+        window.toggleSubUnit = toggleSubUnit;
+
+        function syncGradeToSubUnit(gradeEl) {
+            const subUnitName = gradeEl.getAttribute('data-sub-unit');
+            if (!subUnitName) return;
+            
+            const gradeCheckboxes = document.querySelectorAll(`input.grade-checkbox[data-sub-unit="${subUnitName}"]`);
+            const activeCount = Array.from(gradeCheckboxes).filter(cb => cb.checked).length;
+            
+            const toggleEl = document.querySelector(`input[data-sub-unit-toggle="${subUnitName}"]`);
+            if (toggleEl) {
+                toggleEl.checked = activeCount > 0;
+            }
+            
+            updateSubUnitCounter(subUnitName);
+        }
+        window.syncGradeToSubUnit = syncGradeToSubUnit;
+
+        function updateSubUnitCounter(subUnitName) {
+            const gradeCheckboxes = document.querySelectorAll(`input.grade-checkbox[data-sub-unit="${subUnitName}"]`);
+            const activeCount = Array.from(gradeCheckboxes).filter(cb => cb.checked).length;
+            const totalCount = gradeCheckboxes.length;
+            
+            const counterEl = document.querySelector(`.sub-unit-counter[data-sub-unit="${subUnitName}"]`);
+            if (counterEl) {
+                counterEl.textContent = `${activeCount}/${totalCount} kelas aktif`;
+            }
+        }
+        window.updateSubUnitCounter = updateSubUnitCounter;
 
         (function() {
             const urlParams = new URLSearchParams(window.location.search);

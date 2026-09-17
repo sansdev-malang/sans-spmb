@@ -492,14 +492,33 @@ class Registration extends Model
             })
             ->get();
 
+        // Fallback: If no active fee found, search fees without is_active filter
+        if ($fees->isEmpty()) {
+            $fees = SpmbFee::where(function($q) {
+                    $q->where('spmb_unit_id', $this->spmb_unit_id)
+                      ->orWhereNull('spmb_unit_id');
+                })
+                ->where(function($q) use ($regCatIds) {
+                    if (!empty($regCatIds)) {
+                        $q->whereIn('spmb_fee_category_id', $regCatIds);
+                    }
+                    $q->orWhere('name', 'like', '%Formulir%')
+                      ->orWhere('name', 'like', '%Pendaftaran%')
+                      ->orWhere('name', 'like', '%Registrasi%')
+                      ->orWhere('name', 'like', '%Enrollment%')
+                      ->orWhere('name', 'like', '%Registration%');
+                })
+                ->get();
+        }
+
         // 1. Resolve Base Enrollment Fee
-        $isPureTpaGrade = str_contains($gradeName, 'tpa') || in_array($this->spmb_grade_id, [13, 15]);
+        $isPureTpaGrade = str_contains($gradeName, 'tpa') || str_contains($gradeName, 'daycare') || in_array($this->spmb_grade_id, [13, 15, 16, 17]);
 
         $baseFees = $fees->filter(function($f) use ($isPureTpaGrade) {
             if ($isPureTpaGrade) {
-                return str_contains(strtolower($f->name), 'tpa');
+                return str_contains(strtolower($f->name), 'tpa') || str_contains(strtolower($f->name), 'daycare');
             }
-            return !str_contains(strtolower($f->name), 'tpa') && !str_contains(strtolower($f->name), 'tpq');
+            return !str_contains(strtolower($f->name), 'tpa') && !str_contains(strtolower($f->name), 'tpq') && !str_contains(strtolower($f->name), 'daycare');
         });
         if ($baseFees->isEmpty()) {
             $baseFees = $fees;
@@ -528,9 +547,10 @@ class Registration extends Model
             $gateways = $itemGateways;
         } else {
             $fallbackAmt = ($this->unit && !empty($this->unit->registration_fee)) ? (float)$this->unit->registration_fee : 300000.0;
+            $fallbackName = ($this->unit && !empty($this->unit->code)) ? ('Enrollment Fee ' . $this->unit->code) : 'Biaya Pendaftaran';
             $items[] = [
                 'id' => null,
-                'name' => 'Formulir Pendaftaran ' . ($this->unit->name ?? ''),
+                'name' => $fallbackName,
                 'amount' => $fallbackAmt,
                 'gateways' => ['winpay']
             ];
@@ -545,13 +565,43 @@ class Registration extends Model
         });
 
         if ($hasTpaExtra && (!isset($baseFee) || !str_contains(strtolower($baseFee->name), 'tpa'))) {
-            $tpaFee = SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
-                ->where('is_active', true)
-                ->where(function($q) {
-                    $q->where('name', 'like', '%Enrollment%TPA%')
-                      ->orWhere('name', 'like', '%Pendaftaran%TPA%')
-                      ->orWhere('name', 'like', '%Formulir%TPA%');
-                })->first();
+            $subUnit = strtolower($this->grade->sub_unit ?? '');
+            $gName = strtolower($this->grade->name ?? '');
+            $targetDaycareGradeId = null;
+            if (str_contains($subUnit, 'playgroup') || str_contains($gName, 'kb')) {
+                $targetDaycareGradeId = 16; // TPA 2
+            } elseif (str_contains($subUnit, 'tk') || str_contains($gName, 'tk')) {
+                $targetDaycareGradeId = 17; // TPA 3
+            }
+
+            $tpaFee = null;
+            if ($targetDaycareGradeId) {
+                $dummyTpaReg = clone $this;
+                $dummyTpaReg->spmb_grade_id = $targetDaycareGradeId;
+                $tpaFee = SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
+                    ->where('is_active', true)
+                    ->get()
+                    ->first(function($fee) use ($dummyTpaReg) {
+                        return $fee->matchesRegistration($dummyTpaReg);
+                    });
+            }
+
+            if (!$tpaFee) {
+                $tpaFee = SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
+                    ->where('is_active', true)
+                    ->where(function($q) {
+                        $q->where('name', 'like', '%Enrollment%TPA%')
+                          ->orWhere('name', 'like', '%Pendaftaran%TPA%')
+                          ->orWhere('name', 'like', '%Formulir%TPA%')
+                          ->orWhere('name', 'like', '%TPA%');
+                    })->first() ?: SpmbFee::where('spmb_unit_id', $this->spmb_unit_id)
+                    ->where(function($q) {
+                        $q->where('name', 'like', '%Enrollment%TPA%')
+                          ->orWhere('name', 'like', '%Pendaftaran%TPA%')
+                          ->orWhere('name', 'like', '%Formulir%TPA%')
+                          ->orWhere('name', 'like', '%TPA%');
+                    })->first();
+            }
 
             if ($tpaFee) {
                 $tpaGateways = is_array($tpaFee->payment_gateway) ? $tpaFee->payment_gateway : [$tpaFee->payment_gateway];
@@ -566,9 +616,19 @@ class Registration extends Model
             }
         }
 
-        $feeName = (count($items) > 1)
-            ? 'Pendaftaran & Daycare (' . ($this->grade->name ?? $this->admission_level ?? 'PAUD') . ')'
-            : ($items[0]['name'] ?? 'Formulir Pendaftaran');
+        if (count($items) > 1) {
+            $subUnitName = $this->grade->sub_unit ?? ($this->unit->code ?? 'PAUD');
+            $daycareGradeName = '';
+            $gradeNameLower = strtolower($this->grade->name ?? '');
+            if (str_contains(strtolower($subUnitName), 'playgroup') || str_contains($gradeNameLower, 'kb')) {
+                $daycareGradeName = 'TPA 2';
+            } elseif (str_contains(strtolower($subUnitName), 'tk') || str_contains($gradeNameLower, 'tk')) {
+                $daycareGradeName = 'TPA 3';
+            }
+            $feeName = $subUnitName . ' + Layanan Daycare' . ($daycareGradeName ? " ({$daycareGradeName})" : '');
+        } else {
+            $feeName = $items[0]['name'] ?? 'Biaya Pendaftaran';
+        }
 
         return [
             'id' => $baseFee->id ?? null,
@@ -605,6 +665,84 @@ class Registration extends Model
             return $fee->name;
         }
         return 'Formulir Pendaftaran ' . ($this->unit->code ?? $this->unit->name ?? '');
+    }
+
+    /**
+     * Get resolved sub unit display name for this registration
+     * Examples: 'Playgroup + Daycare', 'TK + Daycare', 'Playgroup', 'TK', 'Daycare', or null (if SD/SMP)
+     */
+    public function getSubUnitDisplayNameAttribute(): ?string
+    {
+        $primarySubUnit = trim($this->grade->sub_unit ?? '');
+        if (empty($primarySubUnit) || $primarySubUnit === '-') {
+            return null;
+        }
+
+        $hasTpaExtra = $this->relationLoaded('extraServices')
+            ? $this->extraServices->contains(function($es) {
+                $n = strtolower($es->name ?? '');
+                $c = strtoupper($es->code ?? '');
+                return str_contains($n, 'tpa') || str_contains($n, 'penitipan') || str_contains($n, 'daycare') || $c === 'TPA';
+            })
+            : $this->extraServices()->where(function($q) {
+                $q->where('name', 'like', '%tpa%')
+                  ->orWhere('name', 'like', '%daycare%')
+                  ->orWhere('name', 'like', '%penitipan%')
+                  ->orWhere('code', 'TPA');
+            })->exists();
+
+        if ($hasTpaExtra && !str_contains(strtolower($primarySubUnit), 'daycare') && !str_contains(strtolower($primarySubUnit), 'tpa')) {
+            return $primarySubUnit . ' + Daycare';
+        }
+
+        return $primarySubUnit;
+    }
+
+    /**
+     * Get resolved full grade/class display name for this registration (supporting multi-class like KB A & TPA 2)
+     * Examples: 'KB A & TPA 2', 'KB B & TPA 2', 'TK A & TPA 3', 'TK B & TPA 3', 'KB A', 'TK A', 'TPA 2', 'Kelas 1', 'Kelas 7'
+     */
+    public function getClassDisplayNameAttribute(): string
+    {
+        $primaryGrade = $this->grade->name ?? ($this->admission_level ?: '-');
+        
+        $hasTpaExtra = $this->relationLoaded('extraServices')
+            ? $this->extraServices->contains(function($es) {
+                $n = strtolower($es->name ?? '');
+                $c = strtoupper($es->code ?? '');
+                return str_contains($n, 'tpa') || str_contains($n, 'penitipan') || str_contains($n, 'daycare') || $c === 'TPA';
+            })
+            : $this->extraServices()->where(function($q) {
+                $q->where('name', 'like', '%tpa%')
+                  ->orWhere('name', 'like', '%daycare%')
+                  ->orWhere('name', 'like', '%penitipan%')
+                  ->orWhere('code', 'TPA');
+            })->exists();
+
+        if ($hasTpaExtra && !str_contains(strtolower($primaryGrade), 'tpa') && !str_contains(strtolower($primaryGrade), 'daycare')) {
+            $subUnit = strtolower($this->grade->sub_unit ?? '');
+            $gName = strtolower($primaryGrade);
+            $daycareGradeName = 'TPA 2';
+            if (str_contains($subUnit, 'tk') || str_contains($gName, 'tk')) {
+                $daycareGradeName = 'TPA 3';
+            }
+            return $primaryGrade . ' & ' . $daycareGradeName;
+        }
+
+        return $primaryGrade;
+    }
+
+    /**
+     * Get non-formal extra services (excluding academic Daycare / TPA which is already represented in grade/subunit)
+     */
+    public function getNonFormalServicesAttribute()
+    {
+        $services = $this->relationLoaded('extraServices') ? $this->extraServices : $this->extraServices()->get();
+        return $services->filter(function($es) {
+            $n = strtolower($es->name ?? '');
+            $c = strtoupper($es->code ?? '');
+            return !str_contains($n, 'tpa') && !str_contains($n, 'daycare') && !str_contains($n, 'penitipan') && $c !== 'TPA';
+        });
     }
 
     /**

@@ -45,6 +45,7 @@ class SpmbFormStepAndFieldSeeder extends Seeder
             ['form_step_id' => 1, 'label' => 'Tempat Lahir', 'field_name' => 'birth_place', 'type' => 'text', 'options' => null, 'is_required' => 1, 'order' => 7],
             ['form_step_id' => 1, 'label' => 'Tanggal Lahir', 'field_name' => 'birth_date', 'type' => 'date', 'options' => null, 'is_required' => 1, 'order' => 8],
             ['form_step_id' => 1, 'label' => 'Asal Sekolah', 'field_name' => 'previous_school', 'type' => 'text', 'options' => null, 'is_required' => 0, 'order' => 9],
+            ['form_step_id' => 1, 'label' => 'Layanan Tambahan / Non-Formal (Opsional)', 'field_name' => 'extra_services', 'type' => 'checkbox', 'options' => null, 'is_required' => 0, 'order' => 10],
 
             // STEP 2: Tempat Tinggal
             ['form_step_id' => 2, 'label' => 'Provinsi', 'field_name' => 'province', 'type' => 'select', 'options' => null, 'is_required' => 1, 'order' => 1],

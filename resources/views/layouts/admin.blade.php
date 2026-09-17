@@ -620,10 +620,10 @@
                     <a href="{{ route('admin.spmb-settings.registration') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.registration') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                         <i data-lucide="toggle-left" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Aktivasi SPMB</span>
                     </a>
+                    <a href="{{ route('admin.spmb-settings.units-grades') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.units-grades') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Struktur Sekolah</span>
+                    </a>
                     @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.spmb-settings.units-grades') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.units-grades') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Struktur Sekolah</span>
-                        </a>
                         <a href="{{ route('admin.spmb-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                             <i data-lucide="git-branch" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Jalur & Gelombang</span>
                         </a>

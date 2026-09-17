@@ -304,8 +304,8 @@
                             </td>
                             <!-- Unit & Jenjang -->
                             <td class="py-4 px-6">
-                                <span class="font-bold text-slate-800 dark:text-white block text-xs">{{ $cand->unit?->name }}</span>
-                                <span class="text-[11px] text-slate-400 dark:text-slate-500">{{ $cand->grade?->name ?: ($cand->admission_level ?? '-') }} ({{ $cand->classProgram?->name ?? 'Reguler' }})</span>
+                                <span class="font-bold text-slate-800 dark:text-white block text-xs">{{ $cand->unit?->name }}@if($cand->sub_unit_display_name) <span class="text-emerald-600 font-semibold">({{ $cand->sub_unit_display_name }})</span>@endif</span>
+                                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{{ $cand->class_display_name }} ({{ $cand->classProgram?->name ?? 'Reguler' }})</span>
                             </td>
                             <td class="py-4 px-6">
                                 <span class="px-2 py-1.5 rounded-xl text-xs font-extrabold border {{ $currentStageColor }}">
@@ -332,8 +332,9 @@
                                         'birth_date' => $cand->birth_date ? $cand->birth_date->format('d F Y') : '-',
                                         'religion' => $cand->religion ?? '-',
                                         'previous_school' => $cand->previous_school ?? 'Tidak ada',
-                                        'admission_level' => $cand->admission_level ?? '-',
+                                        'admission_level' => $cand->class_display_name ?: ($cand->admission_level ?? '-'),
                                         'class_program' => $cand->classProgram->name ?? 'Reguler',
+                                        'sub_unit_name' => $cand->sub_unit_display_name,
                                         
                                         // Tempat Tinggal
                                         'address' => $cand->getFieldValue('address') ?? '-',

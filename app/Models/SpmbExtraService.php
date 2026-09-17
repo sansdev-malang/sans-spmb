@@ -8,6 +8,15 @@ class SpmbExtraService extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'applicable_types' => 'array',
+        'applicable_class_programs' => 'array',
+        'applicable_waves' => 'array',
+        'applicable_periods' => 'array',
+        'applicable_grades' => 'array',
+    ];
+
     /**
      * Get the unit associated with the extra service (nullable for general/all units).
      */
@@ -46,5 +55,44 @@ class SpmbExtraService extends Model
                     });
                 });
             });
+    }
+
+    /**
+     * Check if this extra service is eligible for the given criteria (Type, Class Program, Wave, Period, Grade).
+     * If an applicable array is null or empty, it matches all.
+     */
+    public function matchesEligibility($typeId = null, $classProgramId = null, $waveId = null, $periodId = null, $gradeId = null): bool
+    {
+        if ($typeId !== null && !empty($this->applicable_types)) {
+            if (!in_array((int)$typeId, array_map('intval', (array)$this->applicable_types))) {
+                return false;
+            }
+        }
+
+        if ($classProgramId !== null && !empty($this->applicable_class_programs)) {
+            if (!in_array((int)$classProgramId, array_map('intval', (array)$this->applicable_class_programs))) {
+                return false;
+            }
+        }
+
+        if ($waveId !== null && !empty($this->applicable_waves)) {
+            if (!in_array((int)$waveId, array_map('intval', (array)$this->applicable_waves))) {
+                return false;
+            }
+        }
+
+        if ($periodId !== null && !empty($this->applicable_periods)) {
+            if (!in_array((int)$periodId, array_map('intval', (array)$this->applicable_periods))) {
+                return false;
+            }
+        }
+
+        if ($gradeId !== null && !empty($this->applicable_grades)) {
+            if (!in_array((int)$gradeId, array_map('intval', (array)$this->applicable_grades))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

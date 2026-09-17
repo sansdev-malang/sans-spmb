@@ -96,6 +96,21 @@ class SpmbRegistrationSettingsController extends Controller
         // Load Grades for this specific unit
         $grades = SpmbGrade::where('spmb_unit_id', $selectedUnitId)->orderBy('id', 'asc')->get();
 
+        // Extract Sub-Units if this unit has grades with sub_unit
+        $subUnits = $grades->whereNotNull('sub_unit')->pluck('sub_unit')->unique()->values();
+        $subUnitData = $subUnits->map(function($su) use ($grades) {
+            $suGrades = $grades->where('sub_unit', $su);
+            $activeCount = $suGrades->where('is_active', true)->count();
+            $totalCount = $suGrades->count();
+            return (object) [
+                'name' => $su,
+                'is_active' => $activeCount > 0,
+                'active_count' => $activeCount,
+                'total_count' => $totalCount,
+                'grade_ids' => $suGrades->pluck('id')->toArray(),
+            ];
+        });
+
         // Load Fee Categories & Fee items for this specific unit
         $feeCategories = \App\Models\SpmbFeeCategory::with(['fees' => function($q) use ($selectedUnitId) {
             $q->where('spmb_unit_id', $selectedUnitId)->with('unit');
@@ -106,7 +121,7 @@ class SpmbRegistrationSettingsController extends Controller
         return view('admin.settings-registration', compact(
             'periods', 'waves', 'types', 'feeCategories',
             'units', 'selectedUnit', 'selectedUnitId', 'isSuperAdmin',
-            'grades', 'classPrograms', 'extraServices', 'gateways'
+            'grades', 'classPrograms', 'extraServices', 'gateways', 'subUnitData'
         ));
     }
 

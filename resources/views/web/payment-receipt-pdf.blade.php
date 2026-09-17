@@ -368,7 +368,7 @@
                 <td style="width: 50%;">
                     <span class="label">Unit Pendidikan</span>
                     <span class="value">
-                        {{ $registration->unit->name ?? '-' }}@if(!empty($registration->grade->name)) ({{ $registration->grade->name }})@endif
+                        {{ $registration->unit->name ?? '-' }}@if(!empty($registration->sub_unit_display_name)) • {{ $registration->sub_unit_display_name }}@endif @if(!empty($registration->class_display_name)) ({{ $registration->class_display_name }})@endif
                     </span>
                 </td>
                 <td style="width: 50%;">
@@ -395,12 +395,12 @@
                     @endif
                 </td>
             </tr>
-            @if($registration->extraServices->count() > 0)
+            @if($registration->non_formal_services->isNotEmpty())
                 <tr>
                     <td colspan="2" style="padding-top: 8px;">
-                        <span class="label">Layanan Tambahan</span>
+                        <span class="label">Layanan Non-Formal</span>
                         <span class="value" style="color: #059669;">
-                            {{ $registration->extraServices->pluck('name')->implode(', ') }}
+                            {{ $registration->non_formal_services->pluck('name')->implode(', ') }}
                         </span>
                     </td>
                 </tr>

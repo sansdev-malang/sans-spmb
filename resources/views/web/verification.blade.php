@@ -73,7 +73,9 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <span class="text-[10px] text-white/60 font-semibold block leading-none">Unit Sekolah</span>
-                            <span class="font-bold text-emerald-300 truncate block text-xs mt-1">{{ $registration->unit?->name ?? '-' }}</span>
+                            <span class="font-bold text-emerald-300 truncate block text-xs mt-1">
+                                {{ $registration->unit?->name ?? '-' }}@if($registration->sub_unit_display_name) <span class="text-emerald-200 font-normal">({{ $registration->sub_unit_display_name }})</span>@endif
+                            </span>
                         </div>
                     </div>
 
@@ -84,7 +86,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <span class="text-[10px] text-white/60 font-semibold block leading-none">Kelas & Kategori</span>
-                            <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->grade?->name ?? '-' }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
+                            <span class="font-bold text-white truncate block text-xs mt-1">{{ $registration->class_display_name }} ({{ $registration->classProgram?->name ?? 'Reguler' }})</span>
                         </div>
                     </div>
 

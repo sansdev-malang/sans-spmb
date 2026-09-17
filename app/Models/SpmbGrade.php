@@ -15,6 +15,10 @@ class SpmbGrade extends Model
         'min_age_months' => 'integer',
         'max_age_years' => 'integer',
         'max_age_months' => 'integer',
+        'applicable_types' => 'array',
+        'applicable_class_programs' => 'array',
+        'applicable_waves' => 'array',
+        'applicable_periods' => 'array',
     ];
 
     public function unit()
@@ -56,8 +60,8 @@ class SpmbGrade extends Model
             return 'Tanpa Batasan';
         }
 
-        $minStr = $hasMin ? "{$this->min_age_years} thn" . ($this->min_age_months > 0 ? " {$this->min_age_months} bln" : " 0 bln") : null;
-        $maxStr = $hasMax ? "{$this->max_age_years} thn" . ($this->max_age_months > 0 ? " {$this->max_age_months} bln" : " 0 bln") : null;
+        $minStr = $hasMin ? "{$this->min_age_years} th" . ($this->min_age_months > 0 ? " {$this->min_age_months} bln" : " 0 bln") : null;
+        $maxStr = $hasMax ? "{$this->max_age_years} th" . ($this->max_age_months > 0 ? " {$this->max_age_months} bln" : " 0 bln") : null;
 
         if ($hasMin && $hasMax) {
             return "{$minStr} - {$maxStr}";
@@ -157,5 +161,38 @@ class SpmbGrade extends Model
         }
 
         return ['valid' => true, 'message' => null, 'age' => $age];
+    }
+
+    /**
+     * Check if this grade is eligible for the given criteria (Type, Class Program, Wave, Period).
+     * If an applicable array is null or empty, it matches all.
+     */
+    public function matchesEligibility($typeId = null, $classProgramId = null, $waveId = null, $periodId = null): bool
+    {
+        if ($typeId !== null && !empty($this->applicable_types)) {
+            if (!in_array((int)$typeId, array_map('intval', (array)$this->applicable_types))) {
+                return false;
+            }
+        }
+
+        if ($classProgramId !== null && !empty($this->applicable_class_programs)) {
+            if (!in_array((int)$classProgramId, array_map('intval', (array)$this->applicable_class_programs))) {
+                return false;
+            }
+        }
+
+        if ($waveId !== null && !empty($this->applicable_waves)) {
+            if (!in_array((int)$waveId, array_map('intval', (array)$this->applicable_waves))) {
+                return false;
+            }
+        }
+
+        if ($periodId !== null && !empty($this->applicable_periods)) {
+            if (!in_array((int)$periodId, array_map('intval', (array)$this->applicable_periods))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

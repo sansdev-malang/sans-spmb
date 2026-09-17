@@ -17,6 +17,7 @@
         </div>
 
         <!-- Unit Filter Switcher -->
+        @if($isSuperAdmin)
         <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 p-1.5 rounded-2xl shadow-xs self-start md:self-auto overflow-x-auto">
             <span class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5 px-2 whitespace-nowrap">
                 <i data-lucide="filter" class="w-3.5 h-3.5 text-brand-emerald"></i>
@@ -32,6 +33,14 @@
                 </button>
             @endforeach
         </div>
+        @else
+        <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 py-2 px-3.5 rounded-2xl shadow-xs self-start md:self-auto">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-extrabold text-emerald-800">
+                Unit Pengelola: {{ $units->first()->name ?? 'Unit Saya' }}
+            </span>
+        </div>
+        @endif
     </div>
 
     @php
@@ -60,45 +69,56 @@
                     <h3 class="font-extrabold text-base text-slate-800">Unit Sekolah</h3>
                     <p class="text-[11px] text-slate-400">Kelola unit sekolah yang tersedia untuk pendaftaran (mis. SANS PAUD, SANS SD).</p>
                 </div>
+                @if($isSuperAdmin)
                 <button onclick="openUnitModal('', '', '', '', '', '1', true, '{{ route('admin.spmb-settings.units.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Unit
                 </button>
+                @endif
             </div>
             
-            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+            <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-xs">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
-                            <th class="py-4 px-6">Nama Unit</th>
-                            <th class="py-4 px-6">Kode Unit</th>
-                            <th class="py-4 px-6">No. WhatsApp Admin</th>
-                            <th class="py-4 px-6">Group WA SPMB</th>
-                            <th class="py-4 px-6 text-center">Status</th>
-                            <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
-                            <th class="py-4 px-6 text-right">Aksi</th>
+                        <tr class="border-b border-slate-100 text-[11px] text-slate-500 font-bold uppercase tracking-wider bg-slate-50/80">
+                            <th class="py-3.5 px-6 whitespace-nowrap">Nama Unit</th>
+                            <th class="py-3.5 px-6 whitespace-nowrap">Kode Unit</th>
+                            <th class="py-3.5 px-6 whitespace-nowrap">No. WhatsApp Admin</th>
+                            <th class="py-3.5 px-6 whitespace-nowrap">Group WA SPMB</th>
+                            <th class="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
+                            <th class="py-3.5 px-6 text-center whitespace-nowrap">Digunakan Transaksi</th>
+                            <th class="py-3.5 px-6 text-right whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-xs divide-y divide-slate-100">
+                    <tbody class="text-xs divide-y divide-slate-100/80">
                         @forelse($units as $unit)
-                            <tr class="unit-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $unit->id }}">
-                                <td class="py-4 px-6 font-extrabold text-slate-800">{{ $unit->name }}</td>
-                                <td class="py-4 px-6 text-slate-600 font-semibold">{{ $unit->code ?? '-' }}</td>
-                                <td class="py-4 px-6">
+                            <tr class="unit-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $unit->id }}">
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="w-2.5 h-2.5 rounded-full {{ $unit->is_active ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-slate-300' }} shrink-0"></span>
+                                        <span class="font-extrabold text-sm text-slate-800 tracking-tight">{{ $unit->name }}</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60 font-mono">
+                                        {{ $unit->code ?? '-' }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
                                     @if(!empty($unit->whatsapp_number))
                                         <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                                             <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-600"></i>
                                             <span>{{ $unit->whatsapp_number }}</span>
                                         </div>
                                         @if(!empty($unit->admin_contact_name))
-                                            <span class="text-[10px] text-slate-400 block mt-0.5">{{ $unit->admin_contact_name }}</span>
+                                            <span class="text-[10.5px] text-slate-400 block mt-0.5">{{ $unit->admin_contact_name }}</span>
                                         @endif
                                     @else
                                         <span class="text-xs text-slate-400 italic">Belum diatur</span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6">
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
                                     @if(!empty($unit->spmb_group_url))
-                                        <a href="{{ $unit->spmb_group_url }}" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition" title="Buka Link Group WA">
+                                        <a href="{{ $unit->spmb_group_url }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 transition" title="Buka Link Group WA">
                                             <i data-lucide="users" class="w-3.5 h-3.5 text-emerald-600"></i>
                                             <span>Tersedia</span>
                                             <i data-lucide="external-link" class="w-3 h-3 text-emerald-500"></i>
@@ -107,30 +127,32 @@
                                         <span class="text-xs text-slate-400 italic">Belum diatur</span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $unit->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
+                                <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-extrabold uppercase tracking-wide border {{ $unit->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $unit->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                         {{ $unit->is_active ? 'Aktif' : 'Non-Aktif' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $unit->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
+                                <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                    <span class="inline-flex min-w-24 justify-center items-center px-3 py-1.5 rounded-xl text-xs font-bold {{ $unit->registrations_count > 0 ? 'bg-slate-100 text-slate-700 border border-slate-200/60' : 'bg-slate-50 text-slate-400' }}">
                                         {{ $unit->registrations_count }} Pendaftar
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
+                                <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1.5">
                                         <button onclick="openUnitModal('{{ addslashes($unit->name) }}', '{{ addslashes($unit->code) }}', '{{ addslashes($unit->whatsapp_number ?? '') }}', '{{ addslashes($unit->admin_contact_name ?? '') }}', '{{ addslashes($unit->spmb_group_url ?? '') }}', '{{ $unit->is_active }}', false, '{{ route('admin.spmb-settings.units.update', $unit->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Unit">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
-                                        @if($unit->registrations_count > 0)
-                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Unit karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Unit">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
-                                        @else
-                                            <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.units.delete', $unit->id) }}', 'Apakah Anda yakin ingin menghapus Unit ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer" title="Hapus Unit">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
+                                        @if($isSuperAdmin)
+                                            @if($unit->registrations_count > 0)
+                                                <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Unit karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Unit">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="confirmDelete('{{ route('admin.spmb-settings.units.delete', $unit->id) }}', 'Apakah Anda yakin ingin menghapus Unit ini? Data yang terhapus tidak dapat dikembalikan.')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer" title="Hapus Unit">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
@@ -155,51 +177,137 @@
                     <h3 class="font-extrabold text-base text-slate-800">Tingkatan Kelas</h3>
                     <p class="text-[11px] text-slate-400">Kelola tingkatan kelas dan batas usia/umur untuk setiap Unit (mis. TK A, TK B, Kelas 1).</p>
                 </div>
-                <button onclick="openGradeModal('', window.currentUnitFilter || '', '', '0', '', '0', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                <button onclick="openGradeModal('', window.currentUnitFilter || '', '', '', '0', '', '0', '', '1', true, '{{ route('admin.spmb-settings.grades.store') }}', [], [], [], [])" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Tingkatan
                 </button>
             </div>
             
-            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+            <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-xs">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
-                            <th class="py-4 px-6">Tingkatan (Grade)</th>
-                            <th class="py-4 px-6">Unit Asal</th>
-                            <th class="py-4 px-6">Batas Usia / Umur</th>
-                            <th class="py-4 px-6 text-center">Status</th>
-                            <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
-                            <th class="py-4 px-6 text-right">Aksi</th>
+                        <tr class="border-b border-slate-100 text-[11px] text-slate-500 font-bold uppercase tracking-wider bg-slate-50/80">
+                            <th class="py-3.5 px-6 whitespace-nowrap">Tingkatan (Grade)</th>
+                            <th class="py-3.5 px-6 whitespace-nowrap">Sub-Unit</th>
+                            <th class="py-3.5 px-6 whitespace-nowrap">Unit Asal</th>
+                            <th class="py-3.5 px-6 whitespace-nowrap">Kriteria Keterbukaan</th>
+                            <th class="py-3.5 px-6 whitespace-nowrap">Batas Usia / Umur</th>
+                            <th class="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
+                            <th class="py-3.5 px-6 text-center whitespace-nowrap">Digunakan Transaksi</th>
+                            <th class="py-3.5 px-6 text-right whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-xs divide-y divide-slate-100">
+                    <tbody class="text-xs divide-y divide-slate-100/80">
                         @forelse($grades as $grade)
-                            <tr class="grade-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $grade->spmb_unit_id }}">
-                                <td class="py-4 px-6 font-extrabold text-slate-800">{{ $grade->name }}</td>
-                                <td class="py-4 px-6 text-slate-600 font-semibold">{{ $grade->unit->name ?? '-' }}</td>
-                                <td class="py-4 px-6">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold {{ $grade->min_age_years !== null || $grade->max_age_years !== null ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-500' }}">
-                                        <i data-lucide="clock" class="w-3 h-3 text-brand-emerald"></i>
-                                        {{ $grade->age_range_label }}
-                                    </span>
-                                    @if(!empty($grade->age_notes))
-                                        <p class="text-[10px] text-slate-400 mt-0.5">{{ $grade->age_notes }}</p>
+                            <tr class="grade-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $grade->spmb_unit_id }}">
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="w-2.5 h-2.5 rounded-full {{ $grade->is_active ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-slate-300' }} shrink-0"></span>
+                                        <span class="font-extrabold text-sm text-slate-800 tracking-tight">{{ $grade->name }}</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                    @if($grade->sub_unit)
+                                        @php
+                                            $subLower = strtolower($grade->sub_unit);
+                                            $subBadgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
+                                            if (str_contains($subLower, 'playgroup') || str_contains($subLower, 'kb')) {
+                                                $subBadgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                                            } elseif (str_contains($subLower, 'tk') || str_contains($subLower, 'kanak')) {
+                                                $subBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                            } elseif (str_contains($subLower, 'daycare') || str_contains($subLower, 'tpa')) {
+                                                $subBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
+                                            }
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border {{ $subBadgeClass }}">
+                                            {{ $grade->sub_unit }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-300 dark:text-slate-600 text-xs font-medium">-</span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $grade->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                                        {{ $grade->unit->name ?? '-' }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 align-middle">
+                                    <div class="space-y-1.5 min-w-[210px] max-w-[280px]">
+                                        {{-- Jalur --}}
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase w-13 shrink-0">Jalur:</span>
+                                            @if(empty($grade->applicable_types))
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 whitespace-nowrap">Semua Jalur</span>
+                                            @else
+                                                @php
+                                                    $targetTypes = $types->whereIn('id', (array)$grade->applicable_types)->pluck('name')->implode(', ');
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80 whitespace-nowrap truncate max-w-[150px]" title="{{ $targetTypes }}">
+                                                    {{ \Illuminate\Support\Str::limit($targetTypes, 22) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        {{-- Kategori --}}
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] font-bold text-slate-400 uppercase w-13 shrink-0">Kategori:</span>
+                                            @if(empty($grade->applicable_class_programs))
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/80 whitespace-nowrap">Semua Kategori</span>
+                                            @else
+                                                @php
+                                                    $targetProgs = $classPrograms->whereIn('id', (array)$grade->applicable_class_programs)->pluck('name')->implode(', ');
+                                                @endphp
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/80 whitespace-nowrap truncate max-w-[150px]" title="{{ $targetProgs }}">
+                                                    {{ \Illuminate\Support\Str::limit($targetProgs, 22) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        {{-- Gelombang / Periode jika di-filter khusus --}}
+                                        @if(!empty($grade->applicable_waves) || !empty($grade->applicable_periods))
+                                            <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
+                                                @if(!empty($grade->applicable_waves))
+                                                    @php
+                                                        $targetWaves = $waves->whereIn('id', (array)$grade->applicable_waves)->pluck('name')->implode(', ');
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap" title="Gelombang: {{ $targetWaves }}">
+                                                        Gel: {{ \Illuminate\Support\Str::limit($targetWaves, 15) }}
+                                                    </span>
+                                                @endif
+                                                @if(!empty($grade->applicable_periods))
+                                                    @php
+                                                        $targetPeriods = $periods->whereIn('id', (array)$grade->applicable_periods)->pluck('year')->implode(', ');
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap" title="Tahun Ajaran: {{ $targetPeriods }}">
+                                                        {{ \Illuminate\Support\Str::limit($targetPeriods, 15) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                    <div class="inline-flex flex-col gap-1 items-start">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap {{ $grade->min_age_years !== null || $grade->max_age_years !== null ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-2xs' : 'bg-slate-100 text-slate-500' }}">
+                                            <i data-lucide="clock" class="w-3.5 h-3.5 text-brand-emerald shrink-0"></i>
+                                            <span>{{ $grade->age_range_label }}</span>
+                                        </span>
+                                        @if(!empty($grade->age_notes))
+                                            <span class="text-[10.5px] text-slate-400 font-normal max-w-[200px] truncate block" title="{{ $grade->age_notes }}">{{ $grade->age_notes }}</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-extrabold uppercase tracking-wide border {{ $grade->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
                                         <span class="w-1.5 h-1.5 rounded-full {{ $grade->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
                                         {{ $grade->is_active ? 'Aktif' : 'Non-Aktif' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $grade->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
+                                <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                    <span class="inline-flex min-w-24 justify-center items-center px-3 py-1.5 rounded-xl text-xs font-bold {{ $grade->registrations_count > 0 ? 'bg-slate-100 text-slate-700 border border-slate-200/60' : 'bg-slate-50 text-slate-400' }}">
                                         {{ $grade->registrations_count }} Pendaftar
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
+                                <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button onclick="openGradeModal('{{ addslashes($grade->name) }}', '{{ $grade->spmb_unit_id }}', '{{ $grade->min_age_years ?? '' }}', '{{ $grade->min_age_months ?? 0 }}', '{{ $grade->max_age_years ?? '' }}', '{{ $grade->max_age_months ?? 0 }}', '{{ addslashes($grade->age_notes ?? '') }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Tingkatan">
+                                        <button onclick="openGradeModal('{{ addslashes($grade->name) }}', '{{ $grade->spmb_unit_id }}', '{{ addslashes($grade->sub_unit ?? '') }}', '{{ $grade->min_age_years ?? '' }}', '{{ $grade->min_age_months ?? 0 }}', '{{ $grade->max_age_years ?? '' }}', '{{ $grade->max_age_months ?? 0 }}', '{{ addslashes($grade->age_notes ?? '') }}', '{{ $grade->is_active }}', false, '{{ route('admin.spmb-settings.grades.update', $grade->id) }}', {{ json_encode($grade->applicable_types ?? []) }}, {{ json_encode($grade->applicable_class_programs ?? []) }}, {{ json_encode($grade->applicable_waves ?? []) }}, {{ json_encode($grade->applicable_periods ?? []) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Tingkatan">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </button>
                                         @if($grade->registrations_count > 0)
@@ -216,11 +324,11 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada tingkatan yang ditambahkan.</td>
+                                <td colspan="8" class="py-8 text-center text-slate-400 text-xs">Belum ada tingkatan yang ditambahkan.</td>
                             </tr>
                         @endforelse
                         <tr id="emptyGradeRow-filtered" class="hidden">
-                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tidak ada tingkatan kelas untuk unit yang dipilih.</td>
+                            <td colspan="8" class="py-8 text-center text-slate-400 text-xs">Tidak ada tingkatan kelas untuk unit yang dipilih.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -235,7 +343,7 @@
                         <p class="text-[11px] text-slate-400">Kelola layanan tambahan opsional seperti TPA/Daycare dan TPQ.</p>
                     </div>
                     <button
-                        onclick="openExtraModal('', '', window.currentUnitFilter || '', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}')"
+                        onclick="openExtraModal('', '', window.currentUnitFilter || '', '1', true, '{{ route('admin.spmb-settings.extra-services.store') }}', [], [], [], [], [])"
                         class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer"
                     >
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -243,48 +351,115 @@
                     </button>
                 </div>
                 
-                <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-xs">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
-                                <th class="py-4 px-6">Nama Layanan</th>
-                                <th class="py-4 px-6">Kode Layanan</th>
-                                <th class="py-4 px-6">Unit Asal</th>
-                                <th class="py-4 px-6 text-center">Status</th>
-                                <th class="py-4 px-6 text-center">Jumlah Murid</th>
-                                <th class="py-4 px-6 text-center">Aksi</th>
+                            <tr class="border-b border-slate-100 text-[11px] text-slate-500 font-bold uppercase tracking-wider bg-slate-50/80">
+                                <th class="py-3.5 px-6 whitespace-nowrap">Nama Layanan</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Kode Layanan</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Unit Asal</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Kriteria Keterbukaan</th>
+                                <th class="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
+                                <th class="py-3.5 px-6 text-center whitespace-nowrap">Jumlah Murid</th>
+                                <th class="py-3.5 px-6 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="text-xs text-slate-650 divide-y divide-slate-50">
+                        <tbody class="text-xs divide-y divide-slate-100/80">
                             @forelse($extraServices as $service)
-                                <tr class="extra-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $service->spmb_unit_id ?? 'all' }}">
-                                    <td class="py-4 px-6 font-bold text-slate-800">
-                                        {{ $service->name }}
+                                <tr class="extra-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $service->spmb_unit_id ?? 'all' }}">
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="w-2.5 h-2.5 rounded-full {{ $service->is_active ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-slate-300' }} shrink-0"></span>
+                                            <span class="font-extrabold text-sm text-slate-800 tracking-tight">{{ $service->name }}</span>
+                                        </div>
                                     </td>
-                                    <td class="py-4 px-6 font-mono font-bold text-brand-emerald">
-                                        {{ $service->code }}
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap font-mono font-bold text-brand-emerald">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-mono">
+                                            {{ $service->code }}
+                                        </span>
                                     </td>
-                                    <td class="py-4 px-6 font-semibold text-slate-600">
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
                                         @if($service->unit)
-                                            <span class="text-slate-800 font-bold">{{ $service->unit->name }}</span>
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">{{ $service->unit->name }}</span>
                                         @else
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 text-slate-500 border border-slate-200">Semua Unit</span>
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10.5px] font-bold uppercase bg-slate-100 text-slate-500 border border-slate-200">Semua Unit</span>
                                         @endif
                                     </td>
-                                    <td class="py-4 px-6 text-center">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border {{ $service->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200' }}">
+                                    <td class="py-4 px-6 align-middle">
+                                        <div class="space-y-1.5 min-w-[210px] max-w-[280px]">
+                                            {{-- Jalur --}}
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase w-13 shrink-0">Jalur:</span>
+                                                @if(empty($service->applicable_types))
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 whitespace-nowrap">Semua Jalur</span>
+                                                @else
+                                                    @php
+                                                        $targetTypes = $types->whereIn('id', (array)$service->applicable_types)->pluck('name')->implode(', ');
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80 whitespace-nowrap truncate max-w-[150px]" title="{{ $targetTypes }}">
+                                                        {{ \Illuminate\Support\Str::limit($targetTypes, 22) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            {{-- Kategori --}}
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase w-13 shrink-0">Kategori:</span>
+                                                @if(empty($service->applicable_class_programs))
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/80 whitespace-nowrap">Semua Kategori</span>
+                                                @else
+                                                    @php
+                                                        $targetProgs = $classPrograms->whereIn('id', (array)$service->applicable_class_programs)->pluck('name')->implode(', ');
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/80 whitespace-nowrap truncate max-w-[150px]" title="{{ $targetProgs }}">
+                                                        {{ \Illuminate\Support\Str::limit($targetProgs, 22) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            {{-- Tingkatan / Gelombang / Periode jika di-filter khusus --}}
+                                            @if(!empty($service->applicable_grades) || !empty($service->applicable_waves) || !empty($service->applicable_periods))
+                                                <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
+                                                    @if(!empty($service->applicable_grades))
+                                                        @php
+                                                            $targetGrades = $grades->whereIn('id', (array)$service->applicable_grades)->pluck('name')->implode(', ');
+                                                        @endphp
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap" title="Tingkatan: {{ $targetGrades }}">
+                                                            Kelas: {{ \Illuminate\Support\Str::limit($targetGrades, 15) }}
+                                                        </span>
+                                                    @endif
+                                                    @if(!empty($service->applicable_waves))
+                                                        @php
+                                                            $targetWaves = $waves->whereIn('id', (array)$service->applicable_waves)->pluck('name')->implode(', ');
+                                                        @endphp
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap" title="Gelombang: {{ $targetWaves }}">
+                                                            Gel: {{ \Illuminate\Support\Str::limit($targetWaves, 15) }}
+                                                        </span>
+                                                    @endif
+                                                    @if(!empty($service->applicable_periods))
+                                                        @php
+                                                            $targetPeriods = $periods->whereIn('id', (array)$service->applicable_periods)->pluck('year')->implode(', ');
+                                                        @endphp
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap" title="Tahun Ajaran: {{ $targetPeriods }}">
+                                                            {{ \Illuminate\Support\Str::limit($targetPeriods, 15) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-extrabold uppercase tracking-wide border {{ $service->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200' }}">
                                             <span class="w-1.5 h-1.5 rounded-full {{ $service->is_active ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
                                             {{ $service->is_active ? 'Aktif' : 'Non-Aktif' }}
                                         </span>
                                     </td>
-                                    <td class="py-4 px-6 text-center">
-                                        <span class="inline-flex min-w-20 justify-center px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $service->registrations_count > 0 ? 'bg-slate-100 text-slate-700' : 'bg-slate-50 text-slate-400' }}">
+                                    <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                        <span class="inline-flex min-w-24 justify-center items-center px-3 py-1.5 rounded-xl text-xs font-bold {{ $service->registrations_count > 0 ? 'bg-slate-100 text-slate-700 border border-slate-200/60' : 'bg-slate-50 text-slate-400' }}">
                                             {{ $service->registrations_count }} Pendaftar
                                         </span>
                                     </td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center justify-center gap-1.5">
-                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->spmb_unit_id }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Layanan">
+                                    <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <button onclick="openExtraModal('{{ addslashes($service->name) }}', '{{ addslashes($service->code) }}', '{{ $service->spmb_unit_id }}', '{{ $service->is_active }}', false, '{{ route('admin.spmb-settings.extra-services.update', $service->id) }}', {{ json_encode($service->applicable_types ?? []) }}, {{ json_encode($service->applicable_class_programs ?? []) }}, {{ json_encode($service->applicable_waves ?? []) }}, {{ json_encode($service->applicable_periods ?? []) }}, {{ json_encode($service->applicable_grades ?? []) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-brand-emerald cursor-pointer" title="Edit Layanan">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
                                             @if($service->registrations_count > 0)
@@ -301,11 +476,11 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Belum ada layanan non-formal yang ditambahkan.</td>
+                                    <td colspan="7" class="py-8 text-center text-slate-400 text-xs">Belum ada layanan non-formal yang ditambahkan.</td>
                                 </tr>
                             @endforelse
                             <tr id="emptyExtraRow-filtered" class="hidden">
-                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tidak ada layanan non-formal untuk unit yang dipilih.</td>
+                                <td colspan="7" class="py-8 text-center text-slate-400 text-xs">Tidak ada layanan non-formal untuk unit yang dipilih.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -315,7 +490,7 @@
 
         <!-- Modal for Extra Service (Layanan Non-Formal) -->
         <div id="extraModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-150 overflow-y-auto overscroll-contain">
-            <div class="bg-white dark:bg-slate-900 w-full max-w-md flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-150 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="extraModalBody">
+            <div class="bg-white dark:bg-slate-900 w-full max-w-xl flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-150 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="extraModalBody">
                 <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30 shrink-0">
                     <h2 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white" id="extraModalTitle">Tambah Layanan Non-Formal</h2>
                     <button onclick="closeExtraModal()" type="button" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition">
@@ -341,15 +516,142 @@
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Kode Layanan</label>
                             <input type="text" id="extraCodeInput" name="code" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: TPA">
                         </div>
+                        @if($isSuperAdmin)
                         <div>
                             <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Unit Asal (Terkait Unit Sekolah)</label>
-                            <select id="extraUnitInput" name="spmb_unit_id" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
+                            <select id="extraUnitInput" name="spmb_unit_id" onchange="filterExtraTargetingByUnit(this.value)" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
                                 <option value="">Semua Unit (Umum)</option>
                                 @foreach($units as $u)
                                     <option value="{{ $u->id }}">{{ $u->name }}</option>
                                 @endforeach
                             </select>
                         </div>
+                        @else
+                        <input type="hidden" id="extraUnitInput" name="spmb_unit_id" value="{{ auth()->user()->spmb_unit_id }}">
+                        @endif
+
+                        <!-- Kriteria Keterbukaan Layanan (Jalur, Kategori, Tingkatan, Gelombang, Periode) -->
+                        <div class="p-4 bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-4">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                                <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-emerald"></i>
+                                <span>Kriteria Keterbukaan Layanan</span>
+                            </div>
+                            <p class="text-[10.5px] text-slate-400 dark:text-slate-500 leading-relaxed">
+                                Tentukan kapan layanan ini dapat dipilih oleh calon murid. Jika <strong>tidak dicentang</strong> atau <strong>Pilih Semua</strong>, layanan ini akan otomatis berlaku untuk <strong>semua</strong> jalur, kategori, tingkatan, gelombang, atau tahun ajaran.
+                            </p>
+
+                            <!-- 1. Target Jalur Pendaftaran -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Jalur Pendaftaran</label>
+                                    <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                        <input type="checkbox" id="checkAllExtraTypes" onchange="toggleAllExtraTypes(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                        Pilih Semua Jalur
+                                    </label>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                    <div id="extraTypeCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        @foreach($types as $type)
+                                            @php
+                                                $typeUnitIds = $type->units->pluck('id')->toArray();
+                                            @endphp
+                                            <label class="extra-type-item flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition" data-unit-ids="{{ implode(',', $typeUnitIds) }}">
+                                                <input type="checkbox" name="applicable_types[]" value="{{ $type->id }}" class="extra-type-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllExtraTypesState()">
+                                                <span class="truncate">{{ $type->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Target Kategori Murid (Program Kelas) -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Kategori Murid</label>
+                                    <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                        <input type="checkbox" id="checkAllExtraClassPrograms" onchange="toggleAllExtraClassPrograms(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                        Pilih Semua Kategori
+                                    </label>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                    <div id="extraClassProgramCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        @foreach($classPrograms as $prog)
+                                            @php
+                                                $progUnitIds = $prog->units->pluck('id')->toArray();
+                                            @endphp
+                                            <label class="extra-program-item flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition" data-unit-ids="{{ implode(',', $progUnitIds) }}">
+                                                <input type="checkbox" name="applicable_class_programs[]" value="{{ $prog->id }}" class="extra-program-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllExtraClassProgramsState()">
+                                                <span class="truncate">{{ $prog->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Target Tingkatan Kelas -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Tingkatan Kelas</label>
+                                    <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                        <input type="checkbox" id="checkAllExtraGrades" onchange="toggleAllExtraGrades(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                        Pilih Semua Tingkatan
+                                    </label>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-36 overflow-y-auto">
+                                    <div id="extraGradeCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        @foreach($grades as $gradeItem)
+                                            <label class="extra-grade-item flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition" data-unit-id="{{ $gradeItem->spmb_unit_id }}">
+                                                <input type="checkbox" name="applicable_grades[]" value="{{ $gradeItem->id }}" class="extra-grade-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllExtraGradesState()">
+                                                <span class="truncate">{{ $gradeItem->name }} <span class="text-[10px] text-slate-400">({{ $gradeItem->unit->name ?? 'Unit' }})</span></span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Target Gelombang Pendaftaran -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Gelombang Pendaftaran</label>
+                                    <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                        <input type="checkbox" id="checkAllExtraWaves" onchange="toggleAllExtraWaves(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                        Pilih Semua Gelombang
+                                    </label>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                    <div id="extraWaveCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        @foreach($waves as $wave)
+                                            <label class="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                                <input type="checkbox" name="applicable_waves[]" value="{{ $wave->id }}" class="extra-wave-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllExtraWavesState()">
+                                                <span class="truncate">{{ $wave->name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Target Tahun Ajaran / Periode -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Tahun Ajaran / Periode</label>
+                                    <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                        <input type="checkbox" id="checkAllExtraPeriods" onchange="toggleAllExtraPeriods(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                        Pilih Semua Periode
+                                    </label>
+                                </div>
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                    <div id="extraPeriodCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        @foreach($periods as $per)
+                                            <label class="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                                <input type="checkbox" name="applicable_periods[]" value="{{ $per->id }}" class="extra-period-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllExtraPeriodsState()">
+                                                <span class="truncate">{{ $per->year }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-3">
                             <input type="checkbox" id="extraActiveInput" name="is_active" value="1" class="w-4 h-4 text-brand-emerald rounded border-slate-300 focus:ring-brand-emerald">
                             <label for="extraActiveInput" class="text-sm font-bold text-slate-700 dark:text-slate-300">Layanan Aktif</label>
@@ -420,7 +722,7 @@
 
     <!-- Modal for Grade -->
     <div id="gradeModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-150 overflow-y-auto overscroll-contain">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-md flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-150 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="gradeModalBody">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-xl flex flex-col rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 transition-all duration-150 max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] my-auto overflow-hidden" id="gradeModalBody">
             <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30 shrink-0">
                 <h2 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white" id="gradeModalTitle">Tambah Tingkatan Kelas</h2>
                 <button onclick="closeGradeModal()" type="button" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition">
@@ -443,47 +745,170 @@
                         <input type="text" id="gradeNameInput" name="name" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: TK A, Kelas 1">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Sub-Unit (Opsional)</label>
+                        <input type="text" id="gradeSubUnitInput" name="sub_unit" list="subUnitSuggestions" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold" placeholder="Misal: Playgroup, TK, Daycare (Kosongkan jika bukan sub-unit)">
+                        <datalist id="subUnitSuggestions">
+                            <option value="Playgroup">
+                            <option value="TK">
+                            <option value="Daycare">
+                        </datalist>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Digunakan khusus unit multi-layanan seperti PAUD (Playgroup, TK, Daycare) untuk membedakan kategori layanan.</span>
+                    </div>
+                    @if($isSuperAdmin)
+                    <div>
                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Unit Terkait</label>
-                        <select id="gradeUnitInput" name="spmb_unit_id" required class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
+                        <select id="gradeUnitInput" name="spmb_unit_id" required onchange="filterGradeTargetingByUnit(this.value)" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm font-semibold">
                             <option value="">-- Pilih Unit --</option>
                             @foreach($units as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }}</option>
                             @endforeach
                         </select>
                     </div>
+                    @else
+                    <input type="hidden" id="gradeUnitInput" name="spmb_unit_id" value="{{ auth()->user()->spmb_unit_id }}">
+                    @endif
+
+                    <!-- Kriteria Keterbukaan Kelas (Jalur, Kategori, Gelombang, Periode) -->
+                    <div class="p-4 bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-4">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-emerald"></i>
+                            <span>Kriteria Keterbukaan Tingkatan</span>
+                        </div>
+                        <p class="text-[10.5px] text-slate-400 dark:text-slate-500 leading-relaxed">
+                            Tentukan kapan tingkatan ini dapat dipilih oleh calon murid. Jika <strong>tidak dicentang</strong> atau <strong>Pilih Semua</strong>, tingkatan ini akan otomatis berlaku untuk <strong>semua</strong> jalur, kategori, gelombang, atau tahun ajaran.
+                        </p>
+
+                        <!-- 1. Target Jalur Pendaftaran -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Jalur Pendaftaran</label>
+                                <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                    <input type="checkbox" id="checkAllGradeTypes" onchange="toggleAllGradeTypes(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                    Pilih Semua Jalur
+                                </label>
+                            </div>
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                <div id="gradeTypeCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    @foreach($types as $type)
+                                        @php
+                                            $typeUnitIds = $type->units->pluck('id')->toArray();
+                                        @endphp
+                                        <label class="grade-type-item flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition" data-unit-ids="{{ implode(',', $typeUnitIds) }}">
+                                            <input type="checkbox" name="applicable_types[]" value="{{ $type->id }}" class="grade-type-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllGradeTypesState()">
+                                            <span class="truncate">{{ $type->name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Target Kategori Murid (Program Kelas) -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Kategori Murid</label>
+                                <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                    <input type="checkbox" id="checkAllGradeClassPrograms" onchange="toggleAllGradeClassPrograms(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                    Pilih Semua Kategori
+                                </label>
+                            </div>
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                <div id="gradeClassProgramCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    @foreach($classPrograms as $prog)
+                                        @php
+                                            $progUnitIds = $prog->units->pluck('id')->toArray();
+                                        @endphp
+                                        <label class="grade-program-item flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition" data-unit-ids="{{ implode(',', $progUnitIds) }}">
+                                            <input type="checkbox" name="applicable_class_programs[]" value="{{ $prog->id }}" class="grade-program-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllGradeClassProgramsState()">
+                                            <span class="truncate">{{ $prog->name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Target Gelombang Pendaftaran -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Gelombang Pendaftaran</label>
+                                <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                    <input type="checkbox" id="checkAllGradeWaves" onchange="toggleAllGradeWaves(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                    Pilih Semua Gelombang
+                                </label>
+                            </div>
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                <div id="gradeWaveCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    @foreach($waves as $wave)
+                                        <label class="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                            <input type="checkbox" name="applicable_waves[]" value="{{ $wave->id }}" class="grade-wave-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllGradeWavesState()">
+                                            <span class="truncate">{{ $wave->name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Target Tahun Ajaran / Periode -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Tahun Ajaran / Periode</label>
+                                <label class="flex items-center gap-1.5 text-[10.5px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                    <input type="checkbox" id="checkAllGradePeriods" onchange="toggleAllGradePeriods(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                    Pilih Semua Periode
+                                </label>
+                            </div>
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 max-h-32 overflow-y-auto">
+                                <div id="gradePeriodCheckboxesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    @foreach($periods as $per)
+                                        <label class="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                            <input type="checkbox" name="applicable_periods[]" value="{{ $per->id }}" class="grade-period-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllGradePeriodsState()">
+                                            <span class="truncate">{{ $per->year }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Batas Usia Minimal & Maksimal -->
-                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                    <div class="p-4 bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 space-y-3.5">
                         <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
                             <i data-lucide="clock" class="w-4 h-4 text-brand-emerald"></i>
                             <span>Konfigurasi Batas Usia / Umur</span>
                         </div>
                         <p class="text-[10.5px] text-slate-400 dark:text-slate-500 leading-relaxed">Dihitung relatif per 1 Juli tahun ajaran aktif. Kosongkan jika tanpa batasan usia.</p>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div class="space-y-3 pt-0.5">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Usia Minimal</label>
-                                <div class="flex items-center gap-1.5">
-                                    <input type="number" id="gradeMinAgeYearsInput" name="min_age_years" min="0" max="25" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 4)">
-                                    <span class="text-[11px] font-bold text-slate-400">Thn</span>
-                                    <input type="number" id="gradeMinAgeMonthsInput" name="min_age_months" min="0" max="11" class="w-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
-                                    <span class="text-[11px] font-bold text-slate-400">Bln</span>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1.5">Usia Minimal</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="relative flex items-center">
+                                        <input type="number" id="gradeMinAgeYearsInput" name="min_age_years" min="0" max="25" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl pl-3.5 pr-14 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="0">
+                                        <span class="absolute right-3 text-[11px] font-bold text-slate-400 pointer-events-none select-none">Tahun</span>
+                                    </div>
+                                    <div class="relative flex items-center">
+                                        <input type="number" id="gradeMinAgeMonthsInput" name="min_age_months" min="0" max="11" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl pl-3.5 pr-14 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="0" value="0">
+                                        <span class="absolute right-3 text-[11px] font-bold text-slate-400 pointer-events-none select-none">Bulan</span>
+                                    </div>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Usia Maksimal</label>
-                                <div class="flex items-center gap-1.5">
-                                    <input type="number" id="gradeMaxAgeYearsInput" name="max_age_years" min="0" max="25" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Tahun (e.g. 5)">
-                                    <span class="text-[11px] font-bold text-slate-400">Thn</span>
-                                    <input type="number" id="gradeMaxAgeMonthsInput" name="max_age_months" min="0" max="11" class="w-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Bln" value="0">
-                                    <span class="text-[11px] font-bold text-slate-400">Bln</span>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1.5">Usia Maksimal</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="relative flex items-center">
+                                        <input type="number" id="gradeMaxAgeYearsInput" name="max_age_years" min="0" max="25" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl pl-3.5 pr-14 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="0">
+                                        <span class="absolute right-3 text-[11px] font-bold text-slate-400 pointer-events-none select-none">Tahun</span>
+                                    </div>
+                                    <div class="relative flex items-center">
+                                        <input type="number" id="gradeMaxAgeMonthsInput" name="max_age_months" min="0" max="11" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl pl-3.5 pr-14 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="0" value="0">
+                                        <span class="absolute right-3 text-[11px] font-bold text-slate-400 pointer-events-none select-none">Bulan</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Catatan Batas Usia (Opsional)</label>
-                            <input type="text" id="gradeAgeNotesInput" name="age_notes" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Contoh: Minimal 4 tahun per 1 Juli">
+                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1.5">Catatan Batas Usia (Opsional)</label>
+                            <input type="text" id="gradeAgeNotesInput" name="age_notes" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald text-xs font-semibold" placeholder="Contoh: Minimal 4 tahun per 1 Juli">
                         </div>
                     </div>
 
@@ -701,8 +1126,92 @@
             modalBody.classList.add('scale-95');
         };
 
+        // Grade Dynamic Targeting Checkbox Helpers
+        window.filterGradeTargetingByUnit = function(unitId) {
+            const uId = unitId ? unitId.toString().trim() : '';
+            // Filter Types
+            document.querySelectorAll('.grade-type-item').forEach(item => {
+                const itemUnits = (item.dataset.unitIds || '').split(',').filter(Boolean);
+                if (!uId || itemUnits.length === 0 || itemUnits.includes(uId)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            // Filter Class Programs
+            document.querySelectorAll('.grade-program-item').forEach(item => {
+                const itemUnits = (item.dataset.unitIds || '').split(',').filter(Boolean);
+                if (!uId || itemUnits.length === 0 || itemUnits.includes(uId)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        };
+
+        window.toggleAllGradeTypes = function(master) {
+            document.querySelectorAll('.grade-type-checkbox').forEach(cb => {
+                // only toggle visible ones
+                const parent = cb.closest('.grade-type-item');
+                if (!parent || parent.style.display !== 'none') {
+                    cb.checked = master.checked;
+                }
+            });
+        };
+        window.updateCheckAllGradeTypesState = function() {
+            const visibleCbs = Array.from(document.querySelectorAll('.grade-type-checkbox')).filter(cb => {
+                const parent = cb.closest('.grade-type-item');
+                return !parent || parent.style.display !== 'none';
+            });
+            const allChecked = visibleCbs.length > 0 && visibleCbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllGradeTypes');
+            if (master) master.checked = allChecked;
+        };
+
+        window.toggleAllGradeClassPrograms = function(master) {
+            document.querySelectorAll('.grade-program-checkbox').forEach(cb => {
+                const parent = cb.closest('.grade-program-item');
+                if (!parent || parent.style.display !== 'none') {
+                    cb.checked = master.checked;
+                }
+            });
+        };
+        window.updateCheckAllGradeClassProgramsState = function() {
+            const visibleCbs = Array.from(document.querySelectorAll('.grade-program-checkbox')).filter(cb => {
+                const parent = cb.closest('.grade-program-item');
+                return !parent || parent.style.display !== 'none';
+            });
+            const allChecked = visibleCbs.length > 0 && visibleCbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllGradeClassPrograms');
+            if (master) master.checked = allChecked;
+        };
+
+        window.toggleAllGradeWaves = function(master) {
+            document.querySelectorAll('.grade-wave-checkbox').forEach(cb => {
+                cb.checked = master.checked;
+            });
+        };
+        window.updateCheckAllGradeWavesState = function() {
+            const cbs = Array.from(document.querySelectorAll('.grade-wave-checkbox'));
+            const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllGradeWaves');
+            if (master) master.checked = allChecked;
+        };
+
+        window.toggleAllGradePeriods = function(master) {
+            document.querySelectorAll('.grade-period-checkbox').forEach(cb => {
+                cb.checked = master.checked;
+            });
+        };
+        window.updateCheckAllGradePeriodsState = function() {
+            const cbs = Array.from(document.querySelectorAll('.grade-period-checkbox'));
+            const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllGradePeriods');
+            if (master) master.checked = allChecked;
+        };
+
         // Modal Grade
-        window.openGradeModal = function(name = '', unitId = '', minAgeYears = '', minAgeMonths = '0', maxAgeYears = '', maxAgeMonths = '0', ageNotes = '', isActive = '1', isCreate = true, actionUrl = '') {
+        window.openGradeModal = function(name = '', unitId = '', subUnit = '', minAgeYears = '', minAgeMonths = '0', maxAgeYears = '', maxAgeMonths = '0', ageNotes = '', isActive = '1', isCreate = true, actionUrl = '', applicableTypes = [], applicableClassPrograms = [], applicableWaves = [], applicablePeriods = []) {
             window.clearModalErrors();
             
             const modal = document.getElementById('gradeModal');
@@ -715,7 +1224,9 @@
             
             form.setAttribute('action', actionUrl);
             document.getElementById('gradeNameInput').value = name;
-            document.getElementById('gradeUnitInput').value = unitId || window.currentUnitFilter || '';
+            document.getElementById('gradeSubUnitInput').value = subUnit || '';
+            const targetUnitId = unitId || window.currentUnitFilter || '';
+            document.getElementById('gradeUnitInput').value = targetUnitId;
             document.getElementById('gradeMinAgeYearsInput').value = minAgeYears;
             document.getElementById('gradeMinAgeMonthsInput').value = (minAgeMonths !== '' && minAgeMonths !== null) ? minAgeMonths : '0';
             document.getElementById('gradeMaxAgeYearsInput').value = maxAgeYears;
@@ -723,6 +1234,42 @@
             document.getElementById('gradeAgeNotesInput').value = ageNotes;
             document.getElementById('gradeActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
             
+            // Filter targeting options by unit
+            window.filterGradeTargetingByUnit(targetUnitId);
+
+            // Populate checkboxes
+            // 1. Jalur Pendaftaran (If null/empty, default to all checked)
+            const isAllTypes = !applicableTypes || applicableTypes.length === 0;
+            const typesArr = (applicableTypes || []).map(x => parseInt(x));
+            document.querySelectorAll('.grade-type-checkbox').forEach(cb => {
+                cb.checked = isAllTypes || typesArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllGradeTypesState();
+
+            // 2. Kategori Murid (If null/empty, default to all checked)
+            const isAllProgs = !applicableClassPrograms || applicableClassPrograms.length === 0;
+            const progsArr = (applicableClassPrograms || []).map(x => parseInt(x));
+            document.querySelectorAll('.grade-program-checkbox').forEach(cb => {
+                cb.checked = isAllProgs || progsArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllGradeClassProgramsState();
+
+            // 3. Gelombang Pendaftaran (If null/empty, default to all checked)
+            const isAllWaves = !applicableWaves || applicableWaves.length === 0;
+            const wavesArr = (applicableWaves || []).map(x => parseInt(x));
+            document.querySelectorAll('.grade-wave-checkbox').forEach(cb => {
+                cb.checked = isAllWaves || wavesArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllGradeWavesState();
+
+            // 4. Tahun Ajaran / Periode (If null/empty, default to all checked)
+            const isAllPeriods = !applicablePeriods || applicablePeriods.length === 0;
+            const periodsArr = (applicablePeriods || []).map(x => parseInt(x));
+            document.querySelectorAll('.grade-period-checkbox').forEach(cb => {
+                cb.checked = isAllPeriods || periodsArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllGradePeriodsState();
+
             if (!isCreate) {
                 methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
             } else {
@@ -732,6 +1279,9 @@
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
         };
 
         window.closeGradeModal = function() {
@@ -743,8 +1293,118 @@
             modalBody.classList.add('scale-95');
         };
 
+        // Extra Services Dynamic Targeting Checkbox Helpers
+        window.filterExtraTargetingByUnit = function(unitId) {
+            const uId = unitId ? unitId.toString().trim() : '';
+            // Filter Types
+            document.querySelectorAll('.extra-type-item').forEach(item => {
+                const itemUnits = (item.dataset.unitIds || '').split(',').filter(Boolean);
+                if (!uId || itemUnits.length === 0 || itemUnits.includes(uId)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            // Filter Class Programs
+            document.querySelectorAll('.extra-program-item').forEach(item => {
+                const itemUnits = (item.dataset.unitIds || '').split(',').filter(Boolean);
+                if (!uId || itemUnits.length === 0 || itemUnits.includes(uId)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            // Filter Grades
+            document.querySelectorAll('.extra-grade-item').forEach(item => {
+                const gUnit = (item.dataset.unitId || '').toString().trim();
+                if (!uId || gUnit === uId) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        };
+
+        window.toggleAllExtraTypes = function(master) {
+            document.querySelectorAll('.extra-type-checkbox').forEach(cb => {
+                const parent = cb.closest('.extra-type-item');
+                if (!parent || parent.style.display !== 'none') {
+                    cb.checked = master.checked;
+                }
+            });
+        };
+        window.updateCheckAllExtraTypesState = function() {
+            const visibleCbs = Array.from(document.querySelectorAll('.extra-type-checkbox')).filter(cb => {
+                const parent = cb.closest('.extra-type-item');
+                return !parent || parent.style.display !== 'none';
+            });
+            const allChecked = visibleCbs.length > 0 && visibleCbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllExtraTypes');
+            if (master) master.checked = allChecked;
+        };
+
+        window.toggleAllExtraClassPrograms = function(master) {
+            document.querySelectorAll('.extra-program-checkbox').forEach(cb => {
+                const parent = cb.closest('.extra-program-item');
+                if (!parent || parent.style.display !== 'none') {
+                    cb.checked = master.checked;
+                }
+            });
+        };
+        window.updateCheckAllExtraClassProgramsState = function() {
+            const visibleCbs = Array.from(document.querySelectorAll('.extra-program-checkbox')).filter(cb => {
+                const parent = cb.closest('.extra-program-item');
+                return !parent || parent.style.display !== 'none';
+            });
+            const allChecked = visibleCbs.length > 0 && visibleCbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllExtraClassPrograms');
+            if (master) master.checked = allChecked;
+        };
+
+        window.toggleAllExtraGrades = function(master) {
+            document.querySelectorAll('.extra-grade-checkbox').forEach(cb => {
+                const parent = cb.closest('.extra-grade-item');
+                if (!parent || parent.style.display !== 'none') {
+                    cb.checked = master.checked;
+                }
+            });
+        };
+        window.updateCheckAllExtraGradesState = function() {
+            const visibleCbs = Array.from(document.querySelectorAll('.extra-grade-checkbox')).filter(cb => {
+                const parent = cb.closest('.extra-grade-item');
+                return !parent || parent.style.display !== 'none';
+            });
+            const allChecked = visibleCbs.length > 0 && visibleCbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllExtraGrades');
+            if (master) master.checked = allChecked;
+        };
+
+        window.toggleAllExtraWaves = function(master) {
+            document.querySelectorAll('.extra-wave-checkbox').forEach(cb => {
+                cb.checked = master.checked;
+            });
+        };
+        window.updateCheckAllExtraWavesState = function() {
+            const cbs = Array.from(document.querySelectorAll('.extra-wave-checkbox'));
+            const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllExtraWaves');
+            if (master) master.checked = allChecked;
+        };
+
+        window.toggleAllExtraPeriods = function(master) {
+            document.querySelectorAll('.extra-period-checkbox').forEach(cb => {
+                cb.checked = master.checked;
+            });
+        };
+        window.updateCheckAllExtraPeriodsState = function() {
+            const cbs = Array.from(document.querySelectorAll('.extra-period-checkbox'));
+            const allChecked = cbs.length > 0 && cbs.every(cb => cb.checked);
+            const master = document.getElementById('checkAllExtraPeriods');
+            if (master) master.checked = allChecked;
+        };
+
         // Modal Extra Service
-        window.openExtraModal = function(name = '', code = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '') {
+        window.openExtraModal = function(name = '', code = '', unitId = '', isActive = '1', isCreate = true, actionUrl = '', applicableTypes = [], applicableClassPrograms = [], applicableWaves = [], applicablePeriods = [], applicableGrades = []) {
             window.clearModalErrors();
             
             const modal = document.getElementById('extraModal');
@@ -758,9 +1418,54 @@
             form.setAttribute('action', actionUrl);
             document.getElementById('extraNameInput').value = name;
             document.getElementById('extraCodeInput').value = code;
-            document.getElementById('extraUnitInput').value = unitId || window.currentUnitFilter || '';
+            const targetUnitId = unitId || window.currentUnitFilter || '';
+            document.getElementById('extraUnitInput').value = targetUnitId;
             document.getElementById('extraActiveInput').checked = (isActive == '1' || isActive == true || isActive == 'true');
             
+            // Filter targeting options by unit
+            window.filterExtraTargetingByUnit(targetUnitId);
+
+            // Populate checkboxes
+            // 1. Jalur Pendaftaran (If null/empty, default to all checked)
+            const isAllTypes = !applicableTypes || applicableTypes.length === 0;
+            const typesArr = (applicableTypes || []).map(x => parseInt(x));
+            document.querySelectorAll('.extra-type-checkbox').forEach(cb => {
+                cb.checked = isAllTypes || typesArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllExtraTypesState();
+
+            // 2. Kategori Murid (If null/empty, default to all checked)
+            const isAllProgs = !applicableClassPrograms || applicableClassPrograms.length === 0;
+            const progsArr = (applicableClassPrograms || []).map(x => parseInt(x));
+            document.querySelectorAll('.extra-program-checkbox').forEach(cb => {
+                cb.checked = isAllProgs || progsArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllExtraClassProgramsState();
+
+            // 3. Tingkatan Kelas (If null/empty, default to all checked)
+            const isAllGrades = !applicableGrades || applicableGrades.length === 0;
+            const gradesArr = (applicableGrades || []).map(x => parseInt(x));
+            document.querySelectorAll('.extra-grade-checkbox').forEach(cb => {
+                cb.checked = isAllGrades || gradesArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllExtraGradesState();
+
+            // 4. Gelombang Pendaftaran (If null/empty, default to all checked)
+            const isAllWaves = !applicableWaves || applicableWaves.length === 0;
+            const wavesArr = (applicableWaves || []).map(x => parseInt(x));
+            document.querySelectorAll('.extra-wave-checkbox').forEach(cb => {
+                cb.checked = isAllWaves || wavesArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllExtraWavesState();
+
+            // 5. Tahun Ajaran / Periode (If null/empty, default to all checked)
+            const isAllPeriods = !applicablePeriods || applicablePeriods.length === 0;
+            const periodsArr = (applicablePeriods || []).map(x => parseInt(x));
+            document.querySelectorAll('.extra-period-checkbox').forEach(cb => {
+                cb.checked = isAllPeriods || periodsArr.includes(parseInt(cb.value));
+            });
+            window.updateCheckAllExtraPeriodsState();
+
             if (!isCreate) {
                 methodDiv.innerHTML = '<input type="hidden" name="_method" value="PUT">';
             } else {
@@ -770,6 +1475,9 @@
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modalBody.classList.remove('scale-95');
             modalBody.classList.add('scale-100');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
         };
 
         window.closeExtraModal = function() {
@@ -805,18 +1513,18 @@
                     window.openUnitModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('whatsapp_number') }}', '{{ old('admin_contact_name') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/units/' + id);
                 } else if (failed.startsWith('grade_create')) {
                     window.switchTab('grade');
-                    window.openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}');
+                    window.openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('sub_unit') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.grades.store') }}', {{ json_encode(old('applicable_types', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_waves', [])) }}, {{ json_encode(old('applicable_periods', [])) }});
                 } else if (failed.startsWith('grade_edit_')) {
                     window.switchTab('grade');
                     let id = failed.replace('grade_edit_', '');
-                    window.openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id);
+                    window.openGradeModal('{{ old('name') }}', '{{ old('spmb_unit_id') }}', '{{ old('sub_unit') }}', '{{ old('min_age_years') }}', '{{ old('min_age_months', 0) }}', '{{ old('max_age_years') }}', '{{ old('max_age_months', 0) }}', '{{ old('age_notes') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/grades/' + id, {{ json_encode(old('applicable_types', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_waves', [])) }}, {{ json_encode(old('applicable_periods', [])) }});
                 } else if (failed.startsWith('extra_create')) {
                     window.switchTab('extra');
-                    window.openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}');
+                    window.openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', true, '{{ route('admin.spmb-settings.extra-services.store') }}', {{ json_encode(old('applicable_types', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_waves', [])) }}, {{ json_encode(old('applicable_periods', [])) }}, {{ json_encode(old('applicable_grades', [])) }});
                 } else if (failed.startsWith('extra_edit_')) {
                     window.switchTab('extra');
                     let id = failed.replace('extra_edit_', '');
-                    window.openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id);
+                    window.openExtraModal('{{ old('name') }}', '{{ old('code') }}', '{{ old('spmb_unit_id') }}', '{{ old('is_active') ? 1 : 0 }}', false, '/admin/spmb-settings/extra-services/' + id, {{ json_encode(old('applicable_types', [])) }}, {{ json_encode(old('applicable_class_programs', [])) }}, {{ json_encode(old('applicable_waves', [])) }}, {{ json_encode(old('applicable_periods', [])) }}, {{ json_encode(old('applicable_grades', [])) }});
                 }
 
                 // Show errors inside the reopened modal

@@ -11,6 +11,14 @@
         $latestPayment = $registration->payments()->latest()->first();
         $latestFailedPayment = ($latestPayment && $latestPayment->status === 'failed') ? $latestPayment : null;
         $isPaymentPending = ($registration->payment_status === 'pending' && $activePayment && $activePayment->status === 'pending');
+        $isTpa1Guru = ($registration->spmb_grade_id == 13) || (str_contains(strtolower($registration->grade->name ?? $registration->admission_level ?? ''), 'guru') || str_contains(strtolower($registration->grade->name ?? $registration->admission_level ?? ''), 'karyawan'));
+        $rawPhone = $registration->unit->wa_admin ?? $registration->unit->admin_phone ?? '081234567890';
+        $adminPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+        if (!str_starts_with($adminPhone, '62') && str_starts_with($adminPhone, '0')) {
+            $adminPhone = '62' . substr($adminPhone, 1);
+        }
+        $waMessage = "Halo Admin SPMB " . ($registration->unit->name ?? 'Sekolah Anak Saleh') . ", saya ingin konfirmasi pendaftaran jalur Khusus Guru & Karyawan YPAS untuk ananda " . ($registration->candidate_name ?? 'Calon Murid') . " (ID Reg: #" . $registration->id . "). Mohon bantuannya untuk verifikasi status kepegawaian agar formulir pendaftaran dapat dibuka. Terima kasih.";
+        $waUrl = "https://wa.me/{$adminPhone}?text=" . urlencode($waMessage);
     @endphp
 
     <!-- Check if candidate is still in draft and paid -->
@@ -59,6 +67,10 @@
                         <span class="inline-flex items-center gap-1 bg-green-700 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full border border-green-500 shadow-xs whitespace-nowrap">
                             <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Lunas
                         </span>
+                    @elseif($isTpa1Guru)
+                        <span class="inline-flex items-center gap-1 bg-amber-600 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full border border-amber-400 shadow-xs whitespace-nowrap">
+                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Verifikasi Admin
+                        </span>
                     @else
                         <span class="inline-flex items-center gap-1 bg-red-700 text-white font-black text-xs uppercase tracking-wider px-3 py-1 rounded-full border border-red-500 shadow-xs whitespace-nowrap">
                             <i data-lucide="clock" class="w-3.5 h-3.5"></i> Belum Lunas
@@ -85,6 +97,10 @@
                                 <span>{{ $registration->candidate_name }}</span>
                                 <span class="text-slate-300 dark:text-slate-700 font-normal mx-1.5">•</span>
                                 <span class="text-brand-emerald dark:text-emerald-450 font-bold">{{ $registration->unit->name ?? '-' }}</span>
+                                @if($registration->sub_unit_display_name)
+                                    <span class="text-slate-300 dark:text-slate-700 font-normal mx-1.5">•</span>
+                                    <span class="text-emerald-700 dark:text-emerald-300 font-bold">{{ $registration->sub_unit_display_name }}</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -161,8 +177,39 @@
                     </div>
                 @endif
 
+                @if($isTpa1Guru && !$formPaid && $registration->payment_status !== 'paid')
+                    <!-- Banner Verifikasi Khusus Putra/Putri Guru & Karyawan YPAS -->
+                    <div class="bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-2xl p-6 sm:p-8 space-y-5 text-center shadow-xs">
+                        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 shadow-xs mx-auto">
+                            <i data-lucide="shield-alert" class="w-7 h-7"></i>
+                        </div>
+                        <div class="max-w-xl mx-auto space-y-2">
+                            <span class="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-200/80 text-amber-900 dark:bg-amber-900/80 dark:text-amber-200">
+                                Verifikasi Kepegawaian Diperlukan
+                            </span>
+                            <h3 class="text-base sm:text-lg font-black text-slate-850 dark:text-white">
+                                Jalur Khusus Putra/Putri Guru & Karyawan YPAS
+                            </h3>
+                            <p class="text-xs text-slate-650 dark:text-slate-300 leading-relaxed font-medium">
+                                Pendaftaran untuk ananda <strong>{{ $registration->candidate_name }}</strong> telah tercatat pada sistem. Karena memilih jalur khusus Guru & Karyawan YPAS, akses pengisian formulir pendaftaran memerlukan konfirmasi data kepegawaian oleh <strong>Admin SPMB Unit {{ $registration->unit->name ?? 'Terkait' }}</strong>.
+                            </p>
+                        </div>
+
+                        <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md transition-all">
+                                <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                <span>Hubungi Admin SPMB Unit (WhatsApp)</span>
+                            </a>
+                            <a href="{{ route('dashboard') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs px-5 py-3 rounded-xl transition-all">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>Kembali ke Dashboard</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- 2. Form Select payment method if unpaid or partially paid (or failed pending) -->
-                @if (!$isPaymentPending && $registration->payment_status !== 'paid')
+                @if (!$isPaymentPending && $registration->payment_status !== 'paid' && !($isTpa1Guru && !$formPaid))
                     <form action="{{ route('dashboard.charge', $registration->id) }}" method="POST" class="space-y-6">
                         @csrf
                         <input type="hidden" name="items" value="{{ request()->query('items') }}">

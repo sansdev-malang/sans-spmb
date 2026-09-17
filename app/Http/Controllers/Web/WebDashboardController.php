@@ -173,16 +173,9 @@ class WebDashboardController extends Controller
             session(['active_candidate_id' => (int)$request->query('candidate_id')]);
         }
 
-        // Query active registrations with all required relationships
+        // Query all candidate registrations for this user with all required relationships
         $registrations = Registration::with(['unit', 'grade', 'period', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->where('user_id', auth()->id())
-            ->where(function($q) {
-                $q->whereHas('payments', function($pq) {
-                    $pq->where('payment_type', 'registration_fee')
-                       ->where('status', 'success');
-                })
-                ->orWhere('registration_status', '!=', 'draft');
-            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -200,6 +193,9 @@ class WebDashboardController extends Controller
         $units = SpmbUnit::with([
             'grades' => function($q) {
                 $q->where('is_active', true)->orderBy('id', 'asc');
+            },
+            'extraServices' => function($q) {
+                $q->wherePivot('is_active', true)->orderBy('spmb_extra_services.id', 'asc');
             },
             'waves' => function($q) {
                 $q->wherePivot('is_active', true)->orderBy('id', 'asc');
@@ -220,7 +216,19 @@ class WebDashboardController extends Controller
         $types = \App\Models\SpmbType::where('is_active', true)->get();
         $periods = \App\Models\SpmbPeriod::where('is_active', true)->orderBy('id', 'desc')->get();
         $classPrograms = \App\Models\SpmbClassProgram::where('is_active', true)->orderBy('id', 'asc')->get();
+        $extraServices = \App\Models\SpmbExtraService::where('is_active', true)->orderBy('id', 'asc')->get();
         $activePeriod = \App\Models\SpmbPeriod::where('is_active', true)->first();
+
+        // Fetch all active registration fees for dynamic grade fee resolution
+        $registrationFees = \App\Models\SpmbFee::where('is_active', true)
+            ->where(function($q) {
+                $q->where('spmb_fee_category_id', 1)
+                  ->orWhere('name', 'like', '%Enrollment%')
+                  ->orWhere('name', 'like', '%Registration%')
+                  ->orWhere('name', 'like', '%Formulir%')
+                  ->orWhere('name', 'like', '%Pendaftaran%');
+            })
+            ->get();
 
         // Build dynamic registration fee mapping per unit from master database
         $unitFeeMap = [];
@@ -240,7 +248,7 @@ class WebDashboardController extends Controller
         // Share registrations with layout to prevent duplicate database query
         $allUserRegistrations = $registrations;
 
-        return view('web.dashboard-index', compact('registrations', 'pendingDrafts', 'units', 'grades', 'waves', 'types', 'periods', 'classPrograms', 'activePeriod', 'allUserRegistrations', 'unitFeeMap'));
+        return view('web.dashboard-index', compact('registrations', 'pendingDrafts', 'units', 'grades', 'waves', 'types', 'periods', 'classPrograms', 'extraServices', 'activePeriod', 'allUserRegistrations', 'unitFeeMap', 'registrationFees'));
     }
     
     public function history(Request $request)
@@ -313,57 +321,19 @@ class WebDashboardController extends Controller
 
         $grade = \App\Models\SpmbGrade::find($request->spmb_grade_id);
 
-        // Check if user already has an unpaid draft registration in this active period
-        $existingDraft = Registration::where('user_id', auth()->id())
-            ->where('registration_status', 'draft')
-            ->where('payment_status', '!=', 'paid')
-            ->whereDoesntHave('payments', function($q) {
-                $q->where('payment_type', 'registration_fee')->where('status', 'success');
-            })
-            ->where(function($q) use ($periodId) {
-                if ($periodId) {
-                    $q->where('spmb_period_id', $periodId)->orWhereNull('spmb_period_id');
-                }
-            })
-            ->latest()
-            ->first();
-
-        if ($existingDraft) {
-            // Cancel any old pending payment on this draft if unit changed
-            if ($existingDraft->spmb_unit_id != $request->spmb_unit_id) {
-                $existingDraft->payments()->where('status', 'pending')->update([
-                    'status' => 'cancelled'
-                ]);
-            }
-
-            $existingDraft->update([
-                'candidate_name' => $request->candidate_name,
-                'spmb_unit_id' => $request->spmb_unit_id,
-                'spmb_grade_id' => $request->spmb_grade_id,
-                'admission_level' => $grade ? $grade->name : null,
-                'spmb_period_id' => $periodId,
-                'spmb_class_program_id' => $classProgramId,
-                'spmb_wave_id' => $request->spmb_wave_id,
-                'spmb_type_id' => $request->spmb_type_id,
-                'registration_status' => 'draft',
-                'payment_status' => 'unpaid',
-            ]);
-            $registration = $existingDraft;
-        } else {
-            $registration = Registration::create([
-                'user_id' => auth()->id(),
-                'candidate_name' => $request->candidate_name,
-                'spmb_unit_id' => $request->spmb_unit_id,
-                'spmb_grade_id' => $request->spmb_grade_id,
-                'admission_level' => $grade ? $grade->name : null,
-                'spmb_period_id' => $periodId,
-                'spmb_class_program_id' => $classProgramId,
-                'spmb_wave_id' => $request->spmb_wave_id,
-                'spmb_type_id' => $request->spmb_type_id,
-                'registration_status' => 'draft',
-                'payment_status' => 'unpaid'
-            ]);
-        }
+        $registration = Registration::create([
+            'user_id' => auth()->id(),
+            'candidate_name' => $request->candidate_name,
+            'spmb_unit_id' => $request->spmb_unit_id,
+            'spmb_grade_id' => $request->spmb_grade_id,
+            'admission_level' => $grade ? $grade->name : null,
+            'spmb_period_id' => $periodId,
+            'spmb_class_program_id' => $classProgramId,
+            'spmb_wave_id' => $request->spmb_wave_id,
+            'spmb_type_id' => $request->spmb_type_id,
+            'registration_status' => 'draft',
+            'payment_status' => 'unpaid'
+        ]);
 
         // Handle TPA extra service (Daycare) attachment
         $includeTpa = $request->boolean('include_tpa');
@@ -371,7 +341,11 @@ class WebDashboardController extends Controller
         
         $tpaService = \App\Models\SpmbExtraService::where('spmb_unit_id', $request->spmb_unit_id)
             ->where(function($q) {
-                $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
+                $q->where('name', 'like', '%TPA%')
+                  ->orWhere('name', 'like', '%Daycare%')
+                  ->orWhere('name', 'like', '%Penitipan%')
+                  ->orWhere('code', 'like', '%TPA%')
+                  ->orWhere('code', 'like', '%Daycare%');
             })->first();
 
         if ($includeTpa) {
@@ -382,35 +356,12 @@ class WebDashboardController extends Controller
             $registration->extraServices()->detach($tpaService->id);
         }
 
-        // If registering for TPA 1 (Khusus Guru/Karyawan), it's 100% free / internal dispensation
-        if ($isTpa1Guru) {
-            $hasFormSuccessPayment = $registration->payments()->where('payment_type', 'registration_fee')->where('status', 'success')->exists();
-            if (!$hasFormSuccessPayment) {
-                \App\Models\Payment::create([
-                    'registration_id' => $registration->id,
-                    'invoice_number' => 'INV-FREE-TPA1-' . date('Ymd') . '-' . $registration->id,
-                    'amount' => 0,
-                    'base_amount' => 0,
-                    'admin_fee' => 0,
-                    'payment_method' => 'DISPENSATION',
-                    'reference_id' => 'DISP-TPA1-GURU',
-                    'payment_info' => [
-                        'dispensation' => true,
-                        'dispensation_reason' => 'Program TPA 1 Khusus Putra/Putri Guru & Karyawan Sekolah Anak Saleh'
-                    ],
-                    'status' => 'success',
-                    'payment_type' => 'registration_fee'
-                ]);
-            }
-            $registration->update([
-                'payment_status' => 'paid',
-            ]);
-            
-            session(['active_candidate_id' => $registration->id]);
-            return redirect()->route('dashboard.form', $registration->id)->with('success', 'Pendaftaran TPA 1 (Khusus Guru & Karyawan) berhasil dibuat. Silakan lengkapi formulir pendaftaran.');
-        }
-        
         session(['active_candidate_id' => $registration->id]);
+        
+        if ($isTpa1Guru) {
+            return redirect()->route('dashboard.payment', $registration->id)->with('info', 'Pendaftaran jalur Khusus Putra/Putri Guru & Karyawan YPAS berhasil dibuat. Silakan hubungi Admin SPMB Unit terkait untuk konfirmasi & aktivasi formulir pendaftaran.');
+        }
+
         return redirect()->route('dashboard.payment', $registration->id);
     }
 
@@ -1238,32 +1189,19 @@ class WebDashboardController extends Controller
         if ($step->fields->where('field_name', 'extra_services')->count() > 0) {
             $services = (array)$request->input('extra_services', []);
 
-            // Restrict to extra services that are active for this unit
-            $activeUnitServiceIds = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->pluck('id')->toArray();
-            $services = array_intersect($services, $activeUnitServiceIds);
+            // Restrict to extra services that are active for this unit and match eligibility criteria
+            $eligibleServiceIds = \App\Models\SpmbExtraService::forUnit($registration->spmb_unit_id)->get()->filter(function($s) use ($registration) {
+                return $s->matchesEligibility(
+                    $registration->spmb_type_id,
+                    $registration->spmb_class_program_id,
+                    $registration->spmb_wave_id,
+                    $registration->spmb_period_id,
+                    $registration->spmb_grade_id
+                );
+            })->pluck('id')->toArray();
 
-            // Check if MBK (Murid Berkebutuhan Khusus) program is selected
-            $classProgId = $request->input('spmb_class_program_id', $registration->spmb_class_program_id);
-            $classProgram = $classProgId ? \App\Models\SpmbClassProgram::find($classProgId) : null;
-            $isMbk = $classProgram && (str_contains(strtolower($classProgram->name), 'mbk') || str_contains(strtolower($classProgram->name), 'kebutuhan khusus'));
-
-            $isTpaReg = str_contains(strtolower($registration->admission_level ?? ''), 'tpa') || ($registration->grade && str_contains(strtolower($registration->grade->name), 'tpa'));
-
-            if ($isMbk) {
-                // If MBK, TPA extra service is not allowed / disabled
-                $tpaServiceIds = \App\Models\SpmbExtraService::where(function($q) {
-                    $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
-                })->pluck('id')->toArray();
-                $services = array_diff($services, $tpaServiceIds);
-            } elseif ($isTpaReg) {
-                $tpaServiceId = \App\Models\SpmbExtraService::where(function($q) {
-                    $q->where('name', 'like', '%TPA%')->orWhere('name', 'like', '%Penitipan%')->orWhere('code', 'TPA');
-                })->value('id');
-                if ($tpaServiceId && in_array($tpaServiceId, $activeUnitServiceIds) && !in_array($tpaServiceId, $services)) {
-                    $services[] = $tpaServiceId;
-                }
-            }
-            $registration->extraServices()->sync(array_filter($services));
+            $services = array_intersect($services, $eligibleServiceIds);
+            $registration->extraServices()->sync(array_values(array_filter($services)));
         }
 
         // Capture referral & custom info source fields if present

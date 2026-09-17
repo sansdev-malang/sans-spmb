@@ -630,7 +630,7 @@
                     <div>
                         <h3 class="font-extrabold text-slate-800 dark:text-white text-xs leading-tight text-left">{{ $registration->candidate_name ?? 'Draft Calon Murid' }}</h3>
                         <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5 text-left">
-                            {{ $registration->unit->name ?? '-' }}@if(!empty($registration->grade->name)) • {{ $registration->grade->name }}@endif
+                            {{ $registration->unit->name ?? '-' }}@if(!empty($registration->sub_unit_display_name)) • {{ $registration->sub_unit_display_name }}@endif @if(!empty($registration->class_display_name)) ({{ $registration->class_display_name }})@endif
                         </span>
                     </div>
                 </div>
@@ -638,6 +638,10 @@
                     <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
                         <span class="font-semibold">No. Registrasi</span>
                         <span class="font-mono font-extrabold text-slate-850 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{{ $registration->id_label }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Jenjang / Tingkat</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->class_display_name }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span>Tahun Pelajaran</span>
@@ -655,11 +659,11 @@
                         <span>Tanggal Registrasi</span>
                         <span class="font-bold text-slate-800 dark:text-slate-200">{{ $registration->created_at->format('d M Y') }}</span>
                     </div>
-                    @if($registration->extraServices->count() > 0)
+                    @if($registration->non_formal_services->isNotEmpty())
                         <div class="border-t border-slate-100 dark:border-slate-800 pt-2.5 mt-2 space-y-1.5 text-left">
-                            <span class="font-semibold text-slate-600 dark:text-slate-400 block text-[10px]">Layanan Tambahan</span>
+                            <span class="font-semibold text-slate-600 dark:text-slate-400 block text-[10px]">Layanan Non-Formal</span>
                             <div class="flex flex-wrap gap-1.5">
-                                @foreach($registration->extraServices as $service)
+                                @foreach($registration->non_formal_services as $service)
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-brand-emerald dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
                                         <i data-lucide="check" class="w-3 h-3 text-brand-emerald dark:text-emerald-400 stroke-[2.5]"></i>
                                         <span>{{ $service->name }}</span>

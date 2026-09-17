@@ -224,7 +224,7 @@
                 <div>
                     <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Unit Pendidikan</span>
                     <span class="font-bold text-slate-800 mt-0.5 block">
-                        {{ $registration->unit->name ?? '-' }}@if(!empty($registration->grade->name)) ({{ $registration->grade->name }})@endif
+                        {{ $registration->unit->name ?? '-' }}@if(!empty($registration->sub_unit_display_name)) • {{ $registration->sub_unit_display_name }}@endif @if(!empty($registration->class_display_name)) ({{ $registration->class_display_name }})@endif
                     </span>
                 </div>
                 <div>
@@ -239,11 +239,11 @@
                         {{ $registration->type->name ?? '-' }}@if(!empty($registration->classProgram->name)) ({{ $registration->classProgram->name }})@endif
                     </span>
                 </div>
-                @if($registration->extraServices->count() > 0)
+                @if($registration->non_formal_services->isNotEmpty())
                     <div class="col-span-2 border-t border-slate-100/80 pt-2.5 mt-0.5">
-                        <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Layanan Tambahan</span>
+                        <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Layanan Non-Formal</span>
                         <span class="font-extrabold text-brand-emerald mt-0.5 block">
-                            {{ $registration->extraServices->pluck('name')->implode(', ') }}
+                            {{ $registration->non_formal_services->pluck('name')->implode(', ') }}
                         </span>
                     </div>
                 @endif
