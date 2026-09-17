@@ -41,8 +41,13 @@
             <i data-lucide="info" class="w-4 h-4"></i>
         </div>
         <div class="flex-1 leading-relaxed">
-            <span class="font-bold text-slate-800">Petunjuk Status & Visual Redup:</span>
-            Komponen dengan baris <strong class="text-slate-500">agak redup (muted)</strong> menandakan gelombang/jalur/periode tersebut saat ini sedang <strong>dinonaktifkan / ditutup</strong> untuk pendaftaran online. Anda dapat membuka atau menutup status pendaftaran per unit secara independen melalui menu <a href="{{ route('admin.spmb-settings.registration', ['unit_id' => $selectedUnitId ?: ($units->first()->id ?? 1)]) }}" class="font-bold text-brand-emerald underline hover:text-emerald-700">Aktivasi SPMB</a>.
+            @if($isSuperAdmin)
+                <span class="font-bold text-slate-800">Petunjuk Status & Visual Redup:</span>
+                Komponen dengan baris <strong class="text-slate-500">agak redup (muted)</strong> menandakan gelombang/jalur/periode tersebut saat ini sedang <strong>dinonaktifkan / ditutup</strong> untuk pendaftaran online. Anda dapat membuka atau menutup status pendaftaran per unit secara independen melalui menu <a href="{{ route('admin.spmb-settings.registration', ['unit_id' => $selectedUnitId ?: ($units->first()->id ?? 1)]) }}" class="font-bold text-brand-emerald underline hover:text-emerald-700">Aktivasi SPMB</a>.
+            @else
+                <span class="font-bold text-slate-800">Mode Informasi (Read-Only):</span>
+                Master Jalur, Gelombang, Periode, dan Kategori Murid dikelola secara terpusat oleh Yayasan / Super Admin. Anda dapat melihat informasi dan status keaktifan untuk unit Anda di halaman ini. Untuk membuka atau menutup jalur & gelombang pada unit Anda, silakan gunakan menu <a href="{{ route('admin.spmb-settings.registration') }}" class="font-bold text-brand-emerald underline hover:text-emerald-700">Aktivasi SPMB</a>.
+            @endif
         </div>
     </div>
 
@@ -70,11 +75,13 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Tahun Pelajaran (Periode Akademik)</h3>
-                    <p class="text-[11px] text-slate-400">Atur periode ajaran baru. Tentukan 1 <strong>Tahun Default</strong> agar seluruh halaman admin otomatis terbuka pada tahun tersebut.</p>
+                    <p class="text-[11px] text-slate-400">Daftar periode ajaran baru. Tentukan 1 <strong>Tahun Default</strong> agar seluruh halaman admin otomatis terbuka pada tahun tersebut.</p>
                 </div>
-                <button onclick="openModal('periode', '', '', '{{ route('admin.spmb-settings.periods.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Periode
-                </button>
+                @if($isSuperAdmin)
+                    <button onclick="openModal('periode', '', '', '{{ route('admin.spmb-settings.periods.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Periode
+                    </button>
+                @endif
             </div>
             
             <div class="overflow-x-auto border border-slate-100 rounded-xl">
@@ -85,7 +92,9 @@
                             <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Tahun Default</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
-                            <th class="py-4 px-6 text-right">Aksi</th>
+                            @if($isSuperAdmin)
+                                <th class="py-4 px-6 text-right">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
@@ -136,13 +145,15 @@
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-white shadow-sm shadow-emerald-200">
                                             <i data-lucide="star" class="w-3.5 h-3.5 fill-white text-white"></i> Default Utama
                                         </span>
-                                    @else
+                                    @elseif($isSuperAdmin)
                                         <form action="{{ route('admin.spmb-settings.periods.default', $period->id) }}" method="POST" class="inline-block">
                                             @csrf
                                             <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-brand-emerald hover:text-white text-slate-600 transition shadow-2xs cursor-pointer group" title="Jadikan sebagai Tahun Pelajaran default untuk seluruh admin panel">
                                                 <i data-lucide="star" class="w-3.5 h-3.5 text-slate-400 group-hover:text-white"></i> Jadikan Default
                                             </button>
                                         </form>
+                                    @else
+                                        <span class="text-xs text-slate-400 font-semibold">-</span>
                                     @endif
                                 </td>
                                 <td class="py-4 px-6 text-center">
@@ -150,26 +161,28 @@
                                         {{ $period->registrations_count }} Pendaftar
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button type="button" onclick="openModal('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.update', $period->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Periode">
-                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                        </button>
-                                        @if($period->registrations_count > 0)
-                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Periode karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Periode">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                @if($isSuperAdmin)
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <button type="button" onclick="openModal('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.update', $period->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Periode">
+                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
-                                        @else
-                                            <button type="button" onclick="deleteItem('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.delete', $period->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Periode">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
+                                            @if($period->registrations_count > 0)
+                                                <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Periode karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Periode">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="deleteItem('periode', '{{ $period->year }}', '{{ $period->registrations_count > 0 }}', '{{ route('admin.spmb-settings.periods.delete', $period->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Periode">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada data periode akademik.</td>
+                                <td colspan="{{ $isSuperAdmin ? 5 : 4 }}" class="py-8 px-6 text-center text-slate-400">Belum ada data periode akademik.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -182,11 +195,13 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Gelombang Masuk Pendaftaran</h3>
-                    <p class="text-[11px] text-slate-400">Kelola kuota gelombang penerimaan baru (Biaya disetel pada menu Keuangan).</p>
+                    <p class="text-[11px] text-slate-400">Daftar gelombang penerimaan murid baru (Biaya disetel pada menu Keuangan).</p>
                 </div>
-                <button onclick="openModal('gelombang', '', '', '{{ route('admin.spmb-settings.waves.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Gelombang
-                </button>
+                @if($isSuperAdmin)
+                    <button onclick="openModal('gelombang', '', '', '{{ route('admin.spmb-settings.waves.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Gelombang
+                    </button>
+                @endif
             </div>
             
             <div class="overflow-x-auto border border-slate-100 rounded-xl">
@@ -196,7 +211,9 @@
                             <th class="py-4 px-6">Nama Gelombang</th>
                             <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
-                            <th class="py-4 px-6 text-right">Aksi</th>
+                            @if($isSuperAdmin)
+                                <th class="py-4 px-6 text-right">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
@@ -248,26 +265,28 @@
                                         {{ $wave->registrations_count }} Pendaftar
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button type="button" onclick="openModal('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.update', $wave->id) }}', '1', '{{ addslashes($wave->description) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Gelombang">
-                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                        </button>
-                                        @if($wave->registrations_count > 0)
-                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Gelombang karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Gelombang">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                @if($isSuperAdmin)
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <button type="button" onclick="openModal('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.update', $wave->id) }}', '1', '{{ addslashes($wave->description) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Gelombang">
+                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
-                                        @else
-                                            <button type="button" onclick="deleteItem('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.delete', $wave->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Gelombang">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
+                                            @if($wave->registrations_count > 0)
+                                                <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Gelombang karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Gelombang">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="deleteItem('gelombang', '{{ addslashes($wave->name) }}', '{{ $wave->registrations_count > 0 }}', '{{ route('admin.spmb-settings.waves.delete', $wave->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Gelombang">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data gelombang pendaftaran.</td>
+                                <td colspan="{{ $isSuperAdmin ? 4 : 3 }}" class="py-8 px-6 text-center text-slate-400">Belum ada data gelombang pendaftaran.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -282,9 +301,11 @@
                     <h3 class="font-extrabold text-base text-slate-800">Kategori Jenis Pendaftaran</h3>
                     <p class="text-[11px] text-slate-400">Kelola jenis penerimaan (contoh: Murid Baru, Pindahan Mutasi, dll).</p>
                 </div>
-                <button onclick="openModal('jenis', '', '', '{{ route('admin.spmb-settings.types.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Kategori
-                </button>
+                @if($isSuperAdmin)
+                    <button onclick="openModal('jenis', '', '', '{{ route('admin.spmb-settings.types.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Kategori
+                    </button>
+                @endif
             </div>
             
             <div class="overflow-x-auto border border-slate-100 rounded-xl">
@@ -294,7 +315,9 @@
                             <th class="py-4 px-6">Kategori Jenis</th>
                             <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
-                            <th class="py-4 px-6 text-right">Aksi</th>
+                            @if($isSuperAdmin)
+                                <th class="py-4 px-6 text-right">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
@@ -346,26 +369,28 @@
                                         {{ $type->registrations_count }} Pendaftar
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button type="button" onclick="openModal('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.update', $type->id) }}', '1', '{{ addslashes($type->description) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Jenis Pendaftaran">
-                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                        </button>
-                                        @if($type->registrations_count > 0)
-                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Jenis Pendaftaran karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Jenis Pendaftaran">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                @if($isSuperAdmin)
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <button type="button" onclick="openModal('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.update', $type->id) }}', '1', '{{ addslashes($type->description) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Jenis Pendaftaran">
+                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
-                                        @else
-                                            <button type="button" onclick="deleteItem('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.delete', $type->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Jenis Pendaftaran">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
+                                            @if($type->registrations_count > 0)
+                                                <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Jenis Pendaftaran karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Jenis Pendaftaran">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="deleteItem('jenis', '{{ addslashes($type->name) }}', '{{ $type->registrations_count > 0 }}', '{{ route('admin.spmb-settings.types.delete', $type->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Jenis Pendaftaran">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis pendaftaran.</td>
+                                <td colspan="{{ $isSuperAdmin ? 4 : 3 }}" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis pendaftaran.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -380,9 +405,11 @@
                     <h3 class="font-extrabold text-base text-slate-850">Kategori Murid</h3>
                     <p class="text-[11px] text-slate-400">Kelola kategori penerimaan murid (contoh: Reguler, Inklusi).</p>
                 </div>
-                <button onclick="openModal('program', '', '', '{{ route('admin.spmb-settings.class-programs.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Kategori Murid
-                </button>
+                @if($isSuperAdmin)
+                    <button onclick="openModal('program', '', '', '{{ route('admin.spmb-settings.class-programs.store') }}')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Kategori Murid
+                    </button>
+                @endif
             </div>
             
             <div class="overflow-x-auto border border-slate-100 rounded-xl">
@@ -392,7 +419,9 @@
                             <th class="py-4 px-6">Nama Kategori Murid</th>
                             <th class="py-4 px-6 text-center">Status Aktivasi</th>
                             <th class="py-4 px-6 text-center">Digunakan Transaksi</th>
-                            <th class="py-4 px-6 text-right">Aksi</th>
+                            @if($isSuperAdmin)
+                                <th class="py-4 px-6 text-right">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100">
@@ -444,26 +473,28 @@
                                         {{ $program->registrations_count }} Pendaftar
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <button type="button" onclick="openModal('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.update', $program->id) }}', '{{ $program->is_active }}', '{{ addslashes($program->description) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Kategori Murid">
-                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                        </button>
-                                        @if($program->registrations_count > 0)
-                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Kategori Murid karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Kategori Murid">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                @if($isSuperAdmin)
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <button type="button" onclick="openModal('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.update', $program->id) }}', '{{ $program->is_active }}', '{{ addslashes($program->description) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Kategori Murid">
+                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
                                             </button>
-                                        @else
-                                            <button type="button" onclick="deleteItem('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.delete', $program->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Kategori Murid">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
+                                            @if($program->registrations_count > 0)
+                                                <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Kategori Murid karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed" title="Hapus Kategori Murid">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="deleteItem('program', '{{ addslashes($program->name) }}', '{{ $program->registrations_count > 0 }}', '{{ route('admin.spmb-settings.class-programs.delete', $program->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Kategori Murid">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 px-6 text-center text-slate-400">Belum ada data kategori murid.</td>
+                                <td colspan="{{ $isSuperAdmin ? 4 : 3 }}" class="py-8 px-6 text-center text-slate-400">Belum ada data kategori murid.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -474,56 +505,58 @@
 
 </div>
 
-<!-- Unified CRUD Modal -->
-<div id="crudModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
-    <div class="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-100 overflow-hidden">
-        <div class="bg-brand-emerald text-white px-6 py-4">
-            <h3 id="crudModalTitle" class="font-extrabold text-lg">Tambah</h3>
-            <p class="text-xs text-emerald-100 mt-0.5">Kelola data konfigurasi setting master.</p>
-        </div>
-        <form id="crudForm" method="POST" hx-boost="false" class="p-6 space-y-4">
-            @csrf
-            
-            @if($errors->any() && session('failed_modal'))
-                <div id="spmbErrorWrapper" class="text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold mb-3 space-y-1">
-                    @foreach($errors->all() as $error)
-                        <p>⚠️ {{ $error }}</p>
-                    @endforeach
+@if($isSuperAdmin)
+    <!-- Unified CRUD Modal -->
+    <div id="crudModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-100 overflow-hidden">
+            <div class="bg-brand-emerald text-white px-6 py-4">
+                <h3 id="crudModalTitle" class="font-extrabold text-lg">Tambah</h3>
+                <p class="text-xs text-emerald-100 mt-0.5">Kelola data konfigurasi setting master.</p>
+            </div>
+            <form id="crudForm" method="POST" hx-boost="false" class="p-6 space-y-4">
+                @csrf
+                
+                @if($errors->any() && session('failed_modal'))
+                    <div id="spmbErrorWrapper" class="text-xs text-red-650 bg-red-50 p-3.5 rounded-xl border border-red-200 font-semibold mb-3 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <p>⚠️ {{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div>
+                    <label id="crudInputLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Input</label>
+                    <input type="text" id="crudMainInput" name="value" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
                 </div>
-            @endif
 
-            <div>
-                <label id="crudInputLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Input</label>
-                <input type="text" id="crudMainInput" name="value" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
-            </div>
-
-            <div id="descriptionInputBox">
-                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Deskripsi / Keterangan</label>
-                <textarea id="crudDescriptionInput" name="description" rows="3" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Masukkan deskripsi singkat (opsional)..."></textarea>
-            </div>
-            
-            <div id="statusToggleBox" class="hidden flex items-center gap-2 pt-2">
-                <input type="checkbox" id="crudStatusInput" name="is_active" value="1" class="rounded border-slate-300 text-brand-emerald focus:ring-brand-emerald">
-                <label for="crudStatusInput" class="text-xs font-semibold text-slate-700">Aktifkan Kategori Murid</label>
-            </div>
-            
-            <div class="flex justify-end gap-2 pt-4">
-                <button type="button" onclick="closeModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition">
-                    Kembali
-                </button>
-                <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md">
-                    Simpan Perubahan
-                </button>
-            </div>
-        </form>
+                <div id="descriptionInputBox">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Deskripsi / Keterangan</label>
+                    <textarea id="crudDescriptionInput" name="description" rows="3" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm" placeholder="Masukkan deskripsi singkat (opsional)..."></textarea>
+                </div>
+                
+                <div id="statusToggleBox" class="hidden flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="crudStatusInput" name="is_active" value="1" class="rounded border-slate-300 text-brand-emerald focus:ring-brand-emerald">
+                    <label for="crudStatusInput" class="text-xs font-semibold text-slate-700">Aktifkan Kategori Murid</label>
+                </div>
+                
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="closeModal()" class="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer">
+                        Kembali
+                    </button>
+                    <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold transition shadow-md cursor-pointer">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-<!-- Hidden Delete Form -->
-<form id="deleteForm" method="POST" hx-boost="false" class="hidden">
-    @csrf
-    @method('DELETE')
-</form>
+    <!-- Hidden Delete Form -->
+    <form id="deleteForm" method="POST" hx-boost="false" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
+@endif
 
 <script>
     // Tab Switching
@@ -555,6 +588,7 @@
         localStorage.setItem('spmb_active_tab', tabId);
     }
 
+@if($isSuperAdmin)
     // Modal Control
     function openModal(moduleType, val = '', isLocked = false, actionUrl = '', isActive = '1', desc = '') {
         const errorWrapper = document.getElementById('spmbErrorWrapper');
@@ -628,9 +662,12 @@
         }
     }
 
-    document.getElementById('crudModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
+    const crudModalEl = document.getElementById('crudModal');
+    if (crudModalEl) {
+        crudModalEl.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    }
 
     // Delete Operations
     function deleteItem(type, name, isUsed, deleteUrl) {
@@ -692,5 +729,6 @@
             }
         }
     });
+@endif
 </script>
 @endsection

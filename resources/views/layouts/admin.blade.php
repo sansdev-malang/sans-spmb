@@ -601,14 +601,12 @@
                     <a href="{{ route('admin.spmb-settings.units-grades') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.units-grades') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                         <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Struktur Sekolah</span>
                     </a>
-                    @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('admin.spmb-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="git-branch" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Jalur & Gelombang</span>
-                        </a>
-                        <a href="{{ route('admin.spmb-settings.form') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.form') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
-                            <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Setting Formulir</span>
-                        </a>
-                    @endif
+                    <a href="{{ route('admin.spmb-settings') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="git-branch" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Jalur & Gelombang</span>
+                    </a>
+                    <a href="{{ route('admin.spmb-settings.form') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.form') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
+                        <i data-lucide="settings-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Setting Formulir</span>
+                    </a>
                     <a href="{{ route('admin.spmb-settings.instructions') }}" class="group flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-xs font-medium transition {{ Route::is('admin.spmb-settings.instructions') ? 'active text-brand-yellow font-bold bg-slate-800/60 shadow-sm' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30' }}">
                         <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i> <span class="sidebar-text">Instruksi Daftar</span>
                     </a>

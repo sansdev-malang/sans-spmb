@@ -203,6 +203,15 @@ Route::middleware('auth')->group(function () {
         Route::match(['POST', 'PUT'], '/admin/spmb-settings/extra-services/{id}', [SpmbSettingsController::class, 'updateExtraService'])->name('admin.spmb-settings.extra-services.update');
         Route::delete('/admin/spmb-settings/extra-services/{id}', [SpmbSettingsController::class, 'destroyExtraService'])->name('admin.spmb-settings.extra-services.delete');
 
+        // Master Jalur & Gelombang (Accessible to Super Admin and Unit Admin as read-only)
+        Route::get('/admin/spmb-settings', [SpmbSettingsController::class, 'index'])->name('admin.spmb-settings');
+
+        // Setting Formulir (Accessible to Super Admin and Unit Admin with scoped CRUD)
+        Route::get('/admin/spmb-settings/form', [SpmbFormSettingsController::class, 'index'])->name('admin.spmb-settings.form');
+        Route::post('/admin/spmb-settings/form/fields', [SpmbFormSettingsController::class, 'storeField'])->name('admin.spmb-settings.form.fields.store');
+        Route::post('/admin/spmb-settings/form/fields/{id}', [SpmbFormSettingsController::class, 'updateField'])->name('admin.spmb-settings.form.fields.update');
+        Route::delete('/admin/spmb-settings/form/fields/{id}', [SpmbFormSettingsController::class, 'destroyField'])->name('admin.spmb-settings.form.fields.delete');
+
         // Super Admin Restricted Routes
         Route::middleware('super_admin')->group(function () {
             Route::get('/admin/activity-logs', [AdminDashboardController::class, 'activityLogs'])->name('admin.activity-logs');
@@ -235,7 +244,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/admin/api-integrations/{id}/test-webhook', [AdminApiIntegrationController::class, 'testWebhook'])->name('admin.api-integrations.test-webhook');
             Route::post('/admin/api-integrations/clear-logs', [AdminApiIntegrationController::class, 'clearLogs'])->name('admin.api-integrations.clear-logs');
 
-            Route::get('/admin/spmb-settings', [SpmbSettingsController::class, 'index'])->name('admin.spmb-settings');
             Route::post('/admin/spmb-settings/qrcode', [SpmbSettingsController::class, 'saveQrcode'])->name('admin.spmb-settings.qrcode.save');
             
             // Period CRUD
@@ -259,15 +267,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/admin/spmb-settings/class-programs/{id}', [SpmbSettingsController::class, 'updateClassProgram'])->name('admin.spmb-settings.class-programs.update');
             Route::delete('/admin/spmb-settings/class-programs/{id}', [SpmbSettingsController::class, 'destroyClassProgram'])->name('admin.spmb-settings.class-programs.delete');
 
-            // Setting Formulir CRUD
-            Route::get('/admin/spmb-settings/form', [SpmbFormSettingsController::class, 'index'])->name('admin.spmb-settings.form');
+            // Setting Formulir Steps CRUD (Super Admin Only)
             Route::post('/admin/spmb-settings/form/steps', [SpmbFormSettingsController::class, 'storeStep'])->name('admin.spmb-settings.form.steps.store');
             Route::post('/admin/spmb-settings/form/steps/{id}', [SpmbFormSettingsController::class, 'updateStep'])->name('admin.spmb-settings.form.steps.update');
             Route::delete('/admin/spmb-settings/form/steps/{id}', [SpmbFormSettingsController::class, 'destroyStep'])->name('admin.spmb-settings.form.steps.delete');
-            
-            Route::post('/admin/spmb-settings/form/fields', [SpmbFormSettingsController::class, 'storeField'])->name('admin.spmb-settings.form.fields.store');
-            Route::post('/admin/spmb-settings/form/fields/{id}', [SpmbFormSettingsController::class, 'updateField'])->name('admin.spmb-settings.form.fields.update');
-            Route::delete('/admin/spmb-settings/form/fields/{id}', [SpmbFormSettingsController::class, 'destroyField'])->name('admin.spmb-settings.form.fields.delete');
 
             // System Logs Viewer
             Route::get('/admin/logs', [AdminLogsController::class, 'index'])->name('admin.logs');
