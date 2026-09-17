@@ -451,7 +451,7 @@ class Registration extends Model
     public function getRegistrationFeeDetails(): array
     {
         $gradeName = strtolower($this->grade->name ?? $this->admission_level ?? '');
-        $isTpa1Guru = ($this->spmb_grade_id == 13) || (str_contains($gradeName, 'tpa 1') && (str_contains($gradeName, 'guru') || str_contains($gradeName, 'karyawan')));
+        $isTpa1Guru = (str_contains($gradeName, 'guru') || str_contains($gradeName, 'karyawan') || str_contains($gradeName, 'gukar'));
 
         if ($isTpa1Guru) {
             return [
