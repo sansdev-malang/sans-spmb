@@ -78,9 +78,9 @@
     </div>
 
     <!-- Collapsible Advanced Stats Section -->
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
         <button onclick="document.getElementById('rekap-detail-panel').classList.toggle('hidden'); this.querySelector('.chevron-icon').classList.toggle('rotate-180');" 
-                class="w-full flex items-center justify-between px-6 py-4 bg-slate-50/50 hover:bg-slate-50 transition text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                class="w-full flex items-center justify-between px-6 py-4 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-slate-50 dark:hover:bg-slate-900 transition text-xs font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider cursor-pointer">
             <span class="flex items-center gap-2">
                 <i data-lucide="bar-chart-horizontal" class="w-4 h-4 text-brand-emerald"></i>
                 Lihat Rekap Gelombang, Jalur, & Kategori Murid
@@ -88,11 +88,11 @@
             <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200 chevron-icon"></i>
         </button>
         
-        <div id="rekap-detail-panel" class="hidden p-6 border-t border-slate-100 bg-white">
+        <div id="rekap-detail-panel" class="hidden p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Column 1: Gelombang -->
                 <div class="space-y-3">
-                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
                         <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Distribusi Gelombang
                     </h4>
@@ -102,11 +102,11 @@
                                 $percent = $stats['total'] > 0 ? round(($ws['count'] / $stats['total']) * 100) : 0;
                             @endphp
                             <div class="space-y-1">
-                                <div class="flex justify-between text-xs font-bold text-slate-650">
+                                <div class="flex justify-between text-xs font-bold text-slate-650 dark:text-slate-300">
                                     <span>{{ $ws['name'] }}</span>
                                     <span>{{ $ws['count'] }} Murid ({{ $percent }}%)</span>
                                 </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                                     <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
                                 </div>
                             </div>
@@ -118,7 +118,7 @@
 
                 <!-- Column 2: Jalur Pendaftaran -->
                 <div class="space-y-3">
-                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
                         <i data-lucide="git-branch" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Jalur Pendaftaran
                     </h4>
@@ -128,11 +128,11 @@
                                 $percent = $stats['total'] > 0 ? round(($ts['count'] / $stats['total']) * 100) : 0;
                             @endphp
                             <div class="space-y-1">
-                                <div class="flex justify-between text-xs font-bold text-slate-650">
+                                <div class="flex justify-between text-xs font-bold text-slate-650 dark:text-slate-300">
                                     <span>{{ $ts['name'] }}</span>
                                     <span>{{ $ts['count'] }} Murid ({{ $percent }}%)</span>
                                 </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                                     <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
                                 </div>
                             </div>
@@ -144,7 +144,7 @@
 
                 <!-- Column 3: Kategori Murid -->
                 <div class="space-y-3">
-                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800">
                         <i data-lucide="award" class="w-3.5 h-3.5 text-brand-emerald"></i>
                         Kategori Murid
                     </h4>
@@ -154,11 +154,11 @@
                                 $percent = $stats['total'] > 0 ? round(($cps['count'] / $stats['total']) * 100) : 0;
                             @endphp
                             <div class="space-y-1">
-                                <div class="flex justify-between text-xs font-bold text-slate-650">
+                                <div class="flex justify-between text-xs font-bold text-slate-650 dark:text-slate-300">
                                     <span>{{ $cps['name'] }}</span>
                                     <span>{{ $cps['count'] }} Murid ({{ $percent }}%)</span>
                                 </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                                     <div class="bg-brand-emerald h-full rounded-full" style="width: {{ $percent }}%"></div>
                                 </div>
                             </div>
@@ -174,7 +174,7 @@
     <!-- Candidate List Table -->
     <div id="candidates-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#candidates-card" hx-select="#candidates-card">
          <!-- Search & Filter Form -->
-        <form id="candidateFilterForm" action="{{ route('admin.candidates') }}" method="GET" class="p-6 bg-slate-50/50 border-b border-slate-100 space-y-4">
+        <form id="candidateFilterForm" action="{{ route('admin.candidates') }}" method="GET" class="p-5 sm:p-6 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 space-y-4">
             @php
                 $currentStage = request('stage', 'all');
                 if (empty($currentStage)) $currentStage = 'all';
@@ -184,91 +184,123 @@
                         'label' => 'Semua',
                         'count' => $stageCounts['all'] ?? $stats['total'] ?? 0,
                         'active_class' => 'bg-brand-emerald text-white border-brand-emerald shadow-sm',
-                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300',
+                        'inactive_class' => 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300',
                         'badge_active' => 'bg-white/20 text-white',
-                        'badge_inactive' => 'bg-slate-100 text-slate-600'
+                        'badge_inactive' => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     ],
                     'draft' => [
                         'label' => 'Formulir',
                         'count' => $stageCounts['draft'] ?? 0,
                         'active_class' => 'bg-blue-600 text-white border-blue-600 shadow-sm',
-                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
+                        'inactive_class' => 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 hover:border-blue-200',
                         'badge_active' => 'bg-white/20 text-white',
-                        'badge_inactive' => 'bg-blue-50 text-blue-700'
+                        'badge_inactive' => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400'
                     ],
                     'submitted' => [
                         'label' => 'Verifikasi',
                         'count' => $stageCounts['submitted'] ?? 0,
                         'active_class' => 'bg-purple-600 text-white border-purple-600 shadow-sm',
-                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200',
+                        'inactive_class' => 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-700 hover:border-purple-200',
                         'badge_active' => 'bg-white/20 text-white',
-                        'badge_inactive' => 'bg-purple-50 text-purple-700'
+                        'badge_inactive' => 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400'
                     ],
                     'verified' => [
                         'label' => "Ta'aruf",
                         'count' => $stageCounts['verified'] ?? 0,
                         'active_class' => 'bg-indigo-600 text-white border-indigo-600 shadow-sm',
-                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200',
+                        'inactive_class' => 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:text-indigo-700 hover:border-indigo-200',
                         'badge_active' => 'bg-white/20 text-white',
-                        'badge_inactive' => 'bg-indigo-50 text-indigo-700'
+                        'badge_inactive' => 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400'
                     ],
                     'taaruf_completed' => [
                         'label' => 'Persetujuan',
                         'count' => $stageCounts['taaruf_completed'] ?? 0,
                         'active_class' => 'bg-amber-600 text-white border-amber-600 shadow-sm',
-                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200',
+                        'inactive_class' => 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-700 hover:border-amber-200',
                         'badge_active' => 'bg-white/20 text-white',
-                        'badge_inactive' => 'bg-amber-50 text-amber-700'
+                        'badge_inactive' => 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400'
                     ],
                     'agreement_signed' => [
                         'label' => 'Administrasi',
                         'count' => $stageCounts['agreement_signed'] ?? 0,
                         'active_class' => 'bg-pink-600 text-white border-pink-600 shadow-sm',
-                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-pink-50 hover:text-pink-700 hover:border-pink-200',
+                        'inactive_class' => 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-700 hover:border-pink-200',
                         'badge_active' => 'bg-white/20 text-white',
-                        'badge_inactive' => 'bg-pink-50 text-pink-700'
+                        'badge_inactive' => 'bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-400'
                     ],
                     'completed' => [
                         'label' => 'Selesai',
                         'count' => $stageCounts['completed'] ?? 0,
                         'active_class' => 'bg-emerald-600 text-white border-emerald-600 shadow-sm',
-                        'inactive_class' => 'bg-white text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200',
+                        'inactive_class' => 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:text-emerald-700 hover:border-emerald-200',
                         'badge_active' => 'bg-white/20 text-white',
-                        'badge_inactive' => 'bg-emerald-50 text-emerald-700'
+                        'badge_inactive' => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
                     ],
                 ];
+
+                $hasAdvFilters = request('start_date') || request('end_date') || request('gender') || request('wave_id') || request('type_id') || request('class_program_id');
+                $advFilterCount = 0;
+                if(request('start_date')) $advFilterCount++;
+                if(request('end_date')) $advFilterCount++;
+                if(request('gender')) $advFilterCount++;
+                if(request('wave_id')) $advFilterCount++;
+                if(request('type_id')) $advFilterCount++;
+                if(request('class_program_id')) $advFilterCount++;
+
+                $isFiltered = request()->filled('search') || $hasAdvFilters || (request('unit_id')) || (request('period_id') && request('period_id') !== 'all');
             @endphp
 
-            <div class="flex flex-col 2xl:flex-row gap-3.5 items-start 2xl:items-center justify-between">
-                <!-- Left: Search & Filter Controls -->
-                <div class="flex flex-wrap items-center gap-2.5 w-full 2xl:w-auto">
-                    <!-- Search Input Container -->
-                    <div class="relative w-full sm:w-72 flex items-center">
-                        @if(request('stage') && request('stage') !== 'all')
-                            <input type="hidden" name="stage" value="{{ request('stage') }}" hidden class="hidden">
-                        @endif
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-                            <i data-lucide="search" class="w-4 h-4"></i>
-                        </span>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, WhatsApp, NIK..." 
-                               class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald transition">
-                        
-                        <!-- Clear (X) Button -->
-                        @if(request('search'))
-                            <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; htmx.trigger(this.form, 'submit');" 
-                                    class="absolute right-12 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 transition"
-                                    title="Hapus Pencarian">
-                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                            </button>
-                        @endif
+            @if(request('stage') && request('stage') !== 'all')
+                <input type="hidden" name="stage" value="{{ request('stage') }}" hidden class="hidden">
+            @endif
 
-                        <!-- Integrated Search Button -->
-                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition">
-                            Cari
-                        </button>
-                    </div>
+            <!-- 1. Stage Filter Navigation (Tabs / Pills) -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none select-none border-b border-slate-200/70 dark:border-slate-800">
+                @foreach($stagePills as $sKey => $sData)
+                    @php 
+                        $isActive = ($currentStage === $sKey); 
+                        $pillUrl = ($sKey === 'all') 
+                            ? route('admin.candidates', request()->except(['stage', 'page']))
+                            : route('admin.candidates', array_merge(request()->except(['page']), ['stage' => $sKey]));
+                    @endphp
+                    <a href="{{ $pillUrl }}" 
+                       class="px-3 py-2 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-2 whitespace-nowrap cursor-pointer shadow-2xs {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
+                        <span>{{ $sData['label'] }}</span>
+                        <span class="h-5 min-w-5 px-1.5 rounded-md inline-flex items-center justify-center text-[10px] leading-none font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
+                            {{ $sData['count'] }}
+                        </span>
+                    </a>
+                @endforeach
+            </div>
+
+            <!-- 2. Search & Filter Controls Toolbar -->
+            <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+                <!-- Search Input Container -->
+                <div class="relative flex-1 max-w-full lg:max-w-md flex items-center">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, WhatsApp, NIK..." 
+                           class="w-full pl-9 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-emerald transition shadow-2xs">
                     
-                    <!-- Filter Tahun Ajaran (Custom CSS Dropdown) -->
+                    <!-- Clear (X) Button -->
+                    @if(request('search'))
+                        <button type="button" onclick="this.form.querySelector('input[name=search]').value = ''; htmx.trigger(this.form, 'submit');" 
+                                class="absolute right-14 inset-y-0 pr-1 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                                title="Hapus Pencarian">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    @endif
+
+                    <!-- Integrated Search Button -->
+                    <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-emerald hover-emerald text-white rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1 cursor-pointer">
+                        Cari
+                    </button>
+                </div>
+
+                <!-- Right: Dropdowns & Action Buttons -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Filter Tahun Ajaran (Custom Dropdown) -->
                     @if(isset($periods) && $periods->isNotEmpty())
                         @php
                             $activePeriodObj = $periods->firstWhere('id', $selectedPeriodId);
@@ -279,11 +311,11 @@
                             <input type="hidden" name="period_id" id="filter_period_id_candidates" value="{{ $selectedPeriodId ?? 'all' }}">
                             
                             <button type="button" @click="open = !open" 
-                                    class="inline-flex items-center justify-between gap-2 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-xs">
+                                    class="inline-flex items-center justify-between gap-2 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-2xs">
                                 <span class="flex items-center gap-2">
                                     <span>{{ $displayText }}</span>
                                     @if($isSelectedActive)
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-950 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
                                     @endif
                                 </span>
                                 <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -298,35 +330,35 @@
                                  x-transition:leave="transition ease-in duration-75"
                                  x-transition:leave-start="transform opacity-100 scale-100"
                                  x-transition:leave-end="transform opacity-0 scale-95"
-                                 class="absolute left-0 mt-1.5 min-w-[175px] w-max bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50 focus:outline-none"
+                                 class="absolute left-0 sm:right-0 sm:left-auto mt-1.5 min-w-[175px] w-max bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-50 focus:outline-none"
                                  style="display: none;">
                                 
                                 <button type="button" 
                                         @click="document.getElementById('filter_period_id_candidates').value = 'all'; open = false; htmx.trigger(document.getElementById('candidateFilterForm'), 'submit');"
-                                        class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-emerald-50/70 transition cursor-pointer {{ ($selectedPeriodId ?? 'all') === 'all' ? 'font-extrabold text-emerald-700 bg-emerald-50/50' : 'font-semibold text-slate-700' }}">
+                                        class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-emerald-50/70 dark:hover:bg-emerald-950/40 transition cursor-pointer {{ ($selectedPeriodId ?? 'all') === 'all' ? 'font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30' : 'font-semibold text-slate-700 dark:text-slate-300' }}">
                                     <span>Semua T.A</span>
                                     @if(($selectedPeriodId ?? 'all') === 'all')
-                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                                         </svg>
                                     @endif
                                 </button>
 
-                                <div class="my-1 border-t border-slate-100"></div>
+                                <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
 
                                 @foreach($periods as $period)
                                     @php $isCurrent = (($selectedPeriodId ?? '') == $period->id); @endphp
                                     <button type="button" 
                                             @click="document.getElementById('filter_period_id_candidates').value = '{{ $period->id }}'; open = false; htmx.trigger(document.getElementById('candidateFilterForm'), 'submit');"
-                                            class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between gap-3 hover:bg-emerald-50/70 transition cursor-pointer {{ $isCurrent ? 'font-extrabold text-emerald-700 bg-emerald-50/50' : 'font-semibold text-slate-700' }}">
+                                            class="w-full text-left px-3.5 py-2 text-xs flex items-center justify-between gap-3 hover:bg-emerald-50/70 dark:hover:bg-emerald-950/40 transition cursor-pointer {{ $isCurrent ? 'font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30' : 'font-semibold text-slate-700 dark:text-slate-300' }}">
                                         <span class="flex items-center gap-2">
                                             <span>{{ $period->name ?? $period->year }}</span>
                                             @if($period->is_active)
-                                                <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
+                                                <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-950 inline-block shadow-xs flex-shrink-0" title="Tahun Ajaran Aktif"></span>
                                             @endif
                                         </span>
                                         @if($isCurrent)
-                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                                             </svg>
                                         @endif
@@ -338,7 +370,7 @@
 
                     @if(auth()->user()->isSuperAdmin())
                         <!-- Filter Level / Unit -->
-                        <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                        <select name="unit_id" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-6 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer shadow-2xs">
                             <option value="">Semua Jenjang</option>
                             @foreach(\App\Models\SpmbUnit::where('is_active', true)->get() as $unit)
                                 <option value="{{ $unit->id }}" {{ request('unit_id') == $unit->id ? 'selected' : '' }}>{{ strtoupper($unit->code) }}</option>
@@ -347,7 +379,7 @@
                     @endif
 
                     <!-- Per Page Select -->
-                    <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-4.5 text-xs rounded-xl border border-slate-200 bg-white font-bold text-slate-650 focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <select name="per_page" onchange="htmx.trigger(this.form, 'submit')" class="py-2.5 px-6 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-slate-650 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer shadow-2xs">
                         <option value="10" {{ request('per_page', 10) == '10' ? 'selected' : '' }}>10 Baris</option>
                         <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25 Baris</option>
                         <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 Baris</option>
@@ -357,60 +389,56 @@
 
                     <!-- Advanced Filter Toggle Button -->
                     <button type="button" onclick="document.getElementById('adv-filters').classList.toggle('hidden')" 
-                            class="flex items-center gap-1.5 py-2.5 px-3.5 text-xs rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-600 transition">
+                            class="flex items-center gap-1.5 py-2.5 px-3.5 text-xs rounded-xl border transition cursor-pointer shadow-2xs font-bold {{ $hasAdvFilters ? 'border-brand-emerald bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300' }}">
                         <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
-                        Filter Lanjutan
-                    </button>
-                </div>
-
-                <!-- Right: Stage Filter Pills (Pill Tahapan) -->
-                <div class="flex items-center gap-1.5 overflow-x-auto w-full 2xl:w-auto pb-1 2xl:pb-0 select-none">
-                    @foreach($stagePills as $sKey => $sData)
-                        @php 
-                            $isActive = ($currentStage === $sKey); 
-                            $pillUrl = ($sKey === 'all') 
-                                ? route('admin.candidates', request()->except(['stage', 'page']))
-                                : route('admin.candidates', array_merge(request()->except(['page']), ['stage' => $sKey]));
-                        @endphp
-                        <a href="{{ $pillUrl }}" 
-                           class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap cursor-pointer {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
-                            <span>{{ $sData['label'] }}</span>
-                            <span class="h-5 min-w-5 px-1 rounded-md inline-flex items-center justify-center text-[10px] leading-none font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
-                                {{ $sData['count'] }}
+                        <span>Filter Lanjutan</span>
+                        @if($advFilterCount > 0)
+                            <span class="w-4 h-4 rounded-full bg-brand-emerald text-white text-[10px] flex items-center justify-center font-black">
+                                {{ $advFilterCount }}
                             </span>
+                        @endif
+                    </button>
+
+                    <!-- Reset All Filters Button (if filtered) -->
+                    @if($isFiltered)
+                        <a href="{{ route('admin.candidates', request()->only(['stage'])) }}" 
+                           class="flex items-center gap-1.5 py-2.5 px-3 text-xs rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/30 hover:bg-rose-100 text-rose-600 dark:text-rose-400 font-bold transition cursor-pointer shadow-2xs" 
+                           title="Reset Semua Filter & Pencarian">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">Reset</span>
                         </a>
-                    @endforeach
+                    @endif
                 </div>
             </div>
 
             <!-- Slide-down Advanced Filters Panel -->
-            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('gender') || request('wave_id') || request('type_id') || request('class_program_id')) ? '' : 'hidden' }} border-t border-slate-100 pt-4 space-y-4 transition-all duration-300">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div id="adv-filters" class="{{ (request('start_date') || request('end_date') || request('gender') || request('wave_id') || request('type_id') || request('class_program_id')) ? '' : 'hidden' }} border-t border-slate-200/70 dark:border-slate-800 pt-4 space-y-4 transition-all duration-300">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <!-- Date Range: Start -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Tgl Mulai Daftar</label>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold uppercase text-slate-400 dark:text-slate-500 block">Tgl Mulai Daftar</label>
                         <input type="date" name="start_date" value="{{ request('start_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald transition shadow-2xs">
                     </div>
                     <!-- Date Range: End -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Tgl Selesai Daftar</label>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold uppercase text-slate-400 dark:text-slate-500 block">Tgl Selesai Daftar</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" 
-                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                               class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald transition shadow-2xs">
                     </div>
                     <!-- Filter: Gender -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Jenis Kelamin</label>
-                        <select name="gender" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold uppercase text-slate-400 dark:text-slate-500 block">Jenis Kelamin</label>
+                        <select name="gender" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-2xs">
                             <option value="">Semua</option>
                             <option value="Laki-laki" {{ request('gender') === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
                             <option value="Perempuan" {{ request('gender') === 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                         </select>
                     </div>
                     <!-- Filter: Wave -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Gelombang</label>
-                        <select name="wave_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold uppercase text-slate-400 dark:text-slate-500 block">Gelombang</label>
+                        <select name="wave_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-2xs">
                             <option value="">Semua Gelombang</option>
                             @foreach(\App\Models\SpmbWave::all() as $wave)
                                 <option value="{{ $wave->id }}" {{ request('wave_id') == $wave->id ? 'selected' : '' }}>{{ $wave->name }}{{ !$wave->is_active ? ' (Ditutup)' : '' }}</option>
@@ -418,9 +446,9 @@
                         </select>
                     </div>
                     <!-- Filter: Type -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Jalur Pendaftaran</label>
-                        <select name="type_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold uppercase text-slate-400 dark:text-slate-500 block">Jalur Pendaftaran</label>
+                        <select name="type_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-2xs">
                             <option value="">Semua Jalur</option>
                             @foreach(\App\Models\SpmbType::all() as $type)
                                 <option value="{{ $type->id }}" {{ request('type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}{{ !$type->is_active ? ' (Nonaktif)' : '' }}</option>
@@ -428,9 +456,9 @@
                         </select>
                     </div>
                     <!-- Filter: Class Program -->
-                    <div class="space-y-1">
-                        <label class="text-xs font-extrabold uppercase text-slate-400 block">Kategori Murid</label>
-                        <select name="class_program_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-emerald">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold uppercase text-slate-400 dark:text-slate-500 block">Kategori Murid</label>
+                        <select name="class_program_id" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-emerald cursor-pointer transition shadow-2xs">
                             <option value="">Semua Kategori</option>
                             @foreach(\App\Models\SpmbClassProgram::all() as $program)
                                 <option value="{{ $program->id }}" {{ request('class_program_id') == $program->id ? 'selected' : '' }}>{{ $program->name }}</option>
@@ -439,11 +467,11 @@
                     </div>
                 </div>
                 <!-- Action Buttons in Advanced Filter -->
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" onclick="resetAdvancedFilters(this.form)" class="text-xs font-bold text-slate-500 hover:text-slate-700 px-4 py-2 rounded-xl transition">
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="resetAdvancedFilters(this.form)" class="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 px-4 py-2 rounded-xl transition cursor-pointer">
                         Reset Filter
                     </button>
-                    <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition">
+                    <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm transition cursor-pointer">
                         Terapkan Filter
                     </button>
                 </div>

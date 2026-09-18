@@ -311,17 +311,17 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/70 dark:border-slate-800 hover:border-amber-600 dark:hover:border-amber-600 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                 <div>
                     <div class="flex items-center justify-between mb-5">
-                        <div class="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                        <div class="h-12 w-12 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <img src="https://lh3.googleusercontent.com/d/1COuVw5kLp1uQcERLPLjkjDDPNwD3hKCH"
                                  alt="Ikon Kesalehan Personal"
-                                 class="w-7 h-7 object-contain rounded-lg"
+                                 class="w-15 h-15 object-contain rounded-lg"
                                  loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">01</span>
                     </div>
                     <h3 class="text-base font-black text-slate-800 dark:text-slate-100 mb-2">Kesalehan Personal</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Pembentukan pribadi mandiri dan bertakwa yang fokus pada kebersihan diri, kejujuran, kedisiplinan beribadah dan belajar, serta kestabilan emosi.
+                        Mengenali diri sendiri dengan baik, menginternalisasi fikir, dzikir, dan amal shalih, menjadi pribadi yang bahagia, penuh cinta kasih hingga mampu transendental kepada ilahi.
                     </p>
                 </div>
             </div>
@@ -330,17 +330,17 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/70 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-600 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                 <div>
                     <div class="flex items-center justify-between mb-5">
-                        <div class="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                        <div class="h-12 w-12 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <img src="https://lh3.googleusercontent.com/d/1B51_sjZl_60XvGrf3HRSfkTIx18X6l67"
                                  alt="Ikon Kesalehan Sosial"
-                                 class="w-7 h-7 object-contain rounded-lg"
+                                 class="w-15 h-15 object-contain rounded-lg"
                                  loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">02</span>
                     </div>
                     <h3 class="text-base font-black text-slate-800 dark:text-slate-100 mb-2">Kesalehan Sosial</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Sikap saling menghormati, menyayangi, dan menolong sesama tanpa membeda-bedakan serta menjunjung tinggi nilai kesopanan dan kebersamaan.
+                        Jiwa yang bahagia dan tenang dapat menebarkan cinta kasih kepada sesama, menjaga silaturahim, peduli sesama, dan mau berbagi, mampu menempatkan diri di masyarakat, menjunjung tinggi budaya gotong royong dan tolong menolong.
                     </p>
                 </div>
             </div>
@@ -349,17 +349,17 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-600 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                 <div>
                     <div class="flex items-center justify-between mb-5">
-                        <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-custom-primary dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                        <div class="h-12 w-12 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-custom-primary dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <img src="https://lh3.googleusercontent.com/d/1LIdIP-RXNh0wNRA3j6RH-eErV8Bp6ewY"
                                  alt="Ikon Kesalehan Kealamiahan"
-                                 class="w-7 h-7 object-contain rounded-lg"
+                                 class="w-15 h-15 object-contain rounded-lg"
                                  loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">03</span>
                     </div>
                     <h3 class="text-base font-black text-slate-800 dark:text-slate-100 mb-2">Kesalehan Kealamiahan</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Kepedulian dalam menjaga kebersihan, kesehatan, dan kelangsungan makhluk hidup di alam sebagai wujud rasa syukur kepada Sang Pencipta.
+                        Manusia bukan hanya pemimpin bagi sesamanya namun juga bagi alam, anak saleh merupakan pribadi yang penuh cinta pada alam sekitar dengan merawat dan melestarikan lingkungan, hewan dan tumbuhan demi keselamatan dan keseimbangan alam.
                     </p>
                 </div>
             </div>
@@ -368,17 +368,17 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/70 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-600 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
                 <div>
                     <div class="flex items-center justify-between mb-5">
-                        <div class="h-12 w-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                        <div class="h-12 w-12 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <img src="https://lh3.googleusercontent.com/d/1Hp_FfETsxIMfY-_WKwi8_5Upt5dY7tAI"
                                  alt="Ikon Kesalehan Kebangsaan"
-                                 class="w-7 h-7 object-contain rounded-lg"
+                                 class="w-15 h-15 object-contain rounded-lg"
                                  loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">04</span>
                     </div>
                     <h3 class="text-base font-black text-slate-800 dark:text-slate-100 mb-2">Kesalehan Kebangsaan</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Kepekaan sosial, toleransi, budaya gotong royong, dan cinta kelestarian lingkungan.
+                        Pengabdian diri bukan hanya untuk agama namun juga kepada bangsa, komitmen kebangsaan diasah dalam rangka menanamkan cinta serta bangga terhadap tanah air dan bangsa Indonesia.
                     </p>
                 </div>
             </div>
@@ -387,17 +387,17 @@
             <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200/70 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group sm:col-span-2 lg:col-span-1">
                 <div>
                     <div class="flex items-center justify-between mb-5">
-                        <div class="h-12 w-12 rounded-2xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                        <div class="h-12 w-12 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <img src="https://lh3.googleusercontent.com/d/1mvC1ciPRfv8UfncFOEQ9jZdIdu0ViQl0"
                                  alt="Ikon Kesalehan Kecendikiaan"
-                                 class="w-7 h-7 object-contain rounded-lg"
+                                 class="w-15 h-15 object-contain rounded-lg"
                                  loading="lazy" />
                         </div>
                         <span class="text-xs font-black text-slate-300 dark:text-slate-700">05</span>
                     </div>
                     <h3 class="text-base font-black text-slate-800 dark:text-slate-100 mb-2">Kesalehan Kecendikiaan</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Kegigihan dalam menuntut dan mengembangkan ilmu pengetahuan secara bertanggung jawab demi keselamatan dunia dan akhirat.
+                        Komitmen untuk menjadi cendekiawan muslim yang unggul dalam prestasi dengan akhlak dan agama harus ditanamkan sejak usia dini, melek pengetahuan akan dunia dalam segala aspek ilmu pengetahuan merupakan tujuan dari pendidikan Anak Saleh hingga melahirkan pemimpin-pemimpin cerdas-saleh di masa depan.
                     </p>
                 </div>
             </div>
@@ -483,9 +483,6 @@
         <!-- Section Header -->
         <div class="text-center max-w-2xl mx-auto space-y-3 mb-12 md:mb-16">
             <h2 class="text-3xl md:text-4xl font-black text-custom-primary dark:text-emerald-400 tracking-tight">Kata Mereka Tentang Kami</h2>
-            <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                Cerita dan testimoni dari orang tua wali murid yang mempercayakan masa depan ananda di {{ $schoolName }}.
-            </p>
         </div>
 
         <!-- Testimonial Cards Grid -->

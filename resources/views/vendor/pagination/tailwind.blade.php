@@ -2,7 +2,7 @@
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
 
         {{-- Info Counter --}}
-        <div class="text-xs text-slate-500 dark:text-slate-400 font-medium order-2 sm:order-1">
+        <div class="text-xs text-slate-500 dark:text-slate-400 font-medium order-2 sm:order-1 text-center sm:text-left">
             Menampilkan
             <span class="font-bold text-slate-800 dark:text-white">{{ $paginator->firstItem() }}</span>
             &ndash;
@@ -12,55 +12,35 @@
             data
         </div>
 
-        {{-- Floating Pill Nav --}}
-        <nav class="inline-flex items-stretch order-1 sm:order-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden divide-x divide-slate-200 dark:divide-slate-700" aria-label="Navigasi Halaman">
+        {{-- Simple Pagination Navigation --}}
+        <nav role="navigation" aria-label="Navigasi Halaman" class="flex items-center gap-3.5 order-1 sm:order-2">
 
-            {{-- Previous --}}
+            {{-- Tombol Sebelumnya --}}
             @if ($paginator->onFirstPage())
-                <span class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-400 dark:text-slate-600 cursor-not-allowed whitespace-nowrap">
-                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                    <span class="hidden sm:inline">Sebelumnya</span>
+                <span class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs sm:text-xs font-bold text-slate-400 dark:text-slate-600 bg-white/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-lg cursor-not-allowed select-none">
+                    Sebelumnya
                 </span>
             @else
                 <a href="{{ $paginator->previousPageUrl() }}" rel="prev"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-emerald dark:hover:text-emerald-400 transition-colors whitespace-nowrap">
-                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                    <span class="hidden sm:inline">Sebelumnya</span>
+                    class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs sm:text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-emerald dark:hover:text-emerald-400 hover:border-slate-300 dark:hover:border-slate-600 transition">
+                    Sebelumnya
                 </a>
             @endif
 
-            {{-- Page Numbers (Desktop) --}}
-            @foreach ($elements as $element)
-                @if (is_string($element))
-                    <span class="hidden sm:inline-flex items-center justify-center w-10 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500">{{ $element }}</span>
-                @endif
-                @if (is_array($element))
-                    @foreach ($element as $page => $url)
-                        @if ($page == $paginator->currentPage())
-                            <span aria-current="page" class="hidden sm:inline-flex items-center justify-center w-10 py-2 text-xs font-bold bg-brand-emerald text-white">{{ $page }}</span>
-                        @else
-                            <a href="{{ $url }}" class="hidden sm:inline-flex items-center justify-center w-10 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-emerald dark:hover:text-emerald-400 transition-colors">{{ $page }}</a>
-                        @endif
-                    @endforeach
-                @endif
-            @endforeach
-
-            {{-- Current Page Badge (Mobile only) --}}
-            <span class="sm:hidden inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-brand-emerald whitespace-nowrap">
-                {{ $paginator->currentPage() }} / {{ $paginator->lastPage() }}
+            {{-- Info Halaman --}}
+            <span class="text-xs sm:text-xs text-slate-700 dark:text-slate-300 font-bold px-1 select-none">
+                Halaman {{ $paginator->currentPage() }} dari {{ $paginator->lastPage() }}
             </span>
 
-            {{-- Next --}}
+            {{-- Tombol Berikutnya --}}
             @if ($paginator->hasMorePages())
                 <a href="{{ $paginator->nextPageUrl() }}" rel="next"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-emerald dark:hover:text-emerald-400 transition-colors whitespace-nowrap">
-                    <span class="hidden sm:inline">Selanjutnya</span>
-                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs sm:text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-brand-emerald dark:hover:text-emerald-400 hover:border-slate-300 dark:hover:border-slate-600 transition">
+                    Berikutnya
                 </a>
             @else
-                <span class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-400 dark:text-slate-600 cursor-not-allowed whitespace-nowrap">
-                    <span class="hidden sm:inline">Selanjutnya</span>
-                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                <span class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs sm:text-xs font-bold text-slate-400 dark:text-slate-600 bg-white/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-lg cursor-not-allowed select-none">
+                    Berikutnya
                 </span>
             @endif
 
