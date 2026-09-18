@@ -224,13 +224,15 @@
                                         {{ $step->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-6">
+                                <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button type="button" onclick="openEditStepModal({{ json_encode($step) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Tahapan">
-                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                        <button type="button" onclick="openEditStepModal({{ json_encode($step) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer" title="Edit Tahapan">
+                                            <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                            <span>Edit</span>
                                         </button>
-                                        <button type="button" onclick="deleteStepItem('{{ $step->title }}', '{{ route('admin.spmb-settings.form.steps.delete', $step->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Tahapan">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        <button type="button" onclick="deleteStepItem('{{ $step->title }}', '{{ route('admin.spmb-settings.form.steps.delete', $step->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Hapus Tahapan">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            <span>Hapus</span>
                                         </button>
                                     </div>
                                 </td>
@@ -307,26 +309,30 @@
                                     <td class="py-4 px-6 text-xs text-slate-500 max-w-xs truncate">
                                         {{ $field->options ?? '-' }}
                                     </td>
-                                    <td class="py-4 px-6">
+                                    <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
                                         <div class="flex items-center justify-end gap-1.5">
                                         @if($canEditField)
-                                            <button type="button" onclick="openEditFieldModal({{ json_encode($field) }})" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-brand-emerald text-white transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800" title="Edit Kolom">
-                                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                            <button type="button" onclick="openEditFieldModal({{ json_encode($field) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer" title="Edit Kolom">
+                                                <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                                <span>Edit</span>
                                             </button>
                                         @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed" title="Kolom Default Sistem (Hanya dapat diubah oleh Super Admin)">
-                                                <i data-lucide="lock" class="w-3 h-3"></i> Default
+                                            <span class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-400 cursor-not-allowed" title="Kolom Default Sistem (Hanya dapat diubah oleh Super Admin)">
+                                                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                                <span>Default</span>
                                             </span>
                                         @endif
 
                                         @if($canDeleteField)
-                                            <button type="button" onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-red-500 text-white transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600" title="Hapus Kolom">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            <button type="button" onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Hapus Kolom">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Hapus</span>
                                             </button>
                                         @elseif($canEditField)
-                                            <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-slate-300 cursor-not-allowed" title="Kolom Sistem Utama (Proteksi)">
-                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            </span>
+                                            <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Kolom Sistem Utama karena diperlukan oleh sistem!', 'error')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Kolom Sistem Utama (Proteksi)">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Hapus</span>
+                                            </button>
                                         @endif
                                         </div>
                                     </td>

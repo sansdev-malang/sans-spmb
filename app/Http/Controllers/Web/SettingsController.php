@@ -386,6 +386,9 @@ class SettingsController extends Controller
             'portal_secondary_color' => Setting::get('portal_secondary_color', '#ffc107'),
             'portal_layout_mode' => Setting::get('portal_layout_mode', 'light'),
             'school_hero_images' => Setting::get('school_hero_images', '[]'),
+            'portal_testimonial_enabled' => Setting::get('portal_testimonial_enabled', '1'),
+            'portal_testimonial_title' => Setting::get('portal_testimonial_title', 'Kata Mereka Tentang Kami'),
+            'portal_testimonial_subtitle' => Setting::get('portal_testimonial_subtitle', 'Pengalaman dan kesan nyata dari para orang tua murid serta alumni mengenai lingkungan belajar dan pembinaan karakter di Sekolah Anak Saleh.'),
             'footer_contact_url' => Setting::get('footer_contact_url', '#'),
             'footer_privacy_url' => Setting::get('footer_privacy_url', '#'),
             'footer_terms_url' => Setting::get('footer_terms_url', '#'),
@@ -573,6 +576,9 @@ class SettingsController extends Controller
             'footer_copyright_text' => 'nullable|string|max:255',
             're_registration_instructions_unpaid' => 'nullable|string',
             're_registration_instructions_completed' => 'nullable|string',
+            'portal_testimonial_title' => 'nullable|string|max:255',
+            'portal_testimonial_subtitle' => 'nullable|string',
+            'portal_testimonial_enabled' => 'nullable',
         ];
 
         foreach ($units as $unit) {
@@ -604,6 +610,16 @@ class SettingsController extends Controller
         Setting::set('footer_copyright_text', $request->footer_copyright_text ?? '© 2026 {SchoolName}. All rights reserved.');
         Setting::set('re_registration_instructions_unpaid', $request->re_registration_instructions_unpaid ?? '');
         Setting::set('re_registration_instructions_completed', $request->re_registration_instructions_completed ?? '');
+
+        if ($request->has('portal_testimonial_title')) {
+            Setting::set('portal_testimonial_title', $request->input('portal_testimonial_title', 'Kata Mereka Tentang Kami'));
+        }
+        if ($request->has('portal_testimonial_subtitle')) {
+            Setting::set('portal_testimonial_subtitle', $request->input('portal_testimonial_subtitle', ''));
+        }
+        if ($request->has('portal_testimonial_settings_applied')) {
+            Setting::set('portal_testimonial_enabled', $request->has('portal_testimonial_enabled') ? '1' : '0');
+        }
 
         // Process units dynamically
         foreach ($units as $unit) {
@@ -802,7 +818,7 @@ class SettingsController extends Controller
             'name' => $request->name,
             'role_title' => $request->role_title,
             'spmb_unit_id' => $unitId ?: null,
-            'content' => $request->input('content'),
+            'content' => trim($request->input('content'), "\"'\t\n\r "),
             'rating' => (int) $request->rating,
             'avatar_url' => $avatarUrl,
             'order' => (int) $order,
@@ -882,7 +898,7 @@ class SettingsController extends Controller
             'name' => $request->name,
             'role_title' => $request->role_title,
             'spmb_unit_id' => $unitId ?: null,
-            'content' => $request->input('content'),
+            'content' => trim($request->input('content'), "\"'\t\n\r "),
             'rating' => (int) $request->rating,
             'avatar_url' => $avatarUrl,
             'order' => (int) ($request->order ?? $testimonial->order),

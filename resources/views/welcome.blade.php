@@ -477,39 +477,94 @@
 </div>
 
 <!-- Kata Mereka (Testimoni) Section -->
-<div id="kata-mereka" class="bg-slate-50 dark:bg-slate-950 py-12 border-t border-slate-100 dark:border-slate-800 transition relative overflow-hidden">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+@php
+    $testimonialEnabled = \App\Models\Setting::get('portal_testimonial_enabled', '1') !== '0';
+    $testimonialTitle = \App\Models\Setting::get('portal_testimonial_title', 'Kata Mereka Tentang Kami');
+    $testimonialSubtitle = \App\Models\Setting::get('portal_testimonial_subtitle', 'Simak pengalaman dan kesan nyata dari para orang tua murid serta alumni mengenai lingkungan belajar dan pembinaan karakter di Sekolah Anak Saleh.');
+@endphp
+
+@if($testimonialEnabled)
+<div id="kata-mereka" class="bg-slate-50 dark:bg-slate-950 py-16 md:py-20 border-t border-slate-100 dark:border-slate-800 transition relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 space-y-10">
         
         <!-- Section Header -->
-        <div class="text-center max-w-2xl mx-auto space-y-3 mb-12 md:mb-16">
-            <h2 class="text-3xl md:text-4xl font-black text-custom-primary dark:text-emerald-400 tracking-tight">Kata Mereka Tentang Kami</h2>
+        <div class="text-center max-w-3xl mx-auto space-y-3">
+            <h2 class="text-3xl md:text-4xl font-black text-custom-primary dark:text-emerald-400 tracking-tight gap-2">
+                {{ $testimonialTitle }}
+            </h2>
+            <!-- @if(!empty($testimonialSubtitle))
+                <p class="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium max-w-2xl mx-auto">
+                    {{ $testimonialSubtitle }}
+                </p>
+            @endif -->
         </div>
 
-        <!-- Testimonial Cards Grid -->
         @if($activeTestimonials->isNotEmpty())
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Dynamic Jenjang Filter Pills -->
+            @php
+                $availableUnitIds = $activeTestimonials->pluck('spmb_unit_id')->filter()->unique();
+                $filterUnits = $activeUnits->whereIn('id', $availableUnitIds);
+                $hasGeneral = $activeTestimonials->whereNull('spmb_unit_id')->count() > 0;
+            @endphp
+            @if($filterUnits->count() > 1 || ($filterUnits->count() >= 1 && $hasGeneral))
+                <div class="flex items-center justify-center gap-2 flex-wrap pb-2">
+                    <button type="button" onclick="filterWelcomeTestimonials('all', this)" class="welcome-testi-btn px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 bg-custom-primary text-white shadow-md cursor-pointer">
+                        Semua Jenjang ({{ $activeTestimonials->count() }})
+                    </button>
+                    @foreach($filterUnits as $u)
+                        @php $uCount = $activeTestimonials->where('spmb_unit_id', $u->id)->count(); @endphp
+                        @if($uCount > 0)
+                            <button type="button" onclick="filterWelcomeTestimonials('{{ $u->id }}', this)" class="welcome-testi-btn px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 hover:border-custom-primary hover:text-custom-primary dark:hover:text-emerald-400 shadow-xs cursor-pointer">
+                                {{ $u->name }} ({{ $uCount }})
+                            </button>
+                        @endif
+                    @endforeach
+                    @if($hasGeneral)
+                        <button type="button" onclick="filterWelcomeTestimonials('general', this)" class="welcome-testi-btn px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 hover:border-custom-primary hover:text-custom-primary dark:hover:text-emerald-400 shadow-xs cursor-pointer">
+                            Umum ({{ $activeTestimonials->whereNull('spmb_unit_id')->count() }})
+                        </button>
+                    @endif
+                </div>
+            @endif
+
+            <!-- Testimonial Cards Grid -->
+            <div id="welcome-testimonials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($activeTestimonials as $testi)
-                    <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
+                    <div data-unit-id="{{ $testi->spmb_unit_id ?? 'general' }}" class="welcome-testi-card bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 hover:-translate-y-1">
                         <div class="space-y-4">
-                            <div class="flex items-center gap-1 text-amber-400 text-sm">
-                                @for($s = 1; $s <= ($testi->rating ?? 5); $s++)
-                                    <span>★</span>
-                                @endfor
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                    @for($s = 1; $s <= ($testi->rating ?? 5); $s++)
+                                        <span>★</span>
+                                    @endfor
+                                    @for($s = ($testi->rating ?? 5) + 1; $s <= 5; $s++)
+                                        <span class="text-slate-200 dark:text-slate-700">★</span>
+                                    @endfor
+                                </div>
+                                @if($testi->unit)
+                                    <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-custom-primary dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                                        {{ $testi->unit->name }}
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60">
+                                        Semua Jenjang
+                                    </span>
+                                @endif
                             </div>
                             <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                                "{{ $testi->content }}"
+                                "{{ trim($testi->content, "\"'\t\n\r ") }}"
                             </p>
                         </div>
                         <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                             @if($testi->avatar_url)
-                                <img src="{{ $testi->avatar_url }}" alt="{{ $testi->name }}" class="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-xs flex-shrink-0" />
+                                <img src="{{ $testi->avatar_url }}" alt="{{ $testi->name }}" class="h-11 w-11 rounded-full object-cover border-2 border-slate-100 dark:border-slate-700 shadow-xs flex-shrink-0" />
                             @else
-                                <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                                <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0 shadow-xs">
                                     {{ $testi->initials }}
                                 </div>
                             @endif
                             <div class="min-w-0">
-                                <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">{{ $testi->name }}</h4>
+                                <h4 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate">{{ $testi->name }}</h4>
                                 <p class="text-[10px] text-slate-400 font-semibold truncate">{{ $testi->role_title }}</p>
                             </div>
                         </div>
@@ -529,7 +584,7 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                        <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
                             BS
                         </div>
                         <div class="min-w-0">
@@ -549,7 +604,7 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div class="h-10 w-10 rounded-full bg-amber-50 dark:bg-amber-950 flex items-center justify-center font-black text-amber-600 dark:text-amber-400 text-xs flex-shrink-0">
+                        <div class="h-11 w-11 rounded-full bg-amber-50 dark:bg-amber-950 flex items-center justify-center font-black text-amber-600 dark:text-amber-400 text-xs flex-shrink-0">
                             AH
                         </div>
                         <div class="min-w-0">
@@ -569,7 +624,7 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div class="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                        <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
                             BF
                         </div>
                         <div class="min-w-0">
@@ -583,6 +638,28 @@
 
     </div>
 </div>
+
+<script>
+    function filterWelcomeTestimonials(unitId, btnElem) {
+        document.querySelectorAll('.welcome-testi-btn').forEach(btn => {
+            btn.classList.remove('bg-custom-primary', 'text-white', 'shadow-md');
+            btn.classList.add('bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300');
+        });
+        btnElem.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300');
+        btnElem.classList.add('bg-custom-primary', 'text-white', 'shadow-md');
+
+        const cards = document.querySelectorAll('.welcome-testi-card');
+        cards.forEach(card => {
+            const cardUnit = card.getAttribute('data-unit-id');
+            if (unitId === 'all' || cardUnit === unitId) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
+</script>
+@endif
 
     </div>
 </div>

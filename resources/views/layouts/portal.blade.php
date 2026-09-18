@@ -311,7 +311,9 @@
                             <a href="/#program" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Program</a>
                             <a href="/#panca-karakter" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Panca Karakter</a>
                             <a href="/#partnership" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Partnership</a>
-                            <a href="/#kata-mereka" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Kata Mereka</a>
+                            @if(\App\Models\Setting::get('portal_testimonial_enabled', '1') !== '0')
+                                <a href="/#kata-mereka" class="transition py-1 hover:text-custom-primary dark:hover:text-emerald-400">Kata Mereka</a>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -613,7 +615,9 @@
                         <a href="/#program" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Program</a>
                         <a href="/#panca-karakter" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Panca Karakter</a>
                         <a href="/#partnership" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Partnership</a>
-                        <a href="/#kata-mereka" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Kata Mereka</a>
+                        @if(\App\Models\Setting::get('portal_testimonial_enabled', '1') !== '0')
+                            <a href="/#kata-mereka" onclick="closeMobileMenu()" class="flex items-center px-4 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-custom-primary hover:bg-emerald-50/60 dark:hover:bg-slate-800 rounded-xl transition">Kata Mereka</a>
+                        @endif
                     </div>
                 @endif
                 

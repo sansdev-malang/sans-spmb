@@ -444,6 +444,51 @@
                 </div>
 
                 @if($isSuperAdmin)
+                    <!-- Section Header Configuration Card -->
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-xs">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center gap-2.5">
+                                <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 text-brand-emerald dark:text-emerald-400">
+                                    <i data-lucide="sliders" class="w-4 h-4"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-100">Pengaturan Tampilan Section Kata Mereka</h4>
+                                    <p class="text-[10px] text-slate-400">Atur status penayangan, judul, dan subjudul section testimoni di landing page</p>
+                                </div>
+                            </div>
+                            <input type="hidden" name="portal_testimonial_settings_applied" value="1">
+                            <div class="flex items-center gap-2.5 self-start sm:self-auto">
+                                <span id="section-status-label" class="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full transition-all {{ ($settings['portal_testimonial_enabled'] ?? '1') === '1' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs' : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700' }}">
+                                    {{ ($settings['portal_testimonial_enabled'] ?? '1') === '1' ? 'AKTIF TAYANG' : 'DISEMBUNYIKAN' }}
+                                </span>
+                                <label class="relative inline-flex items-center cursor-pointer" title="Aktifkan / Nonaktifkan Section Testimoni di Landing Page">
+                                    <input type="checkbox" name="portal_testimonial_enabled" value="1" {{ ($settings['portal_testimonial_enabled'] ?? '1') === '1' ? 'checked' : '' }} onchange="updateSectionToggleLabel(this)" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 dark:peer-checked:bg-emerald-500 peer-checked:border-emerald-500 peer-checked:shadow-md peer-checked:shadow-emerald-500/35 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm transition-all duration-200"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Judul Section Testimoni</label>
+                                <input type="text" name="portal_testimonial_title" value="{{ $settings['portal_testimonial_title'] ?? 'Kata Mereka Tentang Kami' }}" placeholder="Contoh: Kata Mereka Tentang Kami" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500" />
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Subjudul / Deskripsi Section</label>
+                                <textarea name="portal_testimonial_subtitle" rows="2" placeholder="Tuliskan pengantar singkat section testimoni..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-emerald dark:focus:ring-emerald-500">{{ $settings['portal_testimonial_subtitle'] ?? '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-1">
+                            <button type="submit" class="bg-brand-emerald hover-emerald text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span>Simpan Pengaturan Section</span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+                @if($isSuperAdmin)
                     <!-- Unit Filter Pills -->
                     <div class="flex items-center gap-2 overflow-x-auto pb-1">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Filter Jenjang:</span>
@@ -567,8 +612,8 @@
 
         </div>
 
-        <!-- Submit Panel (Hidden when on Testimonials Tab) -->
-        <div id="settings-submit-panel" class="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-8 py-4 flex justify-between items-center {{ $currentTab === 'testimonials' ? 'hidden' : '' }}">
+        <!-- Submit Panel -->
+        <div id="settings-submit-panel" class="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-8 py-4 flex justify-between items-center">
             <span class="text-xs text-slate-400 font-semibold">Semua perubahan hanya berlaku pada domain calon pendaftar.</span>
             <button type="submit" class="bg-brand-emerald hover-emerald text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md transition cursor-pointer">
                 Simpan Perubahan Tampilan
@@ -594,16 +639,6 @@
             const activePanel = document.getElementById('tab-content-' + tabId);
             if (activePanel) {
                 activePanel.classList.remove('hidden');
-            }
-
-            // Toggle submit panel visibility
-            const submitPanel = document.getElementById('settings-submit-panel');
-            if (submitPanel) {
-                if (tabId === 'testimonials') {
-                    submitPanel.classList.add('hidden');
-                } else {
-                    submitPanel.classList.remove('hidden');
-                }
             }
 
             // Toggle button active visual states
@@ -802,6 +837,18 @@
             }
         });
 
+        function updateSectionToggleLabel(checkboxElem) {
+            const label = document.getElementById('section-status-label');
+            if (!label) return;
+            if (checkboxElem.checked) {
+                label.textContent = 'AKTIF TAYANG';
+                label.className = 'text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full transition-all bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs';
+            } else {
+                label.textContent = 'DISEMBUNYIKAN';
+                label.className = 'text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full transition-all bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700';
+            }
+        }
+
         function updateModalSwitchLabel(checkboxElem, labelId) {
             const label = document.getElementById(labelId);
             if (!label) return;
@@ -917,9 +964,7 @@
             @endif
         })();
     </script>
-</div>
 
-@push('modals')
     <!-- MODAL 1: TAMBAH TESTIMONI -->
     <div id="modal-add-testimonial" onclick="closeAddTestimonialModal()" class="fixed inset-0 top-0 left-0 right-0 bottom-0 w-full h-full z-[99999] hidden bg-slate-950/80 backdrop-blur-xs overflow-y-auto flex items-center justify-center p-4 m-0">
         <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-6 animate-scaleIn relative my-auto">
@@ -1215,5 +1260,5 @@
             </form>
         </div>
     </div>
-@endpush
+</div>
 @endsection

@@ -93,9 +93,9 @@
                         @forelse($units as $unit)
                             <tr class="unit-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $unit->id }}">
                                 <td class="py-4 px-6 align-middle whitespace-nowrap">
-                                    <div class="flex items-center gap-2.5">
+                                    <div class="flex items-center gap-1">
                                         <span class="w-2.5 h-2.5 rounded-full {{ $unit->is_active ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-slate-300' }} shrink-0"></span>
-                                        <span class="font-extrabold text-sm text-slate-800 tracking-tight">{{ $unit->name }}</span>
+                                        <span class="font-extrabold text-xs text-slate-800 tracking-tight">{{ $unit->name }}</span>
                                     </div>
                                 </td>
                                 <td class="py-4 px-6 align-middle whitespace-nowrap">
@@ -203,9 +203,9 @@
                         @forelse($grades as $grade)
                             <tr class="grade-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $grade->spmb_unit_id }}">
                                 <td class="py-4 px-6 align-middle whitespace-nowrap">
-                                    <div class="flex items-center gap-2.5">
+                                    <div class="flex items-center gap-1">
                                         <span class="w-2.5 h-2.5 rounded-full {{ $grade->is_active ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-slate-300' }} shrink-0"></span>
-                                        <span class="font-extrabold text-sm text-slate-800 tracking-tight">{{ $grade->name }}</span>
+                                        <span class="font-extrabold text-xs text-slate-800 tracking-tight">{{ $grade->name }}</span>
                                     </div>
                                 </td>
                                 <td class="py-4 px-6 align-middle whitespace-nowrap">
@@ -374,9 +374,9 @@
                             @forelse($extraServices as $service)
                                 <tr class="extra-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $service->spmb_unit_id ?? 'all' }}">
                                     <td class="py-4 px-6 align-middle whitespace-nowrap">
-                                        <div class="flex items-center gap-2.5">
+                                        <div class="flex items-center gap-1">
                                             <span class="w-2.5 h-2.5 rounded-full {{ $service->is_active ? 'bg-emerald-500 ring-4 ring-emerald-50' : 'bg-slate-300' }} shrink-0"></span>
-                                            <span class="font-extrabold text-sm text-slate-800 tracking-tight">{{ $service->name }}</span>
+                                            <span class="font-extrabold text-xs text-slate-800 tracking-tight">{{ $service->name }}</span>
                                         </div>
                                     </td>
                                     <td class="py-4 px-6 align-middle whitespace-nowrap font-mono font-bold text-brand-emerald">

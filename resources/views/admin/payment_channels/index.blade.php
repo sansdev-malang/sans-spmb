@@ -192,13 +192,15 @@
                                     </label>
                                 </form>
                             </td>
-                            <td class="py-4 px-6 text-right">
-                                <div class="flex justify-end items-center gap-1.5">
-                                    <button onclick="openEditModal({{ json_encode($channel) }})" class="bg-brand-emerald hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
-                                        <i data-lucide="edit" class="w-4 h-4"></i> Edit
+                            <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button" onclick="openEditModal({{ json_encode($channel) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer" title="Edit Channel">
+                                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                        <span>Edit</span>
                                     </button>
-                                    <button type="button" onclick="confirmDelete('{{ route('admin.payment-channels.destroy', $channel->id) }}' + window.location.search, 'Apakah Anda yakin ingin menghapus channel {{ $channel->name }} ini?')" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus
+                                    <button type="button" onclick="confirmDelete('{{ route('admin.payment-channels.destroy', $channel->id) }}' + window.location.search, 'Apakah Anda yakin ingin menghapus channel {{ $channel->name }} ini?')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Hapus Channel">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        <span>Hapus</span>
                                     </button>
                                 </div>
                             </td>
