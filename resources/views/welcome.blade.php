@@ -299,7 +299,7 @@
     <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <!-- Section Header -->
         <div class="text-center max-w-2xl mx-auto space-y-3 mb-16 md:mb-20">
-            <h2 class="text-3xl md:text-4xl font-black text-custom-primary dark:text-emerald-400 tracking-tight">Panca Karakter Anak Saleh</h2>
+            <h2 class="text-3xl font-black text-custom-primary dark:text-emerald-400 tracking-tight">Panca Karakter Anak Saleh</h2>
             <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 Lima pilar pembinaan holistik yang diintegrasikan dalam setiap aktivitas belajar mengajar untuk mencetak generasi berprestasi dan beradab.
             </p>
@@ -492,11 +492,6 @@
             <h2 class="text-3xl md:text-4xl font-black text-custom-primary dark:text-emerald-400 tracking-tight gap-2">
                 {{ $testimonialTitle }}
             </h2>
-            <!-- @if(!empty($testimonialSubtitle))
-                <p class="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium max-w-2xl mx-auto">
-                    {{ $testimonialSubtitle }}
-                </p>
-            @endif -->
         </div>
 
         @if($activeTestimonials->isNotEmpty())
@@ -527,112 +522,148 @@
                 </div>
             @endif
 
-            <!-- Testimonial Cards Grid -->
-            <div id="welcome-testimonials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @foreach($activeTestimonials as $testi)
-                    <div data-unit-id="{{ $testi->spmb_unit_id ?? 'general' }}" class="welcome-testi-card bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 hover:-translate-y-1">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-1 text-amber-400 text-sm">
-                                    @for($s = 1; $s <= ($testi->rating ?? 5); $s++)
-                                        <span>★</span>
-                                    @endfor
-                                    @for($s = ($testi->rating ?? 5) + 1; $s <= 5; $s++)
-                                        <span class="text-slate-200 dark:text-slate-700">★</span>
-                                    @endfor
+            <!-- Testimonial Cards Slider Container -->
+            <div id="welcome-testimonials-slider-container" class="relative group max-w-7xl mx-auto px-8 sm:px-12 md:px-16">
+                <!-- Previous Button -->
+                <button id="testi-prev-btn" type="button" aria-label="Sebelumnya" class="absolute left-0 md:left-1 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 shadow-md hover:bg-custom-primary hover:text-white dark:hover:bg-custom-primary dark:hover:text-white transition-all duration-200 flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+
+                <!-- Slider Track Wrapper -->
+                <div class="overflow-hidden py-3 px-1">
+                    <div id="welcome-testimonials-track" class="flex transition-transform duration-700 ease-in-out gap-6 items-stretch">
+                        @foreach($activeTestimonials as $testi)
+                            <div data-unit-id="{{ $testi->spmb_unit_id ?? 'general' }}" class="welcome-testi-card flex-shrink-0 w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 hover:-translate-y-1">
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                            @for($s = 1; $s <= ($testi->rating ?? 5); $s++)
+                                                <span>★</span>
+                                            @endfor
+                                            @for($s = ($testi->rating ?? 5) + 1; $s <= 5; $s++)
+                                                <span class="text-slate-200 dark:text-slate-700">★</span>
+                                            @endfor
+                                        </div>
+                                        <!-- @if($testi->unit)
+                                            <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-custom-primary dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                                                {{ $testi->unit->name }}
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60">
+                                                Semua Jenjang
+                                            </span>
+                                        @endif -->
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                                        "{{ trim($testi->content, "\"'\t\n\r ") }}"
+                                    </p>
                                 </div>
-                                @if($testi->unit)
-                                    <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-custom-primary dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
-                                        {{ $testi->unit->name }}
-                                    </span>
-                                @else
-                                    <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60">
-                                        Semua Jenjang
-                                    </span>
-                                @endif
-                            </div>
-                            <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                                "{{ trim($testi->content, "\"'\t\n\r ") }}"
-                            </p>
-                        </div>
-                        <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            @if($testi->avatar_url)
-                                <img src="{{ $testi->avatar_url }}" alt="{{ $testi->name }}" class="h-11 w-11 rounded-full object-cover border-2 border-slate-100 dark:border-slate-700 shadow-xs flex-shrink-0" />
-                            @else
-                                <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0 shadow-xs">
-                                    {{ $testi->initials }}
+                                <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    @if($testi->avatar_url)
+                                        <img src="{{ $testi->avatar_url }}" alt="{{ $testi->name }}" class="h-11 w-11 rounded-full object-cover border-2 border-slate-100 dark:border-slate-700 shadow-xs flex-shrink-0" />
+                                    @else
+                                        <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0 shadow-xs">
+                                            {{ $testi->initials }}
+                                        </div>
+                                    @endif
+                                    <div class="min-w-0">
+                                        <h4 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate">{{ $testi->name }}</h4>
+                                        <p class="text-[10px] text-slate-400 font-semibold truncate">{{ $testi->role_title }}</p>
+                                    </div>
                                 </div>
-                            @endif
-                            <div class="min-w-0">
-                                <h4 class="font-extrabold text-xs text-slate-800 dark:text-slate-100 truncate">{{ $testi->name }}</h4>
-                                <p class="text-[10px] text-slate-400 font-semibold truncate">{{ $testi->role_title }}</p>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
+
+                <!-- Next Button -->
+                <button id="testi-next-btn" type="button" aria-label="Berikutnya" class="absolute right-0 md:right-1 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 shadow-md hover:bg-custom-primary hover:text-white dark:hover:bg-custom-primary dark:hover:text-white transition-all duration-200 flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+
+                <!-- Dynamic Pagination Dots -->
+                <div id="testi-dots-container" class="flex items-center justify-center gap-2 pt-6"></div>
             </div>
         @else
-            <!-- Fallback Default Testimonials if none in database -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-1 text-amber-400 text-sm">
-                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            <!-- Fallback Default Testimonials Slider if none in database -->
+            <div id="welcome-testimonials-slider-container" class="relative group max-w-7xl mx-auto px-8 sm:px-12 md:px-16">
+                <!-- Previous Button -->
+                <button id="testi-prev-btn" type="button" aria-label="Sebelumnya" class="absolute left-0 md:left-1 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 shadow-md hover:bg-custom-primary hover:text-white dark:hover:bg-custom-primary dark:hover:text-white transition-all duration-200 flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+
+                <!-- Slider Track Wrapper -->
+                <div class="overflow-hidden py-3 px-1">
+                    <div id="welcome-testimonials-track" class="flex transition-transform duration-700 ease-in-out gap-6 items-stretch">
+                        <div class="welcome-testi-card flex-shrink-0 w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 hover:-translate-y-1">
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                                    "Perkembangan adab dan kemandirian ananda sangat terlihat nyata. Guru-guru mengajar dengan hati dan penuh keteladanan. Hafalan Al-Qur'annya juga berkembang pesat dengan metode yang menyenangkan."
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                                    BS
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Bunda Sarah</h4>
+                                    <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid SD Anak Saleh</p>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                            "Perkembangan adab dan kemandirian ananda sangat terlihat nyata. Guru-guru mengajar dengan hati dan penuh keteladanan. Hafalan Al-Qur'annya juga berkembang pesat dengan metode yang menyenangkan."
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
-                            BS
+
+                        <div class="welcome-testi-card flex-shrink-0 w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 hover:-translate-y-1">
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                                    "Kurikulumnya sangat seimbang antara akademik modern dan pembinaan akhlak Islam. Fasilitasnya lengkap, ruang kelas nyaman, dan program mentoring karakternya sangat membimbing anak kami."
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <div class="h-11 w-11 rounded-full bg-amber-50 dark:bg-amber-950 flex items-center justify-center font-black text-amber-600 dark:text-amber-400 text-xs flex-shrink-0">
+                                    AH
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Ayah Hendra</h4>
+                                    <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid SMP Anak Saleh</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="min-w-0">
-                            <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Bunda Sarah</h4>
-                            <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid SD Anak Saleh</p>
+
+                        <div class="welcome-testi-card flex-shrink-0 w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 hover:-translate-y-1">
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                                </div>
+                                <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
+                                    "Lingkungan belajarnya ramah anak dan penuh kasih sayang. Setiap pagi anak saya selalu bersemangat ke sekolah. Komunikasi antara guru dan orang tua juga sangat aktif dan terbuka."
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
+                                    BF
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Bunda Fatimah</h4>
+                                    <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid PAUD Anak Saleh</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-1 text-amber-400 text-sm">
-                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                        </div>
-                        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                            "Kurikulumnya sangat seimbang antara akademik modern dan pembinaan akhlak Islam. Fasilitasnya lengkap, ruang kelas nyaman, dan program mentoring karakternya sangat membimbing anak kami."
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div class="h-11 w-11 rounded-full bg-amber-50 dark:bg-amber-950 flex items-center justify-center font-black text-amber-600 dark:text-amber-400 text-xs flex-shrink-0">
-                            AH
-                        </div>
-                        <div class="min-w-0">
-                            <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Ayah Hendra</h4>
-                            <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid SMP Anak Saleh</p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Next Button -->
+                <button id="testi-next-btn" type="button" aria-label="Berikutnya" class="absolute right-0 md:right-1 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 shadow-md hover:bg-custom-primary hover:text-white dark:hover:bg-custom-primary dark:hover:text-white transition-all duration-200 flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
 
-                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6">
-                    <div class="space-y-4">
-                        <div class="flex items-center gap-1 text-amber-400 text-sm">
-                            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                        </div>
-                        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed italic">
-                            "Lingkungan belajarnya ramah anak dan penuh kasih sayang. Setiap pagi anak saya selalu bersemangat ke sekolah. Komunikasi antara guru dan orang tua juga sangat aktif dan terbuka."
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div class="h-11 w-11 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center font-black text-custom-primary dark:text-emerald-400 text-xs flex-shrink-0">
-                            BF
-                        </div>
-                        <div class="min-w-0">
-                            <h4 class="font-black text-xs text-slate-800 dark:text-slate-100 truncate">Bunda Fatimah</h4>
-                            <p class="text-[10px] text-slate-400 font-semibold truncate">Orang Tua Murid PAUD Anak Saleh</p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Dynamic Pagination Dots -->
+                <div id="testi-dots-container" class="flex items-center justify-center gap-2 pt-6"></div>
             </div>
         @endif
 
@@ -657,7 +688,181 @@
                 card.classList.add('hidden');
             }
         });
+
+        if (window.resetTestiSlider) {
+            window.resetTestiSlider();
+        }
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const track = document.getElementById('welcome-testimonials-track');
+        if (!track) return;
+
+        const prevBtn = document.getElementById('testi-prev-btn');
+        const nextBtn = document.getElementById('testi-next-btn');
+        const dotsContainer = document.getElementById('testi-dots-container');
+        const container = document.getElementById('welcome-testimonials-slider-container');
+
+        let currentIndex = 0;
+        let autoSlideInterval = null;
+        const SLIDE_DELAY = 6000; // 6 seconds interval
+
+        function getCardsPerView() {
+            if (window.innerWidth >= 1024) return 3;
+            if (window.innerWidth >= 768) return 2;
+            return 1;
+        }
+
+        function getVisibleCards() {
+            return Array.from(track.querySelectorAll('.welcome-testi-card')).filter(card => !card.classList.contains('hidden'));
+        }
+
+        function getMaxIndex() {
+            const visible = getVisibleCards();
+            const perView = getCardsPerView();
+            return Math.max(0, visible.length - perView);
+        }
+
+        function updateSlider() {
+            const visible = getVisibleCards();
+            const maxIndex = getMaxIndex();
+
+            if (currentIndex > maxIndex) currentIndex = maxIndex;
+            if (currentIndex < 0) currentIndex = 0;
+
+            if (visible.length === 0) {
+                track.style.transform = 'translateX(0px)';
+                if (dotsContainer) dotsContainer.innerHTML = '';
+                if (prevBtn) prevBtn.style.display = 'none';
+                if (nextBtn) nextBtn.style.display = 'none';
+                return;
+            }
+
+            const targetCard = visible[currentIndex] || visible[0];
+            const firstCard = visible[0];
+            const offset = targetCard.offsetLeft - firstCard.offsetLeft;
+
+            track.style.transform = `translateX(-${offset}px)`;
+
+            const totalDots = maxIndex + 1;
+            if (dotsContainer) {
+                if (totalDots <= 1) {
+                    dotsContainer.innerHTML = '';
+                } else {
+                    let dotsHtml = '';
+                    for (let i = 0; i < totalDots; i++) {
+                        const isActive = i === currentIndex;
+                        dotsHtml += `<button type="button" aria-label="Go to slide ${i + 1}" onclick="goToTestiSlide(${i})" class="h-2.5 rounded-full transition-all duration-300 cursor-pointer ${isActive ? 'w-8 bg-custom-primary' : 'w-2.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'}"></button>`;
+                    }
+                    dotsContainer.innerHTML = dotsHtml;
+                }
+            }
+
+            if (prevBtn && nextBtn) {
+                if (totalDots <= 1) {
+                    prevBtn.style.display = 'none';
+                    nextBtn.style.display = 'none';
+                } else {
+                    prevBtn.style.display = 'flex';
+                    nextBtn.style.display = 'flex';
+                    prevBtn.disabled = currentIndex === 0;
+                    nextBtn.disabled = currentIndex >= maxIndex;
+                }
+            }
+        }
+
+        window.goToTestiSlide = function(index) {
+            currentIndex = index;
+            updateSlider();
+            resetTimer();
+        };
+
+        function nextSlide() {
+            const maxIndex = getMaxIndex();
+            if (maxIndex <= 0) return;
+            if (currentIndex >= maxIndex) {
+                currentIndex = 0;
+            } else {
+                currentIndex++;
+            }
+            updateSlider();
+        }
+
+        function prevSlide() {
+            const maxIndex = getMaxIndex();
+            if (maxIndex <= 0) return;
+            if (currentIndex <= 0) {
+                currentIndex = maxIndex;
+            } else {
+                currentIndex--;
+            }
+            updateSlider();
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                prevSlide();
+                resetTimer();
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                nextSlide();
+                resetTimer();
+            });
+        }
+
+        function startTimer() {
+            stopTimer();
+            autoSlideInterval = setInterval(nextSlide, SLIDE_DELAY);
+        }
+
+        function stopTimer() {
+            if (autoSlideInterval) {
+                clearInterval(autoSlideInterval);
+                autoSlideInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            startTimer();
+        }
+
+        if (container) {
+            container.addEventListener('mouseenter', stopTimer);
+            container.addEventListener('mouseleave', startTimer);
+        }
+
+        let touchStartX = 0;
+        track.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+            stopTimer();
+        }, { passive: true });
+
+        track.addEventListener('touchend', function(e) {
+            const touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 40) {
+                if (diff > 0) nextSlide();
+                else prevSlide();
+            }
+            startTimer();
+        }, { passive: true });
+
+        window.addEventListener('resize', function() {
+            updateSlider();
+        });
+
+        window.resetTestiSlider = function() {
+            currentIndex = 0;
+            updateSlider();
+            resetTimer();
+        };
+
+        setTimeout(updateSlider, 100);
+        startTimer();
+    });
 </script>
 @endif
 
