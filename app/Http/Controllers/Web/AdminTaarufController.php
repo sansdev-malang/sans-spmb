@@ -20,6 +20,7 @@ class AdminTaarufController extends Controller
      */
     public function index(Request $request)
     {
+        $periods = SpmbPeriod::orderBy('year', 'desc')->get();
         $selectedPeriodId = $request->filled('period_id')
             ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
             : SpmbPeriod::getDefaultPeriodId();
@@ -41,8 +42,11 @@ class AdminTaarufController extends Controller
 
         // Base Query
         $baseQuery = Registration::with(['user', 'unit', 'grade', 'classProgram'])
-            ->where('spmb_period_id', $selectedPeriodId)
             ->scopedByAdmin();
+
+        if ($selectedPeriodId !== 'all' && $selectedPeriodId) {
+            $baseQuery->where('spmb_period_id', $selectedPeriodId);
+        }
 
         if ($currentUnitId) {
             $baseQuery->where('spmb_unit_id', $currentUnitId);
@@ -134,7 +138,8 @@ class AdminTaarufController extends Controller
             'currentUnitId',
             'counts',
             'statusFilter',
-            'selectedPeriodId'
+            'selectedPeriodId',
+            'periods'
         ));
     }
 

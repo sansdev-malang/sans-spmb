@@ -380,10 +380,10 @@
                                         </button>
                                     @endif
  
-                                    @if ($reg->registration_status === 'verified')
+                                     @if ($reg->registration_status === 'verified')
                                         @if(!$reg->observation_date)
                                             <!-- Belum dijadwalkan: Tampilkan tombol Atur Jadwal Ta'aruf -->
-                                            <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" class="h-8 bg-brand-emerald hover-emerald text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" title="Atur Jadwal Ta'aruf">
+                                            <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'period_id' => $reg->spmb_period_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" class="h-8 bg-brand-emerald hover-emerald text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" title="Atur Jadwal Ta'aruf">
                                                 <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
                                                 <span>Jadwal Ta'aruf</span>
                                             </a>
@@ -410,7 +410,7 @@
                                                 </button>
                                             @else
                                                 <!-- Sudah dijadwalkan tapi belum ada hasil: Arahkan ke modul Ta'aruf untuk unggah berkas hasil -->
-                                                <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" 
+                                                <a href="{{ route('admin.taaruf', ['unit_id' => $reg->spmb_unit_id, 'period_id' => $reg->spmb_period_id, 'search' => $reg->candidate_name]) }}" hx-boost="false" 
                                                     class="h-8 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer" 
                                                     title="Hasil observasi belum diunggah. Klik untuk membuka Jadwal Ta'aruf dan mengunggah berkas hasil observasi.">
                                                     <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
