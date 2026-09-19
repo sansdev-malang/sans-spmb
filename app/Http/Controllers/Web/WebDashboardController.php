@@ -29,7 +29,7 @@ class WebDashboardController extends Controller
 
     private function getRegistration($id)
     {
-        return Registration::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+        return Registration::live()->where('id', $id)->where('user_id', auth()->id())->firstOrFail();
     }
 
     public function getRegistrationFee($registration)
@@ -173,14 +173,16 @@ class WebDashboardController extends Controller
             session(['active_candidate_id' => (int)$request->query('candidate_id')]);
         }
 
-        // Query all candidate registrations for this user with all required relationships
-        $registrations = Registration::with(['unit', 'grade', 'period', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
+        // Query all candidate registrations for this user with all required relationships (exclude trashed)
+        $registrations = Registration::live()
+            ->with(['unit', 'grade', 'period', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Query pending unpaid draft registrations for this candidate
-        $pendingDrafts = Registration::with(['unit', 'grade', 'period', 'wave', 'type', 'payments'])
+        // Query pending unpaid draft registrations for this candidate (exclude trashed)
+        $pendingDrafts = Registration::live()
+            ->with(['unit', 'grade', 'period', 'wave', 'type', 'payments'])
             ->where('user_id', auth()->id())
             ->where('registration_status', 'draft')
             ->where('payment_status', '!=', 'paid')
@@ -255,7 +257,7 @@ class WebDashboardController extends Controller
     {
         $user = auth()->user();
         
-        $registrations = Registration::with([
+        $registrations = Registration::live()->with([
                 'unit', 
                 'grade', 
                 'period', 
@@ -273,7 +275,7 @@ class WebDashboardController extends Controller
             ->get();
 
         if ($request->has('id')) {
-            $requestedReg = Registration::where('id', $request->query('id'))->where('user_id', $user->id)->first();
+            $requestedReg = Registration::live()->where('id', $request->query('id'))->where('user_id', $user->id)->first();
             if ($requestedReg && $requestedReg->registration_status !== 'completed') {
                 session(['active_candidate_id' => $requestedReg->id]);
                 return redirect()->route('dashboard')->with('error', 'Menu Status Akhir untuk ' . ($requestedReg->candidate_name ?? 'calon murid') . ' masih terkunci. Menu ini hanya dapat diakses setelah ananda resmi dinyatakan diterima.');
