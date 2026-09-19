@@ -286,20 +286,25 @@ class Registration extends Model
                     $gradeNameUpper = strtoupper($gradeName);
                     $secGradeNameUpper = strtoupper($this->secondaryGrade->name ?? '');
 
-                    $allGradeKeywords = [
-                        'TPA 1', 'TPA 2', 'TPA 3', 'TPA',
-                        'KB-A', 'KB-B', 'KB A', 'KB B', 'KB',
-                        'TK-A', 'TK-B', 'TK A', 'TK B', 'TK',
-                        'KELAS 1', 'KELAS 2', 'KELAS 3', 'KELAS 4', 'KELAS 5', 'KELAS 6',
-                        'KELAS 7', 'KELAS 8', 'KELAS 9'
-                    ];
+                    // Fetch all grade names dynamically from master database table
+                    static $dbGradeKeywords = null;
+                    if ($dbGradeKeywords === null) {
+                        $dbGradeKeywords = SpmbGrade::pluck('name')
+                            ->filter()
+                            ->map(fn($n) => strtoupper(trim($n)))
+                            ->unique()
+                            ->values()
+                            ->toArray();
+                    }
+
                     $hasOtherGradeKeyword = false;
                     $normalizedGrade = str_replace('-', ' ', $gradeNameUpper);
                     $normalizedSecGrade = str_replace('-', ' ', $secGradeNameUpper);
 
-                    foreach ($allGradeKeywords as $kw) {
-                        if (str_contains($feeNameUpper, $kw)) {
-                            $normalizedKw = str_replace('-', ' ', $kw);
+                    foreach ($dbGradeKeywords as $kw) {
+                        if (empty($kw)) continue;
+                        $normalizedKw = str_replace('-', ' ', $kw);
+                        if (str_contains($feeNameUpper, $kw) || str_contains($feeNameUpper, $normalizedKw)) {
                             if (
                                 (!empty($gradeNameUpper) && (str_contains($gradeNameUpper, $kw) || str_contains($normalizedGrade, $normalizedKw)))
                                 || (!empty($secGradeNameUpper) && (str_contains($secGradeNameUpper, $kw) || str_contains($normalizedSecGrade, $normalizedKw)))
