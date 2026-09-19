@@ -36,7 +36,7 @@ class SpmbFee extends Model
             return false;
         }
 
-        // Period / Academic Year match (Strict: if empty/not set, fee is inactive/not used)
+        // 1. Period / Academic Year match (Strict: if empty/not set, fee is inactive/not used)
         if (empty($this->applicable_periods) || !is_array($this->applicable_periods)) {
             return false;
         }
@@ -45,12 +45,25 @@ class SpmbFee extends Model
             return false;
         }
 
-        // Unit match
+        // 2. Category Match (Period & Unit of the parent category)
+        if ($this->category) {
+            if (!$this->category->matchesPeriod($registration->spmb_period_id)) {
+                return false;
+            }
+            if ($this->category->units && $this->category->units->isNotEmpty() && $registration->spmb_unit_id) {
+                $catUnitIds = $this->category->units->pluck('id')->map(fn($id) => (int)$id)->toArray();
+                if (!in_array((int)$registration->spmb_unit_id, $catUnitIds, true)) {
+                    return false;
+                }
+            }
+        }
+
+        // 3. Fee Unit match
         if ($this->spmb_unit_id && (int)$this->spmb_unit_id !== (int)$registration->spmb_unit_id) {
             return false;
         }
 
-        // Grade match
+        // 4. Grade match (Target Kelas)
         if (!empty($this->applicable_grades) && is_array($this->applicable_grades)) {
             $gradeIds = array_map('intval', $this->applicable_grades);
             $matchesPrimary = $registration->spmb_grade_id && in_array((int)$registration->spmb_grade_id, $gradeIds, true);
@@ -98,23 +111,23 @@ class SpmbFee extends Model
             }
         }
 
-        // Class Program / Category match
+        // 5. Class Program / Category match (Target Kategori Murid: Reguler, Inklusi, ICP, dsb)
         if (!empty($this->applicable_class_programs) && is_array($this->applicable_class_programs)) {
             $progIds = array_map('intval', $this->applicable_class_programs);
-            if ($registration->spmb_class_program_id && !in_array((int)$registration->spmb_class_program_id, $progIds, true)) {
+            if (!$registration->spmb_class_program_id || !in_array((int)$registration->spmb_class_program_id, $progIds, true)) {
                 return false;
             }
         }
 
-        // Registration Type / Jalur match
+        // 6. Registration Type / Jalur match (Target Jalur Pendaftaran: Inden, Reguler, Prestasi, dsb)
         if (!empty($this->applicable_types) && is_array($this->applicable_types)) {
             $typeIds = array_map('intval', $this->applicable_types);
-            if ($registration->spmb_type_id && !in_array((int)$registration->spmb_type_id, $typeIds, true)) {
+            if (!$registration->spmb_type_id || !in_array((int)$registration->spmb_type_id, $typeIds, true)) {
                 return false;
             }
         }
 
-        // Gender match (Laki-laki / Perempuan)
+        // 7. Gender match (Laki-laki / Perempuan)
         $regGender = strtolower(trim($registration->gender ?? ''));
         if (!empty($regGender)) {
             $isCandidateMale = in_array($regGender, ['l', 'laki-laki', 'male', 'ikhwan', 'putra'], true);
