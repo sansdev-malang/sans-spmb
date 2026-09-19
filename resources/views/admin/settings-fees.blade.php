@@ -33,7 +33,7 @@
                 @endforeach
             </div>
 
-            <!-- Unit Filter Switcher -->
+            <!-- Unit Filter Switcher (Khusus SuperAdmin) -->
             @if(auth()->user()->isSuperAdmin())
                 <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 p-1.5 rounded-2xl shadow-xs overflow-x-auto">
                     <span class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5 px-2 whitespace-nowrap">
@@ -49,11 +49,6 @@
                             <span>{{ strtoupper($unit->code) }}</span>
                         </button>
                     @endforeach
-                </div>
-            @else
-                <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-brand-emerald px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs">
-                    <i data-lucide="school" class="w-4 h-4"></i>
-                    <span>Unit: {{ strtoupper(auth()->user()->unit->code ?? 'Unit') }}</span>
                 </div>
             @endif
         </div>
