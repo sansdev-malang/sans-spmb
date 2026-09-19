@@ -8,6 +8,21 @@ class SpmbWave extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_testing' => 'boolean',
+    ];
+
+    public function scopeLive($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), false);
+    }
+
+    public function scopeTrash($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), true);
+    }
+
     public function units()
     {
         return $this->belongsToMany(SpmbUnit::class, 'spmb_wave_unit', 'spmb_wave_id', 'spmb_unit_id')

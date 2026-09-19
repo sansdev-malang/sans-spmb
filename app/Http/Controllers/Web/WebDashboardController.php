@@ -393,7 +393,7 @@ class WebDashboardController extends Controller
     {
         $unitId = $registration->spmb_unit_id;
         $steps = SpmbFormStep::with(['fields' => function($q) use ($unitId) {
-                $q->where(function($sub) use ($unitId) {
+                $q->live()->where(function($sub) use ($unitId) {
                     $sub->whereDoesntHave('units')
                         ->orWhereHas('units', function($u) use ($unitId) {
                             $u->where('spmb_units.id', $unitId);
@@ -917,7 +917,7 @@ class WebDashboardController extends Controller
         
         $committeeMessage = $this->getCommitteeMessage($registration);
         
-        $documentFields = SpmbFormField::where('type', 'file')
+        $documentFields = SpmbFormField::live()->where('type', 'file')
             ->orderBy('order', 'asc')
             ->get();
         
@@ -1081,7 +1081,7 @@ class WebDashboardController extends Controller
 
     public function saveStep(Request $request, $id, $stepId)
     {
-        $step = SpmbFormStep::with('fields')->findOrFail($stepId);
+        $step = SpmbFormStep::with(['fields' => function($q) { $q->live(); }])->findOrFail($stepId);
         $registration = $this->getRegistration($id);
 
         // 1. Build dynamic validation rules
@@ -1226,7 +1226,7 @@ class WebDashboardController extends Controller
         // 3. Check if all steps are completed. If yes, transition status to 'submitted'!
         $unitId = $registration->spmb_unit_id;
         $allSteps = SpmbFormStep::with(['fields' => function($q) use ($unitId) {
-                $q->where(function($sub) use ($unitId) {
+                $q->live()->where(function($sub) use ($unitId) {
                     $sub->whereDoesntHave('units')
                         ->orWhereHas('units', function($u) use ($unitId) {
                             $u->where('spmb_units.id', $unitId);

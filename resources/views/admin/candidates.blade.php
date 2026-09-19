@@ -1,25 +1,31 @@
 @extends('layouts.admin')
 
-@section('title', 'Data Calon Murid (Aktif) - Admin Panel')
-@section('page_title', 'Data Calon Murid')
+@section('title', (!empty($isTrash) ? 'Data Calon Murid (Tong Sampah / Terkunci) - Admin Panel' : 'Data Calon Murid (Aktif) - Admin Panel'))
+@section('page_title', (!empty($isTrash) ? 'Data Calon Murid (Tong Sampah)' : 'Data Calon Murid'))
 
 @section('content')
 <div class="space-y-6">
     <!-- Header Summary Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-slate-800">Daftar Lengkap Calon Murid (Aktif)</h1>
-            <p class="text-xs text-slate-500 mt-1">Menampilkan data calon murid aktif yang telah menyelesaikan pembayaran biaya pendaftaran formulir Sekolah Anak Saleh.</p>
+            <h1 class="text-xl font-extrabold text-slate-800 dark:text-white">
+                {{ !empty($isTrash) ? 'Daftar Calon Murid (Tong Sampah / Terkunci)' : 'Daftar Lengkap Calon Murid (Aktif)' }}
+            </h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {{ !empty($isTrash) ? 'Menampilkan data calon murid yang telah dipindahkan ke tong sampah (diisolasi dari daftar aktif).' : 'Menampilkan data calon murid aktif yang telah menyelesaikan pembayaran biaya pendaftaran formulir Sekolah Anak Saleh.' }}
+            </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <button type="button" id="btn-export-candidates-excel" onclick="exportCandidatesExcel(this)" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
-                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
-                <span>Ekspor Excel</span>
-            </button>
-            <button type="button" id="btn-export-candidates-pdf" onclick="exportCandidatesPdf(this)" class="border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs">
-                <i data-lucide="file-text" class="w-4 h-4 text-rose-500 dark:text-rose-400"></i>
-                <span>Ekspor PDF</span>
-            </button>
+            @if(empty($isTrash))
+                <button type="button" id="btn-export-candidates-excel" onclick="exportCandidatesExcel(this)" class="bg-brand-emerald hover-emerald text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-200"></i>
+                    <span>Ekspor Excel</span>
+                </button>
+                <button type="button" id="btn-export-candidates-pdf" onclick="exportCandidatesPdf(this)" class="border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-2xs">
+                    <i data-lucide="file-text" class="w-4 h-4 text-rose-500 dark:text-rose-400"></i>
+                    <span>Ekspor PDF</span>
+                </button>
+            @endif
         </div>
     </div>
 
@@ -28,7 +34,7 @@
         <!-- Card 1: Total -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
-                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">Total Aktif</span>
+                <span class="text-xs text-slate-400 font-bold block uppercase tracking-wider">{{ !empty($isTrash) ? 'Total Terkunci' : 'Total Aktif' }}</span>
                 <span class="text-2xl font-black text-slate-800 block mt-1">{{ $stats['total'] }}</span>
             </div>
             <div class="h-10 w-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -173,6 +179,24 @@
 
     <!-- Candidate List Table -->
     <div id="candidates-card" class="bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden" hx-boost="true" hx-target="#candidates-card" hx-select="#candidates-card">
+        @if(!empty($isTrash))
+            <div class="p-4 bg-amber-50/80 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-800 dark:text-amber-300">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center flex-shrink-0 text-amber-700 dark:text-amber-400">
+                        <i data-lucide="archive" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold block">Tampilan Tong Sampah (Data Calon Murid Terkunci / Testing)</span>
+                        <span class="text-[11px] text-amber-750 dark:text-amber-400/80">Data di bawah ini diisolasi dari antrean verifikasi, ta'aruf, persetujuan biaya, dan laporan statistik. Anda dapat memulihkan data sewaktu-waktu.</span>
+                    </div>
+                </div>
+                <a href="{{ route('admin.candidates', request()->except(['trash', 'page'])) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/50 transition shadow-2xs self-start sm:self-auto cursor-pointer">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    <span>Kembali ke Data Aktif</span>
+                </a>
+            </div>
+        @endif
+
          <!-- Search & Filter Form -->
         <form id="candidateFilterForm" action="{{ route('admin.candidates') }}" method="GET" class="p-5 sm:p-6 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 space-y-4">
             @php
@@ -253,24 +277,76 @@
             @if(request('stage') && request('stage') !== 'all')
                 <input type="hidden" name="stage" value="{{ request('stage') }}" hidden class="hidden">
             @endif
+            @if(!empty($isTrash))
+                <input type="hidden" name="trash" value="1" hidden class="hidden">
+            @endif
 
-            <!-- 1. Stage Filter Navigation (Tabs / Pills) -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none select-none border-b border-slate-200/70 dark:border-slate-800">
-                @foreach($stagePills as $sKey => $sData)
-                    @php 
-                        $isActive = ($currentStage === $sKey); 
-                        $pillUrl = ($sKey === 'all') 
-                            ? route('admin.candidates', request()->except(['stage', 'page']))
-                            : route('admin.candidates', array_merge(request()->except(['page']), ['stage' => $sKey]));
-                    @endphp
-                    <a href="{{ $pillUrl }}" 
-                       class="px-3 py-2 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-2 whitespace-nowrap cursor-pointer shadow-2xs {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
-                        <span>{{ $sData['label'] }}</span>
-                        <span class="h-5 min-w-5 px-1.5 rounded-md inline-flex items-center justify-center text-[10px] leading-none font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
-                            {{ $sData['count'] }}
-                        </span>
-                    </a>
-                @endforeach
+            <!-- 1. Stage Filter Navigation (Tabs / Pills) & Tong Sampah Dropdown -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 select-none border-b border-slate-200/70 dark:border-slate-800">
+                <div class="flex items-center gap-2 overflow-x-auto scrollbar-none flex-1">
+                    @foreach($stagePills as $sKey => $sData)
+                        @php 
+                            $isActive = ($currentStage === $sKey); 
+                            $pillUrl = ($sKey === 'all') 
+                                ? route('admin.candidates', request()->except(['stage', 'page']))
+                                : route('admin.candidates', array_merge(request()->except(['page']), ['stage' => $sKey]));
+                        @endphp
+                        <a href="{{ $pillUrl }}" 
+                           class="px-3 py-2 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-2 whitespace-nowrap cursor-pointer shadow-2xs {{ $isActive ? $sData['active_class'] : $sData['inactive_class'] }}">
+                            <span>{{ $sData['label'] }}</span>
+                            <span class="h-5 min-w-5 px-1.5 rounded-md inline-flex items-center justify-center text-[10px] leading-none font-black {{ $isActive ? $sData['badge_active'] : $sData['badge_inactive'] }}">
+                                {{ $sData['count'] }}
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+
+                @if(auth()->user()->isSuperAdmin())
+                    <!-- Dropdown Tong Sampah (Khusus Super Admin) -->
+                    <div class="relative inline-block text-left flex-shrink-0" id="candTrashDropdownWrapper">
+                        <button type="button" onclick="toggleCandTrashDropdown()" id="candTrashDropdownBtn" class="px-3.5 py-2 {{ !empty($isTrash) ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800' }} rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer">
+                            <i data-lucide="trash-2" class="w-4 h-4 {{ !empty($isTrash) ? 'text-white' : 'text-amber-600' }}"></i>
+                            <span>Tong Sampah</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 {{ !empty($isTrash) ? 'text-white/80' : 'text-slate-400' }}"></i>
+                        </button>
+                        <div id="candTrashDropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-30 transition-all max-h-96 overflow-y-auto">
+                            <div class="px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/50 border-b border-amber-100 dark:border-amber-900 mb-1">
+                                Terkunci
+                            </div>
+                            @php
+                                $trashStages = [
+                                    'all' => ['label' => 'Semua Calon Murid', 'icon' => 'archive'],
+                                    'draft' => ['label' => 'Tahap Formulir', 'icon' => 'file-text'],
+                                    'submitted' => ['label' => 'Tahap Verifikasi', 'icon' => 'shield-check'],
+                                    'verified' => ['label' => "Tahap Ta'aruf", 'icon' => 'users'],
+                                    'taaruf_completed' => ['label' => 'Tahap Persetujuan', 'icon' => 'check-circle-2'],
+                                    'agreement_signed' => ['label' => 'Tahap Administrasi', 'icon' => 'clipboard-check'],
+                                    'completed' => ['label' => 'Tahap Selesai', 'icon' => 'award'],
+                                ];
+                            @endphp
+                            @foreach($trashStages as $tKey => $tVal)
+                                @php
+                                    $tCount = $trashStageCounts[$tKey] ?? 0;
+                                    $isTActive = !empty($isTrash) && ($currentStage === $tKey);
+                                    $tUrl = ($tKey === 'all')
+                                        ? route('admin.candidates', array_merge(request()->except(['page', 'stage']), ['trash' => 1]))
+                                        : route('admin.candidates', array_merge(request()->except(['page']), ['trash' => 1, 'stage' => $tKey]));
+                                @endphp
+                                <a href="{{ $tUrl }}" class="trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer {{ $isTActive ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-extrabold border-l-4 border-amber-600' : 'text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-800' }}">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="{{ $tVal['icon'] }}" class="w-3.5 h-3.5 {{ $isTActive ? 'text-amber-700 dark:text-amber-400' : 'text-amber-600' }}"></i>
+                                        <span>{{ $tVal['label'] }}</span>
+                                    </div>
+                                    @if($tCount > 0)
+                                        <span class="dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full {{ $isTActive ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800' }}">{{ $tCount }} Murid</span>
+                                    @else
+                                        <span class="dropdown-item-count text-[9px] font-semibold text-slate-400">0 Murid</span>
+                                    @endif
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- 2. Search & Filter Controls Toolbar -->
@@ -961,28 +1037,48 @@
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i> Detail
                                     </button>
 
-                                    @if($cand->registration_status === 'agreement_signed')
-                                        @php
-                                            $dispCandidatePayload = [
-                                                'id' => $cand->id,
-                                                'candidate_name' => $cand->candidate_name ?? 'Calon Murid',
-                                                'id_label' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
-                                                'unit_name' => $cand->unit->name ?? 'Unit',
-                                                'admission_level' => $cand->admission_level ?? '',
-                                                'net_fee' => (float) $calcNet,
-                                                'total_paid' => (float) ($cand->total_paid_final_fee ?? 0),
-                                                'remaining_balance' => (float) ($cand->remaining_balance ?? 0),
-                                                'registration_status' => $cand->registration_status,
-                                                'is_dispensation' => (bool) $cand->is_dispensation,
-                                                'dispensation_reason' => $cand->dispensation_reason ?? '',
-                                            ];
-                                        @endphp
-                                        <button type="button" 
-                                            onclick='openCandidateDispensationModal(@json($dispCandidatePayload))'
-                                            class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1 cursor-pointer"
-                                            title="Dispensasi Penerimaan Langsung (Tahap Administrasi)">
-                                            <i data-lucide="award" class="w-3.5 h-3.5"></i> Dispensasi
-                                        </button>
+                                    @if(!empty($isTrash))
+                                        @if(auth()->user()->isSuperAdmin())
+                                            <button type="button" 
+                                                onclick="openRestoreCandidateModal({{ $cand->id }}, '{{ addslashes($cand->candidate_name ?? 'Calon Murid') }}', 'SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}')" 
+                                                class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                                                title="Pulihkan Calon Murid ke Daftar Aktif">
+                                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Pulihkan
+                                            </button>
+                                        @endif
+                                    @else
+                                        @if($cand->registration_status === 'agreement_signed')
+                                            @php
+                                                $dispCandidatePayload = [
+                                                    'id' => $cand->id,
+                                                    'candidate_name' => $cand->candidate_name ?? 'Calon Murid',
+                                                    'id_label' => 'SANS-' . substr($cand->period->year ?? '2026', 0, 4) . '-' . str_pad($cand->id, 4, '0', STR_PAD_LEFT),
+                                                    'unit_name' => $cand->unit->name ?? 'Unit',
+                                                    'admission_level' => $cand->admission_level ?? '',
+                                                    'net_fee' => (float) $calcNet,
+                                                    'total_paid' => (float) ($cand->total_paid_final_fee ?? 0),
+                                                    'remaining_balance' => (float) ($cand->remaining_balance ?? 0),
+                                                    'registration_status' => $cand->registration_status,
+                                                    'is_dispensation' => (bool) $cand->is_dispensation,
+                                                    'dispensation_reason' => $cand->dispensation_reason ?? '',
+                                                ];
+                                            @endphp
+                                            <button type="button" 
+                                                onclick='openCandidateDispensationModal(@json($dispCandidatePayload))'
+                                                class="bg-purple-600 hover:bg-purple-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                                                title="Dispensasi Penerimaan Langsung (Tahap Administrasi)">
+                                                <i data-lucide="award" class="w-3.5 h-3.5"></i> Dispensasi
+                                            </button>
+                                        @endif
+
+                                        @if(auth()->user()->isSuperAdmin())
+                                            <button type="button" 
+                                                onclick="openTrashCandidateModal({{ $cand->id }}, '{{ addslashes($cand->candidate_name ?? 'Calon Murid') }}', 'SANS-{{ substr($cand->period->year ?? '2026', 0, 4) }}-{{ str_pad($cand->id, 4, '0', STR_PAD_LEFT) }}')" 
+                                                class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1 cursor-pointer"
+                                                title="Pindahkan ke Tong Sampah (Isolasi Data)">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Tong Sampah
+                                            </button>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -2374,5 +2470,122 @@ window.exportCandidatesPdf = function(btn) {
     const queryString = params.toString();
     window.location.href = baseUrl + (queryString ? '?' + queryString : '');
 };
+
+window.toggleCandTrashDropdown = function() {
+    const menu = document.getElementById('candTrashDropdownMenu');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    }
+};
+
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('candTrashDropdownWrapper');
+    const menu = document.getElementById('candTrashDropdownMenu');
+    if (wrapper && menu && !wrapper.contains(e.target)) {
+        menu.classList.add('hidden');
+    }
+});
+
+window.openTrashCandidateModal = function(id, name, idLabel) {
+    const modal = document.getElementById('trashCandidateModal');
+    const form = document.getElementById('trashCandidateForm');
+    const nameEl = document.getElementById('trash-cand-name-text');
+    const idEl = document.getElementById('trash-cand-id-text');
+    
+    if (form) {
+        form.action = "{{ url('/admin/candidates') }}/" + id + "/trash";
+    }
+    if (nameEl) nameEl.textContent = name;
+    if (idEl) idEl.textContent = idLabel;
+    if (modal) {
+        modal.classList.remove('hidden');
+        if (window.lucide) window.lucide.createIcons();
+    }
+};
+
+window.closeTrashCandidateModal = function() {
+    const modal = document.getElementById('trashCandidateModal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.openRestoreCandidateModal = function(id, name, idLabel) {
+    const modal = document.getElementById('restoreCandidateModal');
+    const form = document.getElementById('restoreCandidateForm');
+    const nameEl = document.getElementById('restore-cand-name-text');
+    const idEl = document.getElementById('restore-cand-id-text');
+    
+    if (form) {
+        form.action = "{{ url('/admin/candidates') }}/" + id + "/restore";
+    }
+    if (nameEl) nameEl.textContent = name;
+    if (idEl) idEl.textContent = idLabel;
+    if (modal) {
+        modal.classList.remove('hidden');
+        if (window.lucide) window.lucide.createIcons();
+    }
+};
+
+window.closeRestoreCandidateModal = function() {
+    const modal = document.getElementById('restoreCandidateModal');
+    if (modal) modal.classList.add('hidden');
+};
 </script>
+
+@if(auth()->user()->isSuperAdmin())
+<!-- Modal Konfirmasi Pindah ke Tong Sampah (Khusus Super Admin) -->
+<div id="trashCandidateModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+        <div class="flex items-center gap-3.5">
+            <div class="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="font-extrabold text-base text-slate-800 dark:text-white">Pindahkan ke Tong Sampah?</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500">Isolasi data calon murid testing / bekas</p>
+            </div>
+        </div>
+        <p class="text-xs text-slate-650 dark:text-slate-300 leading-relaxed">
+            Apakah Anda yakin ingin memindahkan calon murid <strong class="text-slate-800 dark:text-white font-bold" id="trash-cand-name-text"></strong> (<span id="trash-cand-id-text" class="font-mono font-bold text-amber-600"></span>) ke <strong>Tong Sampah</strong>? Data ini akan diisolasi dari daftar aktif, antrean verifikasi, ta'aruf, persetujuan biaya, dan laporan statistik.
+        </p>
+        <form id="trashCandidateForm" method="POST" action="" hx-boost="false" class="flex justify-end gap-2 pt-2">
+            @csrf
+            <button type="button" onclick="closeTrashCandidateModal()" class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer">
+                Batal
+            </button>
+            <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <span>Ya, Pindahkan</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Pulihkan dari Tong Sampah (Khusus Super Admin) -->
+<div id="restoreCandidateModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+        <div class="flex items-center gap-3.5">
+            <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="font-extrabold text-base text-slate-800 dark:text-white">Pulihkan Calon Murid?</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-500">Kembalikan ke antrean dan daftar calon murid aktif</p>
+            </div>
+        </div>
+        <p class="text-xs text-slate-650 dark:text-slate-300 leading-relaxed">
+            Apakah Anda yakin ingin memulihkan calon murid <strong class="text-slate-800 dark:text-white font-bold" id="restore-cand-name-text"></strong> (<span id="restore-cand-id-text" class="font-mono font-bold text-emerald-600"></span>) kembali ke <strong>Daftar Aktif</strong>?
+        </p>
+        <form id="restoreCandidateForm" method="POST" action="" hx-boost="false" class="flex justify-end gap-2 pt-2">
+            @csrf
+            <button type="button" onclick="closeRestoreCandidateModal()" class="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer">
+                Batal
+            </button>
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                <span>Ya, Pulihkan Data</span>
+            </button>
+        </form>
+    </div>
+</div>
+@endif
 @endsection

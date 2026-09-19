@@ -156,17 +156,50 @@
     </div>
 
     <!-- Tab Navigation Pills -->
-    <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        @if(!auth()->user()->isUnitAdmin())
-            <button onclick="switchFormTab('crud_steps')" id="formTabBtn-crud_steps" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'crud_steps' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
-                <i data-lucide="list-ordered" class="w-4 h-4"></i> Manajemen Tahapan (Steps)
-            </button>
+    <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            @if(!auth()->user()->isUnitAdmin())
+                <button onclick="switchFormTab('crud_steps')" id="formTabBtn-crud_steps" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'crud_steps' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
+                    <i data-lucide="list-ordered" class="w-4 h-4"></i> Manajemen Tahapan (Steps)
+                </button>
+            @endif
+            @foreach($steps as $step)
+                <button onclick="switchFormTab('step_{{ $step->id }}')" id="formTabBtn-step_{{ $step->id }}" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'step_' . $step->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
+                    <i data-lucide="folder" class="w-4 h-4"></i> {{ $step->title }}
+                </button>
+            @endforeach
+        </div>
+
+        @if($isSuperAdmin)
+            @php
+                $trashFieldCount = $trashedFields->count();
+                $isAnyTrashTab = ($activeTab === 'test_fields');
+            @endphp
+            <!-- Tong Sampah Dropdown di Pojok Kanan (Khusus Super Admin) -->
+            <div class="relative inline-block text-left" id="formTrashDropdownWrapper">
+                <button type="button" onclick="toggleFormTrashDropdown()" id="formTrashDropdownBtn" class="px-3.5 py-2 {{ $isAnyTrashTab ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80' }} rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4 {{ $isAnyTrashTab ? 'text-white' : 'text-amber-600' }}"></i>
+                    <span>Tong Sampah</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 {{ $isAnyTrashTab ? 'text-white/80' : 'text-slate-400' }}"></i>
+                </button>
+                <div id="formTrashDropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 transition-all">
+                    <div class="px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50/70 border-b border-amber-100 mb-1">
+                        Terkunci
+                    </div>
+                    <a href="javascript:void(0)" onclick="switchFormTab('test_fields'); closeFormTrashDropdown();" id="trashSubTab-test_fields" class="trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer {{ $activeTab === 'test_fields' ? 'bg-amber-100 text-amber-900 font-extrabold border-l-4 border-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-800' }}">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="form-input" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>Kolom Input Formulir</span>
+                        </div>
+                        @if($trashFieldCount > 0)
+                            <span class="dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full {{ $activeTab === 'test_fields' ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800' }}">{{ $trashFieldCount }} Data</span>
+                        @else
+                            <span class="dropdown-item-count text-[9px] font-semibold text-slate-400">0 Data</span>
+                        @endif
+                    </a>
+                </div>
+            </div>
         @endif
-        @foreach($steps as $step)
-            <button onclick="switchFormTab('step_{{ $step->id }}')" id="formTabBtn-step_{{ $step->id }}" class="form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'step_' . $step->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }}">
-                <i data-lucide="folder" class="w-4 h-4"></i> {{ $step->title }}
-            </button>
-        @endforeach
     </div>
 
     <!-- Tab Contents Container -->
@@ -323,6 +356,13 @@
                                             </span>
                                         @endif
 
+                                        @if($isSuperAdmin && !$isSystemField)
+                                            <button type="button" onclick="confirmTrashField('{{ addslashes($field->label) }}', '{{ route('admin.spmb-settings.form.fields.trash', $field->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-600 hover:border-amber-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pindahkan ke Tong Sampah">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Tong Sampah</span>
+                                            </button>
+                                        @endif
+
                                         @if($canDeleteField)
                                             <button type="button" onclick="deleteFieldItem('{{ $field->label }}', '{{ route('admin.spmb-settings.form.fields.delete', $field->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Hapus Kolom">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -347,6 +387,91 @@
                 </div>
             </div>
         @endforeach
+
+        @if($isSuperAdmin)
+            <!-- Tab: Tong Sampah Kolom Input Formulir -->
+            <div id="formTabContent-test_fields" class="form-tab-content p-8 space-y-6 {{ $activeTab === 'test_fields' ? '' : 'hidden' }}">
+                <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-9 w-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="archive" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-sm text-amber-950">Tong Sampah: Kolom Input Formulir</h3>
+                            <p class="text-[11px] text-amber-800">Menampilkan kolom input formulir yang diarsipkan / berstatus testing. Data ini diisolasi dan tidak muncul pada langkah pendaftaran calon murid baru.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-xs">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[11px] text-slate-500 font-bold uppercase tracking-wider bg-slate-50/80">
+                                <th class="py-3.5 px-6 whitespace-nowrap">Langkah / Tahapan</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Label Kolom</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Key Database</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Tipe Form</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Berlaku Untuk</th>
+                                <th class="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
+                                <th class="py-3.5 px-6 text-right whitespace-nowrap">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-100/80">
+                            @forelse($trashedFields as $field)
+                                <tr class="hover:bg-slate-50/40 transition">
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                                            <i data-lucide="folder" class="w-3.5 h-3.5 text-slate-500"></i>
+                                            {{ $field->step?->title ?? 'Tahapan #' . $field->form_step_id }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-extrabold text-xs text-slate-800 tracking-tight">{{ $field->label }}</span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                                <i data-lucide="lock" class="w-3 h-3 text-amber-600"></i> Terkunci
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap font-mono text-xs text-slate-600">
+                                        {{ $field->field_name }}
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap font-semibold text-brand-emerald uppercase">
+                                        {{ $field->type }}
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap space-x-1 space-y-1">
+                                        @forelse($field->units as $u)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
+                                                {{ $u->code ?: $u->name }}
+                                            </span>
+                                        @empty
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-50 text-slate-500 border border-slate-200">
+                                                Global
+                                            </span>
+                                        @endforelse
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Di Tong Sampah
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
+                                        <button type="button" onclick="confirmRestoreField('{{ addslashes($field->label) }}', '{{ route('admin.spmb-settings.form.fields.restore', $field->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pulihkan Kolom">
+                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                            <span>Pulihkan</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="py-8 text-center text-slate-400 text-xs">Tong sampah kolom formulir kosong.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
     </div>
 </div>
@@ -649,6 +774,70 @@
     </div>
 </div>
 
+    @if($isSuperAdmin)
+        <!-- Modal Konfirmasi Pindahkan ke Tong Sampah -->
+        <div id="trashFieldModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
+                            <i data-lucide="archive" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-base text-slate-800">Pindahkan ke Tong Sampah?</h3>
+                            <p class="text-xs text-slate-500">Arsipkan kolom input tanpa menghapus data pendaftar.</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-6">
+                        Apakah Anda yakin ingin memindahkan kolom "<strong id="trashFieldLabel" class="text-amber-800 font-extrabold"></strong>" ke <strong>Tong Sampah</strong>? Kolom ini tidak akan muncul pada formulir pendaftaran calon murid baru.
+                    </p>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="closeTrashFieldModal()" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                            Batal
+                        </button>
+                        <form id="trashFieldForm" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition shadow-sm cursor-pointer">
+                                Pindahkan ke Tong Sampah
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Konfirmasi Pulihkan dari Tong Sampah -->
+        <div id="restoreFieldModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-base text-slate-800">Pulihkan Kolom Formulir?</h3>
+                            <p class="text-xs text-slate-500">Kembalikan kolom input ke daftar utama aktif.</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-6">
+                        Apakah Anda yakin ingin memulihkan kolom "<strong id="restoreFieldLabel" class="text-emerald-800 font-extrabold"></strong>" dari Tong Sampah ke formulir aktif?
+                    </p>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="closeRestoreFieldModal()" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                            Batal
+                        </button>
+                        <form id="restoreFieldForm" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm cursor-pointer">
+                                Pulihkan Kolom
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
 <!-- Hidden Delete Form -->
 <form id="deleteForm" method="POST" class="hidden">
     @csrf
@@ -656,6 +845,57 @@
 </form>
 
 <script>
+    // Trash Dropdown Control
+    function toggleFormTrashDropdown() {
+        const menu = document.getElementById('formTrashDropdownMenu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    }
+
+    function closeFormTrashDropdown() {
+        const menu = document.getElementById('formTrashDropdownMenu');
+        if (menu) {
+            menu.classList.add('hidden');
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('formTrashDropdownWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            closeFormTrashDropdown();
+        }
+    });
+
+    // Confirmation Modal Controls for Trash & Restore
+    function confirmTrashField(label, actionUrl) {
+        const labelEl = document.getElementById('trashFieldLabel');
+        const formEl = document.getElementById('trashFieldForm');
+        const modalEl = document.getElementById('trashFieldModal');
+        if (labelEl) labelEl.innerText = label;
+        if (formEl) formEl.setAttribute('action', actionUrl);
+        if (modalEl) modalEl.classList.remove('hidden');
+    }
+
+    function closeTrashFieldModal() {
+        const modalEl = document.getElementById('trashFieldModal');
+        if (modalEl) modalEl.classList.add('hidden');
+    }
+
+    function confirmRestoreField(label, actionUrl) {
+        const labelEl = document.getElementById('restoreFieldLabel');
+        const formEl = document.getElementById('restoreFieldForm');
+        const modalEl = document.getElementById('restoreFieldModal');
+        if (labelEl) labelEl.innerText = label;
+        if (formEl) formEl.setAttribute('action', actionUrl);
+        if (modalEl) modalEl.classList.remove('hidden');
+    }
+
+    function closeRestoreFieldModal() {
+        const modalEl = document.getElementById('restoreFieldModal');
+        if (modalEl) modalEl.classList.add('hidden');
+    }
+
     // Tab switching memory
     function switchFormTab(tabId) {
         const panel = document.getElementById('formTabContent-' + tabId);
@@ -665,19 +905,68 @@
         panel.classList.remove('hidden');
 
         document.querySelectorAll('.form-tab-btn').forEach(btn => {
-            btn.className = "form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50";
+            btn.className = "form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:bg-slate-50 cursor-pointer";
         });
         
         const activeBtn = document.getElementById('formTabBtn-' + tabId);
         if (activeBtn) {
-            activeBtn.className = "form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow";
+            activeBtn.className = "form-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow cursor-pointer";
+        }
+
+        // Highlight Tong Sampah dropdown and subtabs
+        const isTrash = (tabId === 'test_fields');
+        const trashDropdownBtn = document.getElementById('formTrashDropdownBtn');
+        if (trashDropdownBtn) {
+            if (isTrash) {
+                trashDropdownBtn.className = "px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer";
+                const tIcon = trashDropdownBtn.querySelector('[data-lucide="trash-2"]');
+                if (tIcon) tIcon.className = "w-4 h-4 text-white";
+                const cIcon = trashDropdownBtn.querySelector('[data-lucide="chevron-down"]');
+                if (cIcon) cIcon.className = "w-3.5 h-3.5 text-white/80";
+            } else {
+                trashDropdownBtn.className = "px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer";
+                const tIcon = trashDropdownBtn.querySelector('[data-lucide="trash-2"]');
+                if (tIcon) tIcon.className = "w-4 h-4 text-amber-600";
+                const cIcon = trashDropdownBtn.querySelector('[data-lucide="chevron-down"]');
+                if (cIcon) cIcon.className = "w-3.5 h-3.5 text-slate-400";
+            }
+        }
+
+        document.querySelectorAll('.trash-subtab-btn').forEach(subBtn => {
+            subBtn.className = "trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer text-slate-700 hover:bg-amber-50 hover:text-amber-800";
+            const badge = subBtn.querySelector('.dropdown-item-count') || subBtn.querySelector('span:last-child');
+            if (badge) {
+                if (!badge.innerText.startsWith('0')) {
+                    badge.className = "dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-100 text-amber-800";
+                } else {
+                    badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                }
+            }
+        });
+
+        const activeSubBtn = document.getElementById('trashSubTab-' + tabId);
+        if (activeSubBtn) {
+            activeSubBtn.className = "trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer bg-amber-100 text-amber-900 font-extrabold border-l-4 border-amber-600";
+            const badge = activeSubBtn.querySelector('.dropdown-item-count') || activeSubBtn.querySelector('span:last-child');
+            if (badge) {
+                if (!badge.innerText.startsWith('0')) {
+                    badge.className = "dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-200 text-amber-900";
+                } else {
+                    badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                }
+            }
         }
         
         // Update URL query parameter to sync with server
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId;
+        const unitId = "{{ $selectedUnitId ?? '' }}";
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?tab=' + tabId + (unitId !== '' ? '&unit_id=' + unitId : '');
         window.history.replaceState({ path: newUrl }, '', newUrl);
 
         localStorage.setItem('spmb_form_active_tab', tabId);
+
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
     }
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -880,6 +1169,18 @@
     document.getElementById('editFieldModal').addEventListener('click', function(e) {
         if (e.target === this) closeEditFieldModal();
     });
+    const trashFieldModalEl = document.getElementById('trashFieldModal');
+    if (trashFieldModalEl) {
+        trashFieldModalEl.addEventListener('click', function(e) {
+            if (e.target === this) closeTrashFieldModal();
+        });
+    }
+    const restoreFieldModalEl = document.getElementById('restoreFieldModal');
+    if (restoreFieldModalEl) {
+        restoreFieldModalEl.addEventListener('click', function(e) {
+            if (e.target === this) closeRestoreFieldModal();
+        });
+    }
 
     // Auto-reopen modal if validation failed on redirect
     @if(session('failed_modal'))
@@ -942,6 +1243,12 @@
             
             const fieldEditModal = document.getElementById('editFieldModal');
             if (fieldEditModal && !fieldEditModal.classList.contains('hidden')) closeEditFieldModal();
+
+            const tfModal = document.getElementById('trashFieldModal');
+            if (tfModal && !tfModal.classList.contains('hidden')) closeTrashFieldModal();
+
+            const rfModal = document.getElementById('restoreFieldModal');
+            if (rfModal && !rfModal.classList.contains('hidden')) closeRestoreFieldModal();
         }
     });
 </script>

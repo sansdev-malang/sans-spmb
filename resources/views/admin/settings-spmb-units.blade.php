@@ -46,8 +46,9 @@
     @php
         $activeTab = $activeTab ?? request()->input('tab', 'unit');
     @endphp
-    <!-- Tab Navigation -->
-    <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+    <!-- Tab Navigation & Dropdown -->
+    <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
             <button id="tabBtn-unit" onclick="switchTab('unit')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'unit' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
                 <i data-lucide="building-2" class="w-4 h-4"></i> Unit Sekolah
             </button>
@@ -57,6 +58,50 @@
             <button id="tabBtn-extra" onclick="switchTab('extra')" class="tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'extra' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
                 <i data-lucide="sparkles" class="w-4 h-4"></i> Layanan Non-Formal
             </button>
+        </div>
+
+        @if($isSuperAdmin)
+            @php
+                $trashGradeCount = $grades->where('is_testing', true)->count();
+                $trashExtraCount = $extraServices->where('is_testing', true)->count();
+                $isAnyTrashTab = in_array($activeTab, ['test_grade', 'test_extra']);
+            @endphp
+            <!-- Tong Sampah Dropdown di Pojok Kanan (Khusus Super Admin) -->
+            <div class="relative inline-block text-left" id="unitsTrashDropdownWrapper">
+                <button type="button" onclick="toggleUnitsTrashDropdown()" id="unitsTrashDropdownBtn" class="px-3.5 py-2 {{ $isAnyTrashTab ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80' }} rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4 {{ $isAnyTrashTab ? 'text-white' : 'text-amber-600' }}"></i>
+                    <span>Tong Sampah</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 {{ $isAnyTrashTab ? 'text-white/80' : 'text-slate-400' }}"></i>
+                </button>
+                <div id="unitsTrashDropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 transition-all">
+                    <div class="px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50/70 border-b border-amber-100 mb-1">
+                        Terkunci
+                    </div>
+                    <a href="javascript:void(0)" onclick="switchTab('test_grade'); closeUnitsTrashDropdown();" id="trashSubTab-test_grade" class="trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer {{ $activeTab === 'test_grade' ? 'bg-amber-100 text-amber-900 font-extrabold border-l-4 border-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-800' }}">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="layers" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>Tingkatan Kelas</span>
+                        </div>
+                        @if($trashGradeCount > 0)
+                            <span class="dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full {{ $activeTab === 'test_grade' ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800' }}">{{ $trashGradeCount }} Data</span>
+                        @else
+                            <span class="dropdown-item-count text-[9px] font-semibold text-slate-400">0 Data</span>
+                        @endif
+                    </a>
+                    <a href="javascript:void(0)" onclick="switchTab('test_extra'); closeUnitsTrashDropdown();" id="trashSubTab-test_extra" class="trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer {{ $activeTab === 'test_extra' ? 'bg-amber-100 text-amber-900 font-extrabold border-l-4 border-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-800' }}">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>Layanan Non-Formal</span>
+                        </div>
+                        @if($trashExtraCount > 0)
+                            <span class="dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full {{ $activeTab === 'test_extra' ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800' }}">{{ $trashExtraCount }} Data</span>
+                        @else
+                            <span class="dropdown-item-count text-[9px] font-semibold text-slate-400">0 Data</span>
+                        @endif
+                    </a>
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- Main Card Container -->
@@ -200,7 +245,7 @@
                         </tr>
                     </thead>
                     <tbody class="text-xs divide-y divide-slate-100/80">
-                        @forelse($grades as $grade)
+                        @forelse($grades->where('is_testing', false) as $grade)
                             <tr class="grade-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $grade->spmb_unit_id }}">
                                 <td class="py-4 px-6 align-middle whitespace-nowrap">
                                     <div class="flex items-center gap-1">
@@ -314,6 +359,12 @@
                                             <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                                             <span>Edit</span>
                                         </button>
+                                        @if($isSuperAdmin)
+                                            <button type="button" onclick="confirmTrashUnitItem('Tingkatan Kelas', '{{ addslashes($grade->name) }}', '{{ route('admin.spmb-settings.grades.trash', $grade->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-600 hover:border-amber-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pindahkan ke Tong Sampah">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Tong Sampah</span>
+                                            </button>
+                                        @endif
                                         @if($grade->registrations_count > 0)
                                             <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Tingkatan karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Hapus Tingkatan">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -330,7 +381,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="py-8 text-center text-slate-400 text-xs">Belum ada tingkatan yang ditambahkan.</td>
+                                <td colspan="8" class="py-8 text-center text-slate-400 text-xs">Belum ada tingkatan aktif yang ditambahkan.</td>
                             </tr>
                         @endforelse
                         <tr id="emptyGradeRow-filtered" class="hidden">
@@ -371,7 +422,7 @@
                             </tr>
                         </thead>
                         <tbody class="text-xs divide-y divide-slate-100/80">
-                            @forelse($extraServices as $service)
+                            @forelse($extraServices->where('is_testing', false) as $service)
                                 <tr class="extra-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $service->spmb_unit_id ?? 'all' }}">
                                     <td class="py-4 px-6 align-middle whitespace-nowrap">
                                         <div class="flex items-center gap-1">
@@ -469,6 +520,12 @@
                                                 <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                                                 <span>Edit</span>
                                             </button>
+                                            @if($isSuperAdmin)
+                                                <button type="button" onclick="confirmTrashUnitItem('Layanan Non-Formal', '{{ addslashes($service->name) }}', '{{ route('admin.spmb-settings.extra-services.trash', $service->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-600 hover:border-amber-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pindahkan ke Tong Sampah">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <span>Tong Sampah</span>
+                                                </button>
+                                            @endif
                                             @if($service->registrations_count > 0)
                                                 <button type="button" onclick="showToast('Peringatan: Tidak dapat menghapus Layanan karena sudah digunakan oleh pendaftar!', 'error')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Hapus Layanan">
                                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -485,7 +542,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="py-8 text-center text-slate-400 text-xs">Belum ada layanan non-formal yang ditambahkan.</td>
+                                    <td colspan="7" class="py-8 text-center text-slate-400 text-xs">Belum ada layanan non-formal aktif yang ditambahkan.</td>
                                 </tr>
                             @endforelse
                             <tr id="emptyExtraRow-filtered" class="hidden">
@@ -495,7 +552,162 @@
                     </table>
                 </div>
             </div>
-        </div>
+
+        @if($isSuperAdmin)
+            <!-- Tab: Tong Sampah Tingkatan Kelas -->
+            <div id="tabContent-test_grade" class="tab-content p-8 space-y-6 {{ $activeTab === 'test_grade' ? '' : 'hidden' }}">
+                <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-9 w-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="archive" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-sm text-amber-950">Tong Sampah: Tingkatan Kelas</h3>
+                            <p class="text-[11px] text-amber-800">Menampilkan tingkatan kelas yang diarsipkan / berstatus testing. Data ini diisolasi dan tidak muncul pada formulir pendaftaran murid baru.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-xs">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[11px] text-slate-500 font-bold uppercase tracking-wider bg-slate-50/80">
+                                <th class="py-3.5 px-6 whitespace-nowrap">Tingkatan (Grade)</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Sub-Unit</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Unit Asal</th>
+                                <th class="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
+                                <th class="py-3.5 px-6 text-center whitespace-nowrap">Pendaftar Terkait</th>
+                                <th class="py-3.5 px-6 text-right whitespace-nowrap">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-100/80">
+                            @forelse($grades->where('is_testing', true) as $grade)
+                                <tr class="trash-grade-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $grade->spmb_unit_id }}">
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-extrabold text-xs text-slate-800 tracking-tight">{{ $grade->name }}</span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                                <i data-lucide="lock" class="w-3 h-3 text-amber-600"></i> Terkunci
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        <span class="text-slate-500 text-xs font-semibold">{{ $grade->sub_unit ?? '-' }}</span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                                            {{ $grade->unit->name ?? '-' }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Di Tong Sampah
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                        <span class="inline-flex min-w-24 justify-center items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                                            {{ $grade->registrations_count }} Pendaftar
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
+                                        <button type="button" onclick="confirmRestoreUnitItem('Tingkatan Kelas', '{{ addslashes($grade->name) }}', '{{ route('admin.spmb-settings.grades.restore', $grade->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pulihkan Tingkatan">
+                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                            <span>Pulihkan</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tong sampah tingkatan kelas kosong.</td>
+                                </tr>
+                            @endforelse
+                            <tr id="emptyTrashGradeRow-filtered" class="hidden">
+                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tidak ada data tingkatan kelas di tong sampah untuk unit yang dipilih.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Tong Sampah Layanan Non-Formal -->
+            <div id="tabContent-test_extra" class="tab-content p-8 space-y-6 {{ $activeTab === 'test_extra' ? '' : 'hidden' }}">
+                <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-9 w-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="archive" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-sm text-amber-950">Tong Sampah: Layanan Non-Formal</h3>
+                            <p class="text-[11px] text-amber-800">Menampilkan layanan tambahan yang diarsipkan / berstatus testing. Data ini diisolasi dan tidak muncul pada formulir pendaftaran murid baru.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-100 rounded-2xl shadow-xs">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[11px] text-slate-500 font-bold uppercase tracking-wider bg-slate-50/80">
+                                <th class="py-3.5 px-6 whitespace-nowrap">Nama Layanan</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Kode Layanan</th>
+                                <th class="py-3.5 px-6 whitespace-nowrap">Unit Asal</th>
+                                <th class="py-3.5 px-6 text-center whitespace-nowrap">Status</th>
+                                <th class="py-3.5 px-6 text-center whitespace-nowrap">Pendaftar Terkait</th>
+                                <th class="py-3.5 px-6 text-right whitespace-nowrap">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-100/80">
+                            @forelse($extraServices->where('is_testing', true) as $service)
+                                <tr class="trash-extra-item-row hover:bg-slate-50/40 transition" data-unit-id="{{ $service->spmb_unit_id ?? 'all' }}">
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-extrabold text-xs text-slate-800 tracking-tight">{{ $service->name }}</span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                                <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-600"></i> Terkunci
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap font-mono font-bold text-brand-emerald">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-mono">
+                                            {{ $service->code }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle whitespace-nowrap">
+                                        @if($service->unit)
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">{{ $service->unit->name }}</span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10.5px] font-bold uppercase bg-slate-100 text-slate-500 border border-slate-200">Semua Unit</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Di Tong Sampah
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-center whitespace-nowrap">
+                                        <span class="inline-flex min-w-24 justify-center items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                                            {{ $service->registrations_count }} Pendaftar
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 align-middle text-right whitespace-nowrap">
+                                        <button type="button" onclick="confirmRestoreUnitItem('Layanan Non-Formal', '{{ addslashes($service->name) }}', '{{ route('admin.spmb-settings.extra-services.restore', $service->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pulihkan Layanan">
+                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                            <span>Pulihkan</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tong sampah layanan non-formal kosong.</td>
+                                </tr>
+                            @endforelse
+                            <tr id="emptyTrashExtraRow-filtered" class="hidden">
+                                <td colspan="6" class="py-8 text-center text-slate-400 text-xs">Tidak ada data layanan non-formal di tong sampah untuk unit yang dipilih.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
 
         <!-- Modal for Extra Service (Layanan Non-Formal) -->
         <div id="extraModal" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs opacity-0 pointer-events-none transition-all duration-150 overflow-y-auto overscroll-contain">
@@ -933,6 +1145,71 @@
             </form>
         </div>
     </div>
+
+    @if($isSuperAdmin)
+        <!-- Modal Konfirmasi Pindahkan ke Tong Sampah -->
+        <div id="trashUnitItemModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+            <div class="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-100 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
+                            <i data-lucide="archive" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-base text-slate-800">Pindahkan ke Tong Sampah?</h3>
+                            <p class="text-xs text-slate-500">Arsipkan data tanpa menghapus database.</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-6">
+                        Apakah Anda yakin ingin memindahkan <span id="trashUnitItemType" class="font-bold text-slate-800"></span> "<strong id="trashUnitItemName" class="text-amber-800 font-extrabold"></strong>" ke <strong>Tong Sampah</strong>? Data ini tidak akan muncul pada formulir pendaftaran aktif.
+                    </p>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="closeTrashUnitItemModal()" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                            Batal
+                        </button>
+                        <form id="trashUnitItemForm" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition shadow-sm cursor-pointer">
+                                Pindahkan ke Tong Sampah
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Konfirmasi Pulihkan dari Tong Sampah -->
+        <div id="restoreUnitItemModal" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+            <div class="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-100 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-base text-slate-800">Pulihkan Data?</h3>
+                            <p class="text-xs text-slate-500">Kembalikan data ke tab utama / aktif.</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-6">
+                        Apakah Anda yakin ingin memulihkan <span id="restoreUnitItemType" class="font-bold text-slate-800"></span> "<strong id="restoreUnitItemName" class="text-emerald-800 font-extrabold"></strong>" dari Tong Sampah ke daftar utama aktif?
+                    </p>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="closeRestoreUnitItemModal()" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer">
+                            Batal
+                        </button>
+                        <form id="restoreUnitItemForm" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm cursor-pointer">
+                                Pulihkan Data
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if(session('success'))
         <script>
             if (typeof showToast === 'function') {
@@ -1020,6 +1297,71 @@
                 else emptyExtraFiltered.classList.add('hidden');
             }
 
+            // 4. Filter Tab Trash Grade
+            const trashGradeRows = document.querySelectorAll('.trash-grade-item-row');
+            let visibleTrashGradeCount = 0;
+            trashGradeRows.forEach(row => {
+                const uId = (row.dataset.unitId || '').toString().trim();
+                if (!window.currentUnitFilter || uId === window.currentUnitFilter) {
+                    row.style.display = '';
+                    visibleTrashGradeCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            const emptyTrashGradeFiltered = document.getElementById('emptyTrashGradeRow-filtered');
+            if (emptyTrashGradeFiltered) {
+                if (trashGradeRows.length > 0 && visibleTrashGradeCount === 0) emptyTrashGradeFiltered.classList.remove('hidden');
+                else emptyTrashGradeFiltered.classList.add('hidden');
+            }
+
+            // 5. Filter Tab Trash Extra Services
+            const trashExtraRows = document.querySelectorAll('.trash-extra-item-row');
+            let visibleTrashExtraCount = 0;
+            trashExtraRows.forEach(row => {
+                const uId = (row.dataset.unitId || '').toString().trim();
+                if (!window.currentUnitFilter || uId === 'all' || uId === window.currentUnitFilter) {
+                    row.style.display = '';
+                    visibleTrashExtraCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            const emptyTrashExtraFiltered = document.getElementById('emptyTrashExtraRow-filtered');
+            if (emptyTrashExtraFiltered) {
+                if (trashExtraRows.length > 0 && visibleTrashExtraCount === 0) emptyTrashExtraFiltered.classList.remove('hidden');
+                else emptyTrashExtraFiltered.classList.add('hidden');
+            }
+
+            // Update Tong Sampah badges in dropdown
+            const gradeSubTab = document.getElementById('trashSubTab-test_grade');
+            if (gradeSubTab) {
+                const badge = gradeSubTab.querySelector('.dropdown-item-count') || gradeSubTab.querySelector('span:last-child');
+                if (badge) {
+                    badge.textContent = `${visibleTrashGradeCount} Data`;
+                    const isItemActive = gradeSubTab.classList.contains('border-l-4');
+                    if (visibleTrashGradeCount > 0) {
+                        badge.className = `dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full ${isItemActive ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800'}`;
+                    } else {
+                        badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                    }
+                }
+            }
+
+            const extraSubTab = document.getElementById('trashSubTab-test_extra');
+            if (extraSubTab) {
+                const badge = extraSubTab.querySelector('.dropdown-item-count') || extraSubTab.querySelector('span:last-child');
+                if (badge) {
+                    badge.textContent = `${visibleTrashExtraCount} Data`;
+                    const isItemActive = extraSubTab.classList.contains('border-l-4');
+                    if (visibleTrashExtraCount > 0) {
+                        badge.className = `dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full ${isItemActive ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800'}`;
+                    } else {
+                        badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                    }
+                }
+            }
+
             // Update URL and storage
             const url = new URL(window.location.href);
             if (window.currentUnitFilter) {
@@ -1033,6 +1375,61 @@
             if (typeof lucide !== 'undefined' && lucide.createIcons) {
                 lucide.createIcons();
             }
+        };
+
+        // Trash Dropdown Control
+        window.toggleUnitsTrashDropdown = function() {
+            const menu = document.getElementById('unitsTrashDropdownMenu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        };
+
+        window.closeUnitsTrashDropdown = function() {
+            const menu = document.getElementById('unitsTrashDropdownMenu');
+            if (menu) {
+                menu.classList.add('hidden');
+            }
+        };
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('unitsTrashDropdownWrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                window.closeUnitsTrashDropdown();
+            }
+        });
+
+        // Confirmation Modal Controls for Trash & Restore
+        window.confirmTrashUnitItem = function(type, name, actionUrl) {
+            const typeEl = document.getElementById('trashUnitItemType');
+            const nameEl = document.getElementById('trashUnitItemName');
+            const formEl = document.getElementById('trashUnitItemForm');
+            const modalEl = document.getElementById('trashUnitItemModal');
+            if (typeEl) typeEl.innerText = type;
+            if (nameEl) nameEl.innerText = name;
+            if (formEl) formEl.setAttribute('action', actionUrl);
+            if (modalEl) modalEl.classList.remove('hidden');
+        };
+
+        window.closeTrashUnitItemModal = function() {
+            const modalEl = document.getElementById('trashUnitItemModal');
+            if (modalEl) modalEl.classList.add('hidden');
+        };
+
+        window.confirmRestoreUnitItem = function(type, name, actionUrl) {
+            const typeEl = document.getElementById('restoreUnitItemType');
+            const nameEl = document.getElementById('restoreUnitItemName');
+            const formEl = document.getElementById('restoreUnitItemForm');
+            const modalEl = document.getElementById('restoreUnitItemModal');
+            if (typeEl) typeEl.innerText = type;
+            if (nameEl) nameEl.innerText = name;
+            if (formEl) formEl.setAttribute('action', actionUrl);
+            if (modalEl) modalEl.classList.remove('hidden');
+        };
+
+        window.closeRestoreUnitItemModal = function() {
+            const modalEl = document.getElementById('restoreUnitItemModal');
+            if (modalEl) modalEl.classList.add('hidden');
         };
 
         // Tab Switching
@@ -1051,6 +1448,50 @@
             if (activeBtn) {
                 activeBtn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow cursor-pointer";
             }
+
+            // Highlight Tong Sampah dropdown and subtabs
+            const isTrash = tabId.startsWith('test_');
+            const trashDropdownBtn = document.getElementById('unitsTrashDropdownBtn');
+            if (trashDropdownBtn) {
+                if (isTrash) {
+                    trashDropdownBtn.className = "px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer";
+                    const tIcon = trashDropdownBtn.querySelector('[data-lucide="trash-2"]');
+                    if (tIcon) tIcon.className = "w-4 h-4 text-white";
+                    const cIcon = trashDropdownBtn.querySelector('[data-lucide="chevron-down"]');
+                    if (cIcon) cIcon.className = "w-3.5 h-3.5 text-white/80";
+                } else {
+                    trashDropdownBtn.className = "px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer";
+                    const tIcon = trashDropdownBtn.querySelector('[data-lucide="trash-2"]');
+                    if (tIcon) tIcon.className = "w-4 h-4 text-amber-600";
+                    const cIcon = trashDropdownBtn.querySelector('[data-lucide="chevron-down"]');
+                    if (cIcon) cIcon.className = "w-3.5 h-3.5 text-slate-400";
+                }
+            }
+
+            document.querySelectorAll('.trash-subtab-btn').forEach(subBtn => {
+                subBtn.className = "trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer text-slate-700 hover:bg-amber-50 hover:text-amber-800";
+                const badge = subBtn.querySelector('.dropdown-item-count') || subBtn.querySelector('span:last-child');
+                if (badge) {
+                    if (!badge.innerText.startsWith('0')) {
+                        badge.className = "dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-100 text-amber-800";
+                    } else {
+                        badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                    }
+                }
+            });
+
+            const activeSubBtn = document.getElementById('trashSubTab-' + tabId);
+            if (activeSubBtn) {
+                activeSubBtn.className = "trash-subtab-btn w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer bg-amber-100 text-amber-900 font-extrabold border-l-4 border-amber-600";
+                const badge = activeSubBtn.querySelector('.dropdown-item-count') || activeSubBtn.querySelector('span:last-child');
+                if (badge) {
+                    if (!badge.innerText.startsWith('0')) {
+                        badge.className = "dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-200 text-amber-900";
+                    } else {
+                        badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                    }
+                }
+            }
             
             // Update URL query parameter to sync with server
             const url = new URL(window.location.href);
@@ -1060,6 +1501,10 @@
             }
             window.history.replaceState({ path: url.toString() }, '', url.toString());
             localStorage.setItem('spmb_units_active_tab', tabId);
+
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
         };
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -1508,6 +1953,18 @@
         document.getElementById('extraModal').addEventListener('click', function(e) {
             if (e.target === this) window.closeExtraModal();
         });
+        const trashUnitModalEl = document.getElementById('trashUnitItemModal');
+        if (trashUnitModalEl) {
+            trashUnitModalEl.addEventListener('click', function(e) {
+                if (e.target === this) window.closeTrashUnitItemModal();
+            });
+        }
+        const restoreUnitModalEl = document.getElementById('restoreUnitItemModal');
+        if (restoreUnitModalEl) {
+            restoreUnitModalEl.addEventListener('click', function(e) {
+                if (e.target === this) window.closeRestoreUnitItemModal();
+            });
+        }
 
         // Auto-reopen modal if validation failed on redirect
         @if(session('failed_modal'))
@@ -1554,6 +2011,12 @@
                 
                 const eModal = document.getElementById('extraModal');
                 if (eModal && !eModal.classList.contains('pointer-events-none')) window.closeExtraModal();
+
+                const tuModal = document.getElementById('trashUnitItemModal');
+                if (tuModal && !tuModal.classList.contains('hidden')) window.closeTrashUnitItemModal();
+
+                const ruModal = document.getElementById('restoreUnitItemModal');
+                if (ruModal && !ruModal.classList.contains('hidden')) window.closeRestoreUnitItemModal();
             }
         });
     </script>

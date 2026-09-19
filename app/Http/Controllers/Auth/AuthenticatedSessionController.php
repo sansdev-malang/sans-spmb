@@ -40,11 +40,20 @@ class AuthenticatedSessionController extends Controller
             $request->session()->forget('url.intended');
         }
 
-        if (Auth::user()->isAdmin()) {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
+        $targetUrl = Auth::user()->isAdmin()
+            ? route('admin.dashboard', absolute: false)
+            : route('dashboard', absolute: false);
+
+        $response = redirect()->intended($targetUrl);
+
+        // Remember Email in Cookie if "remember" is checked
+        if ($request->boolean('remember')) {
+            $response->withCookie(cookie('remember_email', $request->email, 60 * 24 * 30));
+        } else {
+            $response->withCookie(cookie()->forget('remember_email'));
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return $response;
     }
 
     /**

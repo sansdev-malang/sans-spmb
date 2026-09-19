@@ -13,6 +13,11 @@ class SpmbFormStep extends Model
         return $this->hasMany(SpmbFormField::class, 'form_step_id')->orderBy('order');
     }
 
+    public function liveFields()
+    {
+        return $this->hasMany(SpmbFormField::class, 'form_step_id')->where('is_testing', false)->orderBy('order');
+    }
+
     public function units()
     {
         return $this->belongsToMany(SpmbUnit::class, 'spmb_form_step_unit', 'spmb_form_step_id', 'spmb_unit_id');

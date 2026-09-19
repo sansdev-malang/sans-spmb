@@ -12,7 +12,7 @@
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 group-focus-within:text-custom-primary transition">
                     <i data-lucide="mail" class="w-4 h-4"></i>
                 </span>
-                <x-text-input id="email" class="block pl-10 w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 py-3 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-custom-primary/30 focus:border-custom-primary transition shadow-sm" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                <x-text-input id="email" class="block pl-10 w-full rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 py-3 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-custom-primary/30 focus:border-custom-primary transition shadow-sm" type="email" name="email" :value="old('email', request()->cookie('remember_email'))" required autofocus autocomplete="username" />
             </div>
             <x-input-error :messages="$errors->get('email')" class="mt-1" />
         </div>
@@ -38,7 +38,7 @@
         <!-- Remember Me & Forgot Password -->
         <div class="flex items-center justify-between pt-1">
             <label for="remember_me" class="inline-flex items-center cursor-pointer">
-                <input id="remember_me" type="checkbox" class="rounded border-slate-300 dark:border-slate-700 text-custom-primary shadow-sm focus:ring-custom-primary focus:ring-offset-0 w-4 h-4 transition" name="remember">
+                <input id="remember_me" type="checkbox" class="rounded border-slate-300 dark:border-slate-700 text-custom-primary shadow-sm focus:ring-custom-primary focus:ring-offset-0 w-4 h-4 transition" name="remember" {{ (old('remember') || request()->cookie('remember_email')) ? 'checked' : '' }}>
                 <span class="ms-2 text-xs font-semibold text-slate-600 dark:text-slate-200">{{ __('Remember me') }}</span>
             </label>
 
@@ -80,5 +80,32 @@
                 lucide.createIcons();
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('email');
+            const rememberCheckbox = document.getElementById('remember_me');
+            const form = document.querySelector('form');
+
+            // Auto-fill from localStorage if input is empty
+            if (emailInput && !emailInput.value) {
+                const savedEmail = localStorage.getItem('spmb_remember_email');
+                if (savedEmail) {
+                    emailInput.value = savedEmail;
+                    if (rememberCheckbox) {
+                        rememberCheckbox.checked = true;
+                    }
+                }
+            }
+
+            if (form) {
+                form.addEventListener('submit', function() {
+                    if (rememberCheckbox && rememberCheckbox.checked && emailInput && emailInput.value) {
+                        localStorage.setItem('spmb_remember_email', emailInput.value);
+                    } else if (rememberCheckbox && !rememberCheckbox.checked) {
+                        localStorage.removeItem('spmb_remember_email');
+                    }
+                });
+            }
+        });
     </script>
 </x-guest-layout>

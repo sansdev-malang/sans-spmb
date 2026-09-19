@@ -26,9 +26,12 @@ class AdminCandidateController extends Controller
             ? ($request->period_id === 'all' ? 'all' : (int)$request->period_id)
             : SpmbPeriod::getDefaultPeriodId();
         
+        $isTrash = $request->boolean('trash', false) && auth()->user()->isSuperAdmin();
+
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'wave', 'type', 'payments'])
             ->whereNotNull('candidate_name')
+            ->where('is_testing', $isTrash)
             ->where(function($sq) {
                 $sq->where('payment_status', 'paid')
                   ->orWhereHas('payments', function($q) {
@@ -44,6 +47,7 @@ class AdminCandidateController extends Controller
         // Calculate Stats for Active Candidates with dynamic filters applied
         $baseStatsQuery = Registration::scopedByAdmin()
             ->whereNotNull('candidate_name')
+            ->where('is_testing', $isTrash)
             ->where(function($sq) {
                 $sq->where('payment_status', 'paid')
                   ->orWhereHas('payments', function($q) {
@@ -221,9 +225,51 @@ class AdminCandidateController extends Controller
             }
         }
 
+        // Count trashed candidates and stages for Super Admin dropdown
+        $trashCount = 0;
+        $trashStageCounts = [];
+        if (auth()->user()->isSuperAdmin()) {
+            $trashBaseQuery = Registration::scopedByAdmin()
+                ->whereNotNull('candidate_name')
+                ->where('is_testing', true)
+                ->where(function($sq) {
+                    $sq->where('payment_status', 'paid')
+                      ->orWhereHas('payments', function($q) {
+                          $q->where('payment_type', 'registration_fee')
+                            ->whereIn('status', ['success', 'settled']);
+                      });
+                });
+            if ($selectedPeriodId !== 'all') {
+                $trashBaseQuery->where('spmb_period_id', $selectedPeriodId);
+            }
+            if ($request->filled('unit_id')) {
+                $trashBaseQuery->where('spmb_unit_id', $request->unit_id);
+            }
+            if ($request->filled('wave_id')) {
+                $trashBaseQuery->where('spmb_wave_id', $request->wave_id);
+            }
+            if ($request->filled('type_id')) {
+                $trashBaseQuery->where('spmb_type_id', $request->type_id);
+            }
+            if ($request->filled('class_program_id')) {
+                $trashBaseQuery->where('spmb_class_program_id', $request->class_program_id);
+            }
+
+            $trashCount = (clone $trashBaseQuery)->count();
+            $trashStageCounts = [
+                'all' => $trashCount,
+                'draft' => (clone $trashBaseQuery)->whereIn('registration_status', ['draft', 'failed'])->count(),
+                'submitted' => (clone $trashBaseQuery)->where('registration_status', 'submitted')->count(),
+                'verified' => (clone $trashBaseQuery)->where('registration_status', 'verified')->count(),
+                'taaruf_completed' => (clone $trashBaseQuery)->where('registration_status', 'taaruf_completed')->count(),
+                'agreement_signed' => (clone $trashBaseQuery)->where('registration_status', 'agreement_signed')->count(),
+                'completed' => (clone $trashBaseQuery)->where('registration_status', 'completed')->count(),
+            ];
+        }
+
         $candidates = $query->latest()->paginate($perPage)->withQueryString();
 
-        return view('admin.candidates', compact('candidates', 'stats', 'waveStats', 'typeStats', 'classProgramStats', 'stageCounts', 'periods', 'selectedPeriodId'));
+        return view('admin.candidates', compact('candidates', 'stats', 'waveStats', 'typeStats', 'classProgramStats', 'stageCounts', 'periods', 'selectedPeriodId', 'isTrash', 'trashCount', 'trashStageCounts'));
     }
 
     /**
@@ -238,7 +284,8 @@ class AdminCandidateController extends Controller
 
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'wave', 'type', 'payments'])
-            ->whereNotNull('candidate_name');
+            ->whereNotNull('candidate_name')
+            ->where('is_testing', false);
 
         if ($selectedPeriodId !== 'all') {
             $query->where('spmb_period_id', $selectedPeriodId);
@@ -436,6 +483,60 @@ class AdminCandidateController extends Controller
     }
 
     /**
+     * Move candidate to trash (is_testing = true)
+     */
+    public function trashCandidate(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang memiliki akses memindahkan calon murid ke tong sampah.');
+        }
+
+        $candidate = Registration::findOrFail($id);
+        $candidate->update(['is_testing' => true]);
+
+        \App\Models\SpmbActivityLog::log(
+            'CANDIDATE_TRASHED',
+            "Memindahkan calon murid {$candidate->candidate_name} (ID: {$candidate->id}) ke Tong Sampah."
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Calon murid {$candidate->candidate_name} berhasil dipindahkan ke Tong Sampah.",
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Calon murid {$candidate->candidate_name} berhasil dipindahkan ke Tong Sampah.");
+    }
+
+    /**
+     * Restore candidate from trash (is_testing = false)
+     */
+    public function restoreCandidate(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang memiliki akses memulihkan calon murid dari tong sampah.');
+        }
+
+        $candidate = Registration::findOrFail($id);
+        $candidate->update(['is_testing' => false]);
+
+        \App\Models\SpmbActivityLog::log(
+            'CANDIDATE_RESTORED',
+            "Memulihkan calon murid {$candidate->candidate_name} (ID: {$candidate->id}) dari Tong Sampah ke daftar aktif."
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Calon murid {$candidate->candidate_name} berhasil dipulihkan ke daftar aktif.",
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Calon murid {$candidate->candidate_name} berhasil dipulihkan ke daftar aktif.");
+    }
+
+    /**
      * Export filtered candidates data to Excel (.xls with formatting).
      */
     public function export(Request $request)
@@ -447,6 +548,7 @@ class AdminCandidateController extends Controller
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->whereNotNull('candidate_name')
+            ->where('is_testing', false)
             ->where(function($sq) {
                 $sq->where('payment_status', 'paid')
                   ->orWhereHas('payments', function($q) {
@@ -718,6 +820,7 @@ class AdminCandidateController extends Controller
         $query = Registration::scopedByAdmin()
             ->with(['user', 'period', 'unit', 'grade', 'wave', 'type', 'classProgram', 'extraServices', 'payments'])
             ->whereNotNull('candidate_name')
+            ->where('is_testing', false)
             ->where(function($sq) {
                 $sq->where('payment_status', 'paid')
                   ->orWhereHas('payments', function($q) {

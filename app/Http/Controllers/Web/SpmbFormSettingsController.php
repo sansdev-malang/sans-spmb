@@ -14,6 +14,7 @@ class SpmbFormSettingsController extends Controller
         $units = \App\Models\SpmbUnit::all();
         $user = auth()->user();
         $isUnitAdmin = $user && $user->isUnitAdmin();
+        $isSuperAdmin = $user && $user->isSuperAdmin();
 
         if ($isUnitAdmin) {
             $selectedUnitId = (int)$user->spmb_unit_id;
@@ -25,7 +26,7 @@ class SpmbFormSettingsController extends Controller
         }
 
         $steps = SpmbFormStep::with(['fields' => function($q) use ($selectedUnitId) {
-                $q->with('units');
+                $q->live()->with('units');
                 if ($selectedUnitId !== '') {
                     $q->where(function($sub) use ($selectedUnitId) {
                         $sub->whereDoesntHave('units')
@@ -48,12 +49,28 @@ class SpmbFormSettingsController extends Controller
             ->orderBy('order')
             ->get();
 
+        $trashedFields = $isSuperAdmin 
+            ? SpmbFormField::trash()
+                ->with(['step', 'units'])
+                ->when($selectedUnitId !== '', function($q) use ($selectedUnitId) {
+                    $q->where(function($sub) use ($selectedUnitId) {
+                        $sub->whereDoesntHave('units')
+                            ->orWhereHas('units', function($u) use ($selectedUnitId) {
+                                $u->where('spmb_units.id', $selectedUnitId);
+                            });
+                    });
+                })
+                ->orderBy('form_step_id')
+                ->orderBy('order')
+                ->get()
+            : collect();
+
         $activeTab = request()->get('tab', $isUnitAdmin ? ('step_' . ($steps->first()?->id ?? 'crud_steps')) : 'crud_steps');
         if ($isUnitAdmin && $activeTab === 'crud_steps' && $steps->isNotEmpty()) {
             $activeTab = 'step_' . $steps->first()->id;
         }
 
-        return view('admin.settings-form', compact('steps', 'activeTab', 'units', 'selectedUnitId', 'isUnitAdmin'));
+        return view('admin.settings-form', compact('steps', 'activeTab', 'units', 'selectedUnitId', 'isUnitAdmin', 'isSuperAdmin', 'trashedFields'));
     }
 
     public function storeStep(Request $request)
@@ -287,5 +304,36 @@ class SpmbFormSettingsController extends Controller
         $field->units()->detach();
         $field->delete();
         return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id, 'unit_id' => $unitId])->with('success', 'Kolom input formulir berhasil dihapus.');
+    }
+
+    public function trashField($id)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return redirect()->route('admin.spmb-settings.form')->with('error', 'Fitur tong sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $field = SpmbFormField::findOrFail($id);
+        $systemFields = ['candidate_name', 'spmb_period_id', 'spmb_wave_id', 'spmb_type_id', 'spmb_class_program_id'];
+        if (in_array($field->field_name, $systemFields)) {
+            return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('error', 'Kolom sistem utama tidak boleh dipindahkan ke Tong Sampah.');
+        }
+
+        $field->update(['is_testing' => true]);
+
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('success', 'Kolom input formulir "' . $field->label . '" berhasil dipindahkan ke Tong Sampah.');
+    }
+
+    public function restoreField($id)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return redirect()->route('admin.spmb-settings.form')->with('error', 'Fitur tong sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $field = SpmbFormField::findOrFail($id);
+        $field->update(['is_testing' => false]);
+
+        return redirect()->route('admin.spmb-settings.form', ['tab' => 'step_' . $field->form_step_id])->with('success', 'Kolom input formulir "' . $field->label . '" berhasil dipulihkan dari Tong Sampah.');
     }
 }

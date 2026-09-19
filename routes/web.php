@@ -104,6 +104,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/candidates', [AdminCandidateController::class, 'index'])->name('admin.candidates');
         Route::get('/admin/candidates/export', [AdminCandidateController::class, 'export'])->name('admin.candidates.export');
         Route::get('/admin/candidates/export-pdf', [AdminCandidateController::class, 'exportPdf'])->name('admin.candidates.export-pdf');
+        Route::post('/admin/candidates/{id}/trash', [AdminCandidateController::class, 'trashCandidate'])->name('admin.candidates.trash');
+        Route::post('/admin/candidates/{id}/restore', [AdminCandidateController::class, 'restoreCandidate'])->name('admin.candidates.restore');
         Route::post('/admin/candidates/{id}/installment-settings', [AdminDashboardController::class, 'updateInstallmentSettings'])->name('admin.candidates.installment-settings');
         Route::post('/admin/candidates/{id}/manual-accept', [AdminCandidateController::class, 'manualAccept'])->name('admin.candidates.manual-accept');
         Route::post('/admin/candidates/{id}/revert-manual-accept', [AdminCandidateController::class, 'revertManualAccept'])->name('admin.candidates.revert-manual-accept');
@@ -148,9 +150,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/spmb-settings/fees', [SpmbFeesController::class, 'index'])->name('admin.spmb-settings.fees');
         Route::post('/admin/spmb-settings/fees/categories', [SpmbFeesController::class, 'storeCategory'])->name('admin.spmb-settings.fees.categories.store');
         Route::post('/admin/spmb-settings/fees/categories/{id}', [SpmbFeesController::class, 'updateCategory'])->name('admin.spmb-settings.fees.categories.update');
+        Route::post('/admin/spmb-settings/fees/categories/{id}/trash', [SpmbFeesController::class, 'trashCategory'])->name('admin.spmb-settings.fees.categories.trash');
+        Route::post('/admin/spmb-settings/fees/categories/{id}/restore', [SpmbFeesController::class, 'restoreCategory'])->name('admin.spmb-settings.fees.categories.restore');
         Route::delete('/admin/spmb-settings/fees/categories/{id}', [SpmbFeesController::class, 'destroyCategory'])->name('admin.spmb-settings.fees.categories.delete');
         Route::post('/admin/spmb-settings/fees/admin-fees', [SpmbFeesController::class, 'storeFee'])->name('admin.spmb-settings.fees.admin-fees.store');
         Route::post('/admin/spmb-settings/fees/admin-fees/{id}', [SpmbFeesController::class, 'updateFee'])->name('admin.spmb-settings.fees.admin-fees.update');
+        Route::post('/admin/spmb-settings/fees/admin-fees/{id}/trash', [SpmbFeesController::class, 'trashFee'])->name('admin.spmb-settings.fees.admin-fees.trash');
+        Route::post('/admin/spmb-settings/fees/admin-fees/{id}/restore', [SpmbFeesController::class, 'restoreFee'])->name('admin.spmb-settings.fees.admin-fees.restore');
         Route::delete('/admin/spmb-settings/fees/admin-fees/{id}', [SpmbFeesController::class, 'destroyFee'])->name('admin.spmb-settings.fees.admin-fees.delete');
 
         // Routes accessible to both Super Admin and Unit Admin (with internal scoping)
@@ -197,10 +203,14 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/admin/spmb-settings/grades', [SpmbSettingsController::class, 'storeGrade'])->name('admin.spmb-settings.grades.store');
         Route::match(['POST', 'PUT'], '/admin/spmb-settings/grades/{id}', [SpmbSettingsController::class, 'updateGrade'])->name('admin.spmb-settings.grades.update');
+        Route::post('/admin/spmb-settings/grades/{id}/trash', [SpmbSettingsController::class, 'trashGrade'])->name('admin.spmb-settings.grades.trash');
+        Route::post('/admin/spmb-settings/grades/{id}/restore', [SpmbSettingsController::class, 'restoreGrade'])->name('admin.spmb-settings.grades.restore');
         Route::delete('/admin/spmb-settings/grades/{id}', [SpmbSettingsController::class, 'destroyGrade'])->name('admin.spmb-settings.grades.delete');
 
         Route::post('/admin/spmb-settings/extra-services', [SpmbSettingsController::class, 'storeExtraService'])->name('admin.spmb-settings.extra-services.store');
         Route::match(['POST', 'PUT'], '/admin/spmb-settings/extra-services/{id}', [SpmbSettingsController::class, 'updateExtraService'])->name('admin.spmb-settings.extra-services.update');
+        Route::post('/admin/spmb-settings/extra-services/{id}/trash', [SpmbSettingsController::class, 'trashExtraService'])->name('admin.spmb-settings.extra-services.trash');
+        Route::post('/admin/spmb-settings/extra-services/{id}/restore', [SpmbSettingsController::class, 'restoreExtraService'])->name('admin.spmb-settings.extra-services.restore');
         Route::delete('/admin/spmb-settings/extra-services/{id}', [SpmbSettingsController::class, 'destroyExtraService'])->name('admin.spmb-settings.extra-services.delete');
 
         // Master Jalur & Gelombang (Accessible to Super Admin and Unit Admin as read-only)
@@ -250,27 +260,37 @@ Route::middleware('auth')->group(function () {
             Route::post('/admin/spmb-settings/periods', [SpmbSettingsController::class, 'storePeriod'])->name('admin.spmb-settings.periods.store');
             Route::post('/admin/spmb-settings/periods/{id}', [SpmbSettingsController::class, 'updatePeriod'])->name('admin.spmb-settings.periods.update');
             Route::post('/admin/spmb-settings/periods/{id}/default', [SpmbSettingsController::class, 'setDefaultPeriod'])->name('admin.spmb-settings.periods.default');
+            Route::post('/admin/spmb-settings/periods/{id}/trash', [SpmbSettingsController::class, 'trashPeriod'])->name('admin.spmb-settings.periods.trash');
+            Route::post('/admin/spmb-settings/periods/{id}/restore', [SpmbSettingsController::class, 'restorePeriod'])->name('admin.spmb-settings.periods.restore');
             Route::delete('/admin/spmb-settings/periods/{id}', [SpmbSettingsController::class, 'destroyPeriod'])->name('admin.spmb-settings.periods.delete');
 
             // Wave CRUD
             Route::post('/admin/spmb-settings/waves', [SpmbSettingsController::class, 'storeWave'])->name('admin.spmb-settings.waves.store');
             Route::post('/admin/spmb-settings/waves/{id}', [SpmbSettingsController::class, 'updateWave'])->name('admin.spmb-settings.waves.update');
+            Route::post('/admin/spmb-settings/waves/{id}/trash', [SpmbSettingsController::class, 'trashWave'])->name('admin.spmb-settings.waves.trash');
+            Route::post('/admin/spmb-settings/waves/{id}/restore', [SpmbSettingsController::class, 'restoreWave'])->name('admin.spmb-settings.waves.restore');
             Route::delete('/admin/spmb-settings/waves/{id}', [SpmbSettingsController::class, 'destroyWave'])->name('admin.spmb-settings.waves.delete');
 
             // Type CRUD
             Route::post('/admin/spmb-settings/types', [SpmbSettingsController::class, 'storeType'])->name('admin.spmb-settings.types.store');
             Route::post('/admin/spmb-settings/types/{id}', [SpmbSettingsController::class, 'updateType'])->name('admin.spmb-settings.types.update');
+            Route::post('/admin/spmb-settings/types/{id}/trash', [SpmbSettingsController::class, 'trashType'])->name('admin.spmb-settings.types.trash');
+            Route::post('/admin/spmb-settings/types/{id}/restore', [SpmbSettingsController::class, 'restoreType'])->name('admin.spmb-settings.types.restore');
             Route::delete('/admin/spmb-settings/types/{id}', [SpmbSettingsController::class, 'destroyType'])->name('admin.spmb-settings.types.delete');
 
             // Class Program CRUD
             Route::post('/admin/spmb-settings/class-programs', [SpmbSettingsController::class, 'storeClassProgram'])->name('admin.spmb-settings.class-programs.store');
             Route::post('/admin/spmb-settings/class-programs/{id}', [SpmbSettingsController::class, 'updateClassProgram'])->name('admin.spmb-settings.class-programs.update');
+            Route::post('/admin/spmb-settings/class-programs/{id}/trash', [SpmbSettingsController::class, 'trashClassProgram'])->name('admin.spmb-settings.class-programs.trash');
+            Route::post('/admin/spmb-settings/class-programs/{id}/restore', [SpmbSettingsController::class, 'restoreClassProgram'])->name('admin.spmb-settings.class-programs.restore');
             Route::delete('/admin/spmb-settings/class-programs/{id}', [SpmbSettingsController::class, 'destroyClassProgram'])->name('admin.spmb-settings.class-programs.delete');
 
-            // Setting Formulir Steps CRUD (Super Admin Only)
+            // Setting Formulir Steps & Fields Trash (Super Admin Only)
             Route::post('/admin/spmb-settings/form/steps', [SpmbFormSettingsController::class, 'storeStep'])->name('admin.spmb-settings.form.steps.store');
             Route::post('/admin/spmb-settings/form/steps/{id}', [SpmbFormSettingsController::class, 'updateStep'])->name('admin.spmb-settings.form.steps.update');
             Route::delete('/admin/spmb-settings/form/steps/{id}', [SpmbFormSettingsController::class, 'destroyStep'])->name('admin.spmb-settings.form.steps.delete');
+            Route::post('/admin/spmb-settings/form/fields/{id}/trash', [SpmbFormSettingsController::class, 'trashField'])->name('admin.spmb-settings.form.fields.trash');
+            Route::post('/admin/spmb-settings/form/fields/{id}/restore', [SpmbFormSettingsController::class, 'restoreField'])->name('admin.spmb-settings.form.fields.restore');
 
             // System Logs Viewer
             Route::get('/admin/logs', [AdminLogsController::class, 'index'])->name('admin.logs');

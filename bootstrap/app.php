@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->encryptCookies(except: [
+            'remember_email',
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'logout',
             'api/*',

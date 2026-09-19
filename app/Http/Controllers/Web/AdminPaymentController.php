@@ -29,6 +29,7 @@ class AdminPaymentController extends Controller
         
         // Base query for candidate billing (Khusus calon murid yang telah lolos seleksi / masuk tahap daftar ulang DSP)
         $query = Registration::scopedByAdmin()
+            ->live()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices', 'period'])
             ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
 
@@ -477,6 +478,7 @@ class AdminPaymentController extends Controller
             : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
+            ->live()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices', 'period'])
             ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
 
@@ -696,6 +698,7 @@ class AdminPaymentController extends Controller
             : SpmbPeriod::getDefaultPeriodId();
         
         $query = Registration::scopedByAdmin()
+            ->live()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'payments', 'extraServices', 'period'])
             ->whereIn('registration_status', ['taaruf_completed', 'agreement_signed', 'completed']);
 

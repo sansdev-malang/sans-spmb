@@ -267,6 +267,40 @@ class SpmbSettingsController extends Controller
         return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('success', 'Tahun Pelajaran ' . $period->year . ' berhasil dijadikan sebagai Tahun Default Sistem.');
     }
 
+    public function trashPeriod(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memindahkan data ke tong sampah.');
+        }
+
+        $period = SpmbPeriod::findOrFail($id);
+        $period->update(['is_testing' => true]);
+
+        \App\Models\SpmbActivityLog::log(
+            'PERIOD_TRASHED',
+            "Memindahkan Tahun Pelajaran {$period->year} (ID: {$period->id}) ke Tong Sampah."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'periode'])->with('success', "Tahun Pelajaran {$period->year} berhasil dipindahkan ke Tong Sampah.");
+    }
+
+    public function restorePeriod(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memulihkan data dari tong sampah.');
+        }
+
+        $period = SpmbPeriod::findOrFail($id);
+        $period->update(['is_testing' => false]);
+
+        \App\Models\SpmbActivityLog::log(
+            'PERIOD_RESTORED',
+            "Memulihkan Tahun Pelajaran {$period->year} (ID: {$period->id}) dari Tong Sampah ke daftar aktif."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'test_periode'])->with('success', "Tahun Pelajaran {$period->year} berhasil dipulihkan.");
+    }
+
     public function destroyPeriod($id)
     {
         $period = SpmbPeriod::findOrFail($id);
@@ -325,6 +359,40 @@ class SpmbSettingsController extends Controller
         return redirect()->route('admin.spmb-settings', ['tab' => 'gelombang'])->with('success', 'Gelombang pendaftaran berhasil diperbarui.');
     }
 
+    public function trashWave(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memindahkan data ke tong sampah.');
+        }
+
+        $wave = SpmbWave::findOrFail($id);
+        $wave->update(['is_testing' => true]);
+
+        \App\Models\SpmbActivityLog::log(
+            'WAVE_TRASHED',
+            "Memindahkan Gelombang {$wave->name} (ID: {$wave->id}) ke Tong Sampah."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'gelombang'])->with('success', "Gelombang {$wave->name} berhasil dipindahkan ke Tong Sampah.");
+    }
+
+    public function restoreWave(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memulihkan data dari tong sampah.');
+        }
+
+        $wave = SpmbWave::findOrFail($id);
+        $wave->update(['is_testing' => false]);
+
+        \App\Models\SpmbActivityLog::log(
+            'WAVE_RESTORED',
+            "Memulihkan Gelombang {$wave->name} (ID: {$wave->id}) dari Tong Sampah ke daftar aktif."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'test_gelombang'])->with('success', "Gelombang {$wave->name} berhasil dipulihkan.");
+    }
+
     public function destroyWave($id)
     {
         $wave = SpmbWave::findOrFail($id);
@@ -381,6 +449,40 @@ class SpmbSettingsController extends Controller
             'description' => $request->description
         ]);
         return redirect()->route('admin.spmb-settings', ['tab' => 'jenis'])->with('success', 'Jenis pendaftaran berhasil diperbarui.');
+    }
+
+    public function trashType(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memindahkan data ke tong sampah.');
+        }
+
+        $type = SpmbType::findOrFail($id);
+        $type->update(['is_testing' => true]);
+
+        \App\Models\SpmbActivityLog::log(
+            'TYPE_TRASHED',
+            "Memindahkan Jenis Pendaftaran {$type->name} (ID: {$type->id}) ke Tong Sampah."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'jenis'])->with('success', "Jenis pendaftaran {$type->name} berhasil dipindahkan ke Tong Sampah.");
+    }
+
+    public function restoreType(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memulihkan data dari tong sampah.');
+        }
+
+        $type = SpmbType::findOrFail($id);
+        $type->update(['is_testing' => false]);
+
+        \App\Models\SpmbActivityLog::log(
+            'TYPE_RESTORED',
+            "Memulihkan Jenis Pendaftaran {$type->name} (ID: {$type->id}) dari Tong Sampah ke daftar aktif."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'test_jenis'])->with('success', "Jenis pendaftaran {$type->name} berhasil dipulihkan.");
     }
 
     public function destroyType($id)
@@ -594,6 +696,32 @@ class SpmbSettingsController extends Controller
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])->with('success', 'Tingkatan berhasil diperbarui.');
     }
 
+    public function trashGrade($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $grade = SpmbGrade::findOrFail($id);
+        $grade->update(['is_testing' => true]);
+
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])
+            ->with('success', 'Tingkatan kelas "' . $grade->name . '" berhasil dipindahkan ke Tong Sampah.');
+    }
+
+    public function restoreGrade($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $grade = SpmbGrade::findOrFail($id);
+        $grade->update(['is_testing' => false]);
+
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'grade'])
+            ->with('success', 'Tingkatan kelas "' . $grade->name . '" berhasil dipulihkan ke tab utama.');
+    }
+
     public function destroyGrade($id)
     {
         $grade = SpmbGrade::findOrFail($id);
@@ -656,6 +784,40 @@ class SpmbSettingsController extends Controller
         ]);
 
         return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', 'Kategori murid berhasil diperbarui.');
+    }
+
+    public function trashClassProgram(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memindahkan data ke tong sampah.');
+        }
+
+        $program = SpmbClassProgram::findOrFail($id);
+        $program->update(['is_testing' => true]);
+
+        \App\Models\SpmbActivityLog::log(
+            'CLASS_PROGRAM_TRASHED',
+            "Memindahkan Kategori Murid {$program->name} (ID: {$program->id}) ke Tong Sampah."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'program'])->with('success', "Kategori murid {$program->name} berhasil dipindahkan ke Tong Sampah.");
+    }
+
+    public function restoreClassProgram(Request $request, $id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Hanya Super Admin yang dapat memulihkan data dari tong sampah.');
+        }
+
+        $program = SpmbClassProgram::findOrFail($id);
+        $program->update(['is_testing' => false]);
+
+        \App\Models\SpmbActivityLog::log(
+            'CLASS_PROGRAM_RESTORED',
+            "Memulihkan Kategori Murid {$program->name} (ID: {$program->id}) dari Tong Sampah ke daftar aktif."
+        );
+
+        return redirect()->route('admin.spmb-settings', ['tab' => 'test_program'])->with('success', "Kategori murid {$program->name} berhasil dipulihkan.");
     }
 
     public function destroyClassProgram($id)
@@ -787,6 +949,32 @@ class SpmbSettingsController extends Controller
         $service->update($data);
 
         return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])->with('success', 'Layanan tambahan berhasil diperbarui.');
+    }
+
+    public function trashExtraService($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $service = SpmbExtraService::findOrFail($id);
+        $service->update(['is_testing' => true]);
+
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])
+            ->with('success', 'Layanan non-formal "' . $service->name . '" berhasil dipindahkan ke Tong Sampah.');
+    }
+
+    public function restoreExtraService($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $service = SpmbExtraService::findOrFail($id);
+        $service->update(['is_testing' => false]);
+
+        return redirect()->route('admin.spmb-settings.units-grades', ['tab' => 'extra'])
+            ->with('success', 'Layanan non-formal "' . $service->name . '" berhasil dipulihkan ke tab utama.');
     }
 
     public function destroyExtraService($id)

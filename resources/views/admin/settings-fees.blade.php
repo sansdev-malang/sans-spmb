@@ -54,16 +54,66 @@
         </div>
     </div>
 
-    <!-- Tab Navigation Pills -->
-    <div class="flex flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-        <button onclick="switchFeeTab('jenis_biaya')" id="feeTabBtn-jenis_biaya" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'jenis_biaya' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
-            <i data-lucide="tag" class="w-4 h-4"></i> Jenis Biaya
-        </button>
-        @foreach($categories as $cat)
-            <button onclick="switchFeeTab('cat_{{ $cat->id }}')" id="feeTabBtn-cat_{{ $cat->id }}" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'cat_' . $cat->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
-                <i data-lucide="coins" class="w-4 h-4"></i> {{ $cat->name }}
+    <!-- Tab Navigation Pills & Testing Dropdown -->
+    <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="switchFeeTab('jenis_biaya')" id="feeTabBtn-jenis_biaya" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'jenis_biaya' ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
+                <i data-lucide="tag" class="w-4 h-4"></i> Jenis Biaya
             </button>
-        @endforeach
+            @foreach($categories->where('is_testing', false) as $cat)
+                <button onclick="switchFeeTab('cat_{{ $cat->id }}')" id="feeTabBtn-cat_{{ $cat->id }}" class="fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $activeTab === 'cat_' . $cat->id ? 'bg-brand-emerald text-white shadow' : 'text-slate-600 hover:bg-slate-50' }} cursor-pointer">
+                    <i data-lucide="coins" class="w-4 h-4"></i> {{ $cat->name }}
+                </button>
+            @endforeach
+        </div>
+
+        <!-- Tong Sampah Dropdown di Pojok Kanan (Khusus Super Admin) -->
+        @if(auth()->user()->isSuperAdmin())
+            <div class="relative inline-block text-left" id="testingDropdownWrapper">
+                @php
+                    $isAnyTestingTabActive = str_starts_with($activeTab, 'test_');
+                    $trashCatCount = $categories->where('is_testing', true)->count();
+                @endphp
+                <button type="button" onclick="toggleTestingDropdown()" id="testingDropdownBtn" class="px-4 py-2 {{ $isAnyTestingTabActive ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80' }} rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer">
+                    <i data-lucide="trash-2" class="w-4 h-4 {{ $isAnyTestingTabActive ? 'text-white' : 'text-amber-600' }}"></i>
+                    <span>Tong Sampah</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 {{ $isAnyTestingTabActive ? 'text-white/80' : 'text-slate-400' }}"></i>
+                </button>
+                <div id="testingDropdownMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 transition-all max-h-96 overflow-y-auto">
+                    <div class="px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50/70 border-b border-amber-100 mb-1">
+                        Terkunci
+                    </div>
+                    <button type="button" onclick="selectTestingOption('test_jenis_biaya')" id="testingDropdownItem-test_jenis_biaya" class="testing-dropdown-item w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer {{ $activeTab === 'test_jenis_biaya' ? 'bg-amber-100 text-amber-900 font-extrabold border-l-4 border-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-800' }}">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="tag" class="w-3.5 h-3.5 {{ $activeTab === 'test_jenis_biaya' ? 'text-amber-700' : 'text-amber-600' }}"></i>
+                            <span>Kategori Jenis Biaya</span>
+                        </div>
+                        @if($trashCatCount > 0)
+                            <span class="dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full {{ $activeTab === 'test_jenis_biaya' ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800' }}">{{ $trashCatCount }} Kategori</span>
+                        @else
+                            <span class="dropdown-item-count text-[9px] font-semibold text-slate-400">0 Kategori</span>
+                        @endif
+                    </button>
+                    @foreach($categories->where('is_testing', false) as $cat)
+                        @php
+                            $testCount = $fees->where('spmb_fee_category_id', $cat->id)->where('is_testing', true)->count();
+                            $isItemActive = ($activeTab === 'test_cat_' . $cat->id);
+                        @endphp
+                        <button type="button" onclick="selectTestingOption('test_cat_{{ $cat->id }}')" id="testingDropdownItem-test_cat_{{ $cat->id }}" class="testing-dropdown-item w-full text-left px-3.5 py-2 text-xs font-bold transition flex items-center justify-between gap-2 cursor-pointer {{ $isItemActive ? 'bg-amber-100 text-amber-900 font-extrabold border-l-4 border-amber-600' : 'text-slate-700 hover:bg-amber-50 hover:text-amber-800' }}">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="archive" class="w-3.5 h-3.5 {{ $isItemActive ? 'text-amber-700' : 'text-amber-600' }}"></i>
+                                <span>{{ $cat->name }}</span>
+                            </div>
+                            @if($testCount > 0)
+                                <span class="dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full {{ $isItemActive ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800' }}">{{ $testCount }} Item</span>
+                            @else
+                                <span class="dropdown-item-count text-[9px] font-semibold text-slate-400">0 Item</span>
+                            @endif
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- Tab Contents -->
@@ -96,7 +146,7 @@
                         </tr>
                     </thead>
                     <tbody class="text-xs divide-y divide-slate-100">
-                        @forelse($categories as $cat)
+                        @forelse($categories->where('is_testing', false) as $cat)
                             <tr class="category-item-row hover:bg-slate-50/30 transition" data-unit-ids="{{ implode(',', $cat->units->pluck('id')->toArray()) }}" data-period-ids="{{ implode(',', (array)$cat->applicable_periods) }}">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $cat->name }}</td>
                                 <td class="py-4 px-6 text-center">
@@ -137,10 +187,16 @@
                                             'units' => $cat->units->pluck('id')->toArray(),
                                             'category_type' => $cat->category_type,
                                             'applicable_periods' => $cat->applicable_periods ?? [],
-                                        ]) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer">
+                                        ]) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer" title="Edit Jenis Biaya">
                                             <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                             <span>Edit</span>
                                         </button>
+                                        @if(auth()->user()->isSuperAdmin())
+                                            <button type="button" onclick="confirmTrashCategory('{{ addslashes($cat->name) }}', '{{ route('admin.spmb-settings.fees.categories.trash', $cat->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-600 hover:border-amber-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pindahkan ke Tong Sampah">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Tong Sampah</span>
+                                            </button>
+                                        @endif
                                     @if(!$cat->is_used)
                                         <button type="button" onclick="deleteFeeItem('jenis_biaya', {{ json_encode($cat->name) }}, {{ $cat->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.categories.delete', $cat->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer">
                                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -157,7 +213,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis biaya.</td>
+                                <td colspan="6" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis biaya aktif.</td>
                             </tr>
                         @endforelse
                         <tr id="emptyCatRow-filtered" class="hidden">
@@ -168,20 +224,112 @@
             </div>
         </div>
 
-        <!-- Dynamic Category Tabs -->
+        @if(auth()->user()->isSuperAdmin())
+            <!-- Tab Tong Sampah: Kategori Jenis Biaya -->
+            <div id="feeTabContent-test_jenis_biaya" class="fee-tab-content p-8 space-y-6 {{ $activeTab === 'test_jenis_biaya' ? '' : 'hidden' }}">
+                <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-9 w-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="archive" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-sm text-amber-950">Tong Sampah: Kategori Jenis Biaya</h3>
+                            <p class="text-[11px] text-amber-800">Menampilkan data kelompok jenis biaya yang telah diarsipkan / berstatus testing. Kategori ini tidak akan muncul pada opsi penetapan biaya aktif.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
+                                <th class="py-4 px-6">Jenis Biaya</th>
+                                <th class="py-4 px-6 text-center">Fungsi / Tipe Biaya</th>
+                                <th class="py-4 px-6 text-center">Tahun Ajaran</th>
+                                <th class="py-4 px-6 text-center">Unit Pengguna</th>
+                                <th class="py-4 px-6 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-100">
+                            @forelse($categories->where('is_testing', true) as $cat)
+                                <tr class="trash-category-item-row hover:bg-slate-50/30 transition" data-unit-ids="{{ implode(',', $cat->units->pluck('id')->toArray()) }}" data-period-ids="{{ implode(',', (array)$cat->applicable_periods) }}">
+                                    <td class="py-4 px-6 font-extrabold text-slate-800">
+                                        <div class="flex items-center gap-2">
+                                            <span>{{ $cat->name }}</span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                                                <i data-lucide="lock" class="w-3 h-3 text-amber-600"></i> Terkunci
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $cat->type_badge_class }}">
+                                            {{ $cat->type_label }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        @if(empty($cat->applicable_periods))
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">
+                                                Non-Aktif
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="{{ $cat->target_periods_text }}">
+                                                <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                {{ \Illuminate\Support\Str::limit($cat->target_periods_text, 25) }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-4 px-6 text-center text-xs font-semibold text-slate-500">
+                                        @if($cat->units->count() === $units->count())
+                                            <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold text-[10px]">Semua Unit</span>
+                                        @else
+                                            {{ implode(', ', $cat->units->pluck('code')->toArray()) }}
+                                        @endif
+                                    </td>
+                                    <td class="py-4 px-6 text-right whitespace-nowrap">
+                                        <button type="button" onclick="confirmRestoreCategory('{{ addslashes($cat->name) }}', '{{ route('admin.spmb-settings.fees.categories.restore', $cat->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pulihkan Jenis Biaya">
+                                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                            <span>Pulihkan</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="py-8 px-6 text-center text-slate-400 text-xs">Tong sampah jenis biaya kosong.</td>
+                                </tr>
+                            @endforelse
+                            <tr id="emptyTrashCatRow-filtered" class="hidden">
+                                <td colspan="5" class="py-8 px-6 text-center text-slate-400 text-xs">Tidak ada data jenis biaya di tong sampah untuk filter yang dipilih.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        <!-- Dynamic Category Tabs (Live & Testing) -->
         @foreach($categories as $cat)
             @php
-                $catFees = $fees->where('spmb_fee_category_id', $cat->id);
+                $liveCatFees = $fees->where('spmb_fee_category_id', $cat->id)->where('is_testing', false);
+                $testingCatFees = $fees->where('spmb_fee_category_id', $cat->id)->where('is_testing', true);
             @endphp
+
+            <!-- 1. TAB LIVE -->
             <div id="feeTabContent-cat_{{ $cat->id }}" class="fee-tab-content p-8 space-y-6 {{ $activeTab === 'cat_' . $cat->id ? '' : 'hidden' }}">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-wrap justify-between items-center gap-3">
                     <div>
-                        <h3 class="font-extrabold text-base text-slate-800">Daftar Nominal {{ $cat->name }}</h3>
-                        <p class="text-[11px] text-slate-400">Atur besaran nominal untuk kategori {{ $cat->name }}.</p>
+                        <div class="flex items-center gap-2.5">
+                            <h3 class="font-extrabold text-base text-slate-800">Daftar Nominal {{ $cat->name }}</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-brand-emerald border border-emerald-200">
+                                Live
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Atur besaran nominal resmi untuk kategori {{ $cat->name }} yang berlaku bagi pendaftar.</p>
                     </div>
-                    <button onclick="openFeeModal('biaya_tambahan', '', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '', 'winpay', '{{ $cat->id }}', window.currentUnitFilter || '')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah {{ $cat->name }}
-                    </button>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="openFeeModal('biaya_tambahan', '', false, '{{ route('admin.spmb-settings.fees.admin-fees.store') }}', '', 'winpay', '{{ $cat->id }}', window.currentUnitFilter || '', [], 'tuition_fee', [], [], [], 'all', [], false)" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah {{ $cat->name }}
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="overflow-x-auto border border-slate-100 rounded-xl">
@@ -198,7 +346,7 @@
                             </tr>
                         </thead>
                         <tbody class="text-xs divide-y divide-slate-100">
-                            @forelse($catFees as $fee)
+                            @forelse($liveCatFees as $fee)
                                 <tr class="fee-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $fee->spmb_unit_id }}" data-category-id="{{ $cat->id }}" data-period-ids="{{ implode(',', (array)$fee->applicable_periods) }}">
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $fee->name }}</td>
                                     <td class="py-4 px-6 text-center font-semibold text-slate-500 text-xs">
@@ -315,11 +463,18 @@
                                                 'applicable_class_programs' => $fee->applicable_class_programs ?? [],
                                                 'applicable_types' => $fee->applicable_types ?? [],
                                                 'applicable_gender' => $fee->applicable_gender ?? 'all',
-                                            ]) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer">
+                                                'is_testing' => (bool)$fee->is_testing,
+                                            ]) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer" title="Edit Biaya">
                                                 <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                                 <span>Edit</span>
                                             </button>
-                                            <button type="button" onclick="deleteFeeItem('biaya_tambahan', {{ json_encode($fee->name) }}, {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer">
+                                            @if(auth()->user()->isSuperAdmin())
+                                                <button type="button" onclick="confirmTrashFee('{{ addslashes($fee->name) }}', '{{ route('admin.spmb-settings.fees.admin-fees.trash', $fee->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-600 hover:border-amber-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pindahkan ke Tong Sampah">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <span>Tong Sampah</span>
+                                                </button>
+                                            @endif
+                                            <button type="button" onclick="deleteFeeItem('biaya_tambahan', {{ json_encode($fee->name) }}, {{ $fee->is_used ? 'true' : 'false' }}, '{{ route('admin.spmb-settings.fees.admin-fees.delete', $fee->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white cursor-pointer" title="Hapus Permanen">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                                 <span>Hapus</span>
                                             </button>
@@ -328,7 +483,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="py-8 px-6 text-center text-slate-400 text-xs">Belum ada data nominal untuk kategori ini.</td>
+                                    <td colspan="7" class="py-8 px-6 text-center text-slate-400 text-xs">Belum ada data nominal live untuk kategori ini.</td>
                                 </tr>
                             @endforelse
                             <tr id="emptyFeeRow-{{ $cat->id }}-filtered" class="hidden">
@@ -338,6 +493,166 @@
                     </table>
                 </div>
             </div>
+
+            <!-- 2. TAB TONG SAMPAH (Khusus Super Admin) -->
+            @if(auth()->user()->isSuperAdmin())
+                <div id="feeTabContent-test_cat_{{ $cat->id }}" class="fee-tab-content p-8 space-y-6 {{ $activeTab === 'test_cat_' . $cat->id ? '' : 'hidden' }}">
+                    <!-- Banner Info Tong Sampah -->
+                    <div class="bg-gradient-to-r from-amber-500/10 via-amber-50 to-white border border-amber-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-extrabold text-base text-amber-950">Tong Sampah: {{ $cat->name }}</h3>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-600 text-white">
+                                        Data Bekas / Terkunci
+                                    </span>
+                                </div>
+                                <p class="text-xs text-amber-800 mt-0.5">Komponen biaya di bawah ini adalah data bekas pengujian yang terkunci transaksi lama. Data ini sudah dinonaktifkan dan <strong>tidak akan pernah tertagih</strong> ke calon murid baru.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto border border-amber-100 rounded-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-amber-100 text-[10px] text-amber-800 font-bold uppercase tracking-wider bg-amber-50/50">
+                                    <th class="py-4 px-6">Nama Biaya</th>
+                                    <th class="py-4 px-6 text-center">Unit Sekolah</th>
+                                    <th class="py-4 px-6 text-left">Target Kelas & Kategori</th>
+                                    <th class="py-4 px-6 text-center">Nominal (Rp)</th>
+                                    <th class="py-4 px-6 text-center">Payment Gateway</th>
+                                    <th class="py-4 px-6 text-center">Status Transaksi</th>
+                                    <th class="py-4 px-6 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-amber-50">
+                                @forelse($testingCatFees as $fee)
+                                    <tr class="fee-item-row hover:bg-amber-50/30 transition" data-unit-id="{{ $fee->spmb_unit_id }}" data-category-id="{{ $cat->id }}" data-period-ids="{{ implode(',', (array)$fee->applicable_periods) }}">
+                                        <td class="py-4 px-6 font-extrabold text-slate-800">
+                                            <div class="flex items-center gap-1.5">
+                                                <i data-lucide="archive" class="w-3.5 h-3.5 text-amber-600"></i>
+                                                <span>{{ $fee->name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 text-center font-semibold text-slate-500 text-xs">
+                                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $fee->unit ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700' }}">
+                                                {{ $fee->unit->code ?? 'Global' }}
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-6 text-left">
+                                            <div class="space-y-1">
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="text-[10px] font-bold text-slate-400">Tahun Ajaran:</span>
+                                                    @if(empty($fee->applicable_periods))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">
+                                                            Tidak Ada (Non-Aktif)
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200" title="{{ $fee->target_periods_text }}">
+                                                            <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                            {{ \Illuminate\Support\Str::limit($fee->target_periods_text, 25) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="text-[10px] font-bold text-slate-400">Kelas:</span>
+                                                    @if(empty($fee->applicable_grades))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            Semua Kelas
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200" title="{{ $fee->target_grades_text }}">
+                                                            {{ \Illuminate\Support\Str::limit($fee->target_grades_text, 25) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="text-[10px] font-bold text-slate-400">Kategori:</span>
+                                                    @if(empty($fee->applicable_class_programs))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                                                            Semua Kategori
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200" title="{{ $fee->target_class_programs_text }}">
+                                                            {{ \Illuminate\Support\Str::limit($fee->target_class_programs_text, 25) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="text-[10px] font-bold text-slate-400">Jalur:</span>
+                                                    @if(empty($fee->applicable_types))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                                            Semua Jalur
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200" title="{{ $fee->target_types_text }}">
+                                                            {{ \Illuminate\Support\Str::limit($fee->target_types_text, 25) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex items-center gap-1.5 flex-wrap">
+                                                    <span class="text-[10px] font-bold text-slate-400">Gender:</span>
+                                                    @if(empty($fee->applicable_gender) || $fee->applicable_gender === 'all')
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                                            Semua Gender
+                                                        </span>
+                                                    @elseif(in_array(strtolower($fee->applicable_gender), ['male', 'laki-laki', 'l', 'putra']))
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                            👦 Laki-laki
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
+                                                            👧 Perempuan
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 text-center font-semibold text-slate-700">Rp {{ number_format($fee->amount, 0, ',', '.') }}</td>
+                                        <td class="py-4 px-6 text-center whitespace-nowrap">
+                                            @php
+                                                $gatewaysArray = is_array($fee->payment_gateway) ? $fee->payment_gateway : [$fee->payment_gateway];
+                                            @endphp
+                                            <div class="flex flex-wrap gap-1 justify-center">
+                                                @foreach($gatewaysArray as $gwCode)
+                                                    @php
+                                                        $gw = $gateways->where('code', $gwCode)->first();
+                                                        $colorClass = 'bg-amber-100 text-amber-800';
+                                                    @endphp
+                                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase {{ $colorClass }}">
+                                                        {{ $gw ? $gw->name : strtoupper($gwCode) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 text-center text-xs font-semibold {{ $fee->is_used ? 'text-amber-800 font-bold' : 'text-slate-400' }}">
+                                            {{ $fee->is_used ? 'Terkunci Transaksi' : 'Belum Ada Transaksi' }}
+                                        </td>
+                                        <td class="py-4 px-6 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <button type="button" onclick="confirmRestoreFee('{{ addslashes($fee->name) }}', '{{ route('admin.spmb-settings.fees.admin-fees.restore', $fee->id) }}')" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-300 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:border-emerald-600 hover:text-white transition shadow-2xs cursor-pointer" title="Pulihkan Komponen Biaya">
+                                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                                    <span>Pulihkan</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="py-8 px-6 text-center text-slate-400 text-xs">Tong sampah kosong untuk kategori ini.</td>
+                                    </tr>
+                                @endforelse
+                                <tr id="emptyFeeRow-test_{{ $cat->id }}-filtered" class="hidden">
+                                    <td colspan="7" class="py-8 px-6 text-center text-slate-400 text-xs">Tidak ada data biaya di tong sampah untuk unit yang dipilih pada kategori ini.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
         @endforeach
 
     </div>
@@ -590,6 +905,7 @@
                         @endforeach
                     </div>
                 </div>
+
             </div>
             
             <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-4">
@@ -899,15 +1215,70 @@
             }
         }
 
+        // 3b. Filter Trash Category Rows in Tab test_jenis_biaya
+        const trashCatRows = document.querySelectorAll('.trash-category-item-row');
+        let visibleTrashCatCount = 0;
+        trashCatRows.forEach(row => {
+            const uIds = (row.dataset.unitIds || '').split(',').map(s => s.trim()).filter(Boolean);
+            const pIds = (row.dataset.periodIds || '').split(',').map(s => s.trim()).filter(Boolean);
+
+            const matchUnit = !window.currentUnitFilter || uIds.length === 0 || uIds.includes(window.currentUnitFilter);
+            const matchPeriod = !window.currentPeriodFilter || pIds.includes(window.currentPeriodFilter);
+
+            if (matchUnit && matchPeriod) {
+                row.style.display = '';
+                visibleTrashCatCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const emptyTrashCatFiltered = document.getElementById('emptyTrashCatRow-filtered');
+        if (emptyTrashCatFiltered) {
+            if (trashCatRows.length > 0 && visibleTrashCatCount === 0) {
+                emptyTrashCatFiltered.classList.remove('hidden');
+            } else {
+                emptyTrashCatFiltered.classList.add('hidden');
+            }
+        }
+
+        // Update Kategori Jenis Biaya badge in testing dropdown
+        const catDropdownItem = document.getElementById('testingDropdownItem-test_jenis_biaya');
+        if (catDropdownItem) {
+            const badge = catDropdownItem.querySelector('.dropdown-item-count');
+            if (badge) {
+                badge.textContent = `${visibleTrashCatCount} Kategori`;
+                const isItemActive = catDropdownItem.classList.contains('border-l-4');
+                if (visibleTrashCatCount > 0) {
+                    badge.className = `dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full ${isItemActive ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800'}`;
+                } else {
+                    badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                }
+            }
+        }
+
         // 4. Filter Fee Rows in Category Tabs
         document.querySelectorAll('.fee-tab-content').forEach(tabContent => {
+            const isTestingCatTab = tabContent.id.startsWith('feeTabContent-test_cat_');
             const feeRows = tabContent.querySelectorAll('.fee-item-row');
-            if (feeRows.length === 0) return;
+            
+            if (feeRows.length === 0) {
+                if (isTestingCatTab) {
+                    const testingCatId = tabContent.id.replace('feeTabContent-test_cat_', '');
+                    const itemBtn = document.getElementById('testingDropdownItem-test_cat_' + testingCatId);
+                    if (itemBtn) {
+                        const badge = itemBtn.querySelector('.dropdown-item-count');
+                        if (badge) {
+                            badge.textContent = '0 Item';
+                            badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                        }
+                    }
+                }
+                return;
+            }
 
             let visibleFeeCount = 0;
-            let catId = null;
             feeRows.forEach(row => {
-                catId = row.dataset.categoryId;
                 const uId = (row.dataset.unitId || '').toString().trim();
                 const pIds = (row.dataset.periodIds || '').split(',').map(s => s.trim()).filter(Boolean);
 
@@ -922,13 +1293,28 @@
                 }
             });
 
-            if (catId) {
-                const filteredEmpty = document.getElementById(`emptyFeeRow-${catId}-filtered`);
-                if (filteredEmpty) {
-                    if (feeRows.length > 0 && visibleFeeCount === 0) {
-                        filteredEmpty.classList.remove('hidden');
-                    } else {
-                        filteredEmpty.classList.add('hidden');
+            const filteredEmpty = tabContent.querySelector('[id$="-filtered"]');
+            if (filteredEmpty) {
+                if (feeRows.length > 0 && visibleFeeCount === 0) {
+                    filteredEmpty.classList.remove('hidden');
+                } else {
+                    filteredEmpty.classList.add('hidden');
+                }
+            }
+
+            if (isTestingCatTab) {
+                const testingCatId = tabContent.id.replace('feeTabContent-test_cat_', '');
+                const itemBtn = document.getElementById('testingDropdownItem-test_cat_' + testingCatId);
+                if (itemBtn) {
+                    const badge = itemBtn.querySelector('.dropdown-item-count');
+                    if (badge) {
+                        badge.textContent = `${visibleFeeCount} Item`;
+                        const isItemActive = itemBtn.classList.contains('border-l-4');
+                        if (visibleFeeCount > 0) {
+                            badge.className = `dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full ${isItemActive ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800'}`;
+                        } else {
+                            badge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                        }
                     }
                 }
             }
@@ -984,6 +1370,60 @@
         if (activeBtn) {
             activeBtn.className = "fee-tab-btn px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-brand-emerald text-white shadow cursor-pointer";
         }
+
+        // Highlight testing button and dropdown items if on a testing tab
+        const testingBtn = document.getElementById('testingDropdownBtn');
+        document.querySelectorAll('.testing-dropdown-item').forEach(btn => {
+            btn.className = "testing-dropdown-item w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-800 transition flex items-center justify-between gap-2 cursor-pointer";
+            const icon = btn.querySelector('svg, i');
+            if (icon) {
+                icon.classList.remove('text-amber-700');
+                icon.classList.add('text-amber-600');
+            }
+            const countBadge = btn.querySelector('.dropdown-item-count');
+            if (countBadge) {
+                if (!countBadge.innerText.startsWith('0')) {
+                    countBadge.className = "dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-100 text-amber-800";
+                } else {
+                    countBadge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                }
+            }
+        });
+
+        if (tabId.startsWith('test_')) {
+            if (testingBtn) {
+                testingBtn.className = "px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer";
+                const tIcon = testingBtn.querySelector('[data-lucide="trash-2"]');
+                if (tIcon) tIcon.classList.replace('text-amber-600', 'text-white');
+                const cIcon = testingBtn.querySelector('[data-lucide="chevron-down"]');
+                if (cIcon) cIcon.classList.replace('text-slate-400', 'text-white/80');
+            }
+            const activeItem = document.getElementById('testingDropdownItem-' + tabId);
+            if (activeItem) {
+                activeItem.className = "testing-dropdown-item w-full text-left px-3.5 py-2 text-xs font-extrabold bg-amber-100 text-amber-900 border-l-4 border-amber-600 transition flex items-center justify-between gap-2 cursor-pointer";
+                const icon = activeItem.querySelector('svg, i');
+                if (icon) {
+                    icon.classList.remove('text-amber-600');
+                    icon.classList.add('text-amber-700');
+                }
+                const countBadge = activeItem.querySelector('.dropdown-item-count');
+                if (countBadge) {
+                    if (!countBadge.innerText.startsWith('0')) {
+                        countBadge.className = "dropdown-item-count px-1.5 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-200 text-amber-900";
+                    } else {
+                        countBadge.className = "dropdown-item-count text-[9px] font-semibold text-slate-400";
+                    }
+                }
+            }
+        } else {
+            if (testingBtn) {
+                testingBtn.className = "px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer";
+                const tIcon = testingBtn.querySelector('[data-lucide="trash-2"]');
+                if (tIcon) tIcon.classList.replace('text-white', 'text-amber-600');
+                const cIcon = testingBtn.querySelector('[data-lucide="chevron-down"]');
+                if (cIcon) cIcon.classList.replace('text-white/80', 'text-slate-400');
+            }
+        }
         
         const url = new URL(window.location.href);
         url.searchParams.set('tab', tabId);
@@ -995,10 +1435,30 @@
         }
         window.history.replaceState({ path: url.toString() }, '', url.toString());
         localStorage.setItem('spmb_fees_active_tab', tabId);
+
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
+    };
+
+    // Testing Dropdown Functions
+    window.toggleTestingDropdown = function() {
+        const menu = document.getElementById('testingDropdownMenu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    };
+
+    window.selectTestingOption = function(tabId) {
+        const menu = document.getElementById('testingDropdownMenu');
+        if (menu) {
+            menu.classList.add('hidden');
+        }
+        window.switchFeeTab(tabId);
     };
 
     // Unified Fee Modal Control
-    window.openFeeModal = function(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee', applicableGrades = [], applicableClassPrograms = [], applicableTypes = [], applicableGender = 'all', applicablePeriods = []) {
+    window.openFeeModal = function(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee', applicableGrades = [], applicableClassPrograms = [], applicableTypes = [], applicableGender = 'all', applicablePeriods = [], isTesting = false) {
         const errorWrapper = document.getElementById('feeErrorWrapper');
         if (errorWrapper) {
             errorWrapper.classList.add('hidden');
@@ -1249,9 +1709,60 @@
         }
     };
 
+    // Move to Trash Operations with Confirmation Dialog
+    window.confirmTrashFee = function(name, trashUrl) {
+        showConfirmDialog({
+            title: 'Konfirmasi Pindahkan ke Tong Sampah',
+            message: `Apakah Anda yakin ingin memindahkan komponen biaya "${name}" ke Tong Sampah? Komponen ini tidak akan ditagihkan lagi ke calon murid baru.`,
+            confirmText: 'Ya, Pindahkan',
+            type: 'warning',
+            icon: 'trash-2',
+            formAction: trashUrl,
+            formMethod: 'POST'
+        });
+    };
+
+    // Restore Operations with Confirmation Dialog
+    window.confirmRestoreFee = function(name, restoreUrl) {
+        showConfirmDialog({
+            title: 'Konfirmasi Pulihkan Biaya',
+            message: `Apakah Anda yakin ingin memulihkan komponen biaya "${name}" dari Tong Sampah ke tab utama?`,
+            confirmText: 'Ya, Pulihkan',
+            type: 'emerald',
+            icon: 'rotate-ccw',
+            formAction: restoreUrl,
+            formMethod: 'POST'
+        });
+    };
+
+    // Category Trash & Restore Operations
+    window.confirmTrashCategory = function(name, trashUrl) {
+        showConfirmDialog({
+            title: 'Konfirmasi Pindahkan ke Tong Sampah',
+            message: `Apakah Anda yakin ingin memindahkan kategori jenis biaya "${name}" ke Tong Sampah? Kategori ini tidak akan muncul pada tab aktif.`,
+            confirmText: 'Ya, Pindahkan',
+            type: 'warning',
+            icon: 'trash-2',
+            formAction: trashUrl,
+            formMethod: 'POST'
+        });
+    };
+
+    window.confirmRestoreCategory = function(name, restoreUrl) {
+        showConfirmDialog({
+            title: 'Konfirmasi Pulihkan Jenis Biaya',
+            message: `Apakah Anda yakin ingin memulihkan kategori jenis biaya "${name}" dari Tong Sampah ke tab utama?`,
+            confirmText: 'Ya, Pulihkan',
+            type: 'emerald',
+            icon: 'rotate-ccw',
+            formAction: restoreUrl,
+            formMethod: 'POST'
+        });
+    };
+
     // Edit Helpers for clean data passing
     window.editFeeItem = function(data) {
-        openFeeModal('biaya_tambahan', data.name, data.is_used, data.update_url, data.amount, data.payment_gateway, data.category_id, data.unit_id, [], 'tuition_fee', data.applicable_grades, data.applicable_class_programs, data.applicable_types, data.applicable_gender, data.applicable_periods);
+        openFeeModal('biaya_tambahan', data.name, data.is_used, data.update_url, data.amount, data.payment_gateway, data.category_id, data.unit_id, [], 'tuition_fee', data.applicable_grades, data.applicable_class_programs, data.applicable_types, data.applicable_gender, data.applicable_periods, data.is_testing || false);
     };
 
     window.editCategoryItem = function(data) {
@@ -1314,13 +1825,26 @@
         window.applyFeeFilters();
     });
 
-    // Escape key listener to close modal
+    // Escape key listener to close modal & dropdown
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const modal = document.getElementById('feeCrudModal');
             if (modal && !modal.classList.contains('hidden')) {
                 window.closeFeeModal();
             }
+            const testMenu = document.getElementById('testingDropdownMenu');
+            if (testMenu && !testMenu.classList.contains('hidden')) {
+                testMenu.classList.add('hidden');
+            }
+        }
+    });
+
+    // Close testing dropdown on outside click
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('testingDropdownWrapper');
+        const menu = document.getElementById('testingDropdownMenu');
+        if (wrapper && menu && !wrapper.contains(e.target)) {
+            menu.classList.add('hidden');
         }
     });
 </script>

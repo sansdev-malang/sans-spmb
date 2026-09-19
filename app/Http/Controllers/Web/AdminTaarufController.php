@@ -41,7 +41,8 @@ class AdminTaarufController extends Controller
         $currentUnit = $units->firstWhere('id', $currentUnitId) ?? $units->first();
 
         // Base Query
-        $baseQuery = Registration::with(['user', 'unit', 'grade', 'classProgram'])
+        $baseQuery = Registration::live()
+            ->with(['user', 'unit', 'grade', 'classProgram'])
             ->scopedByAdmin();
 
         if ($selectedPeriodId !== 'all' && $selectedPeriodId) {

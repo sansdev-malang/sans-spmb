@@ -10,12 +10,23 @@ class SpmbExtraService extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_testing' => 'boolean',
         'applicable_types' => 'array',
         'applicable_class_programs' => 'array',
         'applicable_waves' => 'array',
         'applicable_periods' => 'array',
         'applicable_grades' => 'array',
     ];
+
+    public function scopeLive($query)
+    {
+        return $query->where('is_testing', false);
+    }
+
+    public function scopeTrash($query)
+    {
+        return $query->where('is_testing', true);
+    }
 
     /**
      * Get the unit associated with the extra service (nullable for general/all units).

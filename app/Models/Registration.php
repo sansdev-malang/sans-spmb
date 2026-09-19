@@ -21,6 +21,7 @@ class Registration extends Model
         'discount_amount' => 'float',
         'min_installment_amount' => 'float',
         'is_dispensation' => 'boolean',
+        'is_testing' => 'boolean',
         'dispensation_approved_at' => 'datetime',
         'observation_attendance_confirmed_at' => 'datetime',
         'observation_result_uploaded_at' => 'datetime',
@@ -30,6 +31,16 @@ class Registration extends Model
         'registration_fee_name',
         'id_label',
     ];
+
+    public function scopeLive($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), false);
+    }
+
+    public function scopeTrash($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), true);
+    }
 
     public function scopeScopedByAdmin($query)
     {

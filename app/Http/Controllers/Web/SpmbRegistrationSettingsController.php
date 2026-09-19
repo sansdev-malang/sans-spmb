@@ -41,8 +41,8 @@ class SpmbRegistrationSettingsController extends Controller
 
         $selectedUnit = $units->firstWhere('id', $selectedUnitId) ?: $units->first();
 
-        // Load Periods with unit-specific active status
-        $periods = SpmbPeriod::orderBy('id', 'asc')->get()->map(function($p) use ($selectedUnitId) {
+        // Load Periods with unit-specific active status (exclude trashed)
+        $periods = SpmbPeriod::live()->orderBy('id', 'asc')->get()->map(function($p) use ($selectedUnitId) {
             $pivot = DB::table('spmb_period_unit')
                 ->where('spmb_period_id', $p->id)
                 ->where('spmb_unit_id', $selectedUnitId)
@@ -51,8 +51,8 @@ class SpmbRegistrationSettingsController extends Controller
             return $p;
         });
 
-        // Load Waves with unit-specific active status
-        $waves = SpmbWave::orderBy('id', 'asc')->get()->map(function($w) use ($selectedUnitId) {
+        // Load Waves with unit-specific active status (exclude trashed)
+        $waves = SpmbWave::live()->orderBy('id', 'asc')->get()->map(function($w) use ($selectedUnitId) {
             $pivot = DB::table('spmb_wave_unit')
                 ->where('spmb_wave_id', $w->id)
                 ->where('spmb_unit_id', $selectedUnitId)
@@ -61,8 +61,8 @@ class SpmbRegistrationSettingsController extends Controller
             return $w;
         });
 
-        // Load Types with unit-specific active status
-        $types = SpmbType::orderBy('id', 'asc')->get()->map(function($t) use ($selectedUnitId) {
+        // Load Types with unit-specific active status (exclude trashed)
+        $types = SpmbType::live()->orderBy('id', 'asc')->get()->map(function($t) use ($selectedUnitId) {
             $pivot = DB::table('spmb_type_unit')
                 ->where('spmb_type_id', $t->id)
                 ->where('spmb_unit_id', $selectedUnitId)
@@ -71,8 +71,8 @@ class SpmbRegistrationSettingsController extends Controller
             return $t;
         });
 
-        // Load Class Programs with unit-specific active status
-        $classPrograms = SpmbClassProgram::orderBy('id', 'asc')->get()->map(function($cp) use ($selectedUnitId) {
+        // Load Class Programs with unit-specific active status (exclude trashed)
+        $classPrograms = SpmbClassProgram::live()->orderBy('id', 'asc')->get()->map(function($cp) use ($selectedUnitId) {
             $pivot = DB::table('spmb_class_program_unit')
                 ->where('spmb_class_program_id', $cp->id)
                 ->where('spmb_unit_id', $selectedUnitId)
@@ -81,8 +81,8 @@ class SpmbRegistrationSettingsController extends Controller
             return $cp;
         });
 
-        // Load Extra Services with unit-specific active status
-        $extraServices = SpmbExtraService::where(function($q) use ($selectedUnitId) {
+        // Load Extra Services with unit-specific active status (exclude trashed)
+        $extraServices = SpmbExtraService::live()->where(function($q) use ($selectedUnitId) {
             $q->whereNull('spmb_unit_id')->orWhere('spmb_unit_id', $selectedUnitId);
         })->get()->map(function($es) use ($selectedUnitId) {
             $pivot = DB::table('spmb_extra_service_unit')
@@ -93,8 +93,8 @@ class SpmbRegistrationSettingsController extends Controller
             return $es;
         });
 
-        // Load Grades for this specific unit
-        $grades = SpmbGrade::where('spmb_unit_id', $selectedUnitId)->orderBy('id', 'asc')->get();
+        // Load Grades for this specific unit (exclude trashed)
+        $grades = SpmbGrade::live()->where('spmb_unit_id', $selectedUnitId)->orderBy('id', 'asc')->get();
 
         // Extract Sub-Units if this unit has grades with sub_unit
         $subUnits = $grades->whereNotNull('sub_unit')->pluck('sub_unit')->unique()->values();
@@ -111,9 +111,9 @@ class SpmbRegistrationSettingsController extends Controller
             ];
         });
 
-        // Load Fee Categories & Fee items for this specific unit
-        $feeCategories = \App\Models\SpmbFeeCategory::with(['fees' => function($q) use ($selectedUnitId) {
-            $q->where('spmb_unit_id', $selectedUnitId)->with('unit');
+        // Load Fee Categories & Fee items for this specific unit (exclude trashed)
+        $feeCategories = \App\Models\SpmbFeeCategory::live()->with(['fees' => function($q) use ($selectedUnitId) {
+            $q->where('is_testing', false)->where('spmb_unit_id', $selectedUnitId)->with('unit');
         }])->get();
 
         $gateways = \App\Models\PaymentGateway::where('is_active', true)->with('paymentChannels')->get();
@@ -168,7 +168,7 @@ class SpmbRegistrationSettingsController extends Controller
             $now = now();
 
             // 1. Update Pivot: Periods for this unit
-            $allPeriodIds = SpmbPeriod::pluck('id')->toArray();
+            $allPeriodIds = SpmbPeriod::live()->pluck('id')->toArray();
             foreach ($allPeriodIds as $pId) {
                 DB::table('spmb_period_unit')->updateOrInsert(
                     ['spmb_period_id' => $pId, 'spmb_unit_id' => $selectedUnitId],
@@ -177,11 +177,11 @@ class SpmbRegistrationSettingsController extends Controller
             }
             // Keep at least one global active period if matched
             if (!empty($activePeriodIds)) {
-                SpmbPeriod::whereIn('id', $activePeriodIds)->update(['is_active' => true]);
+                SpmbPeriod::live()->whereIn('id', $activePeriodIds)->update(['is_active' => true]);
             }
 
             // 2. Update Pivot: Waves for this unit
-            $allWaveIds = SpmbWave::pluck('id')->toArray();
+            $allWaveIds = SpmbWave::live()->pluck('id')->toArray();
             foreach ($allWaveIds as $wId) {
                 DB::table('spmb_wave_unit')->updateOrInsert(
                     ['spmb_wave_id' => $wId, 'spmb_unit_id' => $selectedUnitId],
@@ -189,11 +189,11 @@ class SpmbRegistrationSettingsController extends Controller
                 );
             }
             if (!empty($activeWaveIds)) {
-                SpmbWave::whereIn('id', $activeWaveIds)->update(['is_active' => true]);
+                SpmbWave::live()->whereIn('id', $activeWaveIds)->update(['is_active' => true]);
             }
 
             // 3. Update Pivot: Types for this unit
-            $allTypeIds = SpmbType::pluck('id')->toArray();
+            $allTypeIds = SpmbType::live()->pluck('id')->toArray();
             foreach ($allTypeIds as $tId) {
                 DB::table('spmb_type_unit')->updateOrInsert(
                     ['spmb_type_id' => $tId, 'spmb_unit_id' => $selectedUnitId],
@@ -201,11 +201,11 @@ class SpmbRegistrationSettingsController extends Controller
                 );
             }
             if (!empty($activeTypeIds)) {
-                SpmbType::whereIn('id', $activeTypeIds)->update(['is_active' => true]);
+                SpmbType::live()->whereIn('id', $activeTypeIds)->update(['is_active' => true]);
             }
 
             // 4. Update Pivot: Class Programs for this unit
-            $allProgramIds = SpmbClassProgram::pluck('id')->toArray();
+            $allProgramIds = SpmbClassProgram::live()->pluck('id')->toArray();
             foreach ($allProgramIds as $prId) {
                 DB::table('spmb_class_program_unit')->updateOrInsert(
                     ['spmb_class_program_id' => $prId, 'spmb_unit_id' => $selectedUnitId],
@@ -213,11 +213,11 @@ class SpmbRegistrationSettingsController extends Controller
                 );
             }
             if (!empty($activeProgramIds)) {
-                SpmbClassProgram::whereIn('id', $activeProgramIds)->update(['is_active' => true]);
+                SpmbClassProgram::live()->whereIn('id', $activeProgramIds)->update(['is_active' => true]);
             }
 
             // 5. Update Pivot: Extra Services for this unit
-            $allServiceIds = SpmbExtraService::pluck('id')->toArray();
+            $allServiceIds = SpmbExtraService::live()->pluck('id')->toArray();
             foreach ($allServiceIds as $sId) {
                 DB::table('spmb_extra_service_unit')->updateOrInsert(
                     ['spmb_extra_service_id' => $sId, 'spmb_unit_id' => $selectedUnitId],
@@ -229,16 +229,16 @@ class SpmbRegistrationSettingsController extends Controller
             $selectedUnit->update(['is_active' => $unitIsActive]);
 
             // 7. Update Grades for this unit
-            SpmbGrade::where('spmb_unit_id', $selectedUnitId)->update(['is_active' => false]);
+            SpmbGrade::live()->where('spmb_unit_id', $selectedUnitId)->update(['is_active' => false]);
             if (!empty($activeGradeIds)) {
-                SpmbGrade::where('spmb_unit_id', $selectedUnitId)->whereIn('id', $activeGradeIds)->update(['is_active' => true]);
+                SpmbGrade::live()->where('spmb_unit_id', $selectedUnitId)->whereIn('id', $activeGradeIds)->update(['is_active' => true]);
             }
 
             // 8. Update Fees for this unit (only if explicitly submitted)
             if ($request->has('active_fees')) {
-                SpmbFee::where('spmb_unit_id', $selectedUnitId)->update(['is_active' => false]);
+                SpmbFee::live()->where('spmb_unit_id', $selectedUnitId)->update(['is_active' => false]);
                 if (!empty($activeFeeIds)) {
-                    SpmbFee::where('spmb_unit_id', $selectedUnitId)->whereIn('id', $activeFeeIds)->update(['is_active' => true]);
+                    SpmbFee::live()->where('spmb_unit_id', $selectedUnitId)->whereIn('id', $activeFeeIds)->update(['is_active' => true]);
                 }
             }
 

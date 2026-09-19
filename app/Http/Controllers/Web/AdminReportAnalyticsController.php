@@ -38,6 +38,7 @@ class AdminReportAnalyticsController extends Controller
         $selectedPeriod = SpmbPeriod::find($selectedPeriodId);
 
         $query = Registration::scopedByAdmin()
+            ->live()
             ->with(['unit', 'grade', 'classProgram', 'wave', 'type', 'user'])
             ->where('spmb_period_id', $selectedPeriodId);
 
@@ -363,6 +364,7 @@ class AdminReportAnalyticsController extends Controller
         }
 
         $query = Registration::scopedByAdmin()
+            ->live()
             ->with(['unit', 'grade'])
             ->where('spmb_period_id', $selectedPeriodId);
 

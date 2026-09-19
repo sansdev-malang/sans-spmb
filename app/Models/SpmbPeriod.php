@@ -12,7 +12,18 @@ class SpmbPeriod extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_default' => 'boolean',
+        'is_testing' => 'boolean',
     ];
+
+    public function scopeLive($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), false);
+    }
+
+    public function scopeTrash($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), true);
+    }
 
     public function units()
     {

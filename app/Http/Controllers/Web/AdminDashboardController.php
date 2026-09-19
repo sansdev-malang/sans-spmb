@@ -81,7 +81,7 @@ class AdminDashboardController extends Controller
             'failed' => (clone $baseStats)->where('registration_status', 'failed')->count(),
         ];
 
-        $documentFields = \App\Models\SpmbFormField::where('type', 'file')
+        $documentFields = \App\Models\SpmbFormField::live()->where('type', 'file')
             ->orderBy('order', 'asc')
             ->get();
 

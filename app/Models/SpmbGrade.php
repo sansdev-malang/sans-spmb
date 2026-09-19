@@ -11,6 +11,7 @@ class SpmbGrade extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_testing' => 'boolean',
         'min_age_years' => 'integer',
         'min_age_months' => 'integer',
         'max_age_years' => 'integer',
@@ -20,6 +21,16 @@ class SpmbGrade extends Model
         'applicable_waves' => 'array',
         'applicable_periods' => 'array',
     ];
+
+    public function scopeLive($query)
+    {
+        return $query->where('is_testing', false);
+    }
+
+    public function scopeTrash($query)
+    {
+        return $query->where('is_testing', true);
+    }
 
     public function unit()
     {

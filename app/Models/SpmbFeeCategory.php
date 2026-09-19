@@ -14,7 +14,18 @@ class SpmbFeeCategory extends Model
 
     protected $casts = [
         'applicable_periods' => 'array',
+        'is_testing' => 'boolean',
     ];
+
+    public function scopeLive($query)
+    {
+        return $query->where('is_testing', false);
+    }
+
+    public function scopeTrash($query)
+    {
+        return $query->where('is_testing', true);
+    }
 
     public function fees()
     {

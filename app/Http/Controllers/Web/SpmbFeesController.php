@@ -141,6 +141,42 @@ class SpmbFeesController extends Controller
         return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])->with('success', 'Jenis biaya berhasil diperbarui.');
     }
 
+    public function trashCategory($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $category = SpmbFeeCategory::findOrFail($id);
+
+        $category->update([
+            'is_testing' => true,
+        ]);
+
+        self::syncUnpaidRegistrationsFeeSnapshot();
+
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])
+            ->with('success', 'Jenis biaya "' . $category->name . '" berhasil dipindahkan ke Tong Sampah.');
+    }
+
+    public function restoreCategory($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $category = SpmbFeeCategory::findOrFail($id);
+
+        $category->update([
+            'is_testing' => false,
+        ]);
+
+        self::syncUnpaidRegistrationsFeeSnapshot();
+
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'jenis_biaya'])
+            ->with('success', 'Jenis biaya "' . $category->name . '" berhasil dipulihkan ke tab utama.');
+    }
+
     public function destroyCategory($id)
     {
         $category = SpmbFeeCategory::findOrFail($id);
@@ -224,6 +260,7 @@ class SpmbFeesController extends Controller
         $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
         $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
         $applicableGender = (!empty($request->applicable_gender) && $request->applicable_gender !== 'all') ? $request->applicable_gender : null;
+        $isTesting = $request->boolean('is_testing', false);
 
         foreach ($units as $unitId) {
             SpmbFee::create([
@@ -237,13 +274,15 @@ class SpmbFeesController extends Controller
                 'applicable_class_programs' => $applicableClassPrograms,
                 'applicable_types' => $applicableTypes,
                 'applicable_gender' => $applicableGender,
+                'is_testing' => $isTesting,
                 'is_active' => true,
             ]);
         }
 
         self::syncUnpaidRegistrationsFeeSnapshot($units);
 
-        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $request->spmb_fee_category_id])->with('success', 'Biaya pendaftaran berhasil ditambahkan.');
+        $targetTab = $isTesting ? 'test_cat_' . $request->spmb_fee_category_id : 'cat_' . $request->spmb_fee_category_id;
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => $targetTab])->with('success', 'Biaya pendaftaran ' . ($isTesting ? '(Mode Testing) ' : '') . 'berhasil ditambahkan.');
     }
 
     public function updateFee(Request $request, $id)
@@ -305,7 +344,8 @@ class SpmbFeesController extends Controller
 
         if (self::isFeeUsed($fee)) {
             if ((int)$fee->amount != (int)$request->amount) {
-                return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $fee->spmb_fee_category_id])->with('error', 'Tidak dapat mengubah nominal biaya yang sudah digunakan dalam transaksi.');
+                $targetTab = $fee->is_testing ? 'test_cat_' . $fee->spmb_fee_category_id : 'cat_' . $fee->spmb_fee_category_id;
+                return redirect()->route('admin.spmb-settings.fees', ['tab' => $targetTab])->with('error', 'Tidak dapat mengubah nominal biaya yang sudah digunakan dalam transaksi.');
             }
         }
 
@@ -314,6 +354,7 @@ class SpmbFeesController extends Controller
         $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
         $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
         $applicableGender = (!empty($request->applicable_gender) && $request->applicable_gender !== 'all') ? $request->applicable_gender : null;
+        $isTesting = $request->boolean('is_testing', false);
 
         $fee->update([
             'name' => $request->name,
@@ -326,11 +367,49 @@ class SpmbFeesController extends Controller
             'applicable_class_programs' => $applicableClassPrograms,
             'applicable_types' => $applicableTypes,
             'applicable_gender' => $applicableGender,
+            'is_testing' => $isTesting,
         ]);
 
         self::syncUnpaidRegistrationsFeeSnapshot([$unitId]);
 
-        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $request->spmb_fee_category_id])->with('success', 'Biaya pendaftaran berhasil diperbarui.');
+        $targetTab = $isTesting ? 'test_cat_' . $request->spmb_fee_category_id : 'cat_' . $request->spmb_fee_category_id;
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => $targetTab])->with('success', 'Biaya pendaftaran ' . ($isTesting ? '(Mode Testing) ' : '') . 'berhasil diperbarui.');
+    }
+
+    public function trashFee($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $fee = SpmbFee::findOrFail($id);
+
+        $fee->update([
+            'is_testing' => true,
+        ]);
+
+        self::syncUnpaidRegistrationsFeeSnapshot([$fee->spmb_unit_id]);
+
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $fee->spmb_fee_category_id])
+            ->with('success', 'Komponen biaya "' . $fee->name . '" berhasil dipindahkan ke Tong Sampah.');
+    }
+
+    public function restoreFee($id)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur Tong Sampah hanya dapat diakses oleh Super Admin.');
+        }
+
+        $fee = SpmbFee::findOrFail($id);
+
+        $fee->update([
+            'is_testing' => false,
+        ]);
+
+        self::syncUnpaidRegistrationsFeeSnapshot([$fee->spmb_unit_id]);
+
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $fee->spmb_fee_category_id])
+            ->with('success', 'Komponen biaya "' . $fee->name . '" berhasil dipulihkan ke tab utama.');
     }
 
     public function destroyFee($id)
@@ -339,14 +418,17 @@ class SpmbFeesController extends Controller
 
         $catId = $fee->spmb_fee_category_id;
         $unitId = $fee->spmb_unit_id;
+        $isTesting = (bool) $fee->is_testing;
+        $targetTab = $isTesting ? 'test_cat_' . $catId : 'cat_' . $catId;
+
         if (self::isFeeUsed($fee)) {
-            return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $catId])->with('error', 'Tidak dapat menghapus biaya ini karena sudah terpakai pada transaksi pembayaran.');
+            return redirect()->route('admin.spmb-settings.fees', ['tab' => $targetTab])->with('error', 'Tidak dapat menghapus biaya ini karena sudah terpakai pada transaksi pembayaran.');
         }
 
         $fee->delete();
         self::syncUnpaidRegistrationsFeeSnapshot([$unitId]);
 
-        return redirect()->route('admin.spmb-settings.fees', ['tab' => 'cat_' . $catId])->with('success', 'Biaya pendaftaran berhasil dihapus.');
+        return redirect()->route('admin.spmb-settings.fees', ['tab' => $targetTab])->with('success', 'Biaya pendaftaran berhasil dihapus.');
     }
 
     public static function syncUnpaidRegistrationsFeeSnapshot($unitIds = [])

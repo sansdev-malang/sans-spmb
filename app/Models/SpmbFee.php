@@ -11,6 +11,7 @@ class SpmbFee extends Model
     protected $casts = [
         'payment_gateway' => 'array',
         'is_active' => 'boolean',
+        'is_testing' => 'boolean',
         'applicable_grades' => 'array',
         'applicable_class_programs' => 'array',
         'applicable_types' => 'array',
@@ -27,12 +28,27 @@ class SpmbFee extends Model
         return $this->belongsTo(SpmbUnit::class, 'spmb_unit_id');
     }
 
+    public function scopeLive($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), false);
+    }
+
+    public function scopeTrash($query)
+    {
+        return $query->where($this->qualifyColumn('is_testing'), true);
+    }
+
     /**
      * Check if this fee component matches a candidate registration
      */
     public function matchesRegistration($registration): bool
     {
         if (!$registration) {
+            return false;
+        }
+
+        // 0. Testing fee protection: testing fees are never applied to regular registrations
+        if ($this->is_testing) {
             return false;
         }
 
