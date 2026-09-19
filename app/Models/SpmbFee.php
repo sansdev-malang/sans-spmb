@@ -14,6 +14,7 @@ class SpmbFee extends Model
         'applicable_grades' => 'array',
         'applicable_class_programs' => 'array',
         'applicable_types' => 'array',
+        'applicable_periods' => 'array',
     ];
 
     public function category()
@@ -32,6 +33,15 @@ class SpmbFee extends Model
     public function matchesRegistration($registration): bool
     {
         if (!$registration) {
+            return false;
+        }
+
+        // Period / Academic Year match (Strict: if empty/not set, fee is inactive/not used)
+        if (empty($this->applicable_periods) || !is_array($this->applicable_periods)) {
+            return false;
+        }
+        $periodIds = array_map('intval', $this->applicable_periods);
+        if (!$registration->spmb_period_id || !in_array((int)$registration->spmb_period_id, $periodIds, true)) {
             return false;
         }
 
@@ -170,6 +180,18 @@ class SpmbFee extends Model
         }
         $names = SpmbType::whereIn('id', $this->applicable_types)->pluck('name')->toArray();
         return !empty($names) ? implode(', ', $names) : 'Semua Jalur';
+    }
+
+    /**
+     * Get readable target periods label
+     */
+    public function getTargetPeriodsTextAttribute(): string
+    {
+        if (empty($this->applicable_periods) || !is_array($this->applicable_periods)) {
+            return 'Tidak Ada (Non-Aktif)';
+        }
+        $names = SpmbPeriod::whereIn('id', $this->applicable_periods)->orderBy('year', 'desc')->pluck('year')->toArray();
+        return !empty($names) ? implode(', ', $names) : 'Tidak Ada (Non-Aktif)';
     }
 
     /**

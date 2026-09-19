@@ -12,6 +12,10 @@ class SpmbFeeCategory extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'applicable_periods' => 'array',
+    ];
+
     public function fees()
     {
         return $this->hasMany(SpmbFee::class, 'spmb_fee_category_id');
@@ -98,4 +102,27 @@ class SpmbFeeCategory extends Model
         return static::where('category_type', self::TYPE_EXTRA)->value('name')
             ?? 'Layanan Tambahan';
     }
+
+    /**
+     * Get readable target periods label
+     */
+     public function getTargetPeriodsTextAttribute(): string
+     {
+         if (empty($this->applicable_periods) || !is_array($this->applicable_periods)) {
+             return 'Tidak Ada (Non-Aktif)';
+         }
+         $names = SpmbPeriod::whereIn('id', $this->applicable_periods)->orderBy('year', 'desc')->pluck('year')->toArray();
+         return !empty($names) ? implode(', ', $names) : 'Tidak Ada (Non-Aktif)';
+     }
+
+     /**
+      * Check if category is active for a given period
+      */
+     public function matchesPeriod($periodId): bool
+     {
+         if (empty($this->applicable_periods) || !is_array($this->applicable_periods)) {
+             return false;
+         }
+         return in_array((int)$periodId, array_map('intval', $this->applicable_periods), true);
+     }
 }

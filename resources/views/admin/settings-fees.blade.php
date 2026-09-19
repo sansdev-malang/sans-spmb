@@ -5,39 +5,58 @@
 
 @section('content')
 <div id="spmb-fees-container" hx-boost="true" hx-target="#spmb-fees-container" hx-select="#spmb-fees-container" class="w-full space-y-6">
-    <!-- Header with Unit Filter -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <!-- Header with Unit & Period Filter -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
         <div>
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
                 <i data-lucide="coins" class="w-6 h-6 text-brand-emerald"></i>
                 Manajemen Biaya Pendaftaran (SPMB)
             </h1>
-            <p class="text-xs text-slate-500 mt-1">Mengatur jenis-jenis kategori biaya dan nominal biaya pendaftaran calon murid baru.</p>
+            <p class="text-xs text-slate-500 mt-1">Mengatur jenis-jenis kategori biaya dan nominal biaya pendaftaran calon murid baru per tahun ajaran.</p>
         </div>
 
-        <!-- Unit Filter Switcher -->
-        @if(auth()->user()->isSuperAdmin())
-            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 p-1.5 rounded-2xl shadow-xs self-start md:self-auto overflow-x-auto">
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Period Filter Switcher -->
+            <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 p-1.5 rounded-2xl shadow-xs overflow-x-auto">
                 <span class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5 px-2 whitespace-nowrap">
-                    <i data-lucide="filter" class="w-3.5 h-3.5 text-brand-emerald"></i>
-                    Unit:
+                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
+                    Tahun Ajaran:
                 </span>
-                <button type="button" onclick="filterFeesByUnit('')" id="unitFilterBtn-all" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') === '' ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                <button type="button" onclick="filterFeesByPeriod('')" id="periodFilterBtn-all" class="period-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedPeriodId ?? '') === '' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
                     <i data-lucide="layers" class="w-3.5 h-3.5"></i>
-                    Semua Unit
+                    Semua TA
                 </button>
-                @foreach($units as $unit)
-                    <button type="button" onclick="filterFeesByUnit('{{ $unit->id }}')" id="unitFilterBtn-{{ $unit->id }}" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') == $unit->id ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
-                        <span>{{ strtoupper($unit->code) }}</span>
+                @foreach($periods as $period)
+                    <button type="button" onclick="filterFeesByPeriod('{{ $period->id }}')" id="periodFilterBtn-{{ $period->id }}" class="period-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedPeriodId ?? '') == $period->id ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                        <span>{{ $period->year ? 'TA ' . $period->year : ($period->name ?? 'TA ' . $period->id) }}</span>
                     </button>
                 @endforeach
             </div>
-        @else
-            <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-brand-emerald px-3.5 py-1.5 rounded-xl text-xs font-bold self-start md:self-auto shadow-xs">
-                <i data-lucide="school" class="w-4 h-4"></i>
-                <span>Unit: {{ strtoupper(auth()->user()->unit->code ?? 'Unit') }}</span>
-            </div>
-        @endif
+
+            <!-- Unit Filter Switcher -->
+            @if(auth()->user()->isSuperAdmin())
+                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 p-1.5 rounded-2xl shadow-xs overflow-x-auto">
+                    <span class="text-xs font-extrabold text-slate-500 flex items-center gap-1.5 px-2 whitespace-nowrap">
+                        <i data-lucide="filter" class="w-3.5 h-3.5 text-brand-emerald"></i>
+                        Unit:
+                    </span>
+                    <button type="button" onclick="filterFeesByUnit('')" id="unitFilterBtn-all" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') === '' ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                        <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                        Semua Unit
+                    </button>
+                    @foreach($units as $unit)
+                        <button type="button" onclick="filterFeesByUnit('{{ $unit->id }}')" id="unitFilterBtn-{{ $unit->id }}" class="unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap {{ ($selectedUnitId ?? '') == $unit->id ? 'bg-brand-emerald text-white shadow-xs' : 'bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60' }} cursor-pointer">
+                            <span>{{ strtoupper($unit->code) }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            @else
+                <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-brand-emerald px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs">
+                    <i data-lucide="school" class="w-4 h-4"></i>
+                    <span>Unit: {{ strtoupper(auth()->user()->unit->code ?? 'Unit') }}</span>
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- Tab Navigation Pills -->
@@ -60,7 +79,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h3 class="font-extrabold text-base text-slate-800">Kategori Jenis Biaya</h3>
-                    <p class="text-[11px] text-slate-400">Kelola kelompok jenis pembayaran masuk.</p>
+                    <p class="text-[11px] text-slate-400">Kelola kelompok jenis pembayaran masuk dan target tahun ajarannya.</p>
                 </div>
                 <button onclick="openFeeModal('jenis_biaya', '', '', '{{ route('admin.spmb-settings.fees.categories.store') }}', '', 'winpay', '', '', [], 'tuition_fee')" class="bg-brand-emerald hover-emerald text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Jenis Biaya
@@ -73,6 +92,7 @@
                         <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50">
                             <th class="py-4 px-6">Jenis Biaya</th>
                             <th class="py-4 px-6 text-center">Fungsi / Tipe Biaya</th>
+                            <th class="py-4 px-6 text-center">Tahun Ajaran</th>
                             @if(auth()->user()->isSuperAdmin())
                                 <th class="py-4 px-6 text-center">Unit Pengguna</th>
                             @endif
@@ -82,12 +102,24 @@
                     </thead>
                     <tbody class="text-xs divide-y divide-slate-100">
                         @forelse($categories as $cat)
-                            <tr class="category-item-row hover:bg-slate-50/30 transition" data-unit-ids="{{ implode(',', $cat->units->pluck('id')->toArray()) }}">
+                            <tr class="category-item-row hover:bg-slate-50/30 transition" data-unit-ids="{{ implode(',', $cat->units->pluck('id')->toArray()) }}" data-period-ids="{{ implode(',', (array)$cat->applicable_periods) }}">
                                 <td class="py-4 px-6 font-extrabold text-slate-800">{{ $cat->name }}</td>
                                 <td class="py-4 px-6 text-center">
                                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border {{ $cat->type_badge_class }}">
                                         {{ $cat->type_label }}
                                     </span>
+                                </td>
+                                <td class="py-4 px-6 text-center">
+                                    @if(empty($cat->applicable_periods))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">
+                                            Non-Aktif
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="{{ $cat->target_periods_text }}">
+                                            <i data-lucide="calendar" class="w-3 h-3"></i>
+                                            {{ \Illuminate\Support\Str::limit($cat->target_periods_text, 25) }}
+                                        </span>
+                                    @endif
                                 </td>
                                 @if(auth()->user()->isSuperAdmin())
                                     <td class="py-4 px-6 text-center text-xs font-semibold text-slate-500">
@@ -109,6 +141,7 @@
                                             'update_url' => route('admin.spmb-settings.fees.categories.update', $cat->id),
                                             'units' => $cat->units->pluck('id')->toArray(),
                                             'category_type' => $cat->category_type,
+                                            'applicable_periods' => $cat->applicable_periods ?? [],
                                         ]) }})" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-emerald text-xs font-bold text-brand-emerald transition hover:bg-emerald-800 hover:border-emerald-800 hover:text-white cursor-pointer">
                                             <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                             <span>Edit</span>
@@ -129,11 +162,11 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis biaya.</td>
+                                <td colspan="6" class="py-8 px-6 text-center text-slate-400">Belum ada data jenis biaya.</td>
                             </tr>
                         @endforelse
                         <tr id="emptyCatRow-filtered" class="hidden">
-                            <td colspan="5" class="py-8 px-6 text-center text-slate-400 text-xs">Tidak ada jenis biaya untuk unit yang dipilih.</td>
+                            <td colspan="6" class="py-8 px-6 text-center text-slate-400 text-xs">Tidak ada jenis biaya untuk filter yang dipilih.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -171,7 +204,7 @@
                         </thead>
                         <tbody class="text-xs divide-y divide-slate-100">
                             @forelse($catFees as $fee)
-                                <tr class="fee-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $fee->spmb_unit_id }}" data-category-id="{{ $cat->id }}">
+                                <tr class="fee-item-row hover:bg-slate-50/30 transition" data-unit-id="{{ $fee->spmb_unit_id }}" data-category-id="{{ $cat->id }}" data-period-ids="{{ implode(',', (array)$fee->applicable_periods) }}">
                                     <td class="py-4 px-6 font-extrabold text-slate-800">{{ $fee->name }}</td>
                                     <td class="py-4 px-6 text-center font-semibold text-slate-500 text-xs">
                                         <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold {{ $fee->unit ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-700' }}">
@@ -180,6 +213,19 @@
                                     </td>
                                     <td class="py-4 px-6 text-left">
                                         <div class="space-y-1">
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="text-[10px] font-bold text-slate-400">Tahun Ajaran:</span>
+                                                @if(empty($fee->applicable_periods))
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">
+                                                        Tidak Ada (Non-Aktif)
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="{{ $fee->target_periods_text }}">
+                                                        <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                        {{ \Illuminate\Support\Str::limit($fee->target_periods_text, 25) }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                             <div class="flex items-center gap-1.5 flex-wrap">
                                                 <span class="text-[10px] font-bold text-slate-400">Kelas:</span>
                                                 @if(empty($fee->applicable_grades))
@@ -269,6 +315,7 @@
                                                 'payment_gateway' => is_array($fee->payment_gateway) ? implode(',', $fee->payment_gateway) : $fee->payment_gateway,
                                                 'category_id' => $cat->id,
                                                 'unit_id' => $fee->spmb_unit_id,
+                                                'applicable_periods' => $fee->applicable_periods ?? [],
                                                 'applicable_grades' => $fee->applicable_grades ?? [],
                                                 'applicable_class_programs' => $fee->applicable_class_programs ?? [],
                                                 'applicable_types' => $fee->applicable_types ?? [],
@@ -381,6 +428,28 @@
                 <p class="text-[11px] text-slate-400 mt-1">Sistem menggunakan tipe ini untuk menentukan alur penagihan yang tepat secara otomatis.</p>
             </div>
 
+            <!-- Category Periods Checkboxes (Only for Jenis Biaya) -->
+            <div id="categoryPeriodsWrapper" class="hidden space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tahun Ajaran Target*</label>
+                    <label class="flex items-center gap-1.5 text-[11px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                        <input type="checkbox" id="checkAllCategoryPeriods" onchange="toggleAllCategoryPeriods(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                        Pilih Semua TA
+                    </label>
+                </div>
+                <div class="bg-slate-50 border border-slate-300 rounded-xl p-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        @foreach($periods as $period)
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer p-1 rounded-lg hover:bg-slate-100 transition">
+                                <input type="checkbox" name="applicable_periods[]" value="{{ $period->id }}" class="category-period-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllCategoryPeriodsState()">
+                                <span>{{ $period->year ? 'TA ' . $period->year : ($period->name ?? 'TA ' . $period->id) }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400">Jenis biaya hanya akan aktif pada Tahun Ajaran yang dicentang.</p>
+            </div>
+
             <div>
                 <label id="feeInputLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Nama*</label>
                 <input type="text" id="feeMainInput" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-emerald text-sm">
@@ -397,11 +466,33 @@
                     </p>
                 </div>
 
-                <!-- Fee Targeting Section (Grades, Class Programs, Registration Types) -->
+                <!-- Fee Targeting Section (Periods, Grades, Class Programs, Registration Types) -->
                 <div id="feeTargetingWrapper" class="space-y-4 pt-1">
                     <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-[11px] text-amber-800 flex items-start gap-2.5">
                         <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5"></i>
-                        <span class="leading-relaxed"><strong>Petunjuk Pengaturan:</strong> Tentukan kelas & kategori murid yang dibebankan biaya ini. Jika <strong>tidak dicentang</strong> atau mencentang <strong>Pilih Semua</strong>, biaya ini akan otomatis berlaku untuk <strong>semua kelas & kategori</strong> di unit terkait.</span>
+                        <span class="leading-relaxed"><strong>Petunjuk Pengaturan:</strong> Tentukan tahun ajaran, kelas, & kategori murid yang dibebankan biaya ini. Wajib mencentang minimal satu Tahun Ajaran agar biaya dapat aktif.</span>
+                    </div>
+
+                    <!-- 0. Target Tahun Ajaran (Periods) -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Tahun Ajaran (Periode)*</label>
+                            <label class="flex items-center gap-1.5 text-[11px] font-bold text-brand-emerald cursor-pointer hover:underline">
+                                <input type="checkbox" id="checkAllFeePeriods" onchange="toggleAllFeePeriods(this)" class="rounded text-brand-emerald focus:ring-brand-emerald w-3.5 h-3.5">
+                                Pilih Semua TA
+                            </label>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                            <div id="feePeriodCheckboxesList" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                @foreach($periods as $period)
+                                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer p-1.5 rounded-lg hover:bg-slate-100 transition">
+                                        <input type="checkbox" name="applicable_periods[]" value="{{ $period->id }}" class="fee-period-checkbox rounded text-brand-emerald focus:ring-brand-emerald w-4 h-4 border-slate-300" onchange="updateCheckAllFeePeriodsState()">
+                                        <span class="truncate">{{ $period->year ? 'TA ' . $period->year : ($period->name ?? 'TA ' . $period->id) }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Nominal biaya hanya akan aktif dan ditagihkan pada Tahun Ajaran yang dicentang.</p>
                     </div>
 
                     <!-- 1. Target Kelas (Grades) -->
@@ -541,6 +632,7 @@
     var currentUserUnitId = "{{ auth()->user()->spmb_unit_id ?? '' }}";
     var isSuperAdmin = {{ auth()->user()->isSuperAdmin() ? 'true' : 'false' }};
     window.currentUnitFilter = "{{ $selectedUnitId ?? '' }}";
+    window.currentPeriodFilter = "{{ $selectedPeriodId ?? '' }}";
 
     // Format as thousands
     window.formatRupiah = function(value) {
@@ -585,7 +677,23 @@
         const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
         const checkAll = document.getElementById('checkAllUnits');
         if (checkAll) {
-            checkAll.checked = checkedCount === checkboxes.length;
+            checkAll.checked = (checkboxes.length > 0 && checkedCount === checkboxes.length);
+        }
+    };
+
+    // Category Periods Checkbox controls
+    window.toggleAllCategoryPeriods = function(source) {
+        document.querySelectorAll('.category-period-checkbox').forEach(cb => {
+            cb.checked = source.checked;
+        });
+    };
+
+    window.updateCheckAllCategoryPeriodsState = function() {
+        const checkboxes = document.querySelectorAll('.category-period-checkbox');
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const checkAll = document.getElementById('checkAllCategoryPeriods');
+        if (checkAll) {
+            checkAll.checked = (checkboxes.length > 0 && checkedCount === checkboxes.length);
         }
     };
 
@@ -607,9 +715,25 @@
         const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
         const checkAll = document.getElementById('checkAllFeeUnits');
         if (checkAll) {
-            checkAll.checked = checkedCount === checkboxes.length;
+            checkAll.checked = (checkboxes.length > 0 && checkedCount === checkboxes.length);
         }
         window.filterTargetingCheckboxesByUnit(window.getSelectedFeeUnits());
+    };
+
+    // Fee Periods Checkbox controls
+    window.toggleAllFeePeriods = function(source) {
+        document.querySelectorAll('.fee-period-checkbox').forEach(cb => {
+            cb.checked = source.checked;
+        });
+    };
+
+    window.updateCheckAllFeePeriodsState = function() {
+        const checkboxes = document.querySelectorAll('.fee-period-checkbox');
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const checkAll = document.getElementById('checkAllFeePeriods');
+        if (checkAll) {
+            checkAll.checked = (checkboxes.length > 0 && checkedCount === checkboxes.length);
+        }
     };
 
     // Targeting Checkboxes Controls
@@ -731,27 +855,39 @@
         window.updateCheckAllTypesState();
     };
 
-    // Dynamic Unit Filtering
-    window.filterFeesByUnit = function(unitId) {
-        window.currentUnitFilter = unitId ? unitId.toString() : '';
-
-        // Update active filter button styling
+    // Combined Filter for Unit and Period
+    window.applyFeeFilters = function() {
+        // 1. Update Unit filter button styles
         document.querySelectorAll('.unit-filter-btn').forEach(btn => {
             btn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60 cursor-pointer";
         });
-
-        const activeBtnId = window.currentUnitFilter ? 'unitFilterBtn-' + window.currentUnitFilter : 'unitFilterBtn-all';
-        const activeBtn = document.getElementById(activeBtnId);
-        if (activeBtn) {
-            activeBtn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-brand-emerald text-white shadow-xs cursor-pointer";
+        const activeUnitBtnId = window.currentUnitFilter ? 'unitFilterBtn-' + window.currentUnitFilter : 'unitFilterBtn-all';
+        const activeUnitBtn = document.getElementById(activeUnitBtnId);
+        if (activeUnitBtn) {
+            activeUnitBtn.className = "unit-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-brand-emerald text-white shadow-xs cursor-pointer";
         }
 
-        // Filter Category Rows in Tab 1 (Jenis Biaya)
+        // 2. Update Period filter button styles
+        document.querySelectorAll('.period-filter-btn').forEach(btn => {
+            btn.className = "period-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-slate-650 hover:bg-slate-100 border border-slate-200/60 cursor-pointer";
+        });
+        const activePeriodBtnId = window.currentPeriodFilter ? 'periodFilterBtn-' + window.currentPeriodFilter : 'periodFilterBtn-all';
+        const activePeriodBtn = document.getElementById(activePeriodBtnId);
+        if (activePeriodBtn) {
+            activePeriodBtn.className = "period-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-xs cursor-pointer";
+        }
+
+        // 3. Filter Category Rows in Tab 1 (Jenis Biaya)
         const catRows = document.querySelectorAll('.category-item-row');
         let visibleCatCount = 0;
         catRows.forEach(row => {
             const uIds = (row.dataset.unitIds || '').split(',').map(s => s.trim()).filter(Boolean);
-            if (!window.currentUnitFilter || uIds.length === 0 || uIds.includes(window.currentUnitFilter)) {
+            const pIds = (row.dataset.periodIds || '').split(',').map(s => s.trim()).filter(Boolean);
+
+            const matchUnit = !window.currentUnitFilter || uIds.length === 0 || uIds.includes(window.currentUnitFilter);
+            const matchPeriod = !window.currentPeriodFilter || pIds.includes(window.currentPeriodFilter);
+
+            if (matchUnit && matchPeriod) {
                 row.style.display = '';
                 visibleCatCount++;
             } else {
@@ -768,7 +904,7 @@
             }
         }
 
-        // Filter Fee Rows in Category Tabs
+        // 4. Filter Fee Rows in Category Tabs
         document.querySelectorAll('.fee-tab-content').forEach(tabContent => {
             const feeRows = tabContent.querySelectorAll('.fee-item-row');
             if (feeRows.length === 0) return;
@@ -778,7 +914,12 @@
             feeRows.forEach(row => {
                 catId = row.dataset.categoryId;
                 const uId = (row.dataset.unitId || '').toString().trim();
-                if (!window.currentUnitFilter || uId === window.currentUnitFilter) {
+                const pIds = (row.dataset.periodIds || '').split(',').map(s => s.trim()).filter(Boolean);
+
+                const matchUnit = !window.currentUnitFilter || uId === '' || uId === window.currentUnitFilter;
+                const matchPeriod = !window.currentPeriodFilter || pIds.includes(window.currentPeriodFilter);
+
+                if (matchUnit && matchPeriod) {
                     row.style.display = '';
                     visibleFeeCount++;
                 } else {
@@ -798,20 +939,38 @@
             }
         });
 
-        // Update URL and LocalStorage
+        // 5. Update URL search params
         const url = new URL(window.location.href);
         if (window.currentUnitFilter) {
             url.searchParams.set('unit_id', window.currentUnitFilter);
         } else {
             url.searchParams.delete('unit_id');
         }
+        if (window.currentPeriodFilter) {
+            url.searchParams.set('period_id', window.currentPeriodFilter);
+        } else {
+            url.searchParams.delete('period_id');
+        }
         window.history.replaceState({ path: url.toString() }, '', url.toString());
-        localStorage.setItem('spmb_fees_active_unit', window.currentUnitFilter);
 
-        // Refresh icons if lucide is available
+        localStorage.setItem('spmb_fees_active_unit', window.currentUnitFilter);
+        localStorage.setItem('spmb_fees_active_period', window.currentPeriodFilter);
+
         if (typeof lucide !== 'undefined' && lucide.createIcons) {
             lucide.createIcons();
         }
+    };
+
+    // Filter by Unit
+    window.filterFeesByUnit = function(unitId) {
+        window.currentUnitFilter = unitId ? unitId.toString() : '';
+        window.applyFeeFilters();
+    };
+
+    // Filter by Period
+    window.filterFeesByPeriod = function(periodId) {
+        window.currentPeriodFilter = periodId ? periodId.toString() : '';
+        window.applyFeeFilters();
     };
 
     // Tab Switching
@@ -836,12 +995,15 @@
         if (window.currentUnitFilter) {
             url.searchParams.set('unit_id', window.currentUnitFilter);
         }
+        if (window.currentPeriodFilter) {
+            url.searchParams.set('period_id', window.currentPeriodFilter);
+        }
         window.history.replaceState({ path: url.toString() }, '', url.toString());
         localStorage.setItem('spmb_fees_active_tab', tabId);
     };
 
     // Unified Fee Modal Control
-    window.openFeeModal = function(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee', applicableGrades = [], applicableClassPrograms = [], applicableTypes = [], applicableGender = 'all') {
+    window.openFeeModal = function(moduleType, val = '', isLocked = false, actionUrl = '', amount = '', gateway = 'winpay', categoryId = '', unitId = '', categoryUnits = [], categoryType = 'tuition_fee', applicableGrades = [], applicableClassPrograms = [], applicableTypes = [], applicableGender = 'all', applicablePeriods = []) {
         const errorWrapper = document.getElementById('feeErrorWrapper');
         if (errorWrapper) {
             errorWrapper.classList.add('hidden');
@@ -862,6 +1024,7 @@
         const targetingWrapper = document.getElementById('feeTargetingWrapper');
         const unitWrapper = document.getElementById('feeUnitWrapper');
         const categoryUnitsWrapper = document.getElementById('categoryUnitsWrapper');
+        const categoryPeriodsWrapper = document.getElementById('categoryPeriodsWrapper');
         const catTypeWrapper = document.getElementById('categoryTypeWrapper');
         const catTypeSelect = document.getElementById('categoryTypeSelect');
         
@@ -881,10 +1044,20 @@
         const checkAll = document.getElementById('checkAllUnits');
         if (checkAll) checkAll.checked = false;
 
-        // Reset nominal fee checkboxes
+        // Reset category periods checkboxes
+        document.querySelectorAll('.category-period-checkbox').forEach(cb => cb.checked = false);
+        const checkAllCatP = document.getElementById('checkAllCategoryPeriods');
+        if (checkAllCatP) checkAllCatP.checked = false;
+
+        // Reset nominal fee unit checkboxes
         document.querySelectorAll('.fee-unit-checkbox').forEach(cb => cb.checked = false);
         const checkAllFee = document.getElementById('checkAllFeeUnits');
         if (checkAllFee) checkAllFee.checked = false;
+
+        // Reset fee periods checkboxes
+        document.querySelectorAll('.fee-period-checkbox').forEach(cb => cb.checked = false);
+        const checkAllFeeP = document.getElementById('checkAllFeePeriods');
+        if (checkAllFeeP) checkAllFeeP.checked = false;
 
         // Reset gateway checkboxes
         document.querySelectorAll('.fee-gateway-checkbox').forEach(cb => cb.checked = false);
@@ -900,6 +1073,22 @@
         const checkAllT = document.getElementById('checkAllTypes');
         if (checkAllT) checkAllT.checked = false;
 
+        // Determine target periods (if editing, use provided; if creating, precheck all or current filtered period)
+        let targetPeriodsArr = [];
+        if (Array.isArray(applicablePeriods) && applicablePeriods.length > 0) {
+            targetPeriodsArr = applicablePeriods.map(x => x.toString());
+        } else if (applicablePeriods && typeof applicablePeriods === 'string' && applicablePeriods !== '') {
+            targetPeriodsArr = [applicablePeriods.toString()];
+        } else if (!val) {
+            // New item creation default: if period filter active use it, otherwise check all periods
+            if (window.currentPeriodFilter) {
+                targetPeriodsArr = [window.currentPeriodFilter.toString()];
+            } else {
+                const targetSelector = (moduleType === 'jenis_biaya') ? '.category-period-checkbox' : '.fee-period-checkbox';
+                targetPeriodsArr = Array.from(document.querySelectorAll(targetSelector)).map(cb => cb.value.toString());
+            }
+        }
+
         if (moduleType === 'jenis_biaya') {
             titleEl.innerText = val ? 'Edit Jenis Biaya' : 'Tambah Jenis Biaya';
             labelEl.innerText = 'Nama Jenis Biaya*';
@@ -913,6 +1102,14 @@
             if (catTypeWrapper) {
                 catTypeWrapper.classList.remove('hidden');
                 if (catTypeSelect) catTypeSelect.value = categoryType || 'tuition_fee';
+            }
+
+            if (categoryPeriodsWrapper) {
+                categoryPeriodsWrapper.classList.remove('hidden');
+                document.querySelectorAll('.category-period-checkbox').forEach(cb => {
+                    cb.checked = targetPeriodsArr.includes(cb.value.toString());
+                });
+                window.updateCheckAllCategoryPeriodsState();
             }
 
             if (categoryUnitsWrapper) {
@@ -932,6 +1129,7 @@
             mainInput.placeholder = 'Contoh: Biaya Pendaftaran TK B';
             
             if (catTypeWrapper) catTypeWrapper.classList.add('hidden');
+            if (categoryPeriodsWrapper) categoryPeriodsWrapper.classList.add('hidden');
 
             amountWrapper.classList.remove('hidden');
             if (targetingWrapper) targetingWrapper.classList.remove('hidden');
@@ -986,6 +1184,12 @@
                 });
                 window.updateCheckAllFeeState();
             }
+
+            // Populate Period targeting for nominal fee
+            document.querySelectorAll('.fee-period-checkbox').forEach(cb => {
+                cb.checked = targetPeriodsArr.includes(cb.value.toString());
+            });
+            window.updateCheckAllFeePeriodsState();
 
             // Populate targeting selections
             let targetGradesArr = [];
@@ -1052,11 +1256,11 @@
 
     // Edit Helpers for clean data passing
     window.editFeeItem = function(data) {
-        openFeeModal('biaya_tambahan', data.name, data.is_used, data.update_url, data.amount, data.payment_gateway, data.category_id, data.unit_id, [], 'tuition_fee', data.applicable_grades, data.applicable_class_programs, data.applicable_types, data.applicable_gender);
+        openFeeModal('biaya_tambahan', data.name, data.is_used, data.update_url, data.amount, data.payment_gateway, data.category_id, data.unit_id, [], 'tuition_fee', data.applicable_grades, data.applicable_class_programs, data.applicable_types, data.applicable_gender, data.applicable_periods);
     };
 
     window.editCategoryItem = function(data) {
-        openFeeModal('jenis_biaya', data.name, data.is_used, data.update_url, '', 'winpay', '', '', data.units, data.category_type);
+        openFeeModal('jenis_biaya', data.name, data.is_used, data.update_url, '', 'winpay', '', '', data.units, data.category_type, [], [], [], 'all', data.applicable_periods);
     };
 
     // Auto-reopen modal if validation failed on redirect
@@ -1065,23 +1269,23 @@
             let failed = {!! json_encode(session('failed_modal')) !!};
             if (failed.startsWith('jenis_biaya_create')) {
                 window.switchFeeTab('jenis_biaya');
-                window.openFeeModal('jenis_biaya', {!! json_encode(old('name', '')) !!}, false, {!! json_encode(route('admin.spmb-settings.fees.categories.store')) !!}, '', 'winpay', '', '', {!! json_encode(is_array(old('spmb_units')) ? old('spmb_units') : []) !!}, {!! json_encode(old('category_type', 'tuition_fee')) !!});
+                window.openFeeModal('jenis_biaya', {!! json_encode(old('name', '')) !!}, false, {!! json_encode(route('admin.spmb-settings.fees.categories.store')) !!}, '', 'winpay', '', '', {!! json_encode(is_array(old('spmb_units')) ? old('spmb_units') : []) !!}, {!! json_encode(old('category_type', 'tuition_fee')) !!}, [], [], [], 'all', {!! json_encode(old('applicable_periods', [])) !!});
             } else if (failed.startsWith('jenis_biaya_edit_')) {
                 window.switchFeeTab('jenis_biaya');
                 let id = failed.replace('jenis_biaya_edit_', '');
-                window.openFeeModal('jenis_biaya', {!! json_encode(old('name', '')) !!}, false, '/admin/spmb-settings/fees/categories/' + id, '', 'winpay', '', '', {!! json_encode(is_array(old('spmb_units')) ? old('spmb_units') : []) !!}, {!! json_encode(old('category_type', 'tuition_fee')) !!});
+                window.openFeeModal('jenis_biaya', {!! json_encode(old('name', '')) !!}, false, '/admin/spmb-settings/fees/categories/' + id, '', 'winpay', '', '', {!! json_encode(is_array(old('spmb_units')) ? old('spmb_units') : []) !!}, {!! json_encode(old('category_type', 'tuition_fee')) !!}, [], [], [], 'all', {!! json_encode(old('applicable_periods', [])) !!});
             } else if (failed.startsWith('biaya_admin_create')) {
                 const oldCatId = {!! json_encode(old('spmb_fee_category_id', '')) !!};
                 if (oldCatId) {
                     window.switchFeeTab('cat_' + oldCatId);
-                    window.openFeeModal('biaya_tambahan', {!! json_encode(old('name', '')) !!}, false, {!! json_encode(route('admin.spmb-settings.fees.admin-fees.store')) !!}, {!! json_encode(old('amount', '')) !!}, {!! json_encode(is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway', 'winpay')) !!}, oldCatId, {!! json_encode(is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units', '')) !!}, [], 'tuition_fee', {!! json_encode(old('applicable_grades', [])) !!}, {!! json_encode(old('applicable_class_programs', [])) !!}, {!! json_encode(old('applicable_types', [])) !!}, {!! json_encode(old('applicable_gender', 'all')) !!});
+                    window.openFeeModal('biaya_tambahan', {!! json_encode(old('name', '')) !!}, false, {!! json_encode(route('admin.spmb-settings.fees.admin-fees.store')) !!}, {!! json_encode(old('amount', '')) !!}, {!! json_encode(is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway', 'winpay')) !!}, oldCatId, {!! json_encode(is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units', '')) !!}, [], 'tuition_fee', {!! json_encode(old('applicable_grades', [])) !!}, {!! json_encode(old('applicable_class_programs', [])) !!}, {!! json_encode(old('applicable_types', [])) !!}, {!! json_encode(old('applicable_gender', 'all')) !!}, {!! json_encode(old('applicable_periods', [])) !!});
                 }
             } else if (failed.startsWith('biaya_admin_edit_')) {
                 const oldCatId = {!! json_encode(old('spmb_fee_category_id', '')) !!};
                 let id = failed.replace('biaya_admin_edit_', '');
                 if (oldCatId) {
                     window.switchFeeTab('cat_' + oldCatId);
-                    window.openFeeModal('biaya_tambahan', {!! json_encode(old('name', '')) !!}, false, '/admin/spmb-settings/fees/admin-fees/' + id, {!! json_encode(old('amount', '')) !!}, {!! json_encode(is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway', 'winpay')) !!}, oldCatId, {!! json_encode(is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units', '')) !!}, [], 'tuition_fee', {!! json_encode(old('applicable_grades', [])) !!}, {!! json_encode(old('applicable_class_programs', [])) !!}, {!! json_encode(old('applicable_types', [])) !!}, {!! json_encode(old('applicable_gender', 'all')) !!});
+                    window.openFeeModal('biaya_tambahan', {!! json_encode(old('name', '')) !!}, false, '/admin/spmb-settings/fees/admin-fees/' + id, {!! json_encode(old('amount', '')) !!}, {!! json_encode(is_array(old('payment_gateway')) ? implode(',', old('payment_gateway')) : old('payment_gateway', 'winpay')) !!}, oldCatId, {!! json_encode(is_array(old('spmb_units')) ? implode(',', old('spmb_units')) : old('spmb_units', '')) !!}, [], 'tuition_fee', {!! json_encode(old('applicable_grades', [])) !!}, {!! json_encode(old('applicable_class_programs', [])) !!}, {!! json_encode(old('applicable_types', [])) !!}, {!! json_encode(old('applicable_gender', 'all')) !!}, {!! json_encode(old('applicable_periods', [])) !!});
                 }
             }
 
@@ -1092,11 +1296,13 @@
         });
     @endif
 
-    // Initial Unit Filter sync on DOM ready
+    // Initial Filter sync on DOM ready
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
         const urlUnit = urlParams.get('unit_id');
+        const urlPeriod = urlParams.get('period_id');
         const savedUnit = localStorage.getItem('spmb_fees_active_unit');
+        const savedPeriod = localStorage.getItem('spmb_fees_active_period');
         
         if (urlUnit !== null) {
             window.currentUnitFilter = urlUnit;
@@ -1104,9 +1310,13 @@
             window.currentUnitFilter = savedUnit;
         }
 
-        if (window.currentUnitFilter) {
-            window.filterFeesByUnit(window.currentUnitFilter);
+        if (urlPeriod !== null) {
+            window.currentPeriodFilter = urlPeriod;
+        } else if (savedPeriod !== null && savedPeriod !== '') {
+            window.currentPeriodFilter = savedPeriod;
         }
+
+        window.applyFeeFilters();
     });
 
     // Escape key listener to close modal

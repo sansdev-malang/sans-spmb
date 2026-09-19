@@ -39,6 +39,7 @@ class SpmbFeesController extends Controller
         });
 
         $units = SpmbUnit::all();
+        $periods = \App\Models\SpmbPeriod::orderBy('year', 'desc')->get();
         $gateways = \App\Models\PaymentGateway::get();
         $grades = \App\Models\SpmbGrade::orderBy('spmb_unit_id', 'asc')->orderBy('id', 'asc')->get();
         $classPrograms = \App\Models\SpmbClassProgram::with('units')->get();
@@ -46,8 +47,9 @@ class SpmbFeesController extends Controller
 
         $activeTab = request()->get('tab', 'jenis_biaya');
         $selectedUnitId = request()->get('unit_id', '');
+        $selectedPeriodId = request()->get('period_id', '');
 
-        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'gateways', 'activeTab', 'grades', 'classPrograms', 'types', 'selectedUnitId'));
+        return view('admin.settings-fees', compact('categories', 'fees', 'units', 'periods', 'gateways', 'activeTab', 'grades', 'classPrograms', 'types', 'selectedUnitId', 'selectedPeriodId'));
     }
 
     // Fee Category (Jenis Biaya) CRUD
@@ -56,6 +58,8 @@ class SpmbFeesController extends Controller
         $rules = [
             'name' => 'required|string|unique:spmb_fee_categories,name',
             'category_type' => 'required|in:registration_fee,tuition_fee,extra_service',
+            'applicable_periods' => 'required|array|min:1',
+            'applicable_periods.*' => 'exists:spmb_periods,id',
         ];
 
         if (auth()->user()->isSuperAdmin()) {
@@ -63,7 +67,12 @@ class SpmbFeesController extends Controller
             $rules['spmb_units.*'] = 'exists:spmb_units,id';
         }
 
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), $rules, [
+            'name.required' => 'Nama jenis biaya wajib diisi.',
+            'name.unique' => 'Nama jenis biaya sudah digunakan.',
+            'applicable_periods.required' => 'Wajib memilih minimal satu Tahun Ajaran.',
+            'applicable_periods.min' => 'Wajib memilih minimal satu Tahun Ajaran.',
+        ]);
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -72,9 +81,12 @@ class SpmbFeesController extends Controller
                 ->with('failed_modal', 'jenis_biaya_create');
         }
 
+        $applicablePeriods = !empty($request->applicable_periods) ? array_values(array_map('intval', (array)$request->applicable_periods)) : null;
+
         $category = SpmbFeeCategory::create([
             'name' => $request->name,
             'category_type' => $request->category_type ?? SpmbFeeCategory::TYPE_TUITION,
+            'applicable_periods' => $applicablePeriods,
         ]);
 
         $units = auth()->user()->isSuperAdmin() ? $request->spmb_units : [auth()->user()->spmb_unit_id];
@@ -88,6 +100,8 @@ class SpmbFeesController extends Controller
         $rules = [
             'name' => 'required|string|unique:spmb_fee_categories,name,' . $id,
             'category_type' => 'required|in:registration_fee,tuition_fee,extra_service',
+            'applicable_periods' => 'required|array|min:1',
+            'applicable_periods.*' => 'exists:spmb_periods,id',
         ];
 
         if (auth()->user()->isSuperAdmin()) {
@@ -95,7 +109,12 @@ class SpmbFeesController extends Controller
             $rules['spmb_units.*'] = 'exists:spmb_units,id';
         }
 
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), $rules, [
+            'name.required' => 'Nama jenis biaya wajib diisi.',
+            'name.unique' => 'Nama jenis biaya sudah digunakan.',
+            'applicable_periods.required' => 'Wajib memilih minimal satu Tahun Ajaran.',
+            'applicable_periods.min' => 'Wajib memilih minimal satu Tahun Ajaran.',
+        ]);
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -104,10 +123,13 @@ class SpmbFeesController extends Controller
                 ->with('failed_modal', 'jenis_biaya_edit_' . $id);
         }
 
+        $applicablePeriods = !empty($request->applicable_periods) ? array_values(array_map('intval', (array)$request->applicable_periods)) : null;
+
         $category = SpmbFeeCategory::findOrFail($id);
         $category->update([
             'name' => $request->name,
             'category_type' => $request->category_type ?? $category->category_type,
+            'applicable_periods' => $applicablePeriods,
         ]);
 
         if (auth()->user()->isSuperAdmin()) {
@@ -149,6 +171,8 @@ class SpmbFeesController extends Controller
             'payment_gateway' => 'required|array|min:1',
             'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
+            'applicable_periods' => 'required|array|min:1',
+            'applicable_periods.*' => 'exists:spmb_periods,id',
             'applicable_grades' => 'nullable|array',
             'applicable_grades.*' => 'exists:spmb_grades,id',
             'applicable_class_programs' => 'nullable|array',
@@ -167,7 +191,9 @@ class SpmbFeesController extends Controller
             'amount.required' => 'Nominal biaya wajib diisi.',
             'amount.numeric' => 'Nominal biaya harus berupa angka.',
             'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.',
-            'amount.max' => 'Nominal biaya pendaftaran maksimal adalah Rp 9.999.999.999.'
+            'amount.max' => 'Nominal biaya pendaftaran maksimal adalah Rp 9.999.999.999.',
+            'applicable_periods.required' => 'Wajib memilih minimal satu Tahun Ajaran.',
+            'applicable_periods.min' => 'Wajib memilih minimal satu Tahun Ajaran.',
         ]);
 
         $validator->after(function ($validator) use ($request, $units) {
@@ -193,6 +219,7 @@ class SpmbFeesController extends Controller
                 ->with('failed_modal', 'biaya_admin_create');
         }
 
+        $applicablePeriods = !empty($request->applicable_periods) ? array_values(array_map('intval', (array)$request->applicable_periods)) : null;
         $applicableGrades = !empty($request->applicable_grades) ? array_values(array_map('intval', (array)$request->applicable_grades)) : null;
         $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
         $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
@@ -205,6 +232,7 @@ class SpmbFeesController extends Controller
                 'payment_gateway' => $request->payment_gateway,
                 'spmb_fee_category_id' => $request->spmb_fee_category_id,
                 'spmb_unit_id' => $unitId,
+                'applicable_periods' => $applicablePeriods,
                 'applicable_grades' => $applicableGrades,
                 'applicable_class_programs' => $applicableClassPrograms,
                 'applicable_types' => $applicableTypes,
@@ -242,6 +270,8 @@ class SpmbFeesController extends Controller
             'payment_gateway' => 'required|array|min:1',
             'payment_gateway.*' => 'in:' . implode(',', $gatewayCodes),
             'spmb_fee_category_id' => 'required|exists:spmb_fee_categories,id',
+            'applicable_periods' => 'required|array|min:1',
+            'applicable_periods.*' => 'exists:spmb_periods,id',
             'applicable_grades' => 'nullable|array',
             'applicable_grades.*' => 'exists:spmb_grades,id',
             'applicable_class_programs' => 'nullable|array',
@@ -261,7 +291,9 @@ class SpmbFeesController extends Controller
             'amount.numeric' => 'Nominal biaya harus berupa angka.',
             'amount.min' => 'Nominal biaya pendaftaran minimal adalah Rp 1.000.',
             'amount.max' => 'Nominal biaya pendaftaran maksimal adalah Rp 9.999.999.999.',
-            'name.unique' => 'Nama biaya sudah digunakan pada unit dan kategori ini.'
+            'name.unique' => 'Nama biaya sudah digunakan pada unit dan kategori ini.',
+            'applicable_periods.required' => 'Wajib memilih minimal satu Tahun Ajaran.',
+            'applicable_periods.min' => 'Wajib memilih minimal satu Tahun Ajaran.',
         ]);
 
         if ($validator->fails()) {
@@ -277,6 +309,7 @@ class SpmbFeesController extends Controller
             }
         }
 
+        $applicablePeriods = !empty($request->applicable_periods) ? array_values(array_map('intval', (array)$request->applicable_periods)) : null;
         $applicableGrades = !empty($request->applicable_grades) ? array_values(array_map('intval', (array)$request->applicable_grades)) : null;
         $applicableClassPrograms = !empty($request->applicable_class_programs) ? array_values(array_map('intval', (array)$request->applicable_class_programs)) : null;
         $applicableTypes = !empty($request->applicable_types) ? array_values(array_map('intval', (array)$request->applicable_types)) : null;
@@ -288,6 +321,7 @@ class SpmbFeesController extends Controller
             'payment_gateway' => $request->payment_gateway,
             'spmb_fee_category_id' => $request->spmb_fee_category_id,
             'spmb_unit_id' => $unitId,
+            'applicable_periods' => $applicablePeriods,
             'applicable_grades' => $applicableGrades,
             'applicable_class_programs' => $applicableClassPrograms,
             'applicable_types' => $applicableTypes,

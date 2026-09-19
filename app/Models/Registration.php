@@ -536,7 +536,7 @@ class Registration extends Model
             return $hasTarget && $fee->matchesRegistration($this);
         }) ?? $baseFees->first(function($fee) {
             return $fee->matchesRegistration($this);
-        }) ?? $baseFees->first() ?? $fees->first();
+        });
 
         $items = [];
         $total = 0.0;
